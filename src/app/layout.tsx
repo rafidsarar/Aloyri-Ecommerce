@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
+import { Footer } from "@/components/footer";
+import { Header } from "@/components/header";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Aloyri",
+    default: "Aloyri — Curated Skincare",
     template: "%s | Aloyri",
   },
-  description: "Aloyri skincare ecommerce storefront.",
+  description:
+    "Aloyri curates thoughtful skincare for everyday routines in Bangladesh.",
 };
 
 export default function RootLayout({
@@ -16,7 +19,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <Header />
+        {children}
+        <Footer />
+      </body>
     </html>
   );
 }
