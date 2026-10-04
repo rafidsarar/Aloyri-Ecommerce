@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { ArrowIcon } from "@/components/icons";
 import { ProductArtwork } from "@/components/product-artwork";
-import { readCart, type CartItem } from "@/lib/cart";
+import { readCart, type CartItem, writeCart } from "@/lib/cart";
 import {
   bangladeshDistricts,
   CHECKOUT_DRAFT_KEY,
@@ -28,11 +29,16 @@ const textareaClass =
   "mt-2 min-h-28 w-full resize-y rounded-[.9rem] border border-[#713a35]/14 bg-white px-4 py-3 text-sm text-[#321f1c] outline-none transition placeholder:text-[#321f1c]/30 focus:border-[#b9725f]/60 focus:ring-2 focus:ring-[#b9725f]/10";
 
 export function CheckoutClient() {
+  const router = useRouter();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [draft, setDraft] = useState<CheckoutDraft>(initialCheckoutDraft);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [step, setStep] = useState<"details" | "review">("details");
   const [hydrated, setHydrated] = useState(false);
+  const [orderingEnabled, setOrderingEnabled] = useState(false);
+  const [orderingStatusLoaded, setOrderingStatusLoaded] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   useEffect(() => {
     setCartItems(readCart());
@@ -50,6 +56,19 @@ export function CheckoutClient() {
     }
 
     setHydrated(true);
+
+    void fetch("/api/store-status", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((status: { orderingEnabled?: boolean }) => {
+        setOrderingEnabled(status.orderingEnabled === true);
+        setDraft((current) =>
+          current.paymentMethod === "COD"
+            ? current
+            : { ...current, paymentMethod: "COD" },
+        );
+      })
+      .catch(() => setOrderingEnabled(false))
+      .finally(() => setOrderingStatusLoaded(true));
   }, []);
 
   useEffect(() => {
@@ -143,6 +162,88 @@ export function CheckoutClient() {
     }));
     setStep("review");
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  async function placeOrder() {
+    if (
+      !orderingEnabled ||
+      submitting ||
+      draft.paymentMethod !== "COD" ||
+      !draft.deliveryZone
+    ) {
+      return;
+    }
+
+    setSubmitting(true);
+    setSubmitError("");
+
+    let externalOrderId = "";
+    try {
+      externalOrderId = sessionStorage.getItem("aloyri_checkout_id") || "";
+      if (!externalOrderId) {
+        externalOrderId = crypto.randomUUID();
+        sessionStorage.setItem("aloyri_checkout_id", externalOrderId);
+      }
+    } catch {
+      externalOrderId = crypto.randomUUID();
+    }
+
+    try {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          externalOrderId,
+          customer: {
+            name: draft.fullName.trim(),
+            phone: normalizeBangladeshPhone(draft.phone),
+            address: draft.address.trim(),
+            district: draft.district,
+            area: draft.area.trim(),
+            landmark: draft.landmark.trim(),
+            notes: draft.notes.trim(),
+          },
+          items: rows.map((row) => ({
+            productId: row.product!.id,
+            qty: row.qty,
+          })),
+          deliveryZone: draft.deliveryZone,
+          paymentMethod: "COD",
+        }),
+      });
+
+      const result = (await response.json()) as {
+        orderNumber?: string;
+        error?: string;
+      };
+
+      if (!response.ok || !result.orderNumber) {
+        setSubmitError(
+          result.error ||
+            "The order could not be placed. Please review your cart and try again.",
+        );
+        return;
+      }
+
+      writeCart([]);
+      setCartItems([]);
+      try {
+        sessionStorage.removeItem(CHECKOUT_DRAFT_KEY);
+        sessionStorage.removeItem("aloyri_checkout_id");
+      } catch {
+        // Confirmation can continue without browser storage.
+      }
+
+      router.push(
+        `/order-confirmation?order=${encodeURIComponent(result.orderNumber)}`,
+      );
+    } catch {
+      setSubmitError(
+        "The order service is temporarily unavailable. Please try again.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   if (!hydrated) {
@@ -439,9 +540,9 @@ export function CheckoutClient() {
               <div className="grid gap-3">
                 {(
                   [
-                    ["COD", "Cash on Delivery", "Pay when the order is delivered."],
-                    ["bKash", "bKash", "Mobile payment preference. No payment is taken yet."],
-                    ["Nagad", "Nagad", "Mobile payment preference. No payment is taken yet."],
+                    ["COD", "Cash on Delivery", "Place the order now and pay when it is delivered."],
+                    ["bKash", "bKash", "Online payment verification will be added in a later payment cycle."],
+                    ["Nagad", "Nagad", "Online payment verification will be added in a later payment cycle."],
                   ] as Array<[PaymentMethod, string, string]>
                 ).map(([value, label, description]) => {
                   const active = draft.paymentMethod === value;
@@ -449,11 +550,16 @@ export function CheckoutClient() {
                     <button
                       key={value}
                       type="button"
-                      onClick={() => setField("paymentMethod", value)}
+                      onClick={() =>
+                        value === "COD" && setField("paymentMethod", value)
+                      }
+                      disabled={value !== "COD"}
                       className={`flex items-center gap-4 rounded-[1rem] border p-4 text-left transition ${
-                        active
-                          ? "border-[#713a35] bg-[#f7ebe6]"
-                          : "border-[#713a35]/12 bg-white hover:border-[#713a35]/28"
+                        value !== "COD"
+                          ? "cursor-not-allowed border-[#713a35]/8 bg-[#f7f3f1] opacity-55"
+                          : active
+                            ? "border-[#713a35] bg-[#f7ebe6]"
+                            : "border-[#713a35]/12 bg-white hover:border-[#713a35]/28"
                       }`}
                     >
                       <span
@@ -610,21 +716,26 @@ export function CheckoutClient() {
                 {paymentMethodLabels[draft.paymentMethod]}
               </h2>
               <p className="mt-3 text-sm leading-6 text-[#321f1c]/50">
-                This is only a checkout preference for now. No payment is charged
-                and no financial record is created.
+                Cash on Delivery is the first live payment method. No online
+                payment is charged during checkout.
               </p>
             </section>
 
             <section className="rounded-[1.5rem] border border-[#b9725f]/20 bg-[#fff4ef] p-5 sm:p-7">
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#713a35]/55">
-                Foundation status
+                Ordering status
               </p>
-              <h2 className="display mt-2 text-3xl">Ready for order integration.</h2>
+              <h2 className="display mt-2 text-3xl">
+                {!orderingStatusLoaded
+                  ? "Checking order service…"
+                  : orderingEnabled
+                    ? "Cash on Delivery ordering is ready."
+                    : "Awaiting delivery-rate setup."}
+              </h2>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-[#321f1c]/55">
-                Customer details, Bangladesh address handling, payment preference,
-                validation and order review are complete. The final order button
-                remains disabled until live stock, delivery pricing and secure CRM
-                order creation are connected.
+                The secure website-to-CRM connection is prepared. Live submission
+                stays closed until Aloyri&apos;s real Inside Dhaka and Outside
+                Dhaka delivery charges are configured.
               </p>
             </section>
           </div>
@@ -665,11 +776,29 @@ export function CheckoutClient() {
 
             <button
               type="button"
-              disabled
-              className="mt-6 w-full cursor-not-allowed rounded-full bg-[#713a35]/30 px-6 py-4 text-sm font-semibold text-white"
+              onClick={() => void placeOrder()}
+              disabled={!orderingEnabled || submitting}
+              className={`mt-6 w-full rounded-full px-6 py-4 text-sm font-semibold text-white transition ${
+                orderingEnabled && !submitting
+                  ? "bg-[#713a35] hover:-translate-y-0.5 hover:bg-[#60312d]"
+                  : "cursor-not-allowed bg-[#713a35]/30"
+              }`}
             >
-              Place order — integration required
+              {submitting
+                ? "Creating order…"
+                : orderingEnabled
+                  ? "Place Cash on Delivery order"
+                  : "Ordering opens after delivery-rate setup"}
             </button>
+
+            {submitError ? (
+              <p
+                role="alert"
+                className="mt-4 rounded-[.9rem] border border-red-200 bg-red-50 px-4 py-3 text-xs leading-5 text-red-800"
+              >
+                {submitError}
+              </p>
+            ) : null}
 
             <button
               type="button"
@@ -683,7 +812,8 @@ export function CheckoutClient() {
             </button>
 
             <p className="mt-4 text-center text-[10px] leading-5 text-[#321f1c]/38">
-              No order, payment or CRM record has been created.
+              Orders are created only after this final confirmation. Online
+              payment is not enabled yet.
             </p>
           </aside>
         </div>
