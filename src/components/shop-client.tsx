@@ -8,11 +8,15 @@ type SortKey = "featured" | "price-asc" | "price-desc" | "name";
 
 export function ShopClient({
   initialCategory,
+  initialQuery,
+  lockCategory = false,
 }: {
   initialCategory?: string;
+  initialQuery?: string;
+  lockCategory?: boolean;
 }) {
   const { products, synced, refreshing, error, refresh } = useCatalog();
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery || "");
   const [category, setCategory] = useState(initialCategory || "All");
   const [sort, setSort] = useState<SortKey>("featured");
 
@@ -105,7 +109,8 @@ export function ShopClient({
       </div>
 
       <div className="flex flex-wrap items-center gap-2 py-6">
-        {["All", ...categories].map((item) => {
+        {!lockCategory
+          ? ["All", ...categories].map((item) => {
           const active = category === item;
           return (
             <button
@@ -120,8 +125,13 @@ export function ShopClient({
             >
               {item === "All" ? "All skincare" : item}
             </button>
-          );
-        })}
+            );
+          })
+          : (
+              <span className="rounded-full border border-[#713a35] bg-[#713a35] px-4 py-2 text-xs font-medium text-white">
+                {initialCategory}
+              </span>
+            )}
         <span className="ml-auto hidden text-xs text-[#321f1c]/40 sm:block">
           {refreshing ? "Refreshing…" : `${filtered.length} ${filtered.length === 1 ? "product" : "products"}`}
         </span>
