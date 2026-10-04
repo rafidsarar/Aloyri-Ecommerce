@@ -32,6 +32,7 @@ export function Footer() {
             </p>
             <div className="mt-5 flex flex-col gap-3 text-sm text-[#321f1c]/70">
               <Link href="/cart">Cart</Link>
+              <Link href="/track-order">Track order</Link>
               <span>Bangladesh</span>
               <span>BDT pricing</span>
             </div>
