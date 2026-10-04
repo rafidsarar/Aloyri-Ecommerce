@@ -1,8 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7f4ef;
-  --foreground: #1d1d1b;
+  --background: #f5f1eb;
+  --surface: #fbf9f6;
+  --surface-strong: #ebe2d8;
+  --foreground: #211d1a;
+  --muted: #746a63;
+  --line: rgba(33, 29, 26, 0.13);
+  --accent: #7f6657;
 }
 
 * {
@@ -10,6 +15,7 @@
 }
 
 html {
+  scroll-behavior: smooth;
   background: var(--background);
 }
 
@@ -25,4 +31,31 @@ body {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+::selection {
+  background: #d9c7ba;
+  color: #211d1a;
+}
+
+.display {
+  font-family: Georgia, "Times New Roman", serif;
+  letter-spacing: -0.045em;
+}
+
+.shell {
+  width: min(100% - 2rem, 1440px);
+  margin-inline: auto;
+}
+
+@media (min-width: 768px) {
+  .shell {
+    width: min(100% - 4rem, 1440px);
+  }
 }
