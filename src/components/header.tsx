@@ -8,9 +8,9 @@ import { CloseIcon, MenuIcon, SearchIcon } from "@/components/icons";
 
 const links = [
   ["Shop", "/shop"],
-  ["Cleansers", "/shop?category=Cleanser"],
-  ["Moisturizers", "/shop?category=Moisturizer"],
-  ["Sunscreen", "/shop?category=Sunscreen"],
+  ["Cleansers", "/category/cleansers"],
+  ["Moisturizers", "/category/moisturizers"],
+  ["Sunscreen", "/category/sunscreen"],
   ["Track order", "/track-order"],
 ];
 
