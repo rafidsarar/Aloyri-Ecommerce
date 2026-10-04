@@ -242,6 +242,7 @@ export function CheckoutClient() {
           customer: {
             name: draft.fullName.trim(),
             phone: normalizeBangladeshPhone(draft.phone),
+            email: draft.email.trim().toLowerCase(),
             address: draft.address.trim(),
             district: draft.district,
             area: draft.area.trim(),
@@ -477,7 +478,11 @@ export function CheckoutClient() {
                   >
                     {errors.email}
                   </span>
-                ) : null}
+                ) : (
+                  <span className="mt-2 block text-xs font-normal leading-5 text-[#321f1c]/40">
+                    Used only for order confirmation and delivery-status updates.
+                  </span>
+                )}
               </label>
             </section>
 
