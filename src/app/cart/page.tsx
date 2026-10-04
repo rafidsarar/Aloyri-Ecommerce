@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { ArrowIcon } from "@/components/icons";
 import { ProductArtwork } from "@/components/product-artwork";
 import { readCart, type CartItem, writeCart } from "@/lib/cart";
 import { formatPrice, products } from "@/lib/catalog";
@@ -168,21 +169,20 @@ export default function CartPage() {
             </div>
 
             <div className="flex justify-between pt-5">
-              <span className="text-sm font-semibold">Estimated total</span>
+              <span className="text-sm font-semibold">Products subtotal</span>
               <span className="text-lg font-semibold">{formatPrice(subtotal)}</span>
             </div>
 
-            <button
-              type="button"
-              disabled
-              className="mt-7 w-full cursor-not-allowed rounded-full bg-[#713a35]/28 px-6 py-4 text-sm font-semibold text-white"
+            <Link
+              href="/checkout"
+              className="mt-7 inline-flex w-full items-center justify-center gap-3 rounded-full bg-[#713a35] px-6 py-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#60312d]"
             >
-              Checkout opening soon
-            </button>
+              Continue to checkout <ArrowIcon />
+            </Link>
 
             <p className="mt-4 text-center text-[11px] leading-5 text-[#321f1c]/42">
-              Cart is ready. Checkout will be enabled when live inventory and
-              order creation are connected.
+              Checkout details and review are available. Final order submission
+              remains disabled until live ordering is connected.
             </p>
           </aside>
         </div>
