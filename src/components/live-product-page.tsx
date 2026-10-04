@@ -4,13 +4,14 @@ import Link from "next/link";
 import { AddToCart } from "@/components/add-to-cart";
 import { useCatalog } from "@/components/catalog-provider";
 import { ArrowIcon } from "@/components/icons";
-import { ProductArtwork } from "@/components/product-artwork";
+import { ProductMedia } from "@/components/product-media";
 import { ProductCard } from "@/components/product-card";
 import {
   formatPrice,
   productStockLabel,
   type Product,
 } from "@/lib/catalog";
+import { getVerifiedProductContent } from "@/lib/product-verification";
 
 export function LiveProductPage({
   slug,
@@ -68,6 +69,10 @@ export function LiveProductPage({
     );
   }
 
+  const verified = getVerifiedProductContent(product.id);
+  const directions = verified?.directions ?? product.howToUse;
+  const careNotes = verified?.warnings ?? product.careNotes;
+
   const related = products
     .filter(
       (candidate) =>
@@ -90,10 +95,25 @@ export function LiveProductPage({
 
       <div className="grid gap-8 lg:grid-cols-[1.08fr_.92fr] lg:gap-14">
         <div>
-          <ProductArtwork
+          <ProductMedia
             product={product}
+            priority
             className="aspect-[4/5] rounded-[2rem] soft-shadow"
           />
+          {verified?.photo ? (
+            <p className="mt-3 text-[11px] leading-5 text-[#321f1c]/42">
+              Product photography:{" "}
+              <a
+                href={verified.photo.sourceUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium text-[#713a35] underline decoration-[#713a35]/20 underline-offset-4"
+              >
+                {verified.photo.sourceLabel}
+              </a>
+              {verified.photo.exactVariant ? " · exact listed variant" : ""}
+            </p>
+          ) : null}
           <div className="mt-4 grid grid-cols-3 gap-3">
             <div className="rounded-[1.1rem] bg-[#f5e8e2] p-4">
               <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[#713a35]/46">
@@ -182,13 +202,56 @@ export function LiveProductPage({
         </div>
       </div>
 
-      <section className="mt-16 grid gap-5 lg:grid-cols-2">
+      {verified ? (
+        <section className="mt-16 rounded-[1.6rem] border border-[#713a35]/10 bg-[#f7ebe6] p-6 sm:p-8">
+          <div className="grid gap-7 lg:grid-cols-[.72fr_1.28fr]">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#713a35]/48">
+                Manufacturer-verified
+              </p>
+              <h2 className="display mt-2 text-3xl">
+                Product facts from {verified.sourceLabel}.
+              </h2>
+              <a
+                href={verified.sourceUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#713a35] underline decoration-[#713a35]/20 underline-offset-4"
+              >
+                View verification source <ArrowIcon className="h-3.5 w-3.5" />
+              </a>
+              <p className="mt-3 text-[11px] text-[#321f1c]/40">
+                Verified {verified.verifiedAt}
+              </p>
+            </div>
+
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {verified.claims.map((claim) => (
+                <li
+                  key={claim}
+                  className="flex gap-3 rounded-[1rem] bg-white/65 p-4 text-sm leading-6 text-[#321f1c]/62"
+                >
+                  <span className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-[#b9725f]" />
+                  <span>{claim}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          {verified.sourceNote ? (
+            <p className="mt-6 border-t border-[#713a35]/10 pt-5 text-xs leading-6 text-[#321f1c]/48">
+              {verified.sourceNote}
+            </p>
+          ) : null}
+        </section>
+      ) : null}
+
+      <section className={`mt-5 grid gap-5 ${careNotes.length > 0 ? "lg:grid-cols-2" : ""}`}>
         <div className="rounded-[1.6rem] border border-[#713a35]/10 bg-white/65 p-6 sm:p-8">
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#713a35]/48">
             How to use
           </p>
           <ol className="mt-5 grid gap-5">
-            {product.howToUse.map((step, index) => (
+            {directions.map((step, index) => (
               <li key={step} className="grid grid-cols-[32px_1fr] gap-3">
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f5e8e2] text-xs font-semibold text-[#713a35]">
                   {index + 1}
@@ -197,34 +260,93 @@ export function LiveProductPage({
               </li>
             ))}
           </ol>
+          {verified ? (
+            <p className="mt-5 text-[11px] leading-5 text-[#321f1c]/38">
+              Directions summarised from {verified.sourceLabel}. Follow the exact pack directions if they differ.
+            </p>
+          ) : null}
         </div>
 
-        <div className="rounded-[1.6rem] border border-[#713a35]/10 bg-[#f5e8e2] p-6 sm:p-8">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#713a35]/48">
-            Good to know
-          </p>
-          <ul className="mt-5 grid gap-4">
-            {product.careNotes.map((note) => (
-              <li key={note} className="flex gap-3 text-sm leading-7 text-[#321f1c]/60">
-                <span className="mt-[11px] h-1.5 w-1.5 shrink-0 rounded-full bg-[#b9725f]" />
-                <span>{note}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        {careNotes.length > 0 ? (
+          <div className="rounded-[1.6rem] border border-[#713a35]/10 bg-[#f5e8e2] p-6 sm:p-8">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#713a35]/48">
+              {verified?.warnings?.length ? "Warnings & care" : "Good to know"}
+            </p>
+            <ul className="mt-5 grid gap-4">
+              {careNotes.map((note) => (
+                <li key={note} className="flex gap-3 text-sm leading-7 text-[#321f1c]/60">
+                  <span className="mt-[11px] h-1.5 w-1.5 shrink-0 rounded-full bg-[#b9725f]" />
+                  <span>{note}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
       </section>
 
       <section className="mt-5 rounded-[1.6rem] border border-[#713a35]/10 bg-white/65 p-6 sm:p-8">
-        <div className="grid gap-6 lg:grid-cols-[.72fr_1.28fr]">
+        <div className="grid gap-7 lg:grid-cols-[.72fr_1.28fr]">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#713a35]/48">
               Ingredients
             </p>
-            <h2 className="display mt-2 text-3xl">Verified information first.</h2>
+            <h2 className="display mt-2 text-3xl">
+              {verified ? "Verified formulation details." : "Verified information first."}
+            </h2>
           </div>
-          <p className="text-sm leading-7 text-[#321f1c]/58">
-            {product.ingredientNote}
-          </p>
+
+          <div>
+            {verified?.keyIngredients?.length ? (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#713a35]/55">
+                  {verified.ingredients?.length ? "Highlighted ingredients" : "Manufacturer-highlighted ingredients"}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {verified.keyIngredients.map((ingredient) => (
+                    <span
+                      key={ingredient}
+                      className="rounded-full bg-[#f5e8e2] px-3 py-2 text-xs text-[#321f1c]/65"
+                    >
+                      {ingredient}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {verified?.ingredients?.length ? (
+              <details className="mt-5 rounded-[1rem] border border-[#713a35]/10 bg-[#fffaf7] p-4">
+                <summary className="cursor-pointer text-sm font-semibold text-[#713a35]">
+                  View full verified ingredient list
+                </summary>
+                <p className="mt-4 text-xs leading-6 text-[#321f1c]/55">
+                  {verified.ingredients.join(", ")}.
+                </p>
+              </details>
+            ) : (
+              <p className="text-sm leading-7 text-[#321f1c]/58">
+                {product.ingredientNote}
+              </p>
+            )}
+
+            {verified?.ingredientSourceLabel ? (
+              <p className="mt-4 text-[11px] leading-5 text-[#321f1c]/40">
+                Ingredient source:{" "}
+                <a
+                  href={verified.ingredientSourceUrl || verified.sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[#713a35] underline decoration-[#713a35]/20 underline-offset-4"
+                >
+                  {verified.ingredientSourceLabel}
+                </a>
+              </p>
+            ) : verified ? (
+              <p className="mt-4 text-[11px] leading-5 text-[#321f1c]/40">
+                Ingredient source: {verified.sourceLabel}. Always compare with the ingredient list printed on the exact product you receive.
+              </p>
+            ) : null}
+          </div>
         </div>
       </section>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ProductArtwork } from "@/components/product-artwork";
+import { ProductMedia } from "@/components/product-media";
 import { useCatalogProduct } from "@/components/catalog-provider";
 import {
   formatPrice,
@@ -20,7 +20,7 @@ export function ProductCard({ product: fallback }: { product: Product }) {
     <article className="group">
       <Link href={`/product/${product.slug}`} className="block">
         <div className="relative">
-          <ProductArtwork
+          <ProductMedia
             product={product}
             className="aspect-[4/5] rounded-[1.55rem] transition duration-500 group-hover:scale-[0.995]"
           />
