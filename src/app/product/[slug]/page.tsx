@@ -10,6 +10,7 @@ import {
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
 import { safeJsonLd } from "@/lib/seo";
 import { absoluteUrl } from "@/lib/site";
+import { getVerifiedProductContent } from "@/lib/product-verification";
 
 async function resolveProduct(slug: string): Promise<Product | null> {
   const fallback = getProduct(slug) ?? null;
@@ -54,6 +55,8 @@ export async function generateMetadata({
     };
   }
 
+  const verified = getVerifiedProductContent(product.id);
+
   return {
     title: `${product.brand} ${product.name}`,
     description: product.description,
@@ -65,6 +68,7 @@ export async function generateMetadata({
       url: "/product/" + product.slug,
       title: `${product.brand} ${product.name}`,
       description: product.description,
+      images: verified?.photo ? [{ url: verified.photo.src, alt: verified.photo.alt }] : undefined,
     },
   };
 }
@@ -81,6 +85,7 @@ export default async function ProductPage({
   if (!product && !fallback) notFound();
 
   const schemaProduct = product ?? fallback!;
+  const verified = getVerifiedProductContent(schemaProduct.id);
   const availability =
     schemaProduct.availableStock === undefined
       ? undefined
@@ -100,6 +105,7 @@ export default async function ProductPage({
     },
     category: schemaProduct.category,
     url: absoluteUrl("/product/" + schemaProduct.slug),
+    ...(verified?.photo ? { image: [verified.photo.src] } : {}),
   };
 
   if (schemaProduct.live && availability) {
