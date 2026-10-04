@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useCatalog } from "@/components/catalog-provider";
 import { ArrowIcon } from "@/components/icons";
-import { ProductArtwork } from "@/components/product-artwork";
+import { ProductMedia } from "@/components/product-media";
 import { readCart, type CartItem, writeCart } from "@/lib/cart";
 import {
   bangladeshDistricts,
@@ -688,7 +688,7 @@ export function CheckoutClient() {
               {rows.map(({ product, qty, productId }) =>
                 product ? (
                   <div key={productId} className="grid grid-cols-[58px_1fr_auto] gap-3">
-                    <ProductArtwork
+                    <ProductMedia
                       product={product}
                       className="aspect-[4/5] rounded-[.75rem]"
                     />
