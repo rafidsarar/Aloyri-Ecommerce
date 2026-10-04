@@ -1,4 +1,12 @@
-export type ProductCategory = "Cleanser" | "Moisturizer" | "Sunscreen";
+export type ProductCategory = string;
+
+export type ProductVisual = {
+  from: string;
+  to: string;
+  accent: string;
+  ink: string;
+  package: "tube" | "bottle" | "pump";
+};
 
 export type Product = {
   id: string;
@@ -14,19 +22,74 @@ export type Product = {
   skinNote: string;
   featured?: boolean;
   bestseller?: boolean;
-  visual: {
-    from: string;
-    to: string;
-    accent: string;
-    ink: string;
-    package: "tube" | "bottle" | "pump";
-  };
+  visual: ProductVisual;
+  active?: boolean;
+  availableStock?: number;
+  live?: boolean;
 };
 
+export type LiveCatalogProduct = {
+  id: string;
+  name: string;
+  brand: string;
+  size: string;
+  category: string;
+  price: number;
+  active: boolean;
+  availableStock: number;
+};
+
+const categoryVisuals: Record<string, ProductVisual> = {
+  Cleanser: {
+    from: "#d7e9ef",
+    to: "#f4fbfd",
+    accent: "#4c93a8",
+    ink: "#204f60",
+    package: "tube",
+  },
+  Moisturizer: {
+    from: "#dfeade",
+    to: "#fbfcf7",
+    accent: "#8db58a",
+    ink: "#315d38",
+    package: "bottle",
+  },
+  Sunscreen: {
+    from: "#f3dfcc",
+    to: "#fff9ef",
+    accent: "#d88d59",
+    ink: "#7b4b2e",
+    package: "tube",
+  },
+};
+
+const fallbackVisual: ProductVisual = {
+  from: "#eadfd9",
+  to: "#fffaf7",
+  accent: "#b9725f",
+  ink: "#713a35",
+  package: "bottle",
+};
+
+function routineForCategory(category: string) {
+  if (category === "Cleanser") return "Step 1 · Cleanse";
+  if (category === "Moisturizer") return "Step 2 · Moisturize";
+  if (category === "Sunscreen") return "Step 3 · Protect";
+  return "Aloyri skincare";
+}
+
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 80);
+}
+
 /**
- * Storefront catalog mirrors the product IDs, names, sizes, categories and
- * selling prices already defined by the Aloyri CRM starter catalog.
- * Costs and internal inventory information intentionally stay out of the store.
+ * Local data is merchandising only: descriptions, visuals, SEO slugs and
+ * editorial badges. Live CRM data overrides operational fields at runtime.
  */
 export const products: Product[] = [
   {
@@ -162,11 +225,59 @@ export const products: Product[] = [
 
 export const featuredProducts = products.filter((product) => product.featured);
 export const bestsellers = products.filter((product) => product.bestseller);
-
 export const categories: ProductCategory[] = ["Cleanser", "Moisturizer", "Sunscreen"];
 
 export function getProduct(slug: string) {
-  return products.find((product) => product.slug === slug);
+  return products.find((product) => product.slug === slug || product.id === slug);
+}
+
+export function getProductById(id: string) {
+  return products.find((product) => product.id === id);
+}
+
+export function mergeLiveCatalog(liveProducts: LiveCatalogProduct[]): Product[] {
+  return liveProducts
+    .filter((product) => product.active)
+    .map((live) => {
+      const local = getProductById(live.id);
+      if (local) {
+        return {
+          ...local,
+          name: live.name,
+          brand: live.brand,
+          size: live.size,
+          category: live.category,
+          price: live.price,
+          active: true,
+          availableStock: live.availableStock,
+          live: true,
+        };
+      }
+
+      return {
+        id: live.id,
+        slug: live.id,
+        brand: live.brand,
+        name: live.name,
+        size: live.size,
+        category: live.category,
+        price: live.price,
+        description: `${live.name} by ${live.brand || "Aloyri"}, available through the Aloyri skincare edit.`,
+        routineStep: routineForCategory(live.category),
+        skinNote: "See the product packaging and brand guidance for usage details.",
+        visual: categoryVisuals[live.category] ?? fallbackVisual,
+        active: true,
+        availableStock: live.availableStock,
+        live: true,
+      } satisfies Product;
+    });
+}
+
+export function productStockLabel(product: Product) {
+  if (product.availableStock === undefined) return "Checking stock";
+  if (product.availableStock <= 0) return "Out of stock";
+  if (product.availableStock <= 5) return `Only ${product.availableStock} left`;
+  return "In stock";
 }
 
 export function formatPrice(price: number) {
