@@ -20,9 +20,9 @@ export function Footer() {
             </p>
             <div className="mt-5 flex flex-col gap-3 text-sm">
               <Link href="/shop">All skincare</Link>
-              <Link href="/shop?category=Cleanser">Cleansers</Link>
-              <Link href="/shop?category=Moisturizer">Moisturizers</Link>
-              <Link href="/shop?category=Sunscreen">Sunscreen</Link>
+              <Link href="/category/cleansers">Cleansers</Link>
+              <Link href="/category/moisturizers">Moisturizers</Link>
+              <Link href="/category/sunscreen">Sunscreen</Link>
             </div>
           </div>
 
