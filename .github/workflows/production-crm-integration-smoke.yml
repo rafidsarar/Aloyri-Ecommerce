@@ -1,0 +1,38 @@
+name: Production CRM integration smoke
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  storefront-to-crm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify Inside Dhaka and Outside Dhaka order bridge
+        shell: bash
+        run: |
+          set -euo pipefail
+          test_zone() {
+            zone="$1"
+            ref="SMOKE-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${zone}"
+            body=$(cat <<JSON
+          {"externalOrderId":"$ref","customer":{"name":"Aloyri Integration Smoke Test","phone":"01700000000","address":"Aloyri production smoke test only","district":"Dhaka","area":"Test","landmark":"","notes":"Non-persisting integration smoke test"},"items":[{"productId":"__aloyri_missing_smoke_product__","qty":1}],"deliveryZone":"$zone","paymentMethod":"COD"}
+          JSON
+            )
+            status=$(curl --fail-with-body --retry 3 --retry-delay 5 --retry-all-errors \
+              --silent --show-error \
+              -o response.json -w "%{http_code}" \
+              -H "content-type: application/json" \
+              --data "$body" \
+              https://aloyri-ecommerce.vercel.app/api/orders || true)
+            cat response.json
+            test "$status" = "409"
+            grep -q '"code":"PRODUCT_UNAVAILABLE"' response.json
+          }
+          test_zone inside-dhaka
+          test_zone outside-dhaka
