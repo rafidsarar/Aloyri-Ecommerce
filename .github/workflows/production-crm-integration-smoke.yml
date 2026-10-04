@@ -45,6 +45,21 @@ jobs:
               assert f'"{key}"' not in text, f"sensitive field leaked: {key}"
           PY
 
+      - name: Verify order tracking bridge without customer data
+        shell: bash
+        run: |
+          set -euo pipefail
+          body='{"orderNumber":"WEB-SMOKE-DOES-NOT-EXIST","phone":"01700000000"}'
+          status=$(curl --fail-with-body --retry 3 --retry-delay 5 --retry-all-errors \
+            --silent --show-error \
+            -o tracking-response.json -w "%{http_code}" \
+            -H "content-type: application/json" \
+            --data "$body" \
+            https://aloyri-ecommerce.vercel.app/api/track-order || true)
+          cat tracking-response.json
+          test "$status" = "404"
+          grep -q '"code":"TRACKING_NOT_FOUND"' tracking-response.json
+
       - name: Verify Inside Dhaka and Outside Dhaka order bridge
         shell: bash
         run: |
