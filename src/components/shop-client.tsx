@@ -2,11 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { ProductCard } from "@/components/product-card";
-import {
-  categories,
-  products,
-  type ProductCategory,
-} from "@/lib/catalog";
+import { useCatalog } from "@/components/catalog-provider";
 
 type SortKey = "featured" | "price-asc" | "price-desc" | "name";
 
@@ -15,13 +11,15 @@ export function ShopClient({
 }: {
   initialCategory?: string;
 }) {
-  const validInitial = categories.includes(initialCategory as ProductCategory)
-    ? (initialCategory as ProductCategory)
-    : "All";
-
+  const { products, synced, refreshing, error, refresh } = useCatalog();
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<"All" | ProductCategory>(validInitial);
+  const [category, setCategory] = useState(initialCategory || "All");
   const [sort, setSort] = useState<SortKey>("featured");
+
+  const categories = useMemo(
+    () => [...new Set(products.map((product) => product.category))].sort(),
+    [products],
+  );
 
   const filtered = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -45,7 +43,35 @@ export function ShopClient({
       if (sort === "name") return a.name.localeCompare(b.name);
       return Number(Boolean(b.featured)) - Number(Boolean(a.featured));
     });
-  }, [category, query, sort]);
+  }, [products, category, query, sort]);
+
+  if (!synced) {
+    return (
+      <div className="py-14">
+        {error ? (
+          <div className="rounded-[1.5rem] border border-[#713a35]/10 bg-[#fff4ef] p-7 text-center">
+            <p className="display text-3xl">Live catalog is temporarily unavailable.</p>
+            <p className="mt-3 text-sm text-[#321f1c]/50">
+              Prices and stock are not shown until the CRM can be refreshed safely.
+            </p>
+            <button
+              type="button"
+              onClick={() => void refresh()}
+              className="mt-6 rounded-full bg-[#713a35] px-5 py-3 text-sm font-semibold text-white"
+            >
+              Try again
+            </button>
+          </div>
+        ) : (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {[0, 1, 2, 3, 4, 5].map((item) => (
+              <div key={item} className="aspect-[4/5] animate-pulse rounded-[1.5rem] bg-[#f5e8e2]" />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <>
@@ -79,7 +105,7 @@ export function ShopClient({
       </div>
 
       <div className="flex flex-wrap items-center gap-2 py-6">
-        {(["All", ...categories] as const).map((item) => {
+        {["All", ...categories].map((item) => {
           const active = category === item;
           return (
             <button
@@ -97,7 +123,7 @@ export function ShopClient({
           );
         })}
         <span className="ml-auto hidden text-xs text-[#321f1c]/40 sm:block">
-          {filtered.length} {filtered.length === 1 ? "product" : "products"}
+          {refreshing ? "Refreshing…" : `${filtered.length} ${filtered.length === 1 ? "product" : "products"}`}
         </span>
       </div>
 

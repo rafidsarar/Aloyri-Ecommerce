@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useCatalog } from "@/components/catalog-provider";
 import { ArrowIcon } from "@/components/icons";
 import { ProductArtwork } from "@/components/product-artwork";
 import { readCart, type CartItem, writeCart } from "@/lib/cart";
@@ -18,7 +19,7 @@ import {
   type DeliveryZone,
   type PaymentMethod,
 } from "@/lib/checkout";
-import { formatPrice, products } from "@/lib/catalog";
+import { formatPrice, getProductById } from "@/lib/catalog";
 
 type FieldErrors = Partial<Record<keyof CheckoutDraft, string>>;
 type DeliveryRates = Record<DeliveryZone, number>;
@@ -31,6 +32,12 @@ const textareaClass =
 
 export function CheckoutClient() {
   const router = useRouter();
+  const {
+    products: liveProducts,
+    synced: catalogSynced,
+    error: catalogError,
+    refresh: refreshCatalog,
+  } = useCatalog();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [draft, setDraft] = useState<CheckoutDraft>(initialCheckoutDraft);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -95,17 +102,28 @@ export function CheckoutClient() {
 
   const rows = useMemo(
     () =>
-      cartItems
-        .map((item) => ({
+      cartItems.map((item) => {
+        const liveProduct = liveProducts.find(
+          (product) => product.id === item.productId,
+        );
+        return {
           ...item,
-          product: products.find((product) => product.id === item.productId),
-        }))
-        .filter((row) => row.product),
-    [cartItems],
+          liveProduct,
+          product: liveProduct ?? getProductById(item.productId),
+        };
+      }),
+    [cartItems, liveProducts],
+  );
+
+  const hasUnavailable = rows.some(
+    (row) =>
+      !row.liveProduct ||
+      (row.liveProduct.availableStock ?? 0) < row.qty,
   );
 
   const subtotal = rows.reduce(
-    (sum, row) => sum + (row.product?.price ?? 0) * row.qty,
+    (sum, row) =>
+      sum + (row.liveProduct ? row.liveProduct.price * row.qty : 0),
     0,
   );
   const deliveryCharge =
@@ -167,6 +185,13 @@ export function CheckoutClient() {
   function reviewOrder(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
+    if (!catalogSynced || catalogError || hasUnavailable) {
+      setSubmitError(
+        "Live stock changed or could not be verified. Return to your cart and review the available quantities.",
+      );
+      return;
+    }
+
     if (!validate()) {
       const firstError = document.querySelector("[data-checkout-error='true']");
       firstError?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -184,6 +209,9 @@ export function CheckoutClient() {
   async function placeOrder() {
     if (
       !orderingEnabled ||
+      !catalogSynced ||
+      Boolean(catalogError) ||
+      hasUnavailable ||
       submitting ||
       draft.paymentMethod !== "COD" ||
       !draft.deliveryZone
@@ -221,7 +249,7 @@ export function CheckoutClient() {
             notes: draft.notes.trim(),
           },
           items: rows.map((row) => ({
-            productId: row.product!.id,
+            productId: row.liveProduct!.id,
             qty: row.qty,
           })),
           deliveryZone: draft.deliveryZone,
@@ -267,6 +295,49 @@ export function CheckoutClient() {
     return (
       <main className="shell min-h-[65vh] py-10 md:py-14">
         <div className="h-72 animate-pulse rounded-[1.8rem] bg-[#f5e8e2]" />
+      </main>
+    );
+  }
+
+  if (cartItems.length > 0 && !catalogSynced) {
+    return (
+      <main className="shell min-h-[62vh] py-20 text-center">
+        <p className="display text-4xl">
+          {catalogError
+            ? "We can’t verify live stock right now."
+            : "Checking live price and stock…"}
+        </p>
+        <p className="mx-auto mt-4 max-w-lg text-sm leading-7 text-[#321f1c]/50">
+          Checkout only continues after Aloyri CRM confirms current prices and
+          available quantities.
+        </p>
+        {catalogError ? (
+          <button
+            type="button"
+            onClick={() => void refreshCatalog()}
+            className="mt-7 rounded-full bg-[#713a35] px-6 py-3.5 text-sm font-semibold text-white"
+          >
+            Try again
+          </button>
+        ) : null}
+      </main>
+    );
+  }
+
+  if (catalogSynced && hasUnavailable) {
+    return (
+      <main className="shell min-h-[62vh] py-20 text-center">
+        <p className="display text-4xl">Your cart needs an update.</p>
+        <p className="mx-auto mt-4 max-w-lg text-sm leading-7 text-[#321f1c]/50">
+          One or more products are out of stock or the selected quantity is
+          higher than current CRM availability.
+        </p>
+        <Link
+          href="/cart"
+          className="mt-7 inline-flex items-center gap-3 rounded-full bg-[#713a35] px-6 py-3.5 text-sm font-semibold text-white"
+        >
+          Review cart <ArrowIcon />
+        </Link>
       </main>
     );
   }
@@ -806,18 +877,28 @@ export function CheckoutClient() {
             <button
               type="button"
               onClick={() => void placeOrder()}
-              disabled={!orderingEnabled || submitting}
+              disabled={
+                !orderingEnabled ||
+                !catalogSynced ||
+                Boolean(catalogError) ||
+                hasUnavailable ||
+                submitting
+              }
               className={`mt-6 w-full rounded-full px-6 py-4 text-sm font-semibold text-white transition ${
-                orderingEnabled && !submitting
+                orderingEnabled &&
+                catalogSynced &&
+                !catalogError &&
+                !hasUnavailable &&
+                !submitting
                   ? "bg-[#713a35] hover:-translate-y-0.5 hover:bg-[#60312d]"
                   : "cursor-not-allowed bg-[#713a35]/30"
               }`}
             >
               {submitting
                 ? "Creating order…"
-                : orderingEnabled
+                : orderingEnabled && catalogSynced && !catalogError && !hasUnavailable
                   ? "Place Cash on Delivery order"
-                  : "Ordering opens after delivery-rate setup"}
+                  : "Live stock verification required"}
             </button>
 
             {submitError ? (

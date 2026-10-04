@@ -11,8 +11,42 @@ permissions:
 jobs:
   storefront-to-crm:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 7
     steps:
+      - name: Verify public catalog sync and field whitelist
+        shell: bash
+        run: |
+          set -euo pipefail
+          catalog=""
+          for attempt in {1..12}; do
+            if catalog=$(curl --fail --silent --show-error \
+              https://aloyri-ecommerce.vercel.app/api/catalog); then
+              break
+            fi
+            sleep 5
+          done
+          test -n "$catalog"
+          CATALOG_JSON="$catalog" python - <<'PY'
+          import json, os
+          data=json.loads(os.environ["CATALOG_JSON"])
+          products=data.get("products")
+          assert isinstance(products,list) and products, "catalog must contain products"
+          allowed={"id","name","brand","size","category","price","active","availableStock"}
+          required=allowed
+          ids=set()
+          for product in products:
+              assert set(product)==allowed, f"unexpected catalog fields: {set(product)-allowed}"
+              assert required <= set(product)
+              assert isinstance(product["price"],(int,float)) and product["price"]>=0
+              assert isinstance(product["availableStock"],int) and product["availableStock"]>=0
+              ids.add(product["id"])
+          assert "cosrx" in ids, "known CRM product missing from public catalog"
+          forbidden={"cost","unitCost","batchId","supplierId","targetQty","reorderAt","holds","finance","ownerId"}
+          text=json.dumps(data)
+          for key in forbidden:
+              assert f'"{key}"' not in text, f"sensitive field leaked: {key}"
+          PY
+
       - name: Verify Inside Dhaka and Outside Dhaka order bridge
         shell: bash
         run: |
