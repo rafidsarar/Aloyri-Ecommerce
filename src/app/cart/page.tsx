@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useCatalog } from "@/components/catalog-provider";
 import { ArrowIcon } from "@/components/icons";
-import { ProductArtwork } from "@/components/product-artwork";
+import { ProductMedia } from "@/components/product-media";
 import { readCart, type CartItem, writeCart } from "@/lib/cart";
 import { formatPrice, getProductById } from "@/lib/catalog";
 
@@ -122,7 +122,7 @@ export default function CartPage() {
                 >
                   {product ? (
                     <Link href={`/product/${product.slug}`}>
-                      <ProductArtwork
+                      <ProductMedia
                         product={product}
                         className="aspect-[4/5] rounded-[1.2rem]"
                       />
