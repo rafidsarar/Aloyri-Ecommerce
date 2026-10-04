@@ -20,6 +20,11 @@ export type Product = {
   description: string;
   routineStep: string;
   skinNote: string;
+  texture: string;
+  bestFor: string;
+  howToUse: string[];
+  careNotes: string[];
+  ingredientNote: string;
   featured?: boolean;
   bestseller?: boolean;
   visual: ProductVisual;
@@ -107,6 +112,19 @@ export const products: Product[] = [
     skinNote: "A practical daily cleanser for simple morning and evening routines.",
     featured: true,
     bestseller: true,
+    texture: "Rinse-off facial wash",
+    bestFor: "A simple everyday cleansing step before moisturiser.",
+    howToUse: [
+      "Wet the face with comfortable-temperature water.",
+      "Massage a small amount over the face with light pressure.",
+      "Rinse thoroughly and continue with moisturiser.",
+    ],
+    careNotes: [
+      "Avoid direct contact with the eyes.",
+      "If the product feels uncomfortable on your skin, stop use and review the pack guidance.",
+    ],
+    ingredientNote:
+      "For the current ingredient list, check the product packaging. Aloyri does not publish an ingredient list until it has been verified against the exact item supplied.",
     visual: {
       from: "#d9e8df",
       to: "#f5faf6",
@@ -129,6 +147,19 @@ export const products: Product[] = [
     routineStep: "Step 2 · Moisturize",
     skinNote: "A lighter texture for everyday use and layered routines.",
     featured: true,
+    texture: "Lightweight moisturiser",
+    bestFor: "Shoppers who prefer a lighter moisturising step in an everyday routine.",
+    howToUse: [
+      "Apply after cleansing to clean, comfortable skin.",
+      "Spread an even amount across the face and neck.",
+      "In the morning, follow with sunscreen as the final skincare step.",
+    ],
+    careNotes: [
+      "Use the amount and frequency that feel comfortable for your routine.",
+      "If irritation occurs, discontinue use and check the package guidance.",
+    ],
+    ingredientNote:
+      "For the current ingredient list, check the product packaging. Aloyri does not publish an ingredient list until it has been verified against the exact item supplied.",
     visual: {
       from: "#dfeade",
       to: "#fbfcf7",
@@ -149,6 +180,19 @@ export const products: Product[] = [
       "A richer daily moisturiser for moments when your routine needs a more comforting, cushioned final step.",
     routineStep: "Step 2 · Moisturize",
     skinNote: "A richer option for drier-feeling days or night routines.",
+    texture: "Richer moisturiser",
+    bestFor: "Routines that call for a more cushioned moisturising finish.",
+    howToUse: [
+      "Apply after cleansing to the face and neck.",
+      "Use a comfortable amount and spread evenly.",
+      "For daytime use, finish the routine with sunscreen.",
+    ],
+    careNotes: [
+      "Adjust the amount to suit how your skin feels that day.",
+      "If irritation occurs, discontinue use and review the package guidance.",
+    ],
+    ingredientNote:
+      "For the current ingredient list, check the product packaging. Aloyri does not publish an ingredient list until it has been verified against the exact item supplied.",
     visual: {
       from: "#d7eadf",
       to: "#f6fbf7",
@@ -170,6 +214,19 @@ export const products: Product[] = [
     routineStep: "Step 3 · Protect",
     skinNote: "Daily sun protection belongs at the end of the morning routine.",
     featured: true,
+    texture: "Daily sunscreen",
+    bestFor: "A straightforward final morning skincare step before going outdoors.",
+    howToUse: [
+      "Use as the final step of the morning skincare routine.",
+      "Apply evenly to exposed skin according to the directions on the product packaging.",
+      "Reapply as directed on the pack, especially when wear may have been reduced by wiping, water or perspiration.",
+    ],
+    careNotes: [
+      "Sunscreen should not replace shade, clothing or other sensible sun-protection measures.",
+      "Follow the exact application and reapplication directions printed on the product.",
+    ],
+    ingredientNote:
+      "For the current ingredient list and sunscreen directions, check the product packaging. Aloyri publishes verified formulation details only when matched to the exact item supplied.",
     visual: {
       from: "#f3dfcc",
       to: "#fff9ef",
@@ -191,6 +248,19 @@ export const products: Product[] = [
     routineStep: "Step 3 · Protect",
     skinNote: "A gel-format sunscreen for daily morning routines.",
     bestseller: true,
+    texture: "Gel-format sunscreen",
+    bestFor: "Shoppers looking for a sunscreen in a larger gel-format presentation.",
+    howToUse: [
+      "Use as the last step of the morning skincare routine.",
+      "Apply evenly to exposed skin following the directions on the product packaging.",
+      "Reapply according to the pack directions, particularly when wear may have been reduced.",
+    ],
+    careNotes: [
+      "Sunscreen works best as part of broader sun-protection habits.",
+      "Follow the exact application, reapplication and caution statements on the package.",
+    ],
+    ingredientNote:
+      "For the current ingredient list and sunscreen directions, check the product packaging. Aloyri publishes verified formulation details only when matched to the exact item supplied.",
     visual: {
       from: "#e9edf7",
       to: "#fbfcff",
@@ -213,6 +283,19 @@ export const products: Product[] = [
     skinNote: "A gel cleanser format that fits neatly into a simple routine.",
     featured: true,
     bestseller: true,
+    texture: "Gel cleanser",
+    bestFor: "A compact gel-cleansing step in a simple morning or evening routine.",
+    howToUse: [
+      "Wet the face with comfortable-temperature water.",
+      "Massage a small amount gently over the face.",
+      "Rinse thoroughly, then continue with the next steps in your routine.",
+    ],
+    careNotes: [
+      "Avoid direct contact with the eyes.",
+      "If the product feels uncomfortable on your skin, stop use and review the pack guidance.",
+    ],
+    ingredientNote:
+      "For the current ingredient list, check the product packaging. Aloyri does not publish an ingredient list until it has been verified against the exact item supplied.",
     visual: {
       from: "#d7e9ef",
       to: "#f4fbfd",
@@ -265,6 +348,25 @@ export function mergeLiveCatalog(liveProducts: LiveCatalogProduct[]): Product[] 
         description: `${live.name} by ${live.brand || "Aloyri"}, available through the Aloyri skincare edit.`,
         routineStep: routineForCategory(live.category),
         skinNote: "See the product packaging and brand guidance for usage details.",
+        texture:
+          live.category === "Cleanser"
+            ? "Facial cleanser"
+            : live.category === "Moisturizer"
+              ? "Moisturiser"
+              : live.category === "Sunscreen"
+                ? "Daily sunscreen"
+                : "Skincare product",
+        bestFor: "Aloyri shoppers looking for a clear, uncomplicated place for this product in their routine.",
+        howToUse: [
+          "Follow the directions printed on the product packaging.",
+          "Use the product only for its intended skincare purpose.",
+        ],
+        careNotes: [
+          "Check the package for current warnings, directions and storage guidance.",
+          "Discontinue use if the product causes discomfort.",
+        ],
+        ingredientNote:
+          "Check the exact product packaging for the current ingredient list. Aloyri publishes formulation details only after they are verified against the item supplied.",
         visual: categoryVisuals[live.category] ?? fallbackVisual,
         active: true,
         availableStock: live.availableStock,

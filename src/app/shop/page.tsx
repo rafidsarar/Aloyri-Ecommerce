@@ -3,15 +3,16 @@ import { ShopClient } from "@/components/shop-client";
 
 export const metadata: Metadata = {
   title: "Shop skincare",
-  description: "Shop Aloyri cleansers, moisturizers and sunscreen in BDT.",
+  description: "Shop Aloyri cleansers, moisturizers and sunscreen in BDT with live product availability.",
+  alternates: { canonical: "/shop" },
 };
 
 export default async function ShopPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string }>;
+  searchParams: Promise<{ category?: string; q?: string }>;
 }) {
-  const { category } = await searchParams;
+  const { category, q } = await searchParams;
 
   return (
     <main className="shell py-12 md:py-16">
@@ -31,7 +32,7 @@ export default async function ShopPage({
         </p>
       </div>
 
-      <ShopClient initialCategory={category} />
+      <ShopClient initialCategory={category} initialQuery={q} />
     </main>
   );
 }

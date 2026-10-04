@@ -5,6 +5,7 @@ import { AddToCart } from "@/components/add-to-cart";
 import { useCatalog } from "@/components/catalog-provider";
 import { ArrowIcon } from "@/components/icons";
 import { ProductArtwork } from "@/components/product-artwork";
+import { ProductCard } from "@/components/product-card";
 import {
   formatPrice,
   productStockLabel,
@@ -67,32 +68,72 @@ export function LiveProductPage({
     );
   }
 
+  const related = products
+    .filter(
+      (candidate) =>
+        candidate.id !== product.id && candidate.category === product.category,
+    )
+    .slice(0, 3);
+
   return (
     <main className="shell py-8 md:py-12">
-      <Link
-        href="/shop"
-        className="mb-7 inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#713a35]/50"
+      <nav
+        aria-label="Breadcrumb"
+        className="mb-7 flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#713a35]/45"
       >
-        <ArrowIcon className="h-3.5 w-3.5 rotate-180" />
-        Back to shop
-      </Link>
+        <Link href="/">Home</Link>
+        <span>/</span>
+        <Link href="/shop">Shop</Link>
+        <span>/</span>
+        <span className="text-[#321f1c]/48">{product.name}</span>
+      </nav>
 
       <div className="grid gap-8 lg:grid-cols-[1.08fr_.92fr] lg:gap-14">
-        <ProductArtwork
-          product={product}
-          className="aspect-[4/5] rounded-[2rem] soft-shadow"
-        />
+        <div>
+          <ProductArtwork
+            product={product}
+            className="aspect-[4/5] rounded-[2rem] soft-shadow"
+          />
+          <div className="mt-4 grid grid-cols-3 gap-3">
+            <div className="rounded-[1.1rem] bg-[#f5e8e2] p-4">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[#713a35]/46">
+                Texture
+              </p>
+              <p className="mt-2 text-xs leading-5 text-[#321f1c]/66">
+                {product.texture}
+              </p>
+            </div>
+            <div className="rounded-[1.1rem] bg-[#f5e8e2] p-4">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[#713a35]/46">
+                Routine
+              </p>
+              <p className="mt-2 text-xs leading-5 text-[#321f1c]/66">
+                {product.routineStep}
+              </p>
+            </div>
+            <div className="rounded-[1.1rem] bg-[#f5e8e2] p-4">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[#713a35]/46">
+                Size
+              </p>
+              <p className="mt-2 text-xs leading-5 text-[#321f1c]/66">
+                {product.size}
+              </p>
+            </div>
+          </div>
+        </div>
 
         <div className="lg:sticky lg:top-32 lg:self-start lg:py-7">
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full bg-[#f5e8e2] px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-[#713a35]">
               {product.category}
             </span>
-            <span className={`rounded-full px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.16em] ${
-              (product.availableStock ?? 0) > 0
-                ? "bg-emerald-50 text-emerald-700"
-                : "bg-black/8 text-black/50"
-            }`}>
+            <span
+              className={`rounded-full px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.16em] ${
+                (product.availableStock ?? 0) > 0
+                  ? "bg-emerald-50 text-emerald-700"
+                  : "bg-black/8 text-black/50"
+              }`}
+            >
               {productStockLabel(product)}
             </span>
           </div>
@@ -112,8 +153,8 @@ export function LiveProductPage({
                 {product.origin ? ` · ${product.origin}` : ""}
               </p>
             </div>
-            <p className="text-right text-[10px] font-semibold uppercase tracking-[0.18em] text-[#713a35]/45">
-              {product.routineStep}
+            <p className="max-w-[210px] text-right text-xs leading-5 text-[#321f1c]/45">
+              {product.bestFor}
             </p>
           </div>
 
@@ -132,13 +173,111 @@ export function LiveProductPage({
 
           <div className="mt-7">
             <AddToCart productId={product.id} />
-            <div className="mt-4 flex items-center justify-center gap-5 text-[10px] uppercase tracking-[0.14em] text-[#321f1c]/38">
-              <span>Live CRM price</span>
-              <span>Live available stock</span>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[10px] uppercase tracking-[0.14em] text-[#321f1c]/38">
+              <span>Live price</span>
+              <span>Live availability</span>
+              <span>COD checkout</span>
             </div>
           </div>
         </div>
       </div>
+
+      <section className="mt-16 grid gap-5 lg:grid-cols-2">
+        <div className="rounded-[1.6rem] border border-[#713a35]/10 bg-white/65 p-6 sm:p-8">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#713a35]/48">
+            How to use
+          </p>
+          <ol className="mt-5 grid gap-5">
+            {product.howToUse.map((step, index) => (
+              <li key={step} className="grid grid-cols-[32px_1fr] gap-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f5e8e2] text-xs font-semibold text-[#713a35]">
+                  {index + 1}
+                </span>
+                <p className="pt-1 text-sm leading-7 text-[#321f1c]/60">{step}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <div className="rounded-[1.6rem] border border-[#713a35]/10 bg-[#f5e8e2] p-6 sm:p-8">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#713a35]/48">
+            Good to know
+          </p>
+          <ul className="mt-5 grid gap-4">
+            {product.careNotes.map((note) => (
+              <li key={note} className="flex gap-3 text-sm leading-7 text-[#321f1c]/60">
+                <span className="mt-[11px] h-1.5 w-1.5 shrink-0 rounded-full bg-[#b9725f]" />
+                <span>{note}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section className="mt-5 rounded-[1.6rem] border border-[#713a35]/10 bg-white/65 p-6 sm:p-8">
+        <div className="grid gap-6 lg:grid-cols-[.72fr_1.28fr]">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#713a35]/48">
+              Ingredients
+            </p>
+            <h2 className="display mt-2 text-3xl">Verified information first.</h2>
+          </div>
+          <p className="text-sm leading-7 text-[#321f1c]/58">
+            {product.ingredientNote}
+          </p>
+        </div>
+      </section>
+
+      <section className="mt-5 grid gap-4 md:grid-cols-3">
+        <Link
+          href="/shipping-delivery"
+          className="rounded-[1.3rem] border border-[#713a35]/10 bg-white/60 p-5 transition hover:bg-white"
+        >
+          <p className="text-sm font-semibold">Shipping & delivery</p>
+          <p className="mt-2 text-xs leading-6 text-[#321f1c]/48">
+            ৳80 inside Dhaka · ৳150 outside Dhaka.
+          </p>
+        </Link>
+        <Link
+          href="/returns-refunds"
+          className="rounded-[1.3rem] border border-[#713a35]/10 bg-white/60 p-5 transition hover:bg-white"
+        >
+          <p className="text-sm font-semibold">Returns & refunds</p>
+          <p className="mt-2 text-xs leading-6 text-[#321f1c]/48">
+            Return requests are reviewed before refund or restocking decisions.
+          </p>
+        </Link>
+        <Link
+          href="/track-order"
+          className="rounded-[1.3rem] border border-[#713a35]/10 bg-white/60 p-5 transition hover:bg-white"
+        >
+          <p className="text-sm font-semibold">Track your order</p>
+          <p className="mt-2 text-xs leading-6 text-[#321f1c]/48">
+            Use your website order number and checkout mobile number.
+          </p>
+        </Link>
+      </section>
+
+      {related.length > 0 ? (
+        <section className="mt-20 border-t border-[#713a35]/10 pt-12 md:mt-24">
+          <div className="mb-8 flex items-end justify-between gap-5">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#713a35]/48">
+                Keep exploring
+              </p>
+              <h2 className="display mt-2 text-4xl">More {product.category.toLowerCase()}.</h2>
+            </div>
+            <Link href="/shop" className="text-sm font-semibold text-[#713a35]">
+              Shop all
+            </Link>
+          </div>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {related.map((candidate) => (
+              <ProductCard key={candidate.id} product={candidate} />
+            ))}
+          </div>
+        </section>
+      ) : null}
     </main>
   );
 }
