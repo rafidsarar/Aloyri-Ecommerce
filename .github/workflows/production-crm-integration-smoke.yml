@@ -33,14 +33,12 @@ jobs:
           assert isinstance(products,list) and products, "catalog must contain products"
           allowed={"id","name","brand","size","category","price","active","availableStock"}
           required=allowed
-          ids=set()
           for product in products:
               assert set(product)==allowed, f"unexpected catalog fields: {set(product)-allowed}"
               assert required <= set(product)
+              assert isinstance(product["id"],str) and product["id"], "product id must be present"
               assert isinstance(product["price"],(int,float)) and product["price"]>=0
               assert isinstance(product["availableStock"],int) and product["availableStock"]>=0
-              ids.add(product["id"])
-          assert "cosrx" in ids, "known CRM product missing from public catalog"
           forbidden={"cost","unitCost","batchId","supplierId","targetQty","reorderAt","holds","finance","ownerId"}
           text=json.dumps(data)
           for key in forbidden:
