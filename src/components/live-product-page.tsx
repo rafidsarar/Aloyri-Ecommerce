@@ -4,7 +4,7 @@ import Link from "next/link";
 import { AddToCart } from "@/components/add-to-cart";
 import { useCatalog } from "@/components/catalog-provider";
 import { ArrowIcon } from "@/components/icons";
-import { ProductArtwork } from "@/components/product-artwork";
+import { ProductMedia } from "@/components/product-media";
 import { ProductCard } from "@/components/product-card";
 import {
   formatPrice,
@@ -90,8 +90,9 @@ export function LiveProductPage({
 
       <div className="grid gap-8 lg:grid-cols-[1.08fr_.92fr] lg:gap-14">
         <div>
-          <ProductArtwork
+          <ProductMedia
             product={product}
+            priority
             className="aspect-[4/5] rounded-[2rem] soft-shadow"
           />
           <div className="mt-4 grid grid-cols-3 gap-3">
