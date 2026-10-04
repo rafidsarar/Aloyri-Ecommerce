@@ -29,6 +29,7 @@ export type WebsiteOrderPayload = {
   customer: {
     name: string;
     phone: string;
+    email?: string;
     address: string;
     district: string;
     area: string;
