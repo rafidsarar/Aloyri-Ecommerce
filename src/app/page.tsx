@@ -12,19 +12,19 @@ const routine = [
     step: "01",
     title: "Cleanse",
     copy: "Start with a comfortable cleanse that fits your morning and evening routine.",
-    href: "/shop?category=Cleanser",
+    href: "/category/cleansers",
   },
   {
     step: "02",
     title: "Moisturize",
     copy: "Choose the texture that feels right for the day, from light hydration to richer comfort.",
-    href: "/shop?category=Moisturizer",
+    href: "/category/moisturizers",
   },
   {
     step: "03",
     title: "Protect",
     copy: "Finish the morning with sunscreen and make daily protection part of the routine.",
-    href: "/shop?category=Sunscreen",
+    href: "/category/sunscreen",
   },
 ];
 
@@ -57,7 +57,7 @@ export default function Home() {
                   Shop the edit <ArrowIcon />
                 </Link>
                 <Link
-                  href="/shop?category=Sunscreen"
+                  href="/category/sunscreen"
                   className="rounded-full border border-[#713a35]/18 bg-white/60 px-6 py-3.5 text-sm font-medium text-[#713a35] transition hover:bg-white"
                 >
                   Explore sunscreen
@@ -174,9 +174,8 @@ export default function Home() {
             </h2>
           </div>
           <p className="max-w-xl text-sm leading-7 text-[#321f1c]/52 lg:justify-self-end">
-            Browse the same core product identities and selling prices used by
-            Aloyri operations, presented here for customers without exposing
-            internal cost, supplier or stock-batch information.
+            Browse current products with clear routine guidance, live BDT pricing
+            and availability that is checked again before an order is placed.
           </p>
         </div>
 
