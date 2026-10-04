@@ -2,34 +2,30 @@ import type { Metadata } from "next";
 import { ProductCard } from "@/components/product-card";
 import { products } from "@/lib/catalog";
 
-export const metadata: Metadata = {
-  title: "Shop",
-  description: "Shop the Aloyri skincare edit.",
-};
+export const metadata: Metadata = { title: "Shop" };
 
 export default function ShopPage() {
-  const categories = ["All", "Cleanser", "Serum", "Essence", "Moisturizer", "Sunscreen", "Balm"];
-
   return (
-    <main>
-      <section className="shell pt-12 md:pt-16">
-        <p className="eyebrow">The Aloyri edit</p>
-        <div className="mt-4 flex flex-col justify-between gap-6 md:flex-row md:items-end">
-          <h1 className="display-title max-w-3xl">Skincare selected with intention.</h1>
-          <p className="max-w-md text-sm leading-6 text-black/55">
-            This first catalog is a storefront foundation. Product data will later be connected to your operational catalog without exposing CRM internals.
-          </p>
+    <main className="shell py-12 md:py-18">
+      <div className="grid gap-8 border-b border-black/10 pb-10 lg:grid-cols-[1fr_.7fr] lg:items-end">
+        <div>
+          <p className="text-xs uppercase tracking-[0.24em] text-black/45">The Aloyri edit</p>
+          <h1 className="display mt-3 text-6xl sm:text-7xl">Shop skincare.</h1>
         </div>
-        <div className="mt-10 flex gap-2 overflow-x-auto pb-2">
-          {categories.map((category, index) => (
-            <span key={category} className={index === 0 ? "filter-pill active" : "filter-pill"}>{category}</span>
-          ))}
-        </div>
-      </section>
+        <p className="max-w-xl text-sm leading-7 text-black/55 lg:justify-self-end">
+          A compact starting collection while the live Aloyri catalog is prepared. Product IDs are intentionally structured so this layer can connect to CRM inventory later without redesigning the storefront.
+        </p>
+      </div>
 
-      <section className="shell mt-10 grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 md:gap-x-6 lg:gap-y-14">
+      <div className="flex flex-wrap gap-2 py-7">
+        {["All", "Cleanser", "Serum", "Essence", "Moisturizer", "Sunscreen"].map((item, index) => (
+          <span key={item} className={`rounded-full border px-4 py-2 text-xs ${index === 0 ? "border-[#211d1a] bg-[#211d1a] text-white" : "border-black/10 bg-white/35"}`}>{item}</span>
+        ))}
+      </div>
+
+      <div className="grid gap-x-5 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
         {products.map((product) => <ProductCard key={product.id} product={product} />)}
-      </section>
+      </div>
     </main>
   );
 }

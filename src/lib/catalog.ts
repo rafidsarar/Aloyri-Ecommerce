@@ -26,7 +26,7 @@ export const products: Product[] = [
     description: "A low-foam daily cleanser designed to refresh skin without leaving it tight or stripped.",
     skinTypes: ["Normal", "Combination", "Sensitive"],
     featured: true,
-    visual: "linear-gradient(145deg, #e7d9cc 0%, #f9f4ef 48%, #c2a78f 100%)",
+    visual: "linear-gradient(145deg,#e8ddcf 0%,#f8f5ef 46%,#c8b6a1 100%)",
   },
   {
     id: "alo-serum-01",
@@ -41,7 +41,7 @@ export const products: Product[] = [
     skinTypes: ["Normal", "Dry", "Combination"],
     featured: true,
     newArrival: true,
-    visual: "linear-gradient(145deg, #d9c8ba 0%, #f4ece5 52%, #b69782 100%)",
+    visual: "linear-gradient(145deg,#d9c8ba 0%,#f4ece5 52%,#b69782 100%)",
   },
   {
     id: "alo-essence-01",
@@ -54,7 +54,7 @@ export const products: Product[] = [
     description: "A fluid hydration step with a soft finish, curated for skin that feels stressed or dehydrated.",
     skinTypes: ["Dry", "Sensitive", "Combination"],
     featured: true,
-    visual: "linear-gradient(145deg, #d9ddd8 0%, #f7f7f2 48%, #aeb8ad 100%)",
+    visual: "linear-gradient(145deg,#d9ddd8 0%,#f7f7f2 48%,#aeb8ad 100%)",
   },
   {
     id: "alo-moisturizer-01",
@@ -67,7 +67,7 @@ export const products: Product[] = [
     description: "A comforting moisturizer with a cushiony texture for everyday barrier support.",
     skinTypes: ["Dry", "Normal", "Sensitive"],
     newArrival: true,
-    visual: "linear-gradient(145deg, #ead8d1 0%, #f8f2ef 46%, #caa9a0 100%)",
+    visual: "linear-gradient(145deg,#ead8d1 0%,#f8f2ef 46%,#caa9a0 100%)",
   },
   {
     id: "alo-spf-01",
@@ -80,7 +80,7 @@ export const products: Product[] = [
     description: "A lightweight everyday sunscreen selected for comfortable wear in warm, humid weather.",
     skinTypes: ["All skin types"],
     newArrival: true,
-    visual: "linear-gradient(145deg, #eee1c4 0%, #fbf7ec 50%, #d9bd7e 100%)",
+    visual: "linear-gradient(145deg,#eee1c4 0%,#fbf7ec 50%,#d9bd7e 100%)",
   },
   {
     id: "alo-balm-01",
@@ -92,7 +92,7 @@ export const products: Product[] = [
     price: 1490,
     description: "A soft cleansing balm that melts through sunscreen and makeup before rinsing clean.",
     skinTypes: ["Normal", "Dry", "Combination"],
-    visual: "linear-gradient(145deg, #ded7c9 0%, #f7f3ea 48%, #b9aa8f 100%)",
+    visual: "linear-gradient(145deg,#ded7c9 0%,#f7f3ea 48%,#b9aa8f 100%)",
   },
 ];
 
