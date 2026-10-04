@@ -5,11 +5,12 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Aloyri — Curated Skincare",
+    default: "Aloyri — Let Your Skin Glow.",
     template: "%s | Aloyri",
   },
   description:
-    "Aloyri curates thoughtful skincare for everyday routines in Bangladesh.",
+    "Aloyri is a curated skincare storefront for Bangladesh, featuring cleansers, moisturizers and daily sunscreen.",
+  metadataBase: new URL("https://aloyri-ecommerce.vercel.app"),
 };
 
 export default function RootLayout({

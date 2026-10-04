@@ -1,16 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f5f1eb;
-  --surface: #fbf9f6;
-  --surface-strong: #ebe2d8;
-  --foreground: #211d1a;
-  --muted: #746a63;
-  --line: rgba(33, 29, 26, 0.13);
-  --accent: #7f6657;
+  --background: #fffaf7;
+  --surface: #fffdfb;
+  --surface-soft: #f7ebe6;
+  --surface-warm: #efe0d9;
+  --foreground: #321f1c;
+  --muted: #796762;
+  --line: rgba(113, 58, 53, 0.14);
+  --rose-deep: #713a35;
+  --rose: #b9725f;
+  --rose-light: #d49a85;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 html {
   scroll-behavior: smooth;
@@ -26,15 +31,25 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-a { color: inherit; text-decoration: none; }
+a {
+  color: inherit;
+  text-decoration: none;
+}
 
 button,
 input,
-select { font: inherit; }
+select {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
 
 ::selection {
-  background: #d9c7ba;
-  color: #211d1a;
+  background: #ead0c5;
+  color: #321f1c;
 }
 
 .display {
@@ -47,6 +62,23 @@ select { font: inherit; }
   margin-inline: auto;
 }
 
+.rose-metal {
+  background: linear-gradient(120deg, #713a35 0%, #c37d68 43%, #efb29b 62%, #8d4a40 100%);
+}
+
+.rose-text {
+  background: linear-gradient(110deg, #713a35 0%, #c37d68 48%, #e5a28d 72%, #7c4038 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.soft-shadow {
+  box-shadow: 0 28px 80px rgba(113, 58, 53, 0.10);
+}
+
 @media (min-width: 768px) {
-  .shell { width: min(100% - 4rem, 1440px); }
+  .shell {
+    width: min(100% - 4rem, 1440px);
+  }
 }
