@@ -21,6 +21,7 @@ import {
 import { formatPrice, products } from "@/lib/catalog";
 
 type FieldErrors = Partial<Record<keyof CheckoutDraft, string>>;
+type DeliveryRates = Record<DeliveryZone, number>;
 
 const inputClass =
   "mt-2 h-12 w-full rounded-[.9rem] border border-[#713a35]/14 bg-white px-4 text-sm text-[#321f1c] outline-none transition placeholder:text-[#321f1c]/30 focus:border-[#b9725f]/60 focus:ring-2 focus:ring-[#b9725f]/10";
@@ -36,6 +37,7 @@ export function CheckoutClient() {
   const [step, setStep] = useState<"details" | "review">("details");
   const [hydrated, setHydrated] = useState(false);
   const [orderingEnabled, setOrderingEnabled] = useState(false);
+  const [deliveryRates, setDeliveryRates] = useState<DeliveryRates | null>(null);
   const [orderingStatusLoaded, setOrderingStatusLoaded] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -59,15 +61,25 @@ export function CheckoutClient() {
 
     void fetch("/api/store-status", { cache: "no-store" })
       .then((response) => response.json())
-      .then((status: { orderingEnabled?: boolean }) => {
-        setOrderingEnabled(status.orderingEnabled === true);
-        setDraft((current) =>
+      .then(
+        (status: {
+          orderingEnabled?: boolean;
+          deliveryRates?: DeliveryRates | null;
+        }) => {
+          const rates = status.deliveryRates ?? null;
+          setDeliveryRates(rates);
+          setOrderingEnabled(status.orderingEnabled === true && Boolean(rates));
+          setDraft((current) =>
           current.paymentMethod === "COD"
             ? current
             : { ...current, paymentMethod: "COD" },
-        );
+          );
+        },
+      )
+      .catch(() => {
+        setDeliveryRates(null);
+        setOrderingEnabled(false);
       })
-      .catch(() => setOrderingEnabled(false))
       .finally(() => setOrderingStatusLoaded(true));
   }, []);
 
@@ -96,6 +108,11 @@ export function CheckoutClient() {
     (sum, row) => sum + (row.product?.price ?? 0) * row.qty,
     0,
   );
+  const deliveryCharge =
+    draft.deliveryZone && deliveryRates
+      ? deliveryRates[draft.deliveryZone]
+      : 0;
+  const payableTotal = subtotal + deliveryCharge;
 
   function setField<K extends keyof CheckoutDraft>(
     field: K,
@@ -424,7 +441,9 @@ export function CheckoutClient() {
                       >
                         <span className="text-sm font-semibold">{label}</span>
                         <span className="mt-1 block text-xs leading-5 text-[#321f1c]/45">
-                          Delivery fee will be configured before live ordering.
+                          {deliveryRates
+                            ? `${formatPrice(deliveryRates[value])} delivery`
+                            : "Checking delivery fee…"}
                         </span>
                       </button>
                     );
@@ -618,13 +637,19 @@ export function CheckoutClient() {
               </div>
               <div className="mt-4 flex justify-between text-sm">
                 <span className="text-[#321f1c]/55">Delivery</span>
-                <span className="text-xs text-[#321f1c]/42">Not configured</span>
+                <span className="font-semibold">
+                  {draft.deliveryZone && deliveryRates
+                    ? formatPrice(deliveryCharge)
+                    : "Select zone"}
+                </span>
               </div>
-              <div className="mt-5 border-t border-[#713a35]/10 pt-5">
-                <p className="text-xs leading-5 text-[#321f1c]/45">
-                  Final payable amount will include the delivery fee once live
-                  delivery pricing is configured.
-                </p>
+              <div className="mt-5 flex justify-between border-t border-[#713a35]/10 pt-5 text-base">
+                <span className="font-semibold">Total</span>
+                <span className="font-semibold">
+                  {draft.deliveryZone && deliveryRates
+                    ? formatPrice(payableTotal)
+                    : formatPrice(subtotal)}
+                </span>
               </div>
             </div>
 
@@ -733,9 +758,9 @@ export function CheckoutClient() {
                     : "Awaiting delivery-rate setup."}
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-[#321f1c]/55">
-                The secure website-to-CRM connection is prepared. Live submission
-                stays closed until Aloyri&apos;s real Inside Dhaka and Outside
-                Dhaka delivery charges are configured.
+                Delivery is configured at ৳80 inside Dhaka and ৳150 outside
+                Dhaka. The CRM rechecks the authoritative charge, product price
+                and available stock when the order is submitted.
               </p>
             </section>
           </div>
@@ -770,7 +795,11 @@ export function CheckoutClient() {
               </div>
               <div className="mt-4 flex justify-between text-sm">
                 <span className="text-[#321f1c]/55">Delivery</span>
-                <span className="text-xs text-[#321f1c]/42">Pending setup</span>
+                <span className="font-semibold">{formatPrice(deliveryCharge)}</span>
+              </div>
+              <div className="mt-5 flex justify-between border-t border-[#713a35]/10 pt-5 text-base">
+                <span className="font-semibold">Total</span>
+                <span className="font-semibold">{formatPrice(payableTotal)}</span>
               </div>
             </div>
 
