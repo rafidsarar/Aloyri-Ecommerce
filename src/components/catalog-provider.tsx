@@ -55,6 +55,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       setError("");
       setRefreshedAt(result.generatedAt || new Date().toISOString());
     } catch (refreshError) {
+      setSynced(false);
       setError(
         refreshError instanceof Error
           ? refreshError.message
