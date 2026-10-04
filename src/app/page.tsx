@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
 import { ArrowIcon } from "@/components/icons";
-import { ProductArtwork } from "@/components/product-artwork";
+import { ProductMedia } from "@/components/product-media";
 import { ProductCard } from "@/components/product-card";
 import { bestsellers, featuredProducts, products } from "@/lib/catalog";
 
@@ -76,8 +76,9 @@ export default function Home() {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_18%,rgba(255,255,255,.85),transparent_36%)]" />
             <div className="relative mx-auto flex h-full max-w-[580px] items-center">
               <div className="relative w-full">
-                <ProductArtwork
+                <ProductMedia
                   product={heroProduct}
+                  priority
                   className="aspect-[4/5] rounded-[2rem] soft-shadow"
                 />
                 <div className="absolute -bottom-5 left-5 right-5 rounded-[1.35rem] border border-white/70 bg-white/82 p-5 backdrop-blur-md sm:left-8 sm:right-8">
