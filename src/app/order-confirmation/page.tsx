@@ -31,12 +31,27 @@ function ConfirmationContent() {
           Your Cash on Delivery order has been created. The Aloyri team can now
           process it through the normal CRM fulfillment workflow.
         </p>
-        <Link
-          href="/shop"
-          className="mt-8 inline-flex items-center gap-3 rounded-full bg-[#713a35] px-6 py-3.5 text-sm font-semibold text-white"
-        >
-          Continue shopping <ArrowIcon />
-        </Link>
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          {orderNumber ? (
+            <Link
+              href={"/track-order?order=" + encodeURIComponent(orderNumber)}
+              className="inline-flex items-center gap-3 rounded-full bg-[#713a35] px-6 py-3.5 text-sm font-semibold text-white"
+            >
+              Track this order <ArrowIcon />
+            </Link>
+          ) : null}
+          <Link
+            href="/shop"
+            className="inline-flex items-center gap-3 rounded-full border border-[#713a35]/15 bg-white/60 px-6 py-3.5 text-sm font-semibold text-[#713a35]"
+          >
+            Continue shopping
+          </Link>
+        </div>
+        {orderNumber ? (
+          <p className="mt-4 text-xs leading-5 text-[#321f1c]/42">
+            Use the same mobile number you entered at checkout to view live status.
+          </p>
+        ) : null}
       </div>
     </main>
   );

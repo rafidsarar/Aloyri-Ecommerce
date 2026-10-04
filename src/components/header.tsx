@@ -11,6 +11,7 @@ const links = [
   ["Cleansers", "/shop?category=Cleanser"],
   ["Moisturizers", "/shop?category=Moisturizer"],
   ["Sunscreen", "/shop?category=Sunscreen"],
+  ["Track order", "/track-order"],
 ];
 
 export function Header() {
