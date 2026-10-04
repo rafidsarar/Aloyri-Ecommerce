@@ -31,7 +31,11 @@ function validPayload(value: unknown): value is WebsiteOrderPayload {
     typeof input.customer.phone !== "string" ||
     typeof input.customer.address !== "string" ||
     typeof input.customer.district !== "string" ||
-    typeof input.customer.area !== "string"
+    typeof input.customer.area !== "string" ||
+    (input.customer.email !== undefined &&
+      (typeof input.customer.email !== "string" ||
+        (input.customer.email.trim().length > 0 &&
+          !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.customer.email.trim()))))
   ) {
     return false;
   }
