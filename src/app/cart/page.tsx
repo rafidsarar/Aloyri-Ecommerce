@@ -21,8 +21,12 @@ export default function CartPage() {
   } = useCatalog();
 
   useEffect(() => {
-    setItems(readCart());
-    setHydrated(true);
+    const initialize = window.setTimeout(() => {
+      setItems(readCart());
+      setHydrated(true);
+    }, 0);
+
+    return () => window.clearTimeout(initialize);
   }, []);
 
   function save(next: CartItem[]) {

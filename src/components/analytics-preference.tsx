@@ -10,13 +10,17 @@ export function AnalyticsPreference() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setDnt(navigator.doNotTrack === "1");
-    try {
-      setDisabled(localStorage.getItem(KEY) === "1");
-    } catch {
-      setDisabled(false);
-    }
-    setReady(true);
+    const initialize = window.setTimeout(() => {
+      setDnt(navigator.doNotTrack === "1");
+      try {
+        setDisabled(localStorage.getItem(KEY) === "1");
+      } catch {
+        setDisabled(false);
+      }
+      setReady(true);
+    }, 0);
+
+    return () => window.clearTimeout(initialize);
   }, []);
 
   function update(nextDisabled: boolean) {

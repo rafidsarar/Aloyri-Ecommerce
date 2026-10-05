@@ -202,46 +202,49 @@ export function CheckoutClient() {
   }, []);
 
   useEffect(() => {
-    setCartItems(readCart());
-
-    try {
-      const saved = sessionStorage.getItem(CHECKOUT_DRAFT_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved) as {
-          savedAt?: unknown;
-          draft?: unknown;
-        } & Partial<CheckoutDraft>;
-
-        if (
-          typeof parsed.savedAt === "number" &&
-          Date.now() - parsed.savedAt > CHECKOUT_DRAFT_TTL_MS
-        ) {
-          sessionStorage.removeItem(CHECKOUT_DRAFT_KEY);
-          sessionStorage.removeItem(CHECKOUT_ATTEMPT_KEY);
-          setDraftNotice(
-            "Your previous checkout details expired for privacy and accuracy. Please enter them again.",
-          );
-        } else {
-          const restored = safeDraft(parsed.draft ?? parsed);
-          if (restored) setDraft(restored);
-        }
-      }
-    } catch {
-      try {
-        sessionStorage.removeItem(CHECKOUT_DRAFT_KEY);
-      } catch {
-        // Checkout still works without browser storage.
-      }
-    }
-
     const syncCart = () => setCartItems(readCart());
     window.addEventListener(CART_UPDATED_EVENT, syncCart);
     window.addEventListener("storage", syncCart);
 
-    setHydrated(true);
-    void loadStoreStatus();
+    const initialize = window.setTimeout(() => {
+      setCartItems(readCart());
+
+      try {
+        const saved = sessionStorage.getItem(CHECKOUT_DRAFT_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved) as {
+            savedAt?: unknown;
+            draft?: unknown;
+          } & Partial<CheckoutDraft>;
+
+          if (
+            typeof parsed.savedAt === "number" &&
+            Date.now() - parsed.savedAt > CHECKOUT_DRAFT_TTL_MS
+          ) {
+            sessionStorage.removeItem(CHECKOUT_DRAFT_KEY);
+            sessionStorage.removeItem(CHECKOUT_ATTEMPT_KEY);
+            setDraftNotice(
+              "Your previous checkout details expired for privacy and accuracy. Please enter them again.",
+            );
+          } else {
+            const restored = safeDraft(parsed.draft ?? parsed);
+            if (restored) setDraft(restored);
+          }
+        }
+      } catch {
+        try {
+          sessionStorage.removeItem(CHECKOUT_DRAFT_KEY);
+        } catch {
+          // Checkout still works without browser storage.
+        }
+      }
+
+      setHydrated(true);
+      void loadStoreStatus();
+    }, 0);
 
     return () => {
+      window.clearTimeout(initialize);
       window.removeEventListener(CART_UPDATED_EVENT, syncCart);
       window.removeEventListener("storage", syncCart);
     };
@@ -301,44 +304,51 @@ export function CheckoutClient() {
   const activePromotion = promotionQuote?.promotion ?? null;
 
   useEffect(() => {
-    if (!catalogSynced || hasUnavailable || cartItems.length === 0) {
-      setPromotionQuote(null);
-      setPromotionLoading(false);
-      return;
-    }
     const controller = new AbortController();
-    setPromotionLoading(true);
-    setPromotionError("");
-    void fetch("/api/promotions/quote", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        items: cartItems.map((item) => ({ productId: item.productId, qty: item.qty })),
-        ...(draft.deliveryZone ? { deliveryZone: draft.deliveryZone } : {}),
-        code: appliedCode,
-      }),
-      cache: "no-store",
-      signal: controller.signal,
-    })
-      .then(async (response) => {
-        const result = (await response.json()) as PromotionQuote & { error?: string };
-        if (!response.ok) {
-          throw new Error(result.error || "That promotion could not be applied.");
-        }
-        setPromotionQuote(result);
-        setPromotionError("");
-      })
-      .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
+    const refreshQuote = window.setTimeout(() => {
+      if (!catalogSynced || hasUnavailable || cartItems.length === 0) {
         setPromotionQuote(null);
-        if (appliedCode) {
-          setPromotionError(error instanceof Error ? error.message : "That promotion could not be applied.");
-        }
+        setPromotionLoading(false);
+        return;
+      }
+
+      setPromotionLoading(true);
+      setPromotionError("");
+      void fetch("/api/promotions/quote", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          items: cartItems.map((item) => ({ productId: item.productId, qty: item.qty })),
+          ...(draft.deliveryZone ? { deliveryZone: draft.deliveryZone } : {}),
+          code: appliedCode,
+        }),
+        cache: "no-store",
+        signal: controller.signal,
       })
-      .finally(() => {
-        if (!controller.signal.aborted) setPromotionLoading(false);
-      });
-    return () => controller.abort();
+        .then(async (response) => {
+          const result = (await response.json()) as PromotionQuote & { error?: string };
+          if (!response.ok) {
+            throw new Error(result.error || "That promotion could not be applied.");
+          }
+          setPromotionQuote(result);
+          setPromotionError("");
+        })
+        .catch((error: unknown) => {
+          if (controller.signal.aborted) return;
+          setPromotionQuote(null);
+          if (appliedCode) {
+            setPromotionError(error instanceof Error ? error.message : "That promotion could not be applied.");
+          }
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setPromotionLoading(false);
+        });
+    }, 0);
+
+    return () => {
+      window.clearTimeout(refreshQuote);
+      controller.abort();
+    };
   }, [appliedCode, cartItems, catalogSynced, draft.deliveryZone, hasUnavailable]);
 
   function applyPromotionCode() {

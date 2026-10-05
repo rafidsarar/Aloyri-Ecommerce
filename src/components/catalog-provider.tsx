@@ -67,7 +67,9 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    void refresh();
+    const initialRefresh = window.setTimeout(() => {
+      void refresh();
+    }, 0);
 
     const interval = window.setInterval(() => {
       if (document.visibilityState === "visible") void refresh();
@@ -78,6 +80,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     document.addEventListener("visibilitychange", onVisibility);
 
     return () => {
+      window.clearTimeout(initialRefresh);
       window.clearInterval(interval);
       document.removeEventListener("visibilitychange", onVisibility);
     };

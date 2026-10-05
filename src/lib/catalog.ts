@@ -87,15 +87,6 @@ function routineForCategory(category: string) {
   return "Aloyri skincare";
 }
 
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 80);
-}
-
 /**
  * Local data is merchandising only: descriptions, visuals, SEO slugs and
  * editorial badges. Live CRM data overrides operational fields at runtime.

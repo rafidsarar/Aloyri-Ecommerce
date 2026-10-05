@@ -24,26 +24,30 @@ function ConfirmationContent() {
   const [snapshot, setSnapshot] = useState<ConfirmationSnapshot | null>(null);
 
   useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem("aloyri_last_order_confirmation");
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as Partial<ConfirmationSnapshot>;
-      if (
-        parsed.orderNumber === orderNumber &&
-        typeof parsed.savedAt === "number" &&
-        Date.now() - parsed.savedAt < 24 * 60 * 60 * 1000 &&
-        typeof parsed.itemCount === "number" &&
-        typeof parsed.deliveryCharge === "number" &&
-        typeof parsed.total === "number" &&
-        (parsed.deliveryZone === "inside-dhaka" ||
-          parsed.deliveryZone === "outside-dhaka") &&
-        parsed.paymentMethod === "COD"
-      ) {
-        setSnapshot(parsed as ConfirmationSnapshot);
+    const initialize = window.setTimeout(() => {
+      try {
+        const raw = sessionStorage.getItem("aloyri_last_order_confirmation");
+        if (!raw) return;
+        const parsed = JSON.parse(raw) as Partial<ConfirmationSnapshot>;
+        if (
+          parsed.orderNumber === orderNumber &&
+          typeof parsed.savedAt === "number" &&
+          Date.now() - parsed.savedAt < 24 * 60 * 60 * 1000 &&
+          typeof parsed.itemCount === "number" &&
+          typeof parsed.deliveryCharge === "number" &&
+          typeof parsed.total === "number" &&
+          (parsed.deliveryZone === "inside-dhaka" ||
+            parsed.deliveryZone === "outside-dhaka") &&
+          parsed.paymentMethod === "COD"
+        ) {
+          setSnapshot(parsed as ConfirmationSnapshot);
+        }
+      } catch {
+        // The confirmation page remains useful without browser storage.
       }
-    } catch {
-      // The confirmation page remains useful without browser storage.
-    }
+    }, 0);
+
+    return () => window.clearTimeout(initialize);
   }, [orderNumber]);
 
   async function copyOrderNumber() {

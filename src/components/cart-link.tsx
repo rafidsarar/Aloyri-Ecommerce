@@ -10,10 +10,11 @@ export function CartLink() {
 
   useEffect(() => {
     const refresh = () => setCount(cartCount(readCart()));
-    refresh();
+    const initialize = window.setTimeout(refresh, 0);
     window.addEventListener("storage", refresh);
     window.addEventListener(CART_UPDATED_EVENT, refresh);
     return () => {
+      window.clearTimeout(initialize);
       window.removeEventListener("storage", refresh);
       window.removeEventListener(CART_UPDATED_EVENT, refresh);
     };
