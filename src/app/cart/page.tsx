@@ -7,6 +7,7 @@ import { ArrowIcon } from "@/components/icons";
 import { ProductMedia } from "@/components/product-media";
 import { readCart, type CartItem, writeCart } from "@/lib/cart";
 import { formatPrice, getProductById } from "@/lib/catalog";
+import { hasSalePrice, salePriceFor } from "@/lib/promotions";
 
 export default function CartPage() {
   const [items, setItems] = useState<CartItem[]>([]);
@@ -46,7 +47,7 @@ export default function CartPage() {
 
   const subtotal = rows.reduce(
     (sum, row) =>
-      sum + (row.liveProduct ? row.liveProduct.price * row.qty : 0),
+      sum + (row.liveProduct ? salePriceFor(row.liveProduct) * row.qty : 0),
     0,
   );
 
@@ -197,8 +198,18 @@ export default function CartPage() {
 
                   <div className="text-right">
                     <p className="text-sm font-semibold">
-                      {liveProduct ? formatPrice(liveProduct.price * qty) : "—"}
+                      {liveProduct ? formatPrice(salePriceFor(liveProduct) * qty) : "—"}
                     </p>
+                    {liveProduct && hasSalePrice(liveProduct) ? (
+                      <>
+                        <p className="mt-1 text-[11px] text-[#321f1c]/38 line-through">
+                          {formatPrice(liveProduct.price * qty)}
+                        </p>
+                        <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#713a35]">
+                          {liveProduct.promotionBadge || "Promotion"}
+                        </p>
+                      </>
+                    ) : null}
                     <button
                       type="button"
                       onClick={() =>

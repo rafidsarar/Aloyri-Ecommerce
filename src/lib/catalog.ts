@@ -31,6 +31,8 @@ export type Product = {
   active?: boolean;
   availableStock?: number;
   live?: boolean;
+  salePrice?: number;
+  promotionBadge?: string;
 };
 
 export type LiveCatalogProduct = {
@@ -42,6 +44,8 @@ export type LiveCatalogProduct = {
   price: number;
   active: boolean;
   availableStock: number;
+  salePrice?: number;
+  promotionBadge?: string;
 };
 
 const categoryVisuals: Record<string, ProductVisual> = {
@@ -333,6 +337,8 @@ export function mergeLiveCatalog(liveProducts: LiveCatalogProduct[]): Product[] 
           price: live.price,
           active: true,
           availableStock: live.availableStock,
+          salePrice: live.salePrice,
+          promotionBadge: live.promotionBadge,
           live: true,
         };
       }
@@ -370,6 +376,8 @@ export function mergeLiveCatalog(liveProducts: LiveCatalogProduct[]): Product[] 
         visual: categoryVisuals[live.category] ?? fallbackVisual,
         active: true,
         availableStock: live.availableStock,
+        salePrice: live.salePrice,
+        promotionBadge: live.promotionBadge,
         live: true,
       } satisfies Product;
     });

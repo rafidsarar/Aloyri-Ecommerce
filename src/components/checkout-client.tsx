@@ -20,6 +20,7 @@ import {
   type PaymentMethod,
 } from "@/lib/checkout";
 import { formatPrice, getProductById } from "@/lib/catalog";
+import type { PromotionQuote } from "@/lib/promotions";
 
 type FieldErrors = Partial<Record<keyof CheckoutDraft, string>>;
 type DeliveryRates = Record<DeliveryZone, number>;
@@ -48,6 +49,11 @@ export function CheckoutClient() {
   const [orderingStatusLoaded, setOrderingStatusLoaded] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [promotionCode, setPromotionCode] = useState("");
+  const [appliedCode, setAppliedCode] = useState("");
+  const [promotionQuote, setPromotionQuote] = useState<PromotionQuote | null>(null);
+  const [promotionLoading, setPromotionLoading] = useState(false);
+  const [promotionError, setPromotionError] = useState("");
 
   useEffect(() => {
     setCartItems(readCart());
@@ -131,6 +137,98 @@ export function CheckoutClient() {
       ? deliveryRates[draft.deliveryZone]
       : 0;
   const payableTotal = subtotal + deliveryCharge;
+  const quotedSubtotal = promotionQuote?.productsSubtotal ?? subtotal;
+  const quotedDiscount = promotionQuote?.discount ?? 0;
+  const quotedShippingDiscount = promotionQuote?.shippingDiscount ?? 0;
+  const quotedDelivery =
+    promotionQuote?.deliveryCharge ??
+    (draft.deliveryZone && deliveryRates ? deliveryCharge : 0);
+  const quotedTotal =
+    promotionQuote?.total ??
+    (draft.deliveryZone && deliveryRates ? payableTotal : subtotal);
+  const activePromotion = promotionQuote?.promotion ?? null;
+
+  useEffect(() => {
+    if (!catalogSynced || hasUnavailable || cartItems.length === 0) {
+      setPromotionQuote(null);
+      setPromotionLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    setPromotionLoading(true);
+    setPromotionError("");
+
+    void fetch("/api/promotions/quote", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        items: cartItems.map((item) => ({
+          productId: item.productId,
+          qty: item.qty,
+        })),
+        ...(draft.deliveryZone ? { deliveryZone: draft.deliveryZone } : {}),
+        code: appliedCode,
+      }),
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        const result = (await response.json()) as PromotionQuote & {
+          error?: string;
+          code?: string;
+        };
+
+        if (!response.ok) {
+          throw new Error(
+            result.error ||
+              "That promotion could not be applied. Check the code and try again.",
+          );
+        }
+
+        setPromotionQuote(result);
+        setPromotionError("");
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return;
+        setPromotionQuote(null);
+        if (appliedCode) {
+          setPromotionError(
+            error instanceof Error
+              ? error.message
+              : "That promotion could not be applied.",
+          );
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setPromotionLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [
+    appliedCode,
+    cartItems,
+    catalogSynced,
+    draft.deliveryZone,
+    hasUnavailable,
+  ]);
+
+  function applyPromotionCode() {
+    const normalized = promotionCode.trim().toUpperCase();
+    if (!normalized) {
+      setPromotionError("Enter a promotion code first.");
+      return;
+    }
+    setPromotionCode(normalized);
+    setPromotionError("");
+    setAppliedCode(normalized);
+  }
+
+  function removePromotionCode() {
+    setAppliedCode("");
+    setPromotionCode("");
+    setPromotionError("");
+  }
 
   function setField<K extends keyof CheckoutDraft>(
     field: K,
@@ -213,6 +311,8 @@ export function CheckoutClient() {
       Boolean(catalogError) ||
       hasUnavailable ||
       submitting ||
+      promotionLoading ||
+      Boolean(appliedCode && promotionError) ||
       draft.paymentMethod !== "COD" ||
       !draft.deliveryZone
     ) {
@@ -253,6 +353,7 @@ export function CheckoutClient() {
             productId: row.liveProduct!.id,
             qty: row.qty,
           })),
+          promotionCode: appliedCode,
           deliveryZone: draft.deliveryZone,
           paymentMethod: "COD",
         }),
@@ -706,16 +807,106 @@ export function CheckoutClient() {
               )}
             </div>
 
+            <div className="mt-6 rounded-[1rem] border border-[#713a35]/10 bg-white/65 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#713a35]/48">
+                    Promotion
+                  </p>
+                  <p className="mt-1 text-xs text-[#321f1c]/45">
+                    Add a code, or eligible automatic offers apply by themselves.
+                  </p>
+                </div>
+                {promotionLoading ? (
+                  <span className="text-[10px] uppercase tracking-[0.12em] text-[#321f1c]/38">
+                    Checking…
+                  </span>
+                ) : null}
+              </div>
+
+              <div className="mt-3 flex gap-2">
+                <input
+                  value={promotionCode}
+                  onChange={(event) => {
+                    setPromotionCode(event.target.value.toUpperCase());
+                    setPromotionError("");
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      applyPromotionCode();
+                    }
+                  }}
+                  placeholder="Promotion code"
+                  maxLength={40}
+                  className="h-11 min-w-0 flex-1 rounded-full border border-[#713a35]/14 bg-white px-4 text-sm uppercase tracking-[0.08em] outline-none placeholder:normal-case placeholder:tracking-normal placeholder:text-[#321f1c]/30 focus:border-[#b9725f]/60"
+                />
+                <button
+                  type="button"
+                  onClick={applyPromotionCode}
+                  disabled={promotionLoading}
+                  className="rounded-full bg-[#713a35] px-4 text-xs font-semibold text-white disabled:opacity-50"
+                >
+                  Apply
+                </button>
+              </div>
+
+              {promotionError ? (
+                <p role="alert" className="mt-2 text-xs leading-5 text-red-700">
+                  {promotionError}
+                </p>
+              ) : null}
+
+              {activePromotion ? (
+                <div className="mt-3 flex items-start justify-between gap-3 rounded-[.8rem] bg-[#f7ebe6] p-3">
+                  <div>
+                    <p className="text-xs font-semibold text-[#713a35]">
+                      {activePromotion.badgeText || activePromotion.name}
+                    </p>
+                    <p className="mt-1 text-[11px] leading-5 text-[#321f1c]/48">
+                      {promotionQuote?.savings
+                        ? `${formatPrice(promotionQuote.savings)} saved on this order.`
+                        : "Promotion applied."}
+                    </p>
+                  </div>
+                  {appliedCode ? (
+                    <button
+                      type="button"
+                      onClick={removePromotionCode}
+                      className="text-[11px] font-semibold text-[#713a35] underline decoration-[#713a35]/25 underline-offset-4"
+                    >
+                      Remove
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+
             <div className="mt-6 border-t border-[#713a35]/10 pt-5">
               <div className="flex justify-between text-sm">
                 <span className="text-[#321f1c]/55">Products subtotal</span>
-                <span className="font-semibold">{formatPrice(subtotal)}</span>
+                <span className="font-semibold">{formatPrice(quotedSubtotal)}</span>
               </div>
+              {quotedDiscount > 0 ? (
+                <div className="mt-3 flex justify-between text-sm text-[#713a35]">
+                  <span>Promotion discount</span>
+                  <span className="font-semibold">−{formatPrice(quotedDiscount)}</span>
+                </div>
+              ) : null}
               <div className="mt-4 flex justify-between text-sm">
                 <span className="text-[#321f1c]/55">Delivery</span>
                 <span className="font-semibold">
                   {draft.deliveryZone && deliveryRates
-                    ? formatPrice(deliveryCharge)
+                    ? quotedShippingDiscount > 0
+                      ? (
+                          <span className="inline-flex items-center gap-2">
+                            <span>{formatPrice(quotedDelivery)}</span>
+                            <span className="text-[11px] font-normal text-[#321f1c]/35 line-through">
+                              {formatPrice(deliveryCharge)}
+                            </span>
+                          </span>
+                        )
+                      : formatPrice(quotedDelivery)
                     : "Select zone"}
                 </span>
               </div>
@@ -723,8 +914,8 @@ export function CheckoutClient() {
                 <span className="font-semibold">Total</span>
                 <span className="font-semibold">
                   {draft.deliveryZone && deliveryRates
-                    ? formatPrice(payableTotal)
-                    : formatPrice(subtotal)}
+                    ? formatPrice(quotedTotal)
+                    : formatPrice(promotionQuote?.discountedSubtotal ?? subtotal)}
                 </span>
               </div>
             </div>
@@ -864,18 +1055,59 @@ export function CheckoutClient() {
               )}
             </div>
 
+              {activePromotion ? (
+                <div className="mt-4 rounded-[.9rem] bg-[#f7ebe6] p-3">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-xs font-semibold text-[#713a35]">
+                        {activePromotion.badgeText || activePromotion.name}
+                      </p>
+                      {activePromotion.code ? (
+                        <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-[#321f1c]/40">
+                          Code {activePromotion.code}
+                        </p>
+                      ) : (
+                        <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-[#321f1c]/40">
+                          Automatic offer
+                        </p>
+                      )}
+                    </div>
+                    <span className="text-xs font-semibold text-[#713a35]">
+                      Save {formatPrice(promotionQuote?.savings ?? 0)}
+                    </span>
+                  </div>
+                </div>
+              ) : null}
+
             <div className="mt-6 border-t border-[#713a35]/10 pt-5">
               <div className="flex justify-between text-sm">
                 <span className="text-[#321f1c]/55">Products subtotal</span>
-                <span className="font-semibold">{formatPrice(subtotal)}</span>
+                <span className="font-semibold">{formatPrice(quotedSubtotal)}</span>
               </div>
+              {quotedDiscount > 0 ? (
+                <div className="mt-3 flex justify-between text-sm text-[#713a35]">
+                  <span>Promotion discount</span>
+                  <span className="font-semibold">−{formatPrice(quotedDiscount)}</span>
+                </div>
+              ) : null}
               <div className="mt-4 flex justify-between text-sm">
                 <span className="text-[#321f1c]/55">Delivery</span>
-                <span className="font-semibold">{formatPrice(deliveryCharge)}</span>
+                <span className="font-semibold">
+                  {quotedShippingDiscount > 0 ? (
+                    <span className="inline-flex items-center gap-2">
+                      <span>{formatPrice(quotedDelivery)}</span>
+                      <span className="text-[11px] font-normal text-[#321f1c]/35 line-through">
+                        {formatPrice(deliveryCharge)}
+                      </span>
+                    </span>
+                  ) : (
+                    formatPrice(quotedDelivery)
+                  )}
+                </span>
               </div>
               <div className="mt-5 flex justify-between border-t border-[#713a35]/10 pt-5 text-base">
                 <span className="font-semibold">Total</span>
-                <span className="font-semibold">{formatPrice(payableTotal)}</span>
+                <span className="font-semibold">{formatPrice(quotedTotal)}</span>
               </div>
             </div>
 
@@ -887,14 +1119,18 @@ export function CheckoutClient() {
                 !catalogSynced ||
                 Boolean(catalogError) ||
                 hasUnavailable ||
-                submitting
+                submitting ||
+                promotionLoading ||
+                Boolean(appliedCode && promotionError)
               }
               className={`mt-6 w-full rounded-full px-6 py-4 text-sm font-semibold text-white transition ${
                 orderingEnabled &&
                 catalogSynced &&
                 !catalogError &&
                 !hasUnavailable &&
-                !submitting
+                !submitting &&
+                !promotionLoading &&
+                !Boolean(appliedCode && promotionError)
                   ? "bg-[#713a35] hover:-translate-y-0.5 hover:bg-[#60312d]"
                   : "cursor-not-allowed bg-[#713a35]/30"
               }`}

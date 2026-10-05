@@ -12,6 +12,7 @@ import {
   type Product,
 } from "@/lib/catalog";
 import { getVerifiedProductContent } from "@/lib/product-verification";
+import { hasSalePrice, salePriceFor } from "@/lib/promotions";
 
 export function LiveProductPage({
   slug,
@@ -70,6 +71,8 @@ export function LiveProductPage({
   }
 
   const verified = getVerifiedProductContent(product.id);
+  const salePrice = salePriceFor(product);
+  const onSale = hasSalePrice(product);
   const directions = verified?.directions ?? product.howToUse;
   const careNotes = verified?.warnings ?? product.careNotes;
 
@@ -147,6 +150,11 @@ export function LiveProductPage({
             <span className="rounded-full bg-[#f5e8e2] px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-[#713a35]">
               {product.category}
             </span>
+            {onSale ? (
+              <span className="rounded-full bg-[#713a35] px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-white">
+                {product.promotionBadge || "Sale"}
+              </span>
+            ) : null}
             <span
               className={`rounded-full px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.16em] ${
                 (product.availableStock ?? 0) > 0
@@ -167,7 +175,14 @@ export function LiveProductPage({
 
           <div className="mt-6 flex items-end justify-between gap-5 border-b border-[#713a35]/10 pb-7">
             <div>
-              <p className="text-xl font-semibold">{formatPrice(product.price)}</p>
+              <div className="flex items-baseline gap-2">
+                <p className="text-xl font-semibold">{formatPrice(salePrice)}</p>
+                {onSale ? (
+                  <p className="text-sm text-[#321f1c]/35 line-through">
+                    {formatPrice(product.price)}
+                  </p>
+                ) : null}
+              </div>
               <p className="mt-1 text-xs text-[#321f1c]/45">
                 {product.size}
                 {product.origin ? ` · ${product.origin}` : ""}
