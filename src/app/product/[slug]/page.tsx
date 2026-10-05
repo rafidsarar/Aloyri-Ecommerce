@@ -73,7 +73,7 @@ export async function generateMetadata({
 
   const verified = getVerifiedProductContent(product.id);
   const image = product.mediaPath
-    ? absoluteUrl("/api/storefront-media/" + product.mediaPath.replace(/^media\\//, ""))
+    ? absoluteUrl("/api/storefront-media/" + product.mediaPath.startsWith("media/") ? product.mediaPath.slice(6) : product.mediaPath)
     : verified?.photo?.src;
 
   return {
@@ -106,7 +106,7 @@ export default async function ProductPage({
   const schemaProduct = product ?? fallback!;
   const verified = getVerifiedProductContent(schemaProduct.id);
   const schemaImage = schemaProduct.mediaPath
-    ? absoluteUrl("/api/storefront-media/" + schemaProduct.mediaPath.replace(/^media\\//, ""))
+    ? absoluteUrl("/api/storefront-media/" + schemaProduct.mediaPath.startsWith("media/") ? schemaProduct.mediaPath.slice(6) : schemaProduct.mediaPath)
     : verified?.photo?.src;
   const availability =
     schemaProduct.availableStock === undefined
