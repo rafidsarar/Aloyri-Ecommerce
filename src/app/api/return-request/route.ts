@@ -62,6 +62,10 @@ function rateAllowed(key: string) {
 }
 
 export async function POST(request: Request) {
+  if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
+    return response({ error: "Content-Type must be application/json.", code: "INVALID_CONTENT_TYPE" }, 415);
+  }
+
   if (!rateAllowed(requestIp(request))) {
     return response(
       {
@@ -115,6 +119,10 @@ export async function POST(request: Request) {
     )
   ) {
     return response({ error: "Check the selected products and return details.", code: "INVALID_RETURN_REQUEST" }, 400);
+  }
+
+  if (new Set(input.items.map((item) => item.line)).size !== input.items.length) {
+    return response({ error: "Each returned order line can only be selected once.", code: "INVALID_RETURN_REQUEST" }, 400);
   }
 
   const result = await submitCrmReturnRequest({

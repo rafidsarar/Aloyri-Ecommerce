@@ -1,6 +1,7 @@
 name: Storefront CI
 
 on:
+  push:
   pull_request:
   workflow_dispatch:
 
@@ -10,7 +11,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -34,3 +35,9 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Browser E2E certification
+        run: pnpm test:e2e

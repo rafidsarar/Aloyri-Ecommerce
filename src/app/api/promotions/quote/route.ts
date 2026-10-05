@@ -24,6 +24,7 @@ function validRequest(value: unknown): value is PromotionQuoteRequest {
       (item) =>
         !item ||
         typeof item.productId !== "string" ||
+        !/^[A-Za-z0-9][A-Za-z0-9_-]{0,119}$/.test(item.productId) ||
         !Number.isInteger(item.qty) ||
         item.qty < 1 ||
         item.qty > 100,
@@ -53,6 +54,10 @@ function validRequest(value: unknown): value is PromotionQuoteRequest {
 }
 
 export async function POST(request: Request) {
+  if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
+    return response({ error: "Content-Type must be application/json.", code: "INVALID_CONTENT_TYPE" }, 415);
+  }
+
   const text = await request.text();
   if (text.length > 32_768) {
     return response({ error: "Request is too large.", code: "REQUEST_TOO_LARGE" }, 413);

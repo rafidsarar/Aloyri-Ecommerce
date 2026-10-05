@@ -60,8 +60,9 @@ export async function submitCrmReturnRequest(input: ReturnRequestInput) {
   const body = JSON.stringify(input);
   const timestamp = String(Math.floor(Date.now() / 1000));
   const nonce = crypto.randomUUID();
-  const idempotencyKey = "return:" + input.orderNumber + ":" + nonce;
   const bodyHash = await sha256Hex(body);
+  const idempotencyKey =
+    "return:" + input.orderNumber + ":" + bodyHash.slice(0, 40);
   const canonical = [
     "POST",
     path,

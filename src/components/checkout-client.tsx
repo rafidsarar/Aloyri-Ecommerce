@@ -35,7 +35,7 @@ import {
 } from "@/lib/checkout";
 import { formatPrice, getProductById } from "@/lib/catalog";
 import { trackStorefrontEvent } from "@/lib/analytics";
-import type { PromotionQuote } from "@/lib/promotions";
+import { salePriceFor, type PromotionQuote } from "@/lib/promotions";
 
 type FieldErrors = Partial<Record<keyof CheckoutDraft, string>>;
 type DeliveryRates = Record<DeliveryZone, number>;
@@ -282,7 +282,7 @@ export function CheckoutClient() {
   );
   const subtotal = rows.reduce(
     (sum, row) =>
-      sum + (row.liveProduct ? row.liveProduct.price * row.qty : 0),
+      sum + (row.liveProduct ? salePriceFor(row.liveProduct) * row.qty : 0),
     0,
   );
   const deliveryCharge =
@@ -531,6 +531,9 @@ export function CheckoutClient() {
 
       const result = (await response.json()) as {
         orderNumber?: string;
+        deliveryCharge?: number;
+        total?: number;
+        savings?: number;
         error?: string;
         code?: string;
       };
@@ -553,11 +556,21 @@ export function CheckoutClient() {
         return;
       }
 
+      const finalDeliveryCharge =
+        typeof result.deliveryCharge === "number" &&
+        Number.isFinite(result.deliveryCharge)
+          ? result.deliveryCharge
+          : quotedDelivery;
+      const finalTotal =
+        typeof result.total === "number" && Number.isFinite(result.total)
+          ? result.total
+          : quotedTotal;
+
       trackStorefrontEvent("order_created", {
         itemCount,
         deliveryZone: draft.deliveryZone || undefined,
         paymentMethod: "COD",
-        totalBdt: quotedTotal,
+        totalBdt: finalTotal,
       });
 
       writeCart([]);
@@ -571,8 +584,8 @@ export function CheckoutClient() {
             orderNumber: result.orderNumber,
             itemCount,
             deliveryZone: draft.deliveryZone,
-            deliveryCharge: quotedDelivery,
-            total: quotedTotal,
+            deliveryCharge: finalDeliveryCharge,
+            total: finalTotal,
             paymentMethod: "COD",
           }),
         );
@@ -1035,7 +1048,7 @@ export function CheckoutClient() {
                     <p className="mt-1 text-[10px] text-[#321f1c]/42">Qty {row.qty}</p>
                   </div>
                   <p className="text-xs font-semibold">
-                    {formatPrice((row.liveProduct?.price || 0) * row.qty)}
+                    {formatPrice(row.liveProduct ? salePriceFor(row.liveProduct) * row.qty : 0)}
                   </p>
                 </div>
               ))}
@@ -1333,7 +1346,7 @@ export function CheckoutClient() {
                 ? "Placing order…"
                 : submitFailure?.uncertain
                   ? "Retry same checkout safely"
-                  : `Place COD order · ${formatPrice(payableTotal)}`}
+                  : `Place COD order · ${formatPrice(quotedTotal)}`}
             </button>
 
             {!submitFailure?.uncertain ? (

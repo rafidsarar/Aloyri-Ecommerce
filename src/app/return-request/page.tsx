@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "Request a return or refund review",
   description:
     "Verify a delivered Aloyri website order and submit products for return or refund review.",
+  alternates: { canonical: "/return-request" },
   robots: { index: false, follow: false },
 };
 

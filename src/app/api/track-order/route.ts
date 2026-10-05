@@ -55,6 +55,10 @@ function rateAllowed(key: string) {
 }
 
 export async function POST(request: Request) {
+  if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
+    return response({ error: "Content-Type must be application/json.", code: "INVALID_CONTENT_TYPE" }, 415);
+  }
+
   if (!rateAllowed(requestIp(request))) {
     return response(
       {

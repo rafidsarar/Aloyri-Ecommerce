@@ -4,6 +4,7 @@ import { OrderTrackingClient } from "@/components/order-tracking-client";
 export const metadata: Metadata = {
   title: "Track order",
   description: "Track the latest status of your Aloyri website order.",
+  alternates: { canonical: "/track-order" },
   robots: {
     index: false,
     follow: false,

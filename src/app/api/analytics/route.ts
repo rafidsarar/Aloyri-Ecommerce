@@ -134,6 +134,10 @@ function safeProperties(value: unknown) {
 }
 
 export async function POST(request: Request) {
+  if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
+    return new Response(null, { status: 204 });
+  }
+
   if (!rateAllowed(requestIp(request))) {
     return new Response(null, { status: 204 });
   }
