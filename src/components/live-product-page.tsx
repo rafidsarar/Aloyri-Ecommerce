@@ -7,6 +7,7 @@ import { ArrowIcon } from "@/components/icons";
 import { ProductMedia } from "@/components/product-media";
 import { ProductCard } from "@/components/product-card";
 import {
+  effectivePrice,
   formatPrice,
   productStockLabel,
   type Product,
@@ -69,6 +70,8 @@ export function LiveProductPage({
     );
   }
 
+  const salePrice = effectivePrice(product);
+  const onSale = salePrice < product.price;
   const verified = getVerifiedProductContent(product.id);
   const directions = verified?.directions ?? product.howToUse;
   const careNotes = verified?.warnings ?? product.careNotes;
@@ -167,7 +170,17 @@ export function LiveProductPage({
 
           <div className="mt-6 flex items-end justify-between gap-5 border-b border-[#713a35]/10 pb-7">
             <div>
-              <p className="text-xl font-semibold">{formatPrice(product.price)}</p>
+              <div className="flex flex-wrap items-center gap-3">
+                <p className="text-xl font-semibold">{formatPrice(salePrice)}</p>
+                {onSale ? (
+                  <>
+                    <p className="text-sm text-[#321f1c]/35 line-through">{formatPrice(product.price)}</p>
+                    <span className="rounded-full bg-[#713a35] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.15em] text-white">
+                      {product.promotionBadge || "Sale"}
+                    </span>
+                  </>
+                ) : null}
+              </div>
               <p className="mt-1 text-xs text-[#321f1c]/45">
                 {product.size}
                 {product.origin ? ` · ${product.origin}` : ""}
