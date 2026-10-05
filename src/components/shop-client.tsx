@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { ProductCard } from "@/components/product-card";
 import { useCatalog } from "@/components/catalog-provider";
+import { effectivePrice } from "@/lib/catalog";
 
 type SortKey = "featured" | "price-asc" | "price-desc" | "name";
 
@@ -42,8 +43,8 @@ export function ShopClient({
     });
 
     return [...list].sort((a, b) => {
-      if (sort === "price-asc") return a.price - b.price;
-      if (sort === "price-desc") return b.price - a.price;
+      if (sort === "price-asc") return effectivePrice(a) - effectivePrice(b);
+      if (sort === "price-desc") return effectivePrice(b) - effectivePrice(a);
       if (sort === "name") return a.name.localeCompare(b.name);
       return Number(Boolean(b.featured)) - Number(Boolean(a.featured));
     });

@@ -31,6 +31,8 @@ export type Product = {
   active?: boolean;
   availableStock?: number;
   live?: boolean;
+  salePrice?: number;
+  promotionBadge?: string;
 };
 
 export type LiveCatalogProduct = {
@@ -42,6 +44,8 @@ export type LiveCatalogProduct = {
   price: number;
   active: boolean;
   availableStock: number;
+  salePrice?: number;
+  promotionBadge?: string;
 };
 
 const categoryVisuals: Record<string, ProductVisual> = {
@@ -334,6 +338,8 @@ export function mergeLiveCatalog(liveProducts: LiveCatalogProduct[]): Product[] 
           active: true,
           availableStock: live.availableStock,
           live: true,
+          salePrice: live.salePrice,
+          promotionBadge: live.promotionBadge,
         };
       }
 
@@ -371,6 +377,8 @@ export function mergeLiveCatalog(liveProducts: LiveCatalogProduct[]): Product[] 
         active: true,
         availableStock: live.availableStock,
         live: true,
+        salePrice: live.salePrice,
+        promotionBadge: live.promotionBadge,
       } satisfies Product;
     });
 }
@@ -380,6 +388,12 @@ export function productStockLabel(product: Product) {
   if (product.availableStock <= 0) return "Out of stock";
   if (product.availableStock <= 5) return `Only ${product.availableStock} left`;
   return "In stock";
+}
+
+export function effectivePrice(product: Pick<Product, "price" | "salePrice">) {
+  return typeof product.salePrice === "number" && product.salePrice >= 0 && product.salePrice < product.price
+    ? product.salePrice
+    : product.price;
 }
 
 export function formatPrice(price: number) {

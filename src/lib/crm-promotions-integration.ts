@@ -1,3 +1,6 @@
+import type { DeliveryZone } from "@/lib/checkout";
+import type { PromotionQuote } from "@/lib/promotions";
+
 const enc = new TextEncoder();
 
 const hex = (bytes: Uint8Array) =>
@@ -18,52 +21,19 @@ async function hmacSha256Hex(secret: string, value: string) {
     ["sign"],
   );
   return hex(
-    new Uint8Array(
-      await crypto.subtle.sign("HMAC", key, enc.encode(value)),
-    ),
+    new Uint8Array(await crypto.subtle.sign("HMAC", key, enc.encode(value))),
   );
 }
 
-export type WebsiteOrderPayload = {
-  externalOrderId: string;
-  customer: {
-    name: string;
-    phone: string;
-    email?: string;
-    address: string;
-    district: string;
-    area: string;
-    landmark?: string;
-    notes?: string;
-  };
+export type WebsitePromotionQuotePayload = {
   items: Array<{ productId: string; qty: number }>;
-  promotionCode?: string;
-  deliveryZone: "inside-dhaka" | "outside-dhaka";
-  paymentMethod: "COD";
+  deliveryZone?: DeliveryZone;
+  code?: string;
 };
 
-export type CrmOrderResult = {
-  orderId: string;
-  orderNumber: string;
-  customerId: string;
-  status: "New";
-  payment: "COD";
-  productsSubtotal: number;
-  discount: number;
-  shippingDiscount: number;
-  deliveryCharge: number;
-  total: number;
-  savings: number;
-  promotion: null | {
-    id: string;
-    name: string;
-    code: string;
-    badgeText: string;
-  };
-  duplicate?: boolean;
-};
-
-export async function createCrmWebsiteOrder(payload: WebsiteOrderPayload) {
+export async function fetchCrmPromotionQuote(
+  payload: WebsitePromotionQuotePayload,
+) {
   const baseUrl = process.env.CRM_INTEGRATION_URL?.replace(/\/$/, "");
   const integrationId = process.env.CRM_INTEGRATION_ID;
   const secret = process.env.CRM_INTEGRATION_SECRET;
@@ -74,17 +44,17 @@ export async function createCrmWebsiteOrder(payload: WebsiteOrderPayload) {
       ok: false as const,
       status: 503,
       body: {
-        error: "Website ordering is not configured yet.",
-        code: "ORDERING_NOT_CONFIGURED",
+        error: "Promotion pricing is not configured yet.",
+        code: "PROMOTIONS_NOT_CONFIGURED",
       },
     };
   }
 
-  const path = "/api/integrations/ecommerce/orders";
+  const path = "/api/integrations/ecommerce/promotions/quote";
   const body = JSON.stringify(payload);
   const timestamp = String(Math.floor(Date.now() / 1000));
   const nonce = crypto.randomUUID();
-  const idempotencyKey = `checkout:${payload.externalOrderId}`;
+  const idempotencyKey = `promotion-quote:${nonce}`;
   const bodyHash = await sha256Hex(body);
   const canonical = [
     "POST",
@@ -116,7 +86,7 @@ export async function createCrmWebsiteOrder(payload: WebsiteOrderPayload) {
       headers,
       body,
       cache: "no-store",
-      signal: AbortSignal.timeout(12_000),
+      signal: AbortSignal.timeout(10_000),
     });
 
     let result: unknown;
@@ -124,8 +94,8 @@ export async function createCrmWebsiteOrder(payload: WebsiteOrderPayload) {
       result = await response.json();
     } catch {
       result = {
-        error: "The order service returned an invalid response.",
-        code: "ORDER_SERVICE_ERROR",
+        error: "Promotion pricing returned an invalid response.",
+        code: "PROMOTION_SERVICE_ERROR",
       };
     }
 
@@ -134,20 +104,20 @@ export async function createCrmWebsiteOrder(payload: WebsiteOrderPayload) {
       status: response.status,
       body: result,
     } as
-      | { ok: true; status: number; body: CrmOrderResult }
+      | { ok: true; status: number; body: PromotionQuote }
       | {
           ok: false;
           status: number;
           body: { error?: string; code?: string };
         };
   } catch (error) {
-    console.error("CRM website order request failed", error);
+    console.error("CRM promotion quote failed", error);
     return {
       ok: false as const,
       status: 503,
       body: {
-        error: "The order service is temporarily unavailable.",
-        code: "ORDER_SERVICE_UNAVAILABLE",
+        error: "Promotion pricing is temporarily unavailable.",
+        code: "PROMOTION_SERVICE_UNAVAILABLE",
       },
     };
   }

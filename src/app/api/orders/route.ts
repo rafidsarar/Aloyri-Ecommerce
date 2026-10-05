@@ -56,6 +56,15 @@ function validPayload(value: unknown): value is WebsiteOrderPayload {
     return false;
   }
 
+  if (
+    input.promotionCode !== undefined &&
+    (typeof input.promotionCode !== "string" ||
+      input.promotionCode.length > 40 ||
+      !/^[A-Za-z0-9_-]*$/.test(input.promotionCode))
+  ) {
+    return false;
+  }
+
   return (
     (input.deliveryZone === "inside-dhaka" ||
       input.deliveryZone === "outside-dhaka") &&

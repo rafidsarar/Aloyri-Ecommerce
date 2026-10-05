@@ -36,7 +36,9 @@ function safeProduct(value: unknown): LiveCatalogProduct | null {
     typeof item.category !== "string" ||
     typeof item.price !== "number" ||
     typeof item.active !== "boolean" ||
-    typeof item.availableStock !== "number"
+    typeof item.availableStock !== "number" ||
+    (item.salePrice !== undefined && typeof item.salePrice !== "number") ||
+    (item.promotionBadge !== undefined && typeof item.promotionBadge !== "string")
   ) {
     return null;
   }
@@ -50,6 +52,15 @@ function safeProduct(value: unknown): LiveCatalogProduct | null {
     price: item.price,
     active: item.active,
     availableStock: Math.max(0, Math.floor(item.availableStock)),
+    ...(typeof item.salePrice === "number" &&
+    Number.isFinite(item.salePrice) &&
+    item.salePrice >= 0 &&
+    item.salePrice < item.price
+      ? { salePrice: item.salePrice }
+      : {}),
+    ...(typeof item.promotionBadge === "string" && item.promotionBadge.trim()
+      ? { promotionBadge: item.promotionBadge.trim().slice(0, 40) }
+      : {}),
   };
 }
 
