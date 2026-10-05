@@ -17,7 +17,12 @@ export function ProductMedia({
 }) {
   const [failed, setFailed] = useState(false);
   const verified = getVerifiedProductContent(product.id);
-  const photo = verified?.photo;
+  const photo = product.mediaPath
+    ? {
+        src: "/api/storefront-media/" + product.mediaPath.replace(/^media\\//, ""),
+        alt: `${product.brand} ${product.name}`,
+      }
+    : verified?.photo;
 
   return (
     <div className={`relative overflow-hidden bg-[#fffdfb] ${className}`}>

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
 
-export function Footer() {
+export function Footer({ description }: { description: string }) {
   return (
     <footer id="about" className="border-t border-[#713a35]/10 bg-[#f5e8e2]">
       <div className="shell py-14 md:py-20">
@@ -9,8 +9,7 @@ export function Footer() {
           <div>
             <BrandMark className="items-start" />
             <p className="mt-6 max-w-md text-sm leading-7 text-[#321f1c]/58">
-              Aloyri is a skincare destination built around considered selection,
-              clear product information and a calmer way to build an everyday routine.
+              {description}
             </p>
             <Link
               href="/about"

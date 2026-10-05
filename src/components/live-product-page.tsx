@@ -112,7 +112,7 @@ export function LiveProductPage({
             priority
             className="aspect-[4/5] rounded-[2rem] soft-shadow"
           />
-          {verified?.photo ? (
+          {verified?.photo && !product.mediaPath ? (
             <p className="mt-3 text-[11px] leading-5 text-[#321f1c]/42">
               Product photography:{" "}
               <a

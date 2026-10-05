@@ -33,6 +33,7 @@ export type Product = {
   live?: boolean;
   salePrice?: number;
   promotionBadge?: string;
+  mediaPath?: string;
 };
 
 export type LiveCatalogProduct = {
@@ -46,6 +47,18 @@ export type LiveCatalogProduct = {
   availableStock: number;
   salePrice?: number;
   promotionBadge?: string;
+  slug?: string;
+  description?: string;
+  routineStep?: string;
+  skinNote?: string;
+  texture?: string;
+  bestFor?: string;
+  howToUse?: string[];
+  careNotes?: string[];
+  ingredientNote?: string;
+  featured?: boolean;
+  bestseller?: boolean;
+  mediaPath?: string;
 };
 
 const categoryVisuals: Record<string, ProductVisual> = {
@@ -321,6 +334,20 @@ export function mergeLiveCatalog(liveProducts: LiveCatalogProduct[]): Product[] 
       if (local) {
         return {
           ...local,
+          ...(live.slug ? { slug: live.slug } : {}),
+          ...(live.description ? { description: live.description } : {}),
+          ...(live.routineStep ? { routineStep: live.routineStep } : {}),
+          ...(live.skinNote ? { skinNote: live.skinNote } : {}),
+          ...(live.texture ? { texture: live.texture } : {}),
+          ...(live.bestFor ? { bestFor: live.bestFor } : {}),
+          ...(live.howToUse?.length ? { howToUse: live.howToUse } : {}),
+          ...(live.careNotes?.length ? { careNotes: live.careNotes } : {}),
+          ...(live.ingredientNote ? { ingredientNote: live.ingredientNote } : {}),
+          ...(typeof live.featured === "boolean" ? { featured: live.featured } : {}),
+          ...(typeof live.bestseller === "boolean"
+            ? { bestseller: live.bestseller }
+            : {}),
+          ...(live.mediaPath ? { mediaPath: live.mediaPath } : {}),
           name: live.name,
           brand: live.brand,
           size: live.size,
@@ -336,34 +363,51 @@ export function mergeLiveCatalog(liveProducts: LiveCatalogProduct[]): Product[] 
 
       return {
         id: live.id,
-        slug: live.id,
+        slug: live.slug || live.id,
         brand: live.brand,
         name: live.name,
         size: live.size,
         category: live.category,
         price: live.price,
-        description: `${live.name} by ${live.brand || "Aloyri"}, available through the Aloyri skincare edit.`,
-        routineStep: routineForCategory(live.category),
-        skinNote: "See the product packaging and brand guidance for usage details.",
+        description:
+          live.description ||
+          `${live.name} by ${live.brand || "Aloyri"}, available through the Aloyri skincare edit.`,
+        routineStep: live.routineStep || routineForCategory(live.category),
+        skinNote:
+          live.skinNote ||
+          "See the product packaging and brand guidance for usage details.",
         texture:
-          live.category === "Cleanser"
+          live.texture ||
+          (live.category === "Cleanser"
             ? "Facial cleanser"
             : live.category === "Moisturizer"
               ? "Moisturiser"
               : live.category === "Sunscreen"
                 ? "Daily sunscreen"
-                : "Skincare product",
-        bestFor: "Aloyri shoppers looking for a clear, uncomplicated place for this product in their routine.",
-        howToUse: [
-          "Follow the directions printed on the product packaging.",
-          "Use the product only for its intended skincare purpose.",
-        ],
-        careNotes: [
-          "Check the package for current warnings, directions and storage guidance.",
-          "Discontinue use if the product causes discomfort.",
-        ],
+                : "Skincare product"),
+        bestFor:
+          live.bestFor ||
+          "Aloyri shoppers looking for a clear, uncomplicated place for this product in their routine.",
+        howToUse:
+          live.howToUse?.length
+            ? live.howToUse
+            : [
+                "Follow the directions printed on the product packaging.",
+                "Use the product only for its intended skincare purpose.",
+              ],
+        careNotes:
+          live.careNotes?.length
+            ? live.careNotes
+            : [
+                "Check the package for current warnings, directions and storage guidance.",
+                "Discontinue use if the product causes discomfort.",
+              ],
         ingredientNote:
+          live.ingredientNote ||
           "Check the exact product packaging for the current ingredient list. Aloyri publishes formulation details only after they are verified against the item supplied.",
+        featured: live.featured,
+        bestseller: live.bestseller,
+        ...(live.mediaPath ? { mediaPath: live.mediaPath } : {}),
         visual: categoryVisuals[live.category] ?? fallbackVisual,
         active: true,
         availableStock: live.availableStock,

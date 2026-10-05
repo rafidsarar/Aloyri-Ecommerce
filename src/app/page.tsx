@@ -3,9 +3,12 @@ import { BrandMark } from "@/components/brand-mark";
 import { ArrowIcon } from "@/components/icons";
 import { ProductMedia } from "@/components/product-media";
 import { ProductCard } from "@/components/product-card";
-import { bestsellers, featuredProducts, products } from "@/lib/catalog";
-
-const heroProduct = products.find((product) => product.id === "skin-aqua") ?? products[0];
+import { mergeLiveCatalog, products as localProducts } from "@/lib/catalog";
+import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
+import {
+  applyStorefrontEditorial,
+  readStorefrontConfig,
+} from "@/lib/storefront-admin-store";
 
 const routine = [
   {
@@ -28,7 +31,27 @@ const routine = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const [config, crm] = await Promise.all([
+    readStorefrontConfig(),
+    fetchCrmCatalog(),
+  ]);
+
+  const catalogProducts = crm.ok
+    ? mergeLiveCatalog(applyStorefrontEditorial(crm.body.products, config))
+    : localProducts.map((product) => ({
+        ...product,
+        ...(config.products[product.id] || {}),
+      }));
+
+  const home = config.homepage;
+  const heroProduct =
+    catalogProducts.find((product) => product.id === home.heroProductId) ??
+    catalogProducts[0] ??
+    localProducts[0];
+  const bestsellers = catalogProducts.filter((product) => product.bestseller);
+  const featuredProducts = catalogProducts.filter((product) => product.featured);
+
   return (
     <main>
       <section className="shell pt-5 md:pt-8">
@@ -36,39 +59,38 @@ export default function Home() {
           <div className="flex flex-col justify-between p-7 sm:p-10 lg:p-14">
             <div className="flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/55">
               <span className="h-px w-8 bg-[#b9725f]/55" />
-              Aloyri skincare edit
+              {home.eyebrow}
             </div>
 
             <div className="max-w-2xl py-14 lg:py-20">
               <BrandMark className="items-start" />
               <h1 className="display mt-9 text-[clamp(3.5rem,7.5vw,7rem)] leading-[0.88] text-[#321f1c]">
-                Skincare that earns a place in your routine.
+                {home.headline}
               </h1>
               <p className="mt-7 max-w-xl text-base leading-7 text-[#321f1c]/60 sm:text-lg">
-                A considered edit of cleansers, moisturizers and daily SPF with
-                straightforward product information and BDT pricing.
+                {home.intro}
               </p>
 
               <div className="mt-9 flex flex-wrap gap-3">
                 <Link
-                  href="/shop"
+                  href={home.primaryHref}
                   className="inline-flex items-center gap-3 rounded-full bg-[#713a35] px-6 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#60312d]"
                 >
-                  Shop the edit <ArrowIcon />
+                  {home.primaryLabel} <ArrowIcon />
                 </Link>
                 <Link
-                  href="/category/sunscreen"
+                  href={home.secondaryHref}
                   className="rounded-full border border-[#713a35]/18 bg-white/60 px-6 py-3.5 text-sm font-medium text-[#713a35] transition hover:bg-white"
                 >
-                  Explore sunscreen
+                  {home.secondaryLabel}
                 </Link>
               </div>
             </div>
 
             <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs text-[#321f1c]/45">
-              <span>Curated selection</span>
-              <span>BDT pricing</span>
-              <span>Bangladesh-first storefront</span>
+              {home.featureChips.map((chip) => (
+                <span key={chip}>{chip}</span>
+              ))}
             </div>
           </div>
 
@@ -124,9 +146,11 @@ export default function Home() {
         </div>
 
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {bestsellers.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+          {(bestsellers.length ? bestsellers : catalogProducts.slice(0, 3)).map(
+            (product) => (
+              <ProductCard key={product.id} product={product} />
+            ),
+          )}
         </div>
       </section>
 
@@ -181,9 +205,11 @@ export default function Home() {
         </div>
 
         <div className="grid gap-x-5 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-          {featuredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+          {(featuredProducts.length ? featuredProducts : catalogProducts.slice(0, 6)).map(
+            (product) => (
+              <ProductCard key={product.id} product={product} />
+            ),
+          )}
         </div>
       </section>
 
@@ -192,15 +218,13 @@ export default function Home() {
           <div className="grid lg:grid-cols-[1.18fr_.82fr]">
             <div className="p-8 sm:p-10 lg:p-14">
               <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/55">
-                The Aloyri idea
+                {home.ideaEyebrow}
               </p>
               <h2 className="display mt-4 max-w-3xl text-5xl leading-[0.94] sm:text-6xl lg:text-7xl">
-                Less noise. Better product choices.
+                {home.ideaHeadline}
               </h2>
               <p className="mt-7 max-w-xl text-sm leading-7 text-white/62">
-                Aloyri keeps the storefront focused on what customers need to
-                make a choice: product, category, size, price and a clear place
-                in the routine.
+                {home.ideaCopy}
               </p>
               <Link
                 href="/shop"

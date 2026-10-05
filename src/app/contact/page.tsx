@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CustomerInfoPage } from "@/components/customer-info-page";
+import { readStorefrontConfig } from "@/lib/storefront-admin-store";
 
 export const metadata: Metadata = {
   title: "Contact Aloyri",
@@ -9,38 +10,25 @@ export const metadata: Metadata = {
   alternates: { canonical: "/contact" },
 };
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const config = await readStorefrontConfig();
+  const { supportEmail, supportPhone, supportHours } = config.site;
+  const hasSupport = supportEmail || supportPhone || supportHours;
+
   return (
     <>
-      <CustomerInfoPage
-        eyebrow="Customer care"
-        title="Contact Aloyri."
-        intro="For order support, having the right information ready helps Aloyri verify the order without exposing private CRM data."
-        sections={[
-          {
-            title: "For an order question",
-            bullets: [
-              "Keep your website order number ready.",
-              "Use the same mobile number that was entered at checkout.",
-              "For a product or delivery issue, note which item is affected and what happened.",
-              "For damaged or incorrect products, keep clear photos of the item and packaging where useful.",
-            ],
-          },
-          {
-            title: "Check the live order first",
-            paragraphs: [
-              "The Track Order page reads the latest customer-safe status directly from Aloyri's CRM. It is usually the quickest way to check whether an order is confirmed, packed, shipped, out for delivery or delivered.",
-            ],
-          },
-          {
-            title: "Direct support channel",
-            paragraphs: [
-              "Aloyri's permanent branded support email will be published here after the final business domain is connected and verified. Until then, the site does not display an invented or temporary branded email address.",
-            ],
-          },
-        ]}
-      />
+      <CustomerInfoPage {...config.pages.contact} />
       <div className="shell -mt-8 pb-16">
+        {hasSupport ? (
+          <div className="mb-5 max-w-2xl rounded-[1.35rem] border border-[#713a35]/10 bg-[#f5e8e2] p-5 text-sm">
+            <p className="font-semibold">Aloyri support</p>
+            <div className="mt-3 grid gap-2 text-[#321f1c]/62">
+              {supportEmail ? <p>Email: {supportEmail}</p> : null}
+              {supportPhone ? <p>Phone: {supportPhone}</p> : null}
+              {supportHours ? <p>{supportHours}</p> : null}
+            </div>
+          </div>
+        ) : null}
         <Link
           href="/track-order"
           className="inline-flex rounded-full bg-[#713a35] px-6 py-3.5 text-sm font-semibold text-white"

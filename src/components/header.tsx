@@ -15,7 +15,7 @@ const links = [
   ["Track order", "/track-order"],
 ];
 
-export function Header() {
+export function Header({ announcement }: { announcement: string }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -73,7 +73,7 @@ export function Header() {
   return (
     <>
       <div className="bg-[#713a35] px-4 py-2.5 text-center text-[10px] font-medium uppercase tracking-[0.22em] text-[#fff8f5] sm:text-[11px]">
-        Let Your Skin Glow. · Curated skincare for Bangladesh
+        {announcement}
       </div>
 
       <header className="sticky top-0 z-40 border-b border-[#713a35]/10 bg-[#fffaf7]/92 backdrop-blur-xl">

@@ -32,7 +32,7 @@ jobs:
           products=data.get("products")
           assert isinstance(products,list) and products, "catalog must contain products"
           required={"id","name","brand","size","category","price","active","availableStock"}
-          optional={"salePrice","promotionBadge"}
+          optional={"salePrice","promotionBadge","slug","description","routineStep","skinNote","texture","bestFor","howToUse","careNotes","ingredientNote","featured","bestseller","mediaPath"}
           allowed=required|optional
           for product in products:
               assert set(product) <= allowed, f"unexpected catalog fields: {set(product)-allowed}"

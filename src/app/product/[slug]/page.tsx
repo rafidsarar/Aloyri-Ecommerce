@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { LiveProductPage } from "@/components/live-product-page";
 import {
   getProduct,
+  getProductById,
   mergeLiveCatalog,
   products,
   type Product,
@@ -11,14 +12,29 @@ import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
 import { safeJsonLd } from "@/lib/seo";
 import { absoluteUrl } from "@/lib/site";
 import { getVerifiedProductContent } from "@/lib/product-verification";
+import { salePriceFor } from "@/lib/promotions";
+import {
+  applyStorefrontEditorial,
+  readStorefrontConfig,
+} from "@/lib/storefront-admin-store";
 
 async function resolveProduct(slug: string): Promise<Product | null> {
-  const fallback = getProduct(slug) ?? null;
+  const config = await readStorefrontConfig();
+  const configuredId = Object.entries(config.products).find(
+    ([, editorial]) => editorial.slug === slug,
+  )?.[0];
+  const localBase =
+    getProduct(slug) ?? (configuredId ? getProductById(configuredId) : undefined);
+  const fallback = localBase
+    ? { ...localBase, ...(config.products[localBase.id] || {}) }
+    : null;
 
   try {
     const live = await fetchCrmCatalog();
     if (live.ok) {
-      const merged = mergeLiveCatalog(live.body.products);
+      const merged = mergeLiveCatalog(
+        applyStorefrontEditorial(live.body.products, config),
+      );
       const match = merged.find(
         (product) =>
           product.slug === slug ||
@@ -29,7 +45,7 @@ async function resolveProduct(slug: string): Promise<Product | null> {
       if (fallback) return null;
     }
   } catch {
-    // Metadata and the page can fall back to local merchandising content.
+    // Metadata and the page can fall back to website-owned editorial content.
   }
 
   return fallback;
@@ -56,6 +72,9 @@ export async function generateMetadata({
   }
 
   const verified = getVerifiedProductContent(product.id);
+  const image = product.mediaPath
+    ? absoluteUrl("/api/storefront-media/" + product.mediaPath.replace(/^media\\//, ""))
+    : verified?.photo?.src;
 
   return {
     title: `${product.brand} ${product.name}`,
@@ -68,7 +87,7 @@ export async function generateMetadata({
       url: "/product/" + product.slug,
       title: `${product.brand} ${product.name}`,
       description: product.description,
-      images: verified?.photo ? [{ url: verified.photo.src, alt: verified.photo.alt }] : undefined,
+      images: image ? [{ url: image, alt: `${product.brand} ${product.name}` }] : undefined,
     },
   };
 }
@@ -86,6 +105,9 @@ export default async function ProductPage({
 
   const schemaProduct = product ?? fallback!;
   const verified = getVerifiedProductContent(schemaProduct.id);
+  const schemaImage = schemaProduct.mediaPath
+    ? absoluteUrl("/api/storefront-media/" + schemaProduct.mediaPath.replace(/^media\\//, ""))
+    : verified?.photo?.src;
   const availability =
     schemaProduct.availableStock === undefined
       ? undefined
@@ -105,7 +127,7 @@ export default async function ProductPage({
     },
     category: schemaProduct.category,
     url: absoluteUrl("/product/" + schemaProduct.slug),
-    ...(verified?.photo ? { image: [verified.photo.src] } : {}),
+    ...(schemaImage ? { image: [schemaImage] } : {}),
   };
 
   if (schemaProduct.live && availability) {
@@ -113,7 +135,7 @@ export default async function ProductPage({
       "@type": "Offer",
       url: absoluteUrl("/product/" + schemaProduct.slug),
       priceCurrency: "BDT",
-      price: schemaProduct.price,
+      price: salePriceFor(schemaProduct),
       availability,
       itemCondition: "https://schema.org/NewCondition",
     };
