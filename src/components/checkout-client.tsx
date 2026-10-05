@@ -2,14 +2,28 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import {
+  FormEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useCatalog } from "@/components/catalog-provider";
 import { ArrowIcon } from "@/components/icons";
 import { ProductMedia } from "@/components/product-media";
-import { readCart, type CartItem, writeCart } from "@/lib/cart";
+import {
+  CART_UPDATED_EVENT,
+  readCart,
+  type CartItem,
+  writeCart,
+} from "@/lib/cart";
 import {
   bangladeshDistricts,
+  CHECKOUT_ATTEMPT_KEY,
   CHECKOUT_DRAFT_KEY,
+  CHECKOUT_DRAFT_TTL_MS,
   deliveryZoneLabels,
   initialCheckoutDraft,
   isValidBangladeshPhone,
@@ -20,16 +34,118 @@ import {
   type PaymentMethod,
 } from "@/lib/checkout";
 import { formatPrice, getProductById } from "@/lib/catalog";
+import { trackStorefrontEvent } from "@/lib/analytics";
 import type { PromotionQuote } from "@/lib/promotions";
 
 type FieldErrors = Partial<Record<keyof CheckoutDraft, string>>;
 type DeliveryRates = Record<DeliveryZone, number>;
+type OrderFailure = {
+  message: string;
+  code: string;
+  recoverable: boolean;
+  cartAction: boolean;
+  uncertain: boolean;
+};
 
 const inputClass =
   "mt-2 h-12 w-full rounded-[.9rem] border border-[#713a35]/14 bg-white px-4 text-sm text-[#321f1c] outline-none transition placeholder:text-[#321f1c]/30 focus:border-[#b9725f]/60 focus:ring-2 focus:ring-[#b9725f]/10";
 
 const textareaClass =
   "mt-2 min-h-28 w-full resize-y rounded-[.9rem] border border-[#713a35]/14 bg-white px-4 py-3 text-sm text-[#321f1c] outline-none transition placeholder:text-[#321f1c]/30 focus:border-[#b9725f]/60 focus:ring-2 focus:ring-[#b9725f]/10";
+
+function safeDraft(value: unknown): CheckoutDraft | null {
+  if (!value || typeof value !== "object") return null;
+  const input = value as Partial<CheckoutDraft>;
+  if (
+    typeof input.fullName !== "string" ||
+    typeof input.phone !== "string" ||
+    typeof input.email !== "string" ||
+    typeof input.district !== "string" ||
+    typeof input.area !== "string" ||
+    typeof input.address !== "string" ||
+    typeof input.landmark !== "string" ||
+    typeof input.notes !== "string"
+  ) {
+    return null;
+  }
+
+  const deliveryZone =
+    input.deliveryZone === "inside-dhaka" ||
+    input.deliveryZone === "outside-dhaka"
+      ? input.deliveryZone
+      : "";
+  const paymentMethod: PaymentMethod = "COD";
+
+  return {
+    fullName: input.fullName.slice(0, 120),
+    phone: input.phone.slice(0, 30),
+    email: input.email.slice(0, 254),
+    district: input.district.slice(0, 80),
+    area: input.area.slice(0, 160),
+    address: input.address.slice(0, 500),
+    landmark: input.landmark.slice(0, 200),
+    notes: input.notes.slice(0, 1000),
+    deliveryZone,
+    paymentMethod,
+  };
+}
+
+function failureFor(status: number, code: string, fallback: string): OrderFailure {
+  if (["OUT_OF_STOCK", "PRODUCT_UNAVAILABLE", "STOCK_CHANGED"].includes(code)) {
+    return {
+      message:
+        fallback ||
+        "Stock changed while you were checking out. Review the cart before trying again.",
+      code,
+      recoverable: true,
+      cartAction: true,
+      uncertain: false,
+    };
+  }
+
+  if (code === "RATE_LIMITED") {
+    return {
+      message: "Too many order attempts were received. Wait a moment, then retry this checkout.",
+      code,
+      recoverable: true,
+      cartAction: false,
+      uncertain: false,
+    };
+  }
+
+  if (code === "IDEMPOTENCY_CONFLICT") {
+    return {
+      message:
+        "This checkout reference may already have been used. To avoid creating a duplicate order, do not start a new attempt from this screen.",
+      code,
+      recoverable: false,
+      cartAction: false,
+      uncertain: true,
+    };
+  }
+
+  if (
+    status >= 500 ||
+    ["ORDER_SERVICE_UNAVAILABLE", "ORDER_CREATE_FAILED"].includes(code)
+  ) {
+    return {
+      message:
+        "We could not confirm whether the order was created. Your checkout is locked to the same reference so you can retry safely without creating a duplicate.",
+      code,
+      recoverable: true,
+      cartAction: false,
+      uncertain: true,
+    };
+  }
+
+  return {
+    message: fallback || "The order could not be placed. Review the checkout and try again.",
+    code,
+    recoverable: true,
+    cartAction: false,
+    uncertain: false,
+  };
+}
 
 export function CheckoutClient() {
   const router = useRouter();
@@ -39,6 +155,7 @@ export function CheckoutClient() {
     error: catalogError,
     refresh: refreshCatalog,
   } = useCatalog();
+
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [draft, setDraft] = useState<CheckoutDraft>(initialCheckoutDraft);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -48,12 +165,41 @@ export function CheckoutClient() {
   const [deliveryRates, setDeliveryRates] = useState<DeliveryRates | null>(null);
   const [orderingStatusLoaded, setOrderingStatusLoaded] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState("");
+  const [submitFailure, setSubmitFailure] = useState<OrderFailure | null>(null);
+  const [draftNotice, setDraftNotice] = useState("");
+  const [storeStatusError, setStoreStatusError] = useState(false);
   const [promotionCode, setPromotionCode] = useState("");
   const [appliedCode, setAppliedCode] = useState("");
   const [promotionQuote, setPromotionQuote] = useState<PromotionQuote | null>(null);
   const [promotionLoading, setPromotionLoading] = useState(false);
   const [promotionError, setPromotionError] = useState("");
+  const checkoutTracked = useRef(false);
+
+  const loadStoreStatus = useCallback(async () => {
+    setStoreStatusError(false);
+    try {
+      const response = await fetch("/api/store-status", { cache: "no-store" });
+      const status = (await response.json()) as {
+        orderingEnabled?: boolean;
+        deliveryRates?: DeliveryRates | null;
+      };
+      if (!response.ok) throw new Error("Store status unavailable.");
+      const rates = status.deliveryRates ?? null;
+      setDeliveryRates(rates);
+      setOrderingEnabled(status.orderingEnabled === true && Boolean(rates));
+      setDraft((current) =>
+        current.paymentMethod === "COD"
+          ? current
+          : { ...current, paymentMethod: "COD" },
+      );
+    } catch {
+      setDeliveryRates(null);
+      setOrderingEnabled(false);
+      setStoreStatusError(true);
+    } finally {
+      setOrderingStatusLoaded(true);
+    }
+  }, []);
 
   useEffect(() => {
     setCartItems(readCart());
@@ -61,46 +207,53 @@ export function CheckoutClient() {
     try {
       const saved = sessionStorage.getItem(CHECKOUT_DRAFT_KEY);
       if (saved) {
-        setDraft({
-          ...initialCheckoutDraft,
-          ...(JSON.parse(saved) as Partial<CheckoutDraft>),
-        });
+        const parsed = JSON.parse(saved) as {
+          savedAt?: unknown;
+          draft?: unknown;
+        } & Partial<CheckoutDraft>;
+
+        if (
+          typeof parsed.savedAt === "number" &&
+          Date.now() - parsed.savedAt > CHECKOUT_DRAFT_TTL_MS
+        ) {
+          sessionStorage.removeItem(CHECKOUT_DRAFT_KEY);
+          sessionStorage.removeItem(CHECKOUT_ATTEMPT_KEY);
+          setDraftNotice(
+            "Your previous checkout details expired for privacy and accuracy. Please enter them again.",
+          );
+        } else {
+          const restored = safeDraft(parsed.draft ?? parsed);
+          if (restored) setDraft(restored);
+        }
       }
     } catch {
-      // Ignore invalid or unavailable browser storage.
+      try {
+        sessionStorage.removeItem(CHECKOUT_DRAFT_KEY);
+      } catch {
+        // Checkout still works without browser storage.
+      }
     }
 
-    setHydrated(true);
+    const syncCart = () => setCartItems(readCart());
+    window.addEventListener(CART_UPDATED_EVENT, syncCart);
+    window.addEventListener("storage", syncCart);
 
-    void fetch("/api/store-status", { cache: "no-store" })
-      .then((response) => response.json())
-      .then(
-        (status: {
-          orderingEnabled?: boolean;
-          deliveryRates?: DeliveryRates | null;
-        }) => {
-          const rates = status.deliveryRates ?? null;
-          setDeliveryRates(rates);
-          setOrderingEnabled(status.orderingEnabled === true && Boolean(rates));
-          setDraft((current) =>
-          current.paymentMethod === "COD"
-            ? current
-            : { ...current, paymentMethod: "COD" },
-          );
-        },
-      )
-      .catch(() => {
-        setDeliveryRates(null);
-        setOrderingEnabled(false);
-      })
-      .finally(() => setOrderingStatusLoaded(true));
-  }, []);
+    setHydrated(true);
+    void loadStoreStatus();
+
+    return () => {
+      window.removeEventListener(CART_UPDATED_EVENT, syncCart);
+      window.removeEventListener("storage", syncCart);
+    };
+  }, [loadStoreStatus]);
 
   useEffect(() => {
     if (!hydrated) return;
-
     try {
-      sessionStorage.setItem(CHECKOUT_DRAFT_KEY, JSON.stringify(draft));
+      sessionStorage.setItem(
+        CHECKOUT_DRAFT_KEY,
+        JSON.stringify({ savedAt: Date.now(), draft }),
+      );
     } catch {
       // Checkout still works when browser storage is unavailable.
     }
@@ -121,12 +274,12 @@ export function CheckoutClient() {
     [cartItems, liveProducts],
   );
 
+  const itemCount = rows.reduce((sum, row) => sum + row.qty, 0);
   const hasUnavailable = rows.some(
     (row) =>
       !row.liveProduct ||
       (row.liveProduct.availableStock ?? 0) < row.qty,
   );
-
   const subtotal = rows.reduce(
     (sum, row) =>
       sum + (row.liveProduct ? row.liveProduct.price * row.qty : 0),
@@ -139,7 +292,6 @@ export function CheckoutClient() {
   const payableTotal = subtotal + deliveryCharge;
   const quotedSubtotal = promotionQuote?.productsSubtotal ?? subtotal;
   const quotedDiscount = promotionQuote?.discount ?? 0;
-  const quotedShippingDiscount = promotionQuote?.shippingDiscount ?? 0;
   const quotedDelivery =
     promotionQuote?.deliveryCharge ??
     (draft.deliveryZone && deliveryRates ? deliveryCharge : 0);
@@ -154,19 +306,14 @@ export function CheckoutClient() {
       setPromotionLoading(false);
       return;
     }
-
     const controller = new AbortController();
     setPromotionLoading(true);
     setPromotionError("");
-
     void fetch("/api/promotions/quote", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        items: cartItems.map((item) => ({
-          productId: item.productId,
-          qty: item.qty,
-        })),
+        items: cartItems.map((item) => ({ productId: item.productId, qty: item.qty })),
         ...(draft.deliveryZone ? { deliveryZone: draft.deliveryZone } : {}),
         code: appliedCode,
       }),
@@ -174,18 +321,10 @@ export function CheckoutClient() {
       signal: controller.signal,
     })
       .then(async (response) => {
-        const result = (await response.json()) as PromotionQuote & {
-          error?: string;
-          code?: string;
-        };
-
+        const result = (await response.json()) as PromotionQuote & { error?: string };
         if (!response.ok) {
-          throw new Error(
-            result.error ||
-              "That promotion could not be applied. Check the code and try again.",
-          );
+          throw new Error(result.error || "That promotion could not be applied.");
         }
-
         setPromotionQuote(result);
         setPromotionError("");
       })
@@ -193,25 +332,14 @@ export function CheckoutClient() {
         if (controller.signal.aborted) return;
         setPromotionQuote(null);
         if (appliedCode) {
-          setPromotionError(
-            error instanceof Error
-              ? error.message
-              : "That promotion could not be applied.",
-          );
+          setPromotionError(error instanceof Error ? error.message : "That promotion could not be applied.");
         }
       })
       .finally(() => {
         if (!controller.signal.aborted) setPromotionLoading(false);
       });
-
     return () => controller.abort();
-  }, [
-    appliedCode,
-    cartItems,
-    catalogSynced,
-    draft.deliveryZone,
-    hasUnavailable,
-  ]);
+  }, [appliedCode, cartItems, catalogSynced, draft.deliveryZone, hasUnavailable]);
 
   function applyPromotionCode() {
     const normalized = promotionCode.trim().toUpperCase();
@@ -230,12 +358,29 @@ export function CheckoutClient() {
     setPromotionError("");
   }
 
+  useEffect(() => {
+    if (hydrated && rows.length > 0 && !checkoutTracked.current) {
+      checkoutTracked.current = true;
+      trackStorefrontEvent("checkout_start", { itemCount });
+    }
+  }, [hydrated, itemCount, rows.length]);
+
+  function clearAttemptReference() {
+    try {
+      sessionStorage.removeItem(CHECKOUT_ATTEMPT_KEY);
+    } catch {
+      // A fresh checkout reference can still be created in memory.
+    }
+  }
+
   function setField<K extends keyof CheckoutDraft>(
     field: K,
     value: CheckoutDraft[K],
   ) {
     setDraft((current) => ({ ...current, [field]: value }));
     setErrors((current) => ({ ...current, [field]: undefined }));
+    setSubmitFailure(null);
+    setDraftNotice("");
   }
 
   function validate() {
@@ -244,62 +389,87 @@ export function CheckoutClient() {
     if (draft.fullName.trim().length < 2) {
       next.fullName = "Enter the customer's full name.";
     }
-
     if (!isValidBangladeshPhone(draft.phone)) {
       next.phone = "Enter a valid Bangladesh mobile number.";
     }
-
     if (
       draft.email.trim() &&
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email.trim())
     ) {
       next.email = "Enter a valid email address or leave it blank.";
     }
-
     if (!draft.deliveryZone) {
       next.deliveryZone = "Choose a delivery zone.";
     }
-
     if (!draft.district) {
       next.district = "Choose a district.";
     }
-
     if (draft.area.trim().length < 2) {
       next.area = "Enter the area, thana or upazila.";
     }
-
     if (draft.address.trim().length < 8) {
       next.address = "Enter a complete delivery address.";
     }
-
     if (!draft.paymentMethod) {
       next.paymentMethod = "Choose a payment method.";
     }
 
     setErrors(next);
-    return Object.keys(next).length === 0;
+    return next;
+  }
+
+  function focusFirstError(next: FieldErrors) {
+    const field = Object.keys(next)[0] as keyof CheckoutDraft | undefined;
+    if (!field) return;
+    window.requestAnimationFrame(() => {
+      document.querySelector<HTMLElement>(`[data-checkout-field="${field}"]`)?.focus();
+    });
   }
 
   function reviewOrder(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setSubmitFailure(null);
+
+    if (!orderingStatusLoaded || !orderingEnabled || !deliveryRates) {
+      setSubmitFailure({
+        message: "Checkout is not ready yet. Refresh the delivery and ordering status, then try again.",
+        code: "STORE_STATUS_UNAVAILABLE",
+        recoverable: true,
+        cartAction: false,
+        uncertain: false,
+      });
+      return;
+    }
 
     if (!catalogSynced || catalogError || hasUnavailable) {
-      setSubmitError(
-        "Live stock changed or could not be verified. Return to your cart and review the available quantities.",
-      );
+      setSubmitFailure({
+        message:
+          "Live stock changed or could not be verified. Review the current cart before continuing.",
+        code: "STOCK_CHANGED",
+        recoverable: true,
+        cartAction: true,
+        uncertain: false,
+      });
       return;
     }
 
-    if (!validate()) {
-      const firstError = document.querySelector("[data-checkout-error='true']");
-      firstError?.scrollIntoView({ behavior: "smooth", block: "center" });
+    const next = validate();
+    if (Object.keys(next).length > 0) {
+      focusFirstError(next);
       return;
     }
 
+    clearAttemptReference();
     setDraft((current) => ({
       ...current,
       phone: normalizeBangladeshPhone(current.phone),
     }));
+    trackStorefrontEvent("checkout_review", {
+      itemCount,
+      deliveryZone: draft.deliveryZone || undefined,
+      paymentMethod: "COD",
+      totalBdt: quotedTotal,
+    });
     setStep("review");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -320,14 +490,14 @@ export function CheckoutClient() {
     }
 
     setSubmitting(true);
-    setSubmitError("");
+    setSubmitFailure(null);
 
     let externalOrderId = "";
     try {
-      externalOrderId = sessionStorage.getItem("aloyri_checkout_id") || "";
+      externalOrderId = sessionStorage.getItem(CHECKOUT_ATTEMPT_KEY) || "";
       if (!externalOrderId) {
         externalOrderId = crypto.randomUUID();
-        sessionStorage.setItem("aloyri_checkout_id", externalOrderId);
+        sessionStorage.setItem(CHECKOUT_ATTEMPT_KEY, externalOrderId);
       }
     } catch {
       externalOrderId = crypto.randomUUID();
@@ -362,21 +532,52 @@ export function CheckoutClient() {
       const result = (await response.json()) as {
         orderNumber?: string;
         error?: string;
+        code?: string;
       };
 
       if (!response.ok || !result.orderNumber) {
-        setSubmitError(
-          result.error ||
-            "The order could not be placed. Please review your cart and try again.",
+        const failure = failureFor(
+          response.status,
+          result.code || "ORDER_FAILED",
+          result.error || "",
         );
+        setSubmitFailure(failure);
+
+        if (!failure.uncertain) {
+          clearAttemptReference();
+        }
+
+        if (failure.cartAction) {
+          await refreshCatalog();
+        }
         return;
       }
 
+      trackStorefrontEvent("order_created", {
+        itemCount,
+        deliveryZone: draft.deliveryZone || undefined,
+        paymentMethod: "COD",
+        totalBdt: quotedTotal,
+      });
+
       writeCart([]);
       setCartItems([]);
+
       try {
+        sessionStorage.setItem(
+          "aloyri_last_order_confirmation",
+          JSON.stringify({
+            savedAt: Date.now(),
+            orderNumber: result.orderNumber,
+            itemCount,
+            deliveryZone: draft.deliveryZone,
+            deliveryCharge: quotedDelivery,
+            total: quotedTotal,
+            paymentMethod: "COD",
+          }),
+        );
         sessionStorage.removeItem(CHECKOUT_DRAFT_KEY);
-        sessionStorage.removeItem("aloyri_checkout_id");
+        sessionStorage.removeItem(CHECKOUT_ATTEMPT_KEY);
       } catch {
         // Confirmation can continue without browser storage.
       }
@@ -385,12 +586,24 @@ export function CheckoutClient() {
         `/order-confirmation?order=${encodeURIComponent(result.orderNumber)}`,
       );
     } catch {
-      setSubmitError(
-        "The order service is temporarily unavailable. Please try again.",
+      setSubmitFailure(
+        failureFor(
+          503,
+          "ORDER_SERVICE_UNAVAILABLE",
+          "The order service is temporarily unavailable.",
+        ),
       );
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function editDetails() {
+    if (submitFailure?.uncertain) return;
+    clearAttemptReference();
+    setSubmitFailure(null);
+    setStep("details");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   if (!hydrated) {
@@ -410,7 +623,7 @@ export function CheckoutClient() {
             : "Checking live price and stock…"}
         </p>
         <p className="mx-auto mt-4 max-w-lg text-sm leading-7 text-[#321f1c]/50">
-          Checkout only continues after Aloyri CRM confirms current prices and
+          Checkout continues only after Aloyri confirms current prices and
           available quantities.
         </p>
         {catalogError ? (
@@ -431,8 +644,8 @@ export function CheckoutClient() {
       <main className="shell min-h-[62vh] py-20 text-center">
         <p className="display text-4xl">Your cart needs an update.</p>
         <p className="mx-auto mt-4 max-w-lg text-sm leading-7 text-[#321f1c]/50">
-          One or more products are out of stock or the selected quantity is
-          higher than current CRM availability.
+          One or more products are unavailable or the selected quantity is now
+          higher than current availability.
         </p>
         <Link
           href="/cart"
@@ -464,48 +677,81 @@ export function CheckoutClient() {
     );
   }
 
-  return (
-    <main className="shell py-10 md:py-14">
-      <div className="mb-9 flex flex-col gap-5 border-b border-[#713a35]/10 pb-8 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/48">
-            Secure checkout foundation
-          </p>
-          <h1 className="display mt-3 text-5xl sm:text-6xl">
-            {step === "details" ? "Delivery details." : "Review your order."}
-          </h1>
-        </div>
+  const zoneLabel = draft.deliveryZone
+    ? deliveryZoneLabels[draft.deliveryZone]
+    : "Not selected";
 
-        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em]">
-          <span
+  return (
+    <main className="shell pb-32 pt-8 md:pb-16 md:pt-12">
+      <nav aria-label="Checkout progress" className="mb-8">
+        <ol className="grid grid-cols-3 gap-2 rounded-[1.2rem] border border-[#713a35]/10 bg-white/55 p-2 text-center text-[10px] font-semibold uppercase tracking-[0.12em] sm:max-w-xl">
+          <li>
+            <Link
+              href="/cart"
+              className="block rounded-[.8rem] px-3 py-2.5 text-[#713a35]"
+            >
+              ✓ Cart
+            </Link>
+          </li>
+          <li
+            aria-current={step === "details" ? "step" : undefined}
             className={
               step === "details"
-                ? "rounded-full bg-[#713a35] px-3 py-2 text-white"
-                : "rounded-full bg-[#f5e8e2] px-3 py-2 text-[#713a35]"
+                ? "rounded-[.8rem] bg-[#713a35] px-3 py-2.5 text-white"
+                : "rounded-[.8rem] px-3 py-2.5 text-[#713a35]"
             }
           >
-            1 · Details
-          </span>
-          <span className="h-px w-6 bg-[#713a35]/20" />
-          <span
+            {step === "review" ? "✓ " : ""}Delivery
+          </li>
+          <li
+            aria-current={step === "review" ? "step" : undefined}
             className={
               step === "review"
-                ? "rounded-full bg-[#713a35] px-3 py-2 text-white"
-                : "rounded-full bg-[#f5e8e2] px-3 py-2 text-[#713a35]/45"
+                ? "rounded-[.8rem] bg-[#713a35] px-3 py-2.5 text-white"
+                : "rounded-[.8rem] px-3 py-2.5 text-[#321f1c]/35"
             }
           >
-            2 · Review
-          </span>
+            Review
+          </li>
+        </ol>
+      </nav>
+
+      <div className="mb-9 flex flex-col gap-4 border-b border-[#713a35]/10 pb-8 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/48">
+            Secure Aloyri checkout
+          </p>
+          <h1 className="display mt-3 text-5xl sm:text-6xl">
+            {step === "details" ? "Delivery details." : "Review everything."}
+          </h1>
+          <p className="mt-3 max-w-xl text-sm leading-7 text-[#321f1c]/48">
+            {step === "details"
+              ? "Your cart is live-stock checked. Add the delivery details, then review the final total before placing the order."
+              : "Nothing is charged online. Check the customer, address, products and Cash on Delivery total before the final confirmation."}
+          </p>
+        </div>
+        <div className="rounded-full bg-[#f5e8e2] px-4 py-2 text-xs font-semibold text-[#713a35]">
+          {itemCount} {itemCount === 1 ? "item" : "items"} · {formatPrice(payableTotal)}
         </div>
       </div>
 
+      {draftNotice ? (
+        <p
+          role="status"
+          className="mb-6 rounded-[1rem] border border-[#713a35]/10 bg-[#f5e8e2] px-4 py-3 text-xs leading-6 text-[#321f1c]/58"
+        >
+          {draftNotice}
+        </p>
+      ) : null}
+
       {step === "details" ? (
         <form
+          id="checkout-details-form"
           onSubmit={reviewOrder}
-          className="grid gap-10 lg:grid-cols-[1fr_390px] lg:gap-14"
+          className="grid gap-8 lg:grid-cols-[1fr_390px] lg:gap-12"
           noValidate
         >
-          <div className="space-y-8">
+          <div className="space-y-6">
             <section className="rounded-[1.5rem] border border-[#713a35]/10 bg-white/60 p-5 sm:p-7">
               <div className="mb-6">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#713a35]/48">
@@ -518,18 +764,17 @@ export function CheckoutClient() {
                 <label className="text-sm font-medium">
                   Full name
                   <input
+                    data-checkout-field="fullName"
                     value={draft.fullName}
                     onChange={(event) => setField("fullName", event.target.value)}
                     className={inputClass}
                     placeholder="Customer name"
                     autoComplete="name"
                     aria-invalid={Boolean(errors.fullName)}
+                    aria-describedby={errors.fullName ? "fullName-error" : undefined}
                   />
                   {errors.fullName ? (
-                    <span
-                      data-checkout-error="true"
-                      className="mt-2 block text-xs text-red-700"
-                    >
+                    <span id="fullName-error" className="mt-2 block text-xs text-red-700">
                       {errors.fullName}
                     </span>
                   ) : null}
@@ -538,6 +783,7 @@ export function CheckoutClient() {
                 <label className="text-sm font-medium">
                   Mobile number
                   <input
+                    data-checkout-field="phone"
                     value={draft.phone}
                     onChange={(event) => setField("phone", event.target.value)}
                     className={inputClass}
@@ -545,17 +791,15 @@ export function CheckoutClient() {
                     inputMode="tel"
                     autoComplete="tel"
                     aria-invalid={Boolean(errors.phone)}
+                    aria-describedby={errors.phone ? "phone-error" : "phone-help"}
                   />
                   {errors.phone ? (
-                    <span
-                      data-checkout-error="true"
-                      className="mt-2 block text-xs text-red-700"
-                    >
+                    <span id="phone-error" className="mt-2 block text-xs text-red-700">
                       {errors.phone}
                     </span>
                   ) : (
-                    <span className="mt-2 block text-xs font-normal text-[#321f1c]/40">
-                      Bangladesh mobile numbers only.
+                    <span id="phone-help" className="mt-2 block text-xs font-normal text-[#321f1c]/40">
+                      Used to verify tracking and return requests.
                     </span>
                   )}
                 </label>
@@ -564,6 +808,7 @@ export function CheckoutClient() {
               <label className="mt-5 block text-sm font-medium">
                 Email <span className="font-normal text-[#321f1c]/38">(optional)</span>
                 <input
+                  data-checkout-field="email"
                   value={draft.email}
                   onChange={(event) => setField("email", event.target.value)}
                   className={inputClass}
@@ -571,17 +816,15 @@ export function CheckoutClient() {
                   inputMode="email"
                   autoComplete="email"
                   aria-invalid={Boolean(errors.email)}
+                  aria-describedby={errors.email ? "email-error" : "email-help"}
                 />
                 {errors.email ? (
-                  <span
-                    data-checkout-error="true"
-                    className="mt-2 block text-xs text-red-700"
-                  >
+                  <span id="email-error" className="mt-2 block text-xs text-red-700">
                     {errors.email}
                   </span>
                 ) : (
-                  <span className="mt-2 block text-xs font-normal leading-5 text-[#321f1c]/40">
-                    Used only for order confirmation and delivery-status updates.
+                  <span id="email-help" className="mt-2 block text-xs font-normal leading-5 text-[#321f1c]/40">
+                    Reserved for transactional order updates when branded email delivery is available.
                   </span>
                 )}
               </label>
@@ -595,8 +838,8 @@ export function CheckoutClient() {
                 <h2 className="display mt-2 text-3xl">Where should it go?</h2>
               </div>
 
-              <div>
-                <p className="text-sm font-medium">Delivery zone</p>
+              <fieldset>
+                <legend className="text-sm font-medium">Delivery zone</legend>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   {(
                     [
@@ -609,8 +852,12 @@ export function CheckoutClient() {
                       <button
                         key={value}
                         type="button"
+                        data-checkout-field={
+                          value === "inside-dhaka" ? "deliveryZone" : undefined
+                        }
+                        aria-pressed={active}
                         onClick={() => setField("deliveryZone", value)}
-                        className={`rounded-[1rem] border p-4 text-left transition ${
+                        className={`min-h-20 rounded-[1rem] border p-4 text-left transition ${
                           active
                             ? "border-[#713a35] bg-[#f7ebe6]"
                             : "border-[#713a35]/12 bg-white hover:border-[#713a35]/28"
@@ -627,24 +874,23 @@ export function CheckoutClient() {
                   })}
                 </div>
                 {errors.deliveryZone ? (
-                  <span
-                    data-checkout-error="true"
-                    className="mt-2 block text-xs text-red-700"
-                  >
+                  <span className="mt-2 block text-xs text-red-700">
                     {errors.deliveryZone}
                   </span>
                 ) : null}
-              </div>
+              </fieldset>
 
               <div className="mt-5 grid gap-5 sm:grid-cols-2">
                 <label className="text-sm font-medium">
                   District
                   <select
+                    data-checkout-field="district"
                     value={draft.district}
                     onChange={(event) => setField("district", event.target.value)}
                     className={inputClass}
                     autoComplete="address-level1"
                     aria-invalid={Boolean(errors.district)}
+                    aria-describedby={errors.district ? "district-error" : undefined}
                   >
                     <option value="">Select district</option>
                     {bangladeshDistricts.map((district) => (
@@ -654,10 +900,7 @@ export function CheckoutClient() {
                     ))}
                   </select>
                   {errors.district ? (
-                    <span
-                      data-checkout-error="true"
-                      className="mt-2 block text-xs text-red-700"
-                    >
+                    <span id="district-error" className="mt-2 block text-xs text-red-700">
                       {errors.district}
                     </span>
                   ) : null}
@@ -666,18 +909,17 @@ export function CheckoutClient() {
                 <label className="text-sm font-medium">
                   Area / thana / upazila
                   <input
+                    data-checkout-field="area"
                     value={draft.area}
                     onChange={(event) => setField("area", event.target.value)}
                     className={inputClass}
-                    placeholder="e.g. Dhanmondi"
+                    placeholder="Area or thana"
                     autoComplete="address-level2"
                     aria-invalid={Boolean(errors.area)}
+                    aria-describedby={errors.area ? "area-error" : undefined}
                   />
                   {errors.area ? (
-                    <span
-                      data-checkout-error="true"
-                      className="mt-2 block text-xs text-red-700"
-                    >
+                    <span id="area-error" className="mt-2 block text-xs text-red-700">
                       {errors.area}
                     </span>
                   ) : null}
@@ -687,194 +929,153 @@ export function CheckoutClient() {
               <label className="mt-5 block text-sm font-medium">
                 Full delivery address
                 <textarea
+                  data-checkout-field="address"
                   value={draft.address}
                   onChange={(event) => setField("address", event.target.value)}
                   className={textareaClass}
-                  placeholder="House/flat, road, block, area and any other delivery details"
+                  placeholder="House / road / building / village and delivery details"
                   autoComplete="street-address"
                   aria-invalid={Boolean(errors.address)}
+                  aria-describedby={errors.address ? "address-error" : undefined}
                 />
                 {errors.address ? (
-                  <span
-                    data-checkout-error="true"
-                    className="mt-2 block text-xs text-red-700"
-                  >
+                  <span id="address-error" className="mt-2 block text-xs text-red-700">
                     {errors.address}
                   </span>
                 ) : null}
               </label>
 
-              <label className="mt-5 block text-sm font-medium">
-                Landmark <span className="font-normal text-[#321f1c]/38">(optional)</span>
-                <input
-                  value={draft.landmark}
-                  onChange={(event) => setField("landmark", event.target.value)}
-                  className={inputClass}
-                  placeholder="Nearby landmark"
-                />
-              </label>
+              <div className="mt-5 grid gap-5 sm:grid-cols-2">
+                <label className="text-sm font-medium">
+                  Landmark <span className="font-normal text-[#321f1c]/38">(optional)</span>
+                  <input
+                    value={draft.landmark}
+                    onChange={(event) => setField("landmark", event.target.value)}
+                    className={inputClass}
+                    placeholder="Nearby landmark"
+                  />
+                </label>
 
-              <label className="mt-5 block text-sm font-medium">
-                Delivery note <span className="font-normal text-[#321f1c]/38">(optional)</span>
-                <textarea
-                  value={draft.notes}
-                  onChange={(event) => setField("notes", event.target.value)}
-                  className={textareaClass}
-                  placeholder="Anything the delivery team should know"
-                />
-              </label>
+                <label className="text-sm font-medium">
+                  Delivery note <span className="font-normal text-[#321f1c]/38">(optional)</span>
+                  <input
+                    value={draft.notes}
+                    onChange={(event) => setField("notes", event.target.value)}
+                    className={inputClass}
+                    placeholder="Useful delivery instruction"
+                  />
+                </label>
+              </div>
             </section>
 
             <section className="rounded-[1.5rem] border border-[#713a35]/10 bg-white/60 p-5 sm:p-7">
-              <div className="mb-6">
+              <div className="mb-5">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#713a35]/48">
                   Payment
                 </p>
-                <h2 className="display mt-2 text-3xl">How would you like to pay?</h2>
+                <h2 className="display mt-2 text-3xl">How will you pay?</h2>
               </div>
 
-              <div className="grid gap-3">
-                {(
-                  [
-                    ["COD", "Cash on Delivery", "Place the order now and pay when it is delivered."],
-                    ["bKash", "bKash", "Online payment verification will be added in a later payment cycle."],
-                    ["Nagad", "Nagad", "Online payment verification will be added in a later payment cycle."],
-                  ] as Array<[PaymentMethod, string, string]>
-                ).map(([value, label, description]) => {
+              <div className="grid gap-3 sm:grid-cols-3">
+                {(["COD", "bKash", "Nagad"] as PaymentMethod[]).map((value) => {
                   const active = draft.paymentMethod === value;
+                  const enabled = value === "COD";
                   return (
                     <button
                       key={value}
                       type="button"
-                      onClick={() =>
-                        value === "COD" && setField("paymentMethod", value)
-                      }
-                      disabled={value !== "COD"}
-                      className={`flex items-center gap-4 rounded-[1rem] border p-4 text-left transition ${
-                        value !== "COD"
-                          ? "cursor-not-allowed border-[#713a35]/8 bg-[#f7f3f1] opacity-55"
-                          : active
-                            ? "border-[#713a35] bg-[#f7ebe6]"
-                            : "border-[#713a35]/12 bg-white hover:border-[#713a35]/28"
-                      }`}
+                      data-checkout-field={value === "COD" ? "paymentMethod" : undefined}
+                      aria-pressed={active}
+                      onClick={() => enabled && setField("paymentMethod", value)}
+                      disabled={!enabled}
+                      className={`min-h-20 rounded-[1rem] border p-4 text-left transition ${
+                        active && enabled
+                          ? "border-[#713a35] bg-[#f7ebe6]"
+                          : "border-[#713a35]/10 bg-white"
+                      } disabled:cursor-not-allowed disabled:opacity-45`}
                     >
-                      <span
-                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
-                          active ? "border-[#713a35]" : "border-[#713a35]/25"
-                        }`}
-                      >
-                        {active ? (
-                          <span className="h-2.5 w-2.5 rounded-full bg-[#713a35]" />
-                        ) : null}
+                      <span className="block text-sm font-semibold">
+                        {paymentMethodLabels[value]}
                       </span>
-                      <span>
-                        <span className="block text-sm font-semibold">{label}</span>
-                        <span className="mt-1 block text-xs leading-5 text-[#321f1c]/45">
-                          {description}
-                        </span>
+                      <span className="mt-1 block text-xs leading-5 text-[#321f1c]/45">
+                        {value === "COD"
+                          ? "Pay the courier when the parcel arrives."
+                          : "Coming later"}
                       </span>
                     </button>
                   );
                 })}
               </div>
+              <p className="mt-4 rounded-[.9rem] bg-[#f5e8e2] p-3 text-xs leading-6 text-[#321f1c]/52">
+                No card, bKash or Nagad payment is collected on this website yet.
+              </p>
             </section>
           </div>
 
           <aside className="h-fit rounded-[1.5rem] border border-[#713a35]/10 bg-[#f5e8e2] p-5 sm:p-6 lg:sticky lg:top-32">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#713a35]/48">
-              Order summary
-            </p>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#713a35]/48">
+                Order summary
+              </p>
+              <span className="text-[10px] text-[#321f1c]/38">
+                Live stock verified
+              </span>
+            </div>
 
             <div className="mt-5 space-y-4">
-              {rows.map(({ product, qty, productId }) =>
-                product ? (
-                  <div key={productId} className="grid grid-cols-[58px_1fr_auto] gap-3">
-                    <ProductMedia
-                      product={product}
-                      className="aspect-[4/5] rounded-[.75rem]"
-                    />
-                    <div className="min-w-0">
-                      <p className="truncate text-xs font-semibold">{product.name}</p>
-                      <p className="mt-1 text-[11px] text-[#321f1c]/42">
-                        {product.brand} · Qty {qty}
-                      </p>
-                    </div>
-                    <p className="text-xs font-semibold">
-                      {formatPrice(product.price * qty)}
-                    </p>
+              {rows.map((row) => (
+                <div key={row.productId} className="grid grid-cols-[52px_1fr_auto] items-center gap-3">
+                  {row.product ? (
+                    <ProductMedia product={row.product} className="aspect-[4/5] rounded-[.8rem]" />
+                  ) : (
+                    <div className="aspect-[4/5] rounded-[.8rem] bg-white" />
+                  )}
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-semibold">{row.product?.name || "Product"}</p>
+                    <p className="mt-1 text-[10px] text-[#321f1c]/42">Qty {row.qty}</p>
                   </div>
-                ) : null,
-              )}
+                  <p className="text-xs font-semibold">
+                    {formatPrice((row.liveProduct?.price || 0) * row.qty)}
+                  </p>
+                </div>
+              ))}
             </div>
 
             <div className="mt-6 rounded-[1rem] border border-[#713a35]/10 bg-white/65 p-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#713a35]/48">
-                    Promotion
-                  </p>
-                  <p className="mt-1 text-xs text-[#321f1c]/45">
-                    Add a code, or eligible automatic offers apply by themselves.
-                  </p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#713a35]/48">Promotion</p>
+                  <p className="mt-1 text-xs text-[#321f1c]/45">Add a code, or eligible automatic offers apply by themselves.</p>
                 </div>
-                {promotionLoading ? (
-                  <span className="text-[10px] uppercase tracking-[0.12em] text-[#321f1c]/38">
-                    Checking…
-                  </span>
-                ) : null}
+                {promotionLoading ? <span className="text-[10px] uppercase tracking-[0.12em] text-[#321f1c]/38">Checking…</span> : null}
               </div>
-
               <div className="mt-3 flex gap-2">
                 <input
                   value={promotionCode}
-                  onChange={(event) => {
-                    setPromotionCode(event.target.value.toUpperCase());
-                    setPromotionError("");
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      applyPromotionCode();
-                    }
-                  }}
+                  onChange={(event) => { setPromotionCode(event.target.value.toUpperCase()); setPromotionError(""); }}
+                  onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); applyPromotionCode(); } }}
+                  aria-label="Promotion code"
                   placeholder="Promotion code"
                   maxLength={40}
                   className="h-11 min-w-0 flex-1 rounded-full border border-[#713a35]/14 bg-white px-4 text-sm uppercase tracking-[0.08em] outline-none placeholder:normal-case placeholder:tracking-normal placeholder:text-[#321f1c]/30 focus:border-[#b9725f]/60"
                 />
-                <button
-                  type="button"
-                  onClick={applyPromotionCode}
-                  disabled={promotionLoading}
-                  className="rounded-full bg-[#713a35] px-4 text-xs font-semibold text-white disabled:opacity-50"
-                >
+                <button type="button" onClick={applyPromotionCode} disabled={promotionLoading}
+                  className="rounded-full bg-[#713a35] px-4 text-xs font-semibold text-white disabled:opacity-50">
                   Apply
                 </button>
               </div>
-
-              {promotionError ? (
-                <p role="alert" className="mt-2 text-xs leading-5 text-red-700">
-                  {promotionError}
-                </p>
-              ) : null}
-
+              {promotionError ? <p role="alert" aria-live="polite" className="mt-2 text-xs leading-5 text-red-700">{promotionError}</p> : null}
               {activePromotion ? (
                 <div className="mt-3 flex items-start justify-between gap-3 rounded-[.8rem] bg-[#f7ebe6] p-3">
                   <div>
-                    <p className="text-xs font-semibold text-[#713a35]">
-                      {activePromotion.badgeText || activePromotion.name}
-                    </p>
+                    <p className="text-xs font-semibold text-[#713a35]">{activePromotion.badgeText || activePromotion.name}</p>
                     <p className="mt-1 text-[11px] leading-5 text-[#321f1c]/48">
-                      {promotionQuote?.savings
-                        ? `${formatPrice(promotionQuote.savings)} saved on this order.`
-                        : "Promotion applied."}
+                      {promotionQuote?.savings ? `${formatPrice(promotionQuote.savings)} saved on this order.` : "Promotion applied."}
                     </p>
                   </div>
                   {appliedCode ? (
-                    <button
-                      type="button"
-                      onClick={removePromotionCode}
-                      className="text-[11px] font-semibold text-[#713a35] underline decoration-[#713a35]/25 underline-offset-4"
-                    >
+                    <button type="button" onClick={removePromotionCode}
+                      className="text-[11px] font-semibold text-[#713a35] underline decoration-[#713a35]/25 underline-offset-4">
                       Remove
                     </button>
                   ) : null}
@@ -882,293 +1083,357 @@ export function CheckoutClient() {
               ) : null}
             </div>
 
-            <div className="mt-6 border-t border-[#713a35]/10 pt-5">
-              <div className="flex justify-between text-sm">
-                <span className="text-[#321f1c]/55">Products subtotal</span>
-                <span className="font-semibold">{formatPrice(quotedSubtotal)}</span>
+            <div className="mt-6 border-t border-[#713a35]/10 pt-5 text-sm">
+              <div className="flex justify-between py-1.5">
+                <span className="text-[#321f1c]/55">Products</span>
+                <span>{formatPrice(quotedSubtotal)}</span>
               </div>
               {quotedDiscount > 0 ? (
-                <div className="mt-3 flex justify-between text-sm text-[#713a35]">
+                <div className="flex justify-between py-1.5 text-[#713a35]">
                   <span>Promotion discount</span>
-                  <span className="font-semibold">−{formatPrice(quotedDiscount)}</span>
+                  <span>−{formatPrice(quotedDiscount)}</span>
                 </div>
               ) : null}
-              <div className="mt-4 flex justify-between text-sm">
+              <div className="flex justify-between py-1.5">
                 <span className="text-[#321f1c]/55">Delivery</span>
-                <span className="font-semibold">
-                  {draft.deliveryZone && deliveryRates
-                    ? quotedShippingDiscount > 0
-                      ? (
-                          <span className="inline-flex items-center gap-2">
-                            <span>{formatPrice(quotedDelivery)}</span>
-                            <span className="text-[11px] font-normal text-[#321f1c]/35 line-through">
-                              {formatPrice(deliveryCharge)}
-                            </span>
-                          </span>
-                        )
-                      : formatPrice(quotedDelivery)
-                    : "Select zone"}
-                </span>
+                <span>{draft.deliveryZone ? formatPrice(quotedDelivery) : "Choose zone"}</span>
               </div>
-              <div className="mt-5 flex justify-between border-t border-[#713a35]/10 pt-5 text-base">
-                <span className="font-semibold">Total</span>
-                <span className="font-semibold">
-                  {draft.deliveryZone && deliveryRates
-                    ? formatPrice(quotedTotal)
-                    : formatPrice(promotionQuote?.discountedSubtotal ?? subtotal)}
-                </span>
+              <div className="mt-3 flex justify-between border-t border-[#713a35]/10 pt-4 text-base font-semibold">
+                <span>Total</span>
+                <span>{formatPrice(quotedTotal)}</span>
               </div>
             </div>
 
+            {!orderingStatusLoaded ? (
+              <p className="mt-5 rounded-[.9rem] bg-white/60 p-3 text-xs leading-5 text-[#321f1c]/48">
+                Checking ordering and delivery configuration…
+              </p>
+            ) : storeStatusError || !orderingEnabled ? (
+              <div className="mt-5 rounded-[.9rem] border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900">
+                <p>Checkout configuration could not be verified.</p>
+                <button
+                  type="button"
+                  onClick={() => void loadStoreStatus()}
+                  className="mt-2 font-semibold underline underline-offset-4"
+                >
+                  Try again
+                </button>
+              </div>
+            ) : null}
+
+            {submitFailure ? (
+              <CheckoutFailure
+                failure={submitFailure}
+                onRetryStore={() => void loadStoreStatus()}
+              />
+            ) : null}
+
             <button
               type="submit"
-              className="mt-6 inline-flex w-full items-center justify-center gap-3 rounded-full bg-[#713a35] px-6 py-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#60312d]"
+              disabled={!orderingStatusLoaded || !orderingEnabled}
+              className="mt-6 hidden w-full items-center justify-center gap-3 rounded-full bg-[#713a35] px-6 py-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:bg-[#713a35]/30 lg:inline-flex"
             >
-              Review order <ArrowIcon />
+              Continue to review <ArrowIcon />
             </button>
 
             <p className="mt-4 text-center text-[10px] leading-5 text-[#321f1c]/38">
-              Nothing is sent to Aloyri or the CRM at this stage.
+              Final price, stock and delivery charge are validated again when the order is created.
             </p>
           </aside>
+
+          <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#713a35]/10 bg-[#fffaf7]/96 p-3 backdrop-blur lg:hidden">
+            <div className="mx-auto flex max-w-xl items-center gap-3">
+              <div className="min-w-0 flex-1 pl-1">
+                <p className="text-[10px] uppercase tracking-[0.12em] text-[#321f1c]/40">Estimated total</p>
+                <p className="font-semibold">{formatPrice(quotedTotal)}</p>
+              </div>
+              <button
+                type="submit"
+                disabled={!orderingStatusLoaded || !orderingEnabled}
+                className="min-h-12 rounded-full bg-[#713a35] px-6 text-sm font-semibold text-white disabled:bg-[#713a35]/30"
+              >
+                Review order
+              </button>
+            </div>
+          </div>
         </form>
       ) : (
-        <div className="grid gap-10 lg:grid-cols-[1fr_390px] lg:gap-14">
-          <div className="space-y-6">
-            <section className="rounded-[1.5rem] border border-[#713a35]/10 bg-white/60 p-5 sm:p-7">
-              <div className="flex items-start justify-between gap-5">
+        <div className="grid gap-8 lg:grid-cols-[1fr_390px] lg:gap-12">
+          <div className="space-y-5">
+            <section className="rounded-[1.5rem] border border-[#713a35]/10 bg-white/65 p-5 sm:p-7">
+              <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#713a35]/48">
-                    Contact & delivery
+                    Customer
                   </p>
-                  <h2 className="display mt-2 text-3xl">{draft.fullName}</h2>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setStep("details")}
-                  className="rounded-full border border-[#713a35]/14 bg-white px-4 py-2 text-xs font-semibold text-[#713a35]"
-                >
-                  Edit
-                </button>
-              </div>
-
-              <div className="mt-6 grid gap-6 sm:grid-cols-2">
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#713a35]/45">
-                    Contact
-                  </p>
-                  <p className="mt-2 text-sm">{draft.phone}</p>
-                  {draft.email ? (
-                    <p className="mt-1 text-sm text-[#321f1c]/55">{draft.email}</p>
+                  <h2 className="mt-2 text-lg font-semibold">{draft.fullName.trim()}</h2>
+                  <p className="mt-1 text-sm text-[#321f1c]/52">{normalizeBangladeshPhone(draft.phone)}</p>
+                  {draft.email.trim() ? (
+                    <p className="mt-1 text-sm text-[#321f1c]/52">{draft.email.trim().toLowerCase()}</p>
                   ) : null}
                 </div>
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#713a35]/45">
-                    Delivery zone
-                  </p>
-                  <p className="mt-2 text-sm">
-                    {draft.deliveryZone
-                      ? deliveryZoneLabels[draft.deliveryZone]
-                      : ""}
-                  </p>
-                </div>
+                {!submitFailure?.uncertain ? (
+                  <button
+                    type="button"
+                    onClick={editDetails}
+                    className="text-xs font-semibold text-[#713a35] underline underline-offset-4"
+                  >
+                    Edit
+                  </button>
+                ) : null}
               </div>
-
-              <div className="mt-6 rounded-[1rem] bg-[#f7ebe6] p-4">
-                <p className="text-sm leading-6">
-                  {draft.address}
-                  <br />
-                  {draft.area}, {draft.district}
-                  {draft.landmark ? (
-                    <>
-                      <br />
-                      Landmark: {draft.landmark}
-                    </>
-                  ) : null}
-                </p>
-              </div>
-
-              {draft.notes ? (
-                <div className="mt-5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#713a35]/45">
-                    Delivery note
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-[#321f1c]/58">
-                    {draft.notes}
-                  </p>
-                </div>
-              ) : null}
             </section>
 
-            <section className="rounded-[1.5rem] border border-[#713a35]/10 bg-white/60 p-5 sm:p-7">
+            <section className="rounded-[1.5rem] border border-[#713a35]/10 bg-white/65 p-5 sm:p-7">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#713a35]/48">
+                    Delivery
+                  </p>
+                  <h2 className="mt-2 text-lg font-semibold">{zoneLabel}</h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-7 text-[#321f1c]/55">
+                    {draft.address.trim()}
+                    <br />
+                    {draft.area.trim()}, {draft.district}
+                    {draft.landmark.trim() ? (
+                      <>
+                        <br />
+                        Landmark: {draft.landmark.trim()}
+                      </>
+                    ) : null}
+                  </p>
+                  {draft.notes.trim() ? (
+                    <p className="mt-3 rounded-[.8rem] bg-[#f5e8e2] p-3 text-xs leading-6 text-[#321f1c]/52">
+                      Delivery note: {draft.notes.trim()}
+                    </p>
+                  ) : null}
+                </div>
+                {!submitFailure?.uncertain ? (
+                  <button
+                    type="button"
+                    onClick={editDetails}
+                    className="text-xs font-semibold text-[#713a35] underline underline-offset-4"
+                  >
+                    Edit
+                  </button>
+                ) : null}
+              </div>
+            </section>
+
+            <section className="rounded-[1.5rem] border border-[#713a35]/10 bg-white/65 p-5 sm:p-7">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#713a35]/48">
+                    Payment
+                  </p>
+                  <h2 className="mt-2 text-lg font-semibold">Cash on Delivery</h2>
+                  <p className="mt-1 text-sm text-[#321f1c]/52">
+                    Pay {formatPrice(quotedTotal)} to the courier when the parcel is delivered.
+                  </p>
+                </div>
+                <span className="rounded-full bg-[#f5e8e2] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#713a35]">
+                  No online charge
+                </span>
+              </div>
+            </section>
+
+            <section className="rounded-[1.5rem] border border-[#713a35]/10 bg-white/65 p-5 sm:p-7">
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#713a35]/48">
-                Payment preference
+                Products
               </p>
-              <h2 className="display mt-2 text-3xl">
-                {paymentMethodLabels[draft.paymentMethod]}
-              </h2>
-              <p className="mt-3 text-sm leading-6 text-[#321f1c]/50">
-                Cash on Delivery is the first live payment method. No online
-                payment is charged during checkout.
-              </p>
-            </section>
-
-            <section className="rounded-[1.5rem] border border-[#b9725f]/20 bg-[#fff4ef] p-5 sm:p-7">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#713a35]/55">
-                Ordering status
-              </p>
-              <h2 className="display mt-2 text-3xl">
-                {!orderingStatusLoaded
-                  ? "Checking order service…"
-                  : orderingEnabled
-                    ? "Cash on Delivery ordering is ready."
-                    : "Awaiting delivery-rate setup."}
-              </h2>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-[#321f1c]/55">
-                Delivery is configured at ৳80 inside Dhaka and ৳150 outside
-                Dhaka. The CRM rechecks the authoritative charge, product price
-                and available stock when the order is submitted.
-              </p>
+              <div className="mt-5 divide-y divide-[#713a35]/10">
+                {rows.map((row) => (
+                  <div key={row.productId} className="grid grid-cols-[64px_1fr_auto] items-center gap-4 py-4 first:pt-0 last:pb-0">
+                    {row.product ? (
+                      <ProductMedia product={row.product} className="aspect-[4/5] rounded-[.9rem]" />
+                    ) : (
+                      <div className="aspect-[4/5] rounded-[.9rem] bg-[#f5e8e2]" />
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold">{row.product?.name || "Product"}</p>
+                      <p className="mt-1 text-[10px] text-[#321f1c]/42">
+                        {row.product?.brand || "Aloyri"} · Qty {row.qty}
+                      </p>
+                    </div>
+                    <p className="text-xs font-semibold">
+                      {formatPrice((row.liveProduct?.price || 0) * row.qty)}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </section>
           </div>
 
           <aside className="h-fit rounded-[1.5rem] border border-[#713a35]/10 bg-[#f5e8e2] p-5 sm:p-6 lg:sticky lg:top-32">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#713a35]/48">
-              Final review
+              Final total
             </p>
 
-            <div className="mt-5 space-y-4">
-              {rows.map(({ product, qty, productId }) =>
-                product ? (
-                  <div key={productId} className="grid grid-cols-[1fr_auto] gap-4">
-                    <div>
-                      <p className="text-xs font-semibold">{product.name}</p>
-                      <p className="mt-1 text-[11px] text-[#321f1c]/42">
-                        Qty {qty} · {product.size}
-                      </p>
-                    </div>
-                    <p className="text-xs font-semibold">
-                      {formatPrice(product.price * qty)}
-                    </p>
-                  </div>
-                ) : null,
-              )}
-            </div>
-
-              {activePromotion ? (
-                <div className="mt-4 rounded-[.9rem] bg-[#f7ebe6] p-3">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-xs font-semibold text-[#713a35]">
-                        {activePromotion.badgeText || activePromotion.name}
-                      </p>
-                      {activePromotion.code ? (
-                        <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-[#321f1c]/40">
-                          Code {activePromotion.code}
-                        </p>
-                      ) : (
-                        <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-[#321f1c]/40">
-                          Automatic offer
-                        </p>
-                      )}
-                    </div>
-                    <span className="text-xs font-semibold text-[#713a35]">
-                      Save {formatPrice(promotionQuote?.savings ?? 0)}
-                    </span>
-                  </div>
-                </div>
-              ) : null}
-
-            <div className="mt-6 border-t border-[#713a35]/10 pt-5">
-              <div className="flex justify-between text-sm">
-                <span className="text-[#321f1c]/55">Products subtotal</span>
-                <span className="font-semibold">{formatPrice(quotedSubtotal)}</span>
+            <div className="mt-5 text-sm">
+              <div className="flex justify-between py-2">
+                <span className="text-[#321f1c]/55">Products</span>
+                <span>{formatPrice(quotedSubtotal)}</span>
               </div>
               {quotedDiscount > 0 ? (
-                <div className="mt-3 flex justify-between text-sm text-[#713a35]">
+                <div className="flex justify-between py-2 text-[#713a35]">
                   <span>Promotion discount</span>
-                  <span className="font-semibold">−{formatPrice(quotedDiscount)}</span>
+                  <span>−{formatPrice(quotedDiscount)}</span>
                 </div>
               ) : null}
-              <div className="mt-4 flex justify-between text-sm">
-                <span className="text-[#321f1c]/55">Delivery</span>
-                <span className="font-semibold">
-                  {quotedShippingDiscount > 0 ? (
-                    <span className="inline-flex items-center gap-2">
-                      <span>{formatPrice(quotedDelivery)}</span>
-                      <span className="text-[11px] font-normal text-[#321f1c]/35 line-through">
-                        {formatPrice(deliveryCharge)}
-                      </span>
-                    </span>
-                  ) : (
-                    formatPrice(quotedDelivery)
-                  )}
-                </span>
+              <div className="flex justify-between py-2">
+                <span className="text-[#321f1c]/55">Delivery · {zoneLabel}</span>
+                <span>{formatPrice(quotedDelivery)}</span>
               </div>
-              <div className="mt-5 flex justify-between border-t border-[#713a35]/10 pt-5 text-base">
-                <span className="font-semibold">Total</span>
-                <span className="font-semibold">{formatPrice(quotedTotal)}</span>
+              {activePromotion ? (
+                <div className="my-3 rounded-[.8rem] bg-white/60 p-3 text-xs">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="font-semibold text-[#713a35]">{activePromotion.badgeText || activePromotion.name}</span>
+                    <span className="font-semibold text-[#713a35]">Save {formatPrice(promotionQuote?.savings ?? 0)}</span>
+                  </div>
+                </div>
+              ) : null}
+              <div className="mt-3 flex justify-between border-t border-[#713a35]/10 pt-5 text-lg font-semibold">
+                <span>Cash due</span>
+                <span>{formatPrice(quotedTotal)}</span>
               </div>
             </div>
+
+            <div className="mt-5 rounded-[.9rem] bg-white/65 p-4 text-xs leading-6 text-[#321f1c]/52">
+              By placing the order, you confirm the delivery details above and request Aloyri to create a Cash on Delivery order. You can review the{" "}
+              <Link href="/terms" className="font-semibold text-[#713a35] underline underline-offset-4">
+                Terms
+              </Link>{" "}
+              and{" "}
+              <Link href="/returns-refunds" className="font-semibold text-[#713a35] underline underline-offset-4">
+                Returns & Refunds
+              </Link>
+              .
+            </div>
+
+            {submitFailure ? (
+              <CheckoutFailure
+                failure={submitFailure}
+                onRetryStore={() => void loadStoreStatus()}
+              />
+            ) : null}
 
             <button
               type="button"
               onClick={() => void placeOrder()}
               disabled={
-                !orderingEnabled ||
-                !catalogSynced ||
-                Boolean(catalogError) ||
-                hasUnavailable ||
                 submitting ||
                 promotionLoading ||
-                Boolean(appliedCode && promotionError)
+                Boolean(appliedCode && promotionError) ||
+                !orderingEnabled ||
+                Boolean(submitFailure && !submitFailure.recoverable)
               }
-              className={`mt-6 w-full rounded-full px-6 py-4 text-sm font-semibold text-white transition ${
-                orderingEnabled &&
-                catalogSynced &&
-                !catalogError &&
-                !hasUnavailable &&
-                !submitting &&
-                !promotionLoading &&
-                !Boolean(appliedCode && promotionError)
-                  ? "bg-[#713a35] hover:-translate-y-0.5 hover:bg-[#60312d]"
-                  : "cursor-not-allowed bg-[#713a35]/30"
-              }`}
+              className="mt-6 hidden w-full items-center justify-center rounded-full bg-[#713a35] px-6 py-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:bg-[#713a35]/30 lg:inline-flex"
             >
               {submitting
-                ? "Creating order…"
-                : orderingEnabled && catalogSynced && !catalogError && !hasUnavailable
-                  ? "Place Cash on Delivery order"
-                  : "Live stock verification required"}
+                ? "Placing order…"
+                : submitFailure?.uncertain
+                  ? "Retry same checkout safely"
+                  : `Place COD order · ${formatPrice(payableTotal)}`}
             </button>
 
-            {submitError ? (
-              <p
-                role="alert"
-                className="mt-4 rounded-[.9rem] border border-red-200 bg-red-50 px-4 py-3 text-xs leading-5 text-red-800"
+            {!submitFailure?.uncertain ? (
+              <button
+                type="button"
+                onClick={editDetails}
+                disabled={submitting}
+                className="mt-3 hidden w-full rounded-full border border-[#713a35]/14 bg-white/60 px-6 py-3.5 text-sm font-semibold text-[#713a35] disabled:opacity-50 lg:block"
               >
-                {submitError}
+                Edit checkout details
+              </button>
+            ) : (
+              <p className="mt-4 text-center text-[10px] leading-5 text-[#321f1c]/45">
+                Editing is temporarily locked because the previous attempt has an uncertain result. Retry the same checkout reference first.
               </p>
-            ) : null}
-
-            <button
-              type="button"
-              onClick={() => {
-                setStep("details");
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-              className="mt-3 w-full rounded-full border border-[#713a35]/14 bg-white/60 px-6 py-3.5 text-sm font-semibold text-[#713a35]"
-            >
-              Edit checkout details
-            </button>
+            )}
 
             <p className="mt-4 text-center text-[10px] leading-5 text-[#321f1c]/38">
-              Orders are created only after this final confirmation. Online
-              payment is not enabled yet.
+              Repeated clicks use the same checkout reference, helping prevent duplicate orders.
             </p>
           </aside>
+
+          <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#713a35]/10 bg-[#fffaf7]/96 p-3 backdrop-blur lg:hidden">
+            <div className="mx-auto flex max-w-xl items-center gap-3">
+              {!submitFailure?.uncertain ? (
+                <button
+                  type="button"
+                  onClick={editDetails}
+                  disabled={submitting}
+                  className="min-h-12 rounded-full border border-[#713a35]/15 bg-white px-4 text-sm font-semibold text-[#713a35]"
+                >
+                  Edit
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => void placeOrder()}
+                disabled={
+                submitting ||
+                promotionLoading ||
+                Boolean(appliedCode && promotionError) ||
+                !orderingEnabled ||
+                Boolean(submitFailure && !submitFailure.recoverable)
+              }
+                className="min-h-12 flex-1 rounded-full bg-[#713a35] px-5 text-sm font-semibold text-white disabled:bg-[#713a35]/30"
+              >
+                {submitting
+                  ? "Placing order…"
+                  : submitFailure?.uncertain
+                    ? "Retry same checkout safely"
+                    : `Place COD · ${formatPrice(quotedTotal)}`}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </main>
+  );
+}
+
+function CheckoutFailure({
+  failure,
+  onRetryStore,
+}: {
+  failure: OrderFailure;
+  onRetryStore: () => void;
+}) {
+  return (
+    <div
+      role="alert"
+      aria-live="assertive"
+      className="mt-5 rounded-[.9rem] border border-red-200 bg-red-50 p-4 text-xs leading-6 text-red-800"
+    >
+      <p className="font-semibold">
+        {failure.uncertain ? "Order confirmation interrupted" : "Checkout needs attention"}
+      </p>
+      <p className="mt-1">{failure.message}</p>
+      {failure.cartAction ? (
+        <Link
+          href="/cart"
+          className="mt-3 inline-flex font-semibold underline underline-offset-4"
+        >
+          Review cart
+        </Link>
+      ) : failure.code === "STORE_STATUS_UNAVAILABLE" ? (
+        <button
+          type="button"
+          onClick={onRetryStore}
+          className="mt-3 font-semibold underline underline-offset-4"
+        >
+          Refresh checkout status
+        </button>
+      ) : !failure.recoverable ? (
+        <Link
+          href="/customer-care"
+          className="mt-3 inline-flex font-semibold underline underline-offset-4"
+        >
+          Open customer care
+        </Link>
+      ) : null}
+    </div>
   );
 }

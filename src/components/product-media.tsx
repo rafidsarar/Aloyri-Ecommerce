@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { ProductArtwork } from "@/components/product-artwork";
 import type { Product } from "@/lib/catalog";
@@ -26,16 +27,15 @@ export function ProductMedia({
       />
 
       {photo && !failed ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-[#fffdfb] p-[7%]">
-          <img
+        <div className="absolute inset-0 bg-[#fffdfb]">
+          <Image
             src={photo.src}
             alt={photo.alt}
-            loading={priority ? "eager" : "lazy"}
-            fetchPriority={priority ? "high" : "auto"}
-            decoding="async"
-            referrerPolicy="no-referrer"
+            fill
+            priority={priority}
+            sizes="(max-width: 640px) 46vw, (max-width: 1024px) 34vw, 520px"
             onError={() => setFailed(true)}
-            className="h-full w-full object-contain transition duration-500"
+            className="object-contain p-[7%]"
           />
         </div>
       ) : null}

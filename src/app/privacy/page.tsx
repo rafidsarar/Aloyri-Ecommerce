@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AnalyticsPreference } from "@/components/analytics-preference";
 import { CustomerInfoPage } from "@/components/customer-info-page";
 
 export const metadata: Metadata = {
@@ -9,6 +10,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
+    <>
     <CustomerInfoPage
       eyebrow="Legal"
       title="Privacy policy."
@@ -41,6 +43,13 @@ export default function PrivacyPage() {
           ],
         },
         {
+          title: "Storefront analytics & performance",
+          paragraphs: [
+            "Aloyri records a limited set of first-party storefront events to understand product views, cart activity, checkout progress, successful order creation, order tracking, return requests and Core Web Vitals. The application analytics payload does not include customer names, phone numbers, email addresses, delivery addresses, order numbers, free-text notes or search text.",
+            "These analytics events use strict allowlists rather than arbitrary customer data. The storefront respects browser Do Not Track and also supports a local analytics opt-out. Hosting and security providers may separately process limited technical request information needed to operate and protect the service.",
+          ],
+        },
+        {
           title: "Marketing",
           paragraphs: [
             "Providing an email address at checkout is not treated as marketing consent. The current checkout email field is for transactional order confirmation and delivery-status updates.",
@@ -54,5 +63,9 @@ export default function PrivacyPage() {
         },
       ]}
     />
+    <div className="shell -mt-8 pb-16">
+      <AnalyticsPreference />
+    </div>
+    </>
   );
 }

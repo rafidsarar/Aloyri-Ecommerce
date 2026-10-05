@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { CustomerInfoPage } from "@/components/customer-info-page";
 
 export const metadata: Metadata = {
@@ -10,6 +11,7 @@ export const metadata: Metadata = {
 
 export default function ReturnsRefundsPage() {
   return (
+    <>
     <CustomerInfoPage
       eyebrow="Customer care"
       title="Returns & refunds."
@@ -45,5 +47,17 @@ export default function ReturnsRefundsPage() {
         },
       ]}
     />
+    <div className="shell -mt-8 pb-16">
+      <Link
+        href="/return-request"
+        className="inline-flex rounded-full bg-[#713a35] px-6 py-3.5 text-sm font-semibold text-white"
+      >
+        Request a return / refund review
+      </Link>
+      <p className="mt-3 max-w-xl text-xs leading-6 text-[#321f1c]/45">
+        You will verify the website order with the same mobile number used at checkout before selecting products for review.
+      </p>
+    </div>
+    </>
   );
 }

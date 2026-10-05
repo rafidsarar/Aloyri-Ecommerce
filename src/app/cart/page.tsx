@@ -157,7 +157,7 @@ export default function CartPage() {
                       <div className="mt-5 inline-flex items-center overflow-hidden rounded-full border border-[#713a35]/14 bg-white">
                         <button
                           type="button"
-                          className="h-9 w-9 text-[#713a35]"
+                          className="h-11 w-11 text-[#713a35]"
                           aria-label={`Decrease ${product?.name || "product"} quantity`}
                           onClick={() =>
                             save(
@@ -171,11 +171,11 @@ export default function CartPage() {
                         >
                           −
                         </button>
-                        <span className="w-8 text-center text-sm">{qty}</span>
+                        <span className="w-9 text-center text-sm">{qty}</span>
                         <button
                           type="button"
                           disabled={qty >= available}
-                          className="h-9 w-9 text-[#713a35] disabled:cursor-not-allowed disabled:opacity-30"
+                          className="h-11 w-11 text-[#713a35] disabled:cursor-not-allowed disabled:opacity-30"
                           aria-label={`Increase ${product?.name || "product"} quantity`}
                           onClick={() =>
                             save(
