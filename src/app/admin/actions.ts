@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import {
   ADMIN_COOKIE,
   ADMIN_SESSION_SECONDS,
+  changeAdminPassword,
   createAdminOwner,
   createAdminSession,
   currentAdmin,
@@ -110,6 +111,36 @@ export async function logoutAdmin() {
     maxAge: 0,
   });
   redirect("/admin/login");
+}
+
+export async function updateAdminPassword(formData: FormData) {
+  const admin = await ensureAdmin();
+  const currentPassword = text(formData, "currentPassword", 128);
+  const newPassword = text(formData, "newPassword", 128);
+  const confirmPassword = text(formData, "confirmPassword", 128);
+
+  if (newPassword !== confirmPassword) {
+    redirect(
+      "/admin/settings?passwordError=" +
+        encodeURIComponent("New passwords do not match."),
+    );
+  }
+
+  try {
+    await changeAdminPassword(
+      admin.username,
+      currentPassword,
+      newPassword,
+    );
+    await setSession(admin.username);
+  } catch (error) {
+    redirect(
+      "/admin/settings?passwordError=" +
+        encodeURIComponent(errorMessage(error)),
+    );
+  }
+
+  redirect("/admin/settings?passwordChanged=1");
 }
 
 export async function saveHomepage(formData: FormData) {

@@ -143,6 +143,36 @@ export async function verifyAdminCredentials(username: string, password: string)
   return constantTimeEqual(derived, auth.passwordHash);
 }
 
+export async function changeAdminPassword(
+  username: string,
+  currentPassword: string,
+  newPassword: string,
+) {
+  const auth = await readAdminAuth();
+  if (!auth || !constantTimeEqual(auth.username, username)) {
+    throw new Error("Admin account is not available.");
+  }
+
+  const valid = await verifyAdminCredentials(username, currentPassword);
+  if (!valid) throw new Error("Current password is incorrect.");
+  if (newPassword.length < 12 || newPassword.length > 128) {
+    throw new Error("New password must be between 12 and 128 characters.");
+  }
+  if (constantTimeEqual(currentPassword, newPassword)) {
+    throw new Error("Choose a different password.");
+  }
+
+  const salt = randomBytes(16);
+  const next: AdminAuthRecord = {
+    ...auth,
+    salt: bytesToBase64Url(salt),
+    passwordHash: await derivePasswordHash(newPassword, salt),
+    sessionSecret: bytesToBase64Url(randomBytes(32)),
+    updatedAt: new Date().toISOString(),
+  };
+  await writePrivateJson(AUTH_PATH, next);
+}
+
 export async function createAdminSession(username: string) {
   const auth = await readAdminAuth();
   if (!auth || !constantTimeEqual(auth.username, username)) {

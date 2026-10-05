@@ -1,4 +1,4 @@
-import { saveSiteSettings } from "@/app/admin/actions";
+import { saveSiteSettings, updateAdminPassword } from "@/app/admin/actions";
 import { AdminCard, AdminNotice, AdminShell } from "@/components/admin/admin-shell";
 import { requireAdminPage } from "@/lib/admin-auth";
 import { readStorefrontConfig } from "@/lib/storefront-admin-store";
@@ -6,10 +6,10 @@ import { readStorefrontConfig } from "@/lib/storefront-admin-store";
 export default async function AdminSettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string }>;
+  searchParams: Promise<{ saved?: string; passwordChanged?: string; passwordError?: string }>;
 }) {
   const admin = await requireAdminPage();
-  const [{ saved }, config] = await Promise.all([
+  const [query, config] = await Promise.all([
     searchParams,
     readStorefrontConfig(),
   ]);
@@ -20,7 +20,7 @@ export default async function AdminSettingsPage({
       title="Store settings"
       subtitle="Customer-facing website settings live here. Commerce-critical price, stock and order controls remain in CRM."
     >
-      {saved ? <AdminNotice>Store settings saved.</AdminNotice> : null}
+      {query.saved ? <AdminNotice>Store settings saved.</AdminNotice> : null}\n      {query.passwordChanged ? <AdminNotice>Admin password changed and session keys rotated.</AdminNotice> : null}\n      {query.passwordError ? <AdminNotice tone="warning">{query.passwordError}</AdminNotice> : null}
 
       <form action={saveSiteSettings} className="grid gap-5">
         <AdminCard>
@@ -66,6 +66,54 @@ export default async function AdminSettingsPage({
             Save settings
           </button>
         </div>
+      </form>
+
+      <form action={updateAdminPassword} className="mt-5">
+        <AdminCard>
+          <p className="text-sm font-semibold">Admin account security</p>
+          <p className="mt-1 text-xs leading-5 text-black/45">
+            Changing the password also rotates the admin session signing key.
+          </p>
+          <div className="mt-4 grid gap-4 md:grid-cols-3">
+            <label className="grid gap-1.5 text-sm font-medium">
+              Current password
+              <input
+                name="currentPassword"
+                type="password"
+                autoComplete="current-password"
+                required
+                className="rounded-xl border border-black/10 px-4 py-3"
+              />
+            </label>
+            <label className="grid gap-1.5 text-sm font-medium">
+              New password
+              <input
+                name="newPassword"
+                type="password"
+                autoComplete="new-password"
+                minLength={12}
+                maxLength={128}
+                required
+                className="rounded-xl border border-black/10 px-4 py-3"
+              />
+            </label>
+            <label className="grid gap-1.5 text-sm font-medium">
+              Confirm new password
+              <input
+                name="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                minLength={12}
+                maxLength={128}
+                required
+                className="rounded-xl border border-black/10 px-4 py-3"
+              />
+            </label>
+          </div>
+          <button className="mt-4 rounded-xl border border-[#713a35]/18 px-5 py-3 text-sm font-semibold text-[#713a35]">
+            Change admin password
+          </button>
+        </AdminCard>
       </form>
     </AdminShell>
   );
