@@ -213,8 +213,7 @@ export function CheckoutClient() {
     setErrors((current) => ({ ...current, [field]: undefined }));
   }
 
-  async function applyPromotion(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function applyPromotion() {
     const code = normalizePromotionCode(promotionInput);
 
     if (!code) {
@@ -885,7 +884,7 @@ export function CheckoutClient() {
               </div>
             </div>
 
-            <form onSubmit={applyPromotion} className="mt-5 rounded-[1rem] border border-[#713a35]/10 bg-white/60 p-4">
+            <div className="mt-5 rounded-[1rem] border border-[#713a35]/10 bg-white/60 p-4">
               <label className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#713a35]/48">
                 Promotion code
               </label>
@@ -900,7 +899,8 @@ export function CheckoutClient() {
                   className="min-w-0 flex-1 rounded-full border border-[#713a35]/14 bg-white px-4 py-2.5 text-sm uppercase outline-none focus:border-[#b9725f]/60"
                 />
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={() => void applyPromotion()}
                   disabled={promotionLoading || !draft.deliveryZone}
                   className="rounded-full bg-[#713a35] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-35"
                 >
@@ -926,7 +926,7 @@ export function CheckoutClient() {
                   {promotionError}
                 </p>
               ) : null}
-            </form>
+            </div>
 
             <button
               type="submit"
@@ -1101,7 +1101,7 @@ export function CheckoutClient() {
               </div>
             </div>
 
-            <form onSubmit={applyPromotion} className="mt-5 rounded-[1rem] border border-[#713a35]/10 bg-white/60 p-4">
+            <div className="mt-5 rounded-[1rem] border border-[#713a35]/10 bg-white/60 p-4">
               <label className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#713a35]/48">
                 Promotion code
               </label>
@@ -1116,7 +1116,8 @@ export function CheckoutClient() {
                   className="min-w-0 flex-1 rounded-full border border-[#713a35]/14 bg-white px-4 py-2.5 text-sm uppercase outline-none focus:border-[#b9725f]/60"
                 />
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={() => void applyPromotion()}
                   disabled={promotionLoading}
                   className="rounded-full bg-[#713a35] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-35"
                 >
@@ -1136,7 +1137,7 @@ export function CheckoutClient() {
               {promotionError ? (
                 <p role="alert" className="mt-3 text-[11px] leading-5 text-red-700">{promotionError}</p>
               ) : null}
-            </form>
+            </div>
 
             <button
               type="button"
