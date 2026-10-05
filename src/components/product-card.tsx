@@ -8,6 +8,7 @@ import {
   productStockLabel,
   type Product,
 } from "@/lib/catalog";
+import { hasSalePrice, salePriceFor } from "@/lib/promotions";
 
 export function ProductCard({ product: fallback }: { product: Product }) {
   const { product: liveProduct, synced } = useCatalogProduct(fallback.id);
@@ -15,6 +16,8 @@ export function ProductCard({ product: fallback }: { product: Product }) {
   if (synced && !liveProduct) return null;
   const product = liveProduct ?? fallback;
   const stockLabel = synced ? productStockLabel(product) : "Checking live stock";
+  const salePrice = salePriceFor(product);
+  const onSale = synced && hasSalePrice(product);
 
   return (
     <article className="group">
@@ -24,7 +27,11 @@ export function ProductCard({ product: fallback }: { product: Product }) {
             product={product}
             className="aspect-[4/5] rounded-[1.55rem] transition duration-500 group-hover:scale-[0.995]"
           />
-          {product.bestseller ? (
+          {onSale ? (
+            <span className="absolute left-4 top-4 rounded-full border border-white/50 bg-[#713a35] px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-white shadow-sm">
+              {product.promotionBadge || "Sale"}
+            </span>
+          ) : product.bestseller ? (
             <span className="absolute left-4 top-4 rounded-full border border-white/50 bg-white/75 px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-[#713a35] backdrop-blur">
               Bestseller
             </span>
@@ -49,9 +56,16 @@ export function ProductCard({ product: fallback }: { product: Product }) {
                 {product.size} · {stockLabel}
               </p>
             </div>
-            <p className="shrink-0 text-sm font-medium text-[#321f1c]">
-              {synced ? formatPrice(product.price) : "—"}
-            </p>
+            <div className="shrink-0 text-right">
+              <p className="text-sm font-medium text-[#321f1c]">
+                {synced ? formatPrice(salePrice) : "—"}
+              </p>
+              {onSale ? (
+                <p className="mt-0.5 text-[11px] text-[#321f1c]/38 line-through">
+                  {formatPrice(product.price)}
+                </p>
+              ) : null}
+            </div>
           </div>
         </div>
       </Link>
