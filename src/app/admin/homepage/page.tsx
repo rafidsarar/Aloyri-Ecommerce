@@ -17,6 +17,13 @@ export default async function AdminHomepagePage({
   ]);
   const home = config.homepage;
   const products = catalog.ok ? catalog.body.products : [];
+  const heroProductId = products.some(
+    (product) => product.id === home.heroProductId,
+  )
+    ? home.heroProductId
+    : products.find((product) => product.availableStock > 0)?.id ||
+      products[0]?.id ||
+      "";
 
   return (
     <AdminShell
@@ -77,7 +84,7 @@ export default async function AdminHomepagePage({
           <div className="grid gap-4 lg:grid-cols-2">
             <label className="grid gap-1.5 text-sm font-medium">
               Hero product
-              <select name="heroProductId" defaultValue={home.heroProductId} className="rounded-xl border border-black/10 px-4 py-3">
+              <select name="heroProductId" defaultValue={heroProductId} className="rounded-xl border border-black/10 px-4 py-3">
                 {products.map((product) => (
                   <option key={product.id} value={product.id}>
                     {product.brand} · {product.name}
