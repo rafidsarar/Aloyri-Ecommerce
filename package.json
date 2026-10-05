@@ -2,8 +2,10 @@
   "name": "aloyri-ecommerce",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "pnpm@12.8.1",
-  "engines": {"node": "24.x"},
+  "packageManager": "npm@11.11.0",
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -12,7 +14,7 @@
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
-    "verify": "pnpm lint && pnpm typecheck && pnpm build && pnpm test:e2e"
+    "verify": "npm run lint && npm run typecheck && npm run build && npm run test:e2e"
   },
   "dependencies": {
     "next": "16.3.8",
@@ -22,12 +24,12 @@
   "devDependencies": {
     "@playwright/test": "1.63.0",
     "@tailwindcss/postcss": "4.3.3",
-    "@types/node": "^24.19.1",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "eslint": "10.10.0",
+    "@types/node": "24.10.0",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "eslint": "9.39.5",
     "eslint-config-next": "16.3.8",
     "tailwindcss": "4.3.3",
-    "typescript": "7.0.2"
+    "typescript": "6.0.3"
   }
 }

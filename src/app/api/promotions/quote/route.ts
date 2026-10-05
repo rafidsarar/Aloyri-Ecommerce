@@ -1,5 +1,6 @@
 import { quoteCrmPromotion } from "@/lib/crm-promotion-integration";
 import type { PromotionQuoteRequest } from "@/lib/promotions";
+import { rateAllowed, requestIp } from "@/lib/request-rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +57,16 @@ function validRequest(value: unknown): value is PromotionQuoteRequest {
 export async function POST(request: Request) {
   if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
     return response({ error: "Content-Type must be application/json.", code: "INVALID_CONTENT_TYPE" }, 415);
+  }
+
+  if (!rateAllowed("promotions", requestIp(request), 120, 5 * 60_000)) {
+    return response(
+      {
+        error: "Too many promotion requests. Please wait a few minutes and try again.",
+        code: "RATE_LIMITED",
+      },
+      429,
+    );
   }
 
   const text = await request.text();

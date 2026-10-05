@@ -7,6 +7,7 @@ import {
   isValidBangladeshPhone,
   normalizeBangladeshPhone,
 } from "@/lib/checkout";
+import { rateAllowed, requestIp } from "@/lib/request-rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -137,6 +138,16 @@ export async function POST(request: Request) {
     return response(
       { error: "Content-Type must be application/json.", code: "INVALID_CONTENT_TYPE" },
       415,
+    );
+  }
+
+  if (!rateAllowed("orders", requestIp(request), 20, 5 * 60_000)) {
+    return response(
+      {
+        error: "Too many order attempts. Please wait a few minutes and try again.",
+        code: "RATE_LIMITED",
+      },
+      429,
     );
   }
 
