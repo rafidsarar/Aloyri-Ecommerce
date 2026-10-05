@@ -12,6 +12,7 @@ export default function robots(): MetadataRoute.Robots {
         "/checkout",
         "/order-confirmation",
         "/track-order",
+        "/return-request",
       ],
     },
     sitemap: siteConfig.url + "/sitemap.xml",

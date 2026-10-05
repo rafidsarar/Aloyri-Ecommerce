@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { ArrowIcon } from "@/components/icons";
 import { formatPrice } from "@/lib/catalog";
@@ -7,6 +8,7 @@ import {
   isValidBangladeshPhone,
   normalizeBangladeshPhone,
 } from "@/lib/checkout";
+import { trackStorefrontEvent } from "@/lib/analytics";
 import type {
   PublicTrackedOrder,
   TrackingStatus,
@@ -94,6 +96,9 @@ export function OrderTrackingClient({
       }
 
       setResult(body);
+      trackStorefrontEvent("order_tracking_success", {
+        orderStatus: body.status,
+      });
     } catch {
       setError("Order tracking is temporarily unavailable. Please try again.");
     } finally {
@@ -337,13 +342,22 @@ export function OrderTrackingClient({
                 </p>
               </div>
 
+              {["Delivered", "Returned"].includes(result.status) ? (
+                <Link
+                  href={"/return-request?order=" + encodeURIComponent(result.orderNumber)}
+                  className="mt-5 block w-full rounded-full bg-[#713a35] px-5 py-3 text-center text-sm font-semibold text-white"
+                >
+                  Request return / refund review
+                </Link>
+              ) : null}
+
               <button
                 type="button"
                 onClick={() => {
                   setResult(null);
                   setError("");
                 }}
-                className="mt-5 w-full rounded-full border border-[#713a35]/14 bg-white/60 px-5 py-3 text-sm font-semibold text-[#713a35]"
+                className="mt-3 w-full rounded-full border border-[#713a35]/14 bg-white/60 px-5 py-3 text-sm font-semibold text-[#713a35]"
               >
                 Track another order
               </button>

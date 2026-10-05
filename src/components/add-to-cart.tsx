@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useCatalogProduct } from "@/components/catalog-provider";
 import { readCart, writeCart } from "@/lib/cart";
+import { trackStorefrontEvent } from "@/lib/analytics";
 
 export function AddToCart({ productId }: { productId: string }) {
   const [added, setAdded] = useState(false);
@@ -25,6 +26,7 @@ export function AddToCart({ productId }: { productId: string }) {
     }
 
     writeCart(items);
+    trackStorefrontEvent("add_to_cart", { productId });
     setAdded(true);
     window.setTimeout(() => setAdded(false), 1500);
   }
@@ -41,6 +43,7 @@ export function AddToCart({ productId }: { productId: string }) {
         : "Add to cart";
 
   return (
+    <>
     <button
       type="button"
       onClick={add}
@@ -53,5 +56,9 @@ export function AddToCart({ productId }: { productId: string }) {
     >
       {label}
     </button>
+    <span className="sr-only" aria-live="polite">
+      {added ? (product?.name || "Product") + " added to cart." : ""}
+    </span>
+    </>
   );
 }

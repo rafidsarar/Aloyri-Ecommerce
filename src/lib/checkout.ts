@@ -15,6 +15,8 @@ export type CheckoutDraft = {
 };
 
 export const CHECKOUT_DRAFT_KEY = "aloyri_checkout_draft";
+export const CHECKOUT_DRAFT_TTL_MS = 24 * 60 * 60 * 1000;
+export const CHECKOUT_ATTEMPT_KEY = "aloyri_checkout_id";
 
 export const initialCheckoutDraft: CheckoutDraft = {
   fullName: "",

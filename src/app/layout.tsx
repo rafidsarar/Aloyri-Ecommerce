@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { CatalogProvider } from "@/components/catalog-provider";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
+import { PerformanceReporter } from "@/components/performance-reporter";
 import { safeJsonLd } from "@/lib/seo";
 import { absoluteUrl, siteConfig } from "@/lib/site";
 import "./globals.css";
@@ -65,6 +66,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: safeJsonLd(organizationSchema) }}
@@ -75,8 +79,11 @@ export default function RootLayout({
         />
         <CatalogProvider>
           <Header />
-          {children}
+          <div id="main-content" tabIndex={-1}>
+            {children}
+          </div>
           <Footer />
+          <PerformanceReporter />
         </CatalogProvider>
       </body>
     </html>

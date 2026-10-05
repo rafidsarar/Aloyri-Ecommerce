@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 import { AddToCart } from "@/components/add-to-cart";
 import { useCatalog } from "@/components/catalog-provider";
 import { ArrowIcon } from "@/components/icons";
@@ -13,6 +14,7 @@ import {
 } from "@/lib/catalog";
 import { getVerifiedProductContent } from "@/lib/product-verification";
 import { hasSalePrice, salePriceFor } from "@/lib/promotions";
+import { trackStorefrontEvent } from "@/lib/analytics";
 
 export function LiveProductPage({
   slug,
@@ -28,6 +30,13 @@ export function LiveProductPage({
       candidate.id === slug ||
       (fallback && candidate.id === fallback.id),
   );
+  const productId = product?.id;
+
+  useEffect(() => {
+    if (synced && productId) {
+      trackStorefrontEvent("product_view", { productId });
+    }
+  }, [synced, productId]);
 
   if (!synced) {
     return (
@@ -156,6 +165,7 @@ export function LiveProductPage({
               </span>
             ) : null}
             <span
+              aria-live="polite"
               className={`rounded-full px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.16em] ${
                 (product.availableStock ?? 0) > 0
                   ? "bg-emerald-50 text-emerald-700"
