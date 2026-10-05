@@ -37,6 +37,7 @@ export type WebsiteOrderPayload = {
     notes?: string;
   };
   items: Array<{ productId: string; qty: number }>;
+  promotionCode?: string;
   deliveryZone: "inside-dhaka" | "outside-dhaka";
   paymentMethod: "COD";
 };
@@ -48,8 +49,17 @@ export type CrmOrderResult = {
   status: "New";
   payment: "COD";
   productsSubtotal: number;
+  discount: number;
+  shippingDiscount: number;
   deliveryCharge: number;
   total: number;
+  savings: number;
+  promotion: null | {
+    id: string;
+    name: string;
+    code: string;
+    badgeText: string;
+  };
   duplicate?: boolean;
 };
 
