@@ -75,7 +75,7 @@ jobs:
             zone="$1"
             ref="SMOKE-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${zone}"
             body=$(cat <<JSON
-          {"externalOrderId":"$ref","customer":{"name":"Aloyri Integration Smoke Test","phone":"01700000000","address":"Aloyri production smoke test only","district":"Dhaka","area":"Test","landmark":"","notes":"Non-persisting integration smoke test"},"items":[{"productId":"__aloyri_missing_smoke_product__","qty":1}],"deliveryZone":"$zone","paymentMethod":"COD"}
+          {"externalOrderId":"$ref","customer":{"name":"Aloyri Integration Smoke Test","phone":"01700000000","address":"Aloyri production smoke test only","district":"Dhaka","area":"Test","landmark":"","notes":"Non-persisting integration smoke test"},"items":[{"productId":"aloyri-missing-smoke-product","qty":1}],"deliveryZone":"$zone","paymentMethod":"COD"}
           JSON
             )
             status=$(curl --fail-with-body --retry 3 --retry-delay 5 --retry-all-errors \
