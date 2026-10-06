@@ -309,6 +309,23 @@ const DRAFT_CONFIG_PATH = "admin/storefront-draft.json";
 const HISTORY_PREFIX = "admin/history/";
 const AUDIT_PREFIX = "admin/audit/";
 
+const STORAGE_NAMESPACE =
+  process.env.VERCEL_ENV === "production" ? "" : "preview/";
+
+export function storefrontStoragePath(pathname: string) {
+  if (!STORAGE_NAMESPACE || pathname.startsWith(STORAGE_NAMESPACE)) {
+    return pathname;
+  }
+  return STORAGE_NAMESPACE + pathname;
+}
+
+function logicalStorefrontPath(pathname: string) {
+  if (STORAGE_NAMESPACE && pathname.startsWith(STORAGE_NAMESPACE)) {
+    return pathname.slice(STORAGE_NAMESPACE.length);
+  }
+  return pathname;
+}
+
 export type StorefrontVersionRecord = {
   version: 1;
   id: string;
@@ -339,7 +356,7 @@ export async function readPrivateJson<T>(pathname: string): Promise<T | null> {
   if (!blobConfigured()) return null;
 
   try {
-    const result = await get(pathname, {
+    const result = await get(storefrontStoragePath(pathname), {
       access: "private",
       useCache: false,
     });
@@ -359,7 +376,7 @@ export async function writePrivateJson(pathname: string, value: unknown) {
     throw new Error("Website datastore is not configured.");
   }
 
-  await put(pathname, JSON.stringify(value, null, 2), {
+  await put(storefrontStoragePath(pathname), JSON.stringify(value, null, 2), {
     access: "private",
     addRandomSuffix: false,
     allowOverwrite: true,
@@ -543,9 +560,9 @@ export async function getPublishingStatus() {
 
 async function historyRecords(limit = 50) {
   if (!blobConfigured()) return [] as StorefrontVersionRecord[];
-  const result = await list({ prefix: HISTORY_PREFIX, limit: Math.min(limit, 100) });
+  const result = await list({ prefix: storefrontStoragePath(HISTORY_PREFIX), limit: Math.min(limit, 100) });
   const records = await Promise.all(
-    result.blobs.map((blob) => readPrivateJson<StorefrontVersionRecord>(blob.pathname)),
+    result.blobs.map((blob) => readPrivateJson<StorefrontVersionRecord>(logicalStorefrontPath(blob.pathname))),
   );
   return records
     .filter((record): record is StorefrontVersionRecord => Boolean(record))
@@ -582,9 +599,9 @@ export async function writeAdminAuditEvent(
 
 export async function listAdminAuditEvents(limit = 20) {
   if (!blobConfigured()) return [] as AdminAuditEvent[];
-  const result = await list({ prefix: AUDIT_PREFIX, limit: Math.min(limit, 100) });
+  const result = await list({ prefix: storefrontStoragePath(AUDIT_PREFIX), limit: Math.min(limit, 100) });
   const events = await Promise.all(
-    result.blobs.map((blob) => readPrivateJson<AdminAuditEvent>(blob.pathname)),
+    result.blobs.map((blob) => readPrivateJson<AdminAuditEvent>(logicalStorefrontPath(blob.pathname))),
   );
   return events
     .filter((event): event is AdminAuditEvent => Boolean(event))
@@ -691,7 +708,7 @@ export async function uploadStorefrontMedia(file: File) {
     .slice(0, 60) || "image";
   const pathname = `media/${Date.now()}-${base}.${extension}`;
 
-  await put(pathname, file, {
+  await put(storefrontStoragePath(pathname), file, {
     access: "private",
     addRandomSuffix: false,
     contentType: file.type,
@@ -704,10 +721,13 @@ export async function listStorefrontMedia() {
   if (!blobConfigured()) return [];
   try {
     const result = await list({
-      prefix: "media/",
+      prefix: storefrontStoragePath("media/"),
       limit: 100,
     });
-    return result.blobs;
+    return result.blobs.map((blob) => ({
+      ...blob,
+      pathname: logicalStorefrontPath(blob.pathname),
+    }));
   } catch (error) {
     console.error("Media list failed", error);
     return [];

@@ -1,4 +1,5 @@
 import { get } from "@vercel/blob";
+import { storefrontStoragePath } from "@/lib/storefront-admin-store";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,7 @@ export async function GET(
 
   const pathname = "media/" + safeSegments.join("/");
   try {
-    const result = await get(pathname, {
+    const result = await get(storefrontStoragePath(pathname), {
       access: "private",
       useCache: true,
     });
