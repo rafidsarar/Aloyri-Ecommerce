@@ -18,14 +18,15 @@ import {
 } from "@/lib/product-preferences";
 
 function usePreferenceCounts() {
-  const snapshot = useSyncExternalStore(
+  useSyncExternalStore(
     subscribeProductPreferences,
     productPreferencesSnapshot,
     productPreferencesServerSnapshot,
   );
-  const saved = useMemo(() => readSavedProductIds(), [snapshot]);
-  const compare = useMemo(() => readCompareProductIds(), [snapshot]);
-  return { saved, compare };
+  return {
+    saved: readSavedProductIds(),
+    compare: readCompareProductIds(),
+  };
 }
 
 export function ProductPreferenceButtons({ productId }: { productId: string }) {
@@ -92,18 +93,14 @@ export function RecentlyViewedProducts({
   currentProductId: string;
 }) {
   const { products, synced } = useCatalog();
-  const snapshot = useSyncExternalStore(
+  useSyncExternalStore(
     subscribeProductPreferences,
     productPreferencesSnapshot,
     productPreferencesServerSnapshot,
   );
-  const recentIds = useMemo(
-    () =>
-      readRecentProductIds()
-        .filter((id) => id !== currentProductId)
-        .slice(0, 4),
-    [currentProductId, snapshot],
-  );
+  const recentIds = readRecentProductIds()
+    .filter((id) => id !== currentProductId)
+    .slice(0, 4);
 
   useEffect(() => {
     const previous = readRecentProductIds().filter(
