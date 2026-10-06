@@ -111,6 +111,9 @@ export default async function CategoryPage({
       <ShopClient
         initialCategory={entry.name}
         lockCategory
+        searchSynonymGroups={config.merchandising.discovery.synonymGroups}
+        categoryOrder={config.merchandising.discovery.categoryOrder}
+        popularSearches={config.merchandising.discovery.popularSearches}
         merchandisingSortMode={config.merchandising.shopSortMode}
       />
     </main>
