@@ -25,12 +25,12 @@ function Cell({ children }: { children: React.ReactNode }) {
 
 export function CompareProductsClient() {
   const { products, synced, error, refresh } = useCatalog();
-  const snapshot = useSyncExternalStore(
+  useSyncExternalStore(
     subscribeProductPreferences,
     productPreferencesSnapshot,
     productPreferencesServerSnapshot,
   );
-  const ids = useMemo(() => readCompareProductIds(), [snapshot]);
+  const ids = readCompareProductIds();
 
   const compared = useMemo(() => {
     const byId = new Map(products.map((product) => [product.id, product]));
