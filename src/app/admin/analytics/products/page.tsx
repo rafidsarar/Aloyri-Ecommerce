@@ -3,7 +3,7 @@ import {
   AdminNotice,
   AdminShell,
 } from "@/components/admin/admin-shell";
-import { requireAdminPage } from "@/lib/admin-auth";
+import { requireAdminPermission } from "@/lib/admin-auth";
 import { buildAnalyticsReport } from "@/lib/analytics-store";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
 
@@ -17,7 +17,7 @@ export default async function ProductAnalyticsPage({
 }: {
   searchParams: Promise<{ days?: string }>;
 }) {
-  const admin = await requireAdminPage();
+  const admin = await requireAdminPermission("analytics.view");
   const query = await searchParams;
   const days = period(query.days);
   const [report, catalog] = await Promise.all([

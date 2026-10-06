@@ -2,10 +2,10 @@ import {
   AdminCard,
   AdminShell,
 } from "@/components/admin/admin-shell";
-import { requireAdminPage } from "@/lib/admin-auth";
+import { requireAdminPermission } from "@/lib/admin-auth";
 
 export default async function AnalyticsPrivacyPage() {
-  const admin = await requireAdminPage();
+  const admin = await requireAdminPermission("analytics.view");
 
   return (
     <AdminShell

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { AdminCard, AdminShell } from "@/components/admin/admin-shell";
-import { requireAdminPage } from "@/lib/admin-auth";
+import { requireAdminPermission } from "@/lib/admin-auth";
 import { readDraftStorefrontConfig } from "@/lib/storefront-admin-store";
 
 const items = [
@@ -12,7 +12,7 @@ const items = [
 ];
 
 export default async function AdminPagesPage() {
-  const admin = await requireAdminPage();
+  const admin = await requireAdminPermission("pages.view");
   await readDraftStorefrontConfig();
 
   return (

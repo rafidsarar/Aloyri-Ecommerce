@@ -1,10 +1,10 @@
 import { AdminCard, AdminShell } from "@/components/admin/admin-shell";
 import { UtmBuilder } from "@/components/admin/utm-builder";
-import { requireAdminPage } from "@/lib/admin-auth";
+import { requireAdminPermission } from "@/lib/admin-auth";
 import { siteConfig } from "@/lib/site";
 
 export default async function AnalyticsUtmPage() {
-  const admin = await requireAdminPage();
+  const admin = await requireAdminPermission("analytics.view");
 
   return (
     <AdminShell

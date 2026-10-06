@@ -4,7 +4,7 @@ import {
   AdminNotice,
   AdminShell,
 } from "@/components/admin/admin-shell";
-import { requireAdminPage } from "@/lib/admin-auth";
+import { requireAdminPermission } from "@/lib/admin-auth";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
 import {
   effectiveSeoEntry,
@@ -20,7 +20,7 @@ export default async function SeoProductsPage({
 }: {
   searchParams: Promise<{ error?: string }>;
 }) {
-  const admin = await requireAdminPage();
+  const admin = await requireAdminPermission("seo.view");
   const [query, config, catalog] = await Promise.all([
     searchParams,
     readDraftStorefrontConfig(),

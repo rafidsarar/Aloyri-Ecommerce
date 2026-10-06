@@ -2,7 +2,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { saveProductEditorial } from "@/app/admin/actions";
 import { AdminCard, AdminNotice, AdminShell } from "@/components/admin/admin-shell";
-import { requireAdminPage } from "@/lib/admin-auth";
+import { requireAdminPermission } from "@/lib/admin-auth";
 import { getProductById, formatPrice } from "@/lib/catalog";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
 import {
@@ -17,7 +17,7 @@ export default async function AdminProductPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ saved?: string; error?: string }>;
 }) {
-  const admin = await requireAdminPage();
+  const admin = await requireAdminPermission("products.view");
   const [{ id }, query, config, catalog] = await Promise.all([
     params,
     searchParams,

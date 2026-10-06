@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { saveFaq, saveInfoPage } from "@/app/admin/actions";
 import { AdminCard, AdminNotice, AdminShell } from "@/components/admin/admin-shell";
-import { requireAdminPage } from "@/lib/admin-auth";
+import { requireAdminPermission } from "@/lib/admin-auth";
 import { readDraftStorefrontConfig, type ContentSection } from "@/lib/storefront-admin-store";
 
 const infoKeys = new Set(["about", "shipping", "returns", "contact"]);
@@ -13,7 +13,7 @@ export default async function AdminContentPage({
   params: Promise<{ page: string }>;
   searchParams: Promise<{ saved?: string }>;
 }) {
-  const admin = await requireAdminPage();
+  const admin = await requireAdminPermission("pages.view");
   const [{ page }, query, config] = await Promise.all([
     params,
     searchParams,

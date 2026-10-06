@@ -1,6 +1,6 @@
 import { saveSiteSettings } from "@/app/admin/actions";
 import { AdminCard, AdminNotice, AdminShell } from "@/components/admin/admin-shell";
-import { requireAdminPage } from "@/lib/admin-auth";
+import { requireAdminPermission } from "@/lib/admin-auth";
 import { readDraftStorefrontConfig } from "@/lib/storefront-admin-store";
 
 export default async function AdminSettingsPage({
@@ -8,7 +8,7 @@ export default async function AdminSettingsPage({
 }: {
   searchParams: Promise<{ saved?: string }>;
 }) {
-  const admin = await requireAdminPage();
+  const admin = await requireAdminPermission("settings.view");
   const [{ saved }, config] = await Promise.all([
     searchParams,
     readDraftStorefrontConfig(),

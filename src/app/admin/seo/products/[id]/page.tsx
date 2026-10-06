@@ -10,7 +10,7 @@ import {
   SeoSearchPreview,
   SeoSocialPreview,
 } from "@/components/admin/seo-preview";
-import { requireAdminPage } from "@/lib/admin-auth";
+import { requireAdminPermission } from "@/lib/admin-auth";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
 import {
   effectiveSeoEntry,
@@ -28,7 +28,7 @@ export default async function ProductSeoEditor({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ saved?: string; error?: string }>;
 }) {
-  const admin = await requireAdminPage();
+  const admin = await requireAdminPermission("seo.view");
   const [{ id }, query, config, catalog] = await Promise.all([
     params,
     searchParams,

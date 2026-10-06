@@ -4,7 +4,7 @@ import {
   AdminNotice,
   AdminShell,
 } from "@/components/admin/admin-shell";
-import { requireAdminPage } from "@/lib/admin-auth";
+import { requireAdminPermission } from "@/lib/admin-auth";
 import { campaignScheduleState } from "@/lib/merchandising";
 import { readDraftStorefrontConfig } from "@/lib/storefront-admin-store";
 
@@ -22,7 +22,7 @@ export default async function CampaignsPage({
 }: {
   searchParams: Promise<{ deleted?: string }>;
 }) {
-  const admin = await requireAdminPage();
+  const admin = await requireAdminPermission("merchandising.view");
   const [query, config] = await Promise.all([
     searchParams,
     readDraftStorefrontConfig(),

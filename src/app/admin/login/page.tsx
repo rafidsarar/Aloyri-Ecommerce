@@ -58,7 +58,7 @@ export default async function AdminLoginPage({
           href="/admin/recover"
           className="mt-5 inline-block text-sm font-semibold text-[#713a35]"
         >
-          Use a recovery code
+          Owner recovery code
         </Link>
       </div>
     </main>

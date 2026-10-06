@@ -1,13 +1,13 @@
 import Image from "next/image";
 import { AdminCard, AdminShell } from "@/components/admin/admin-shell";
-import { requireAdminPage } from "@/lib/admin-auth";
+import { requireAdminPermission } from "@/lib/admin-auth";
 import {
   listStorefrontMedia,
   storefrontMediaUrl,
 } from "@/lib/storefront-admin-store";
 
 export default async function AdminMediaPage() {
-  const admin = await requireAdminPage();
+  const admin = await requireAdminPermission("media.view");
   const media = await listStorefrontMedia();
 
   return (

@@ -2,7 +2,7 @@ import {
   AdminCard,
   AdminShell,
 } from "@/components/admin/admin-shell";
-import { requireAdminPage } from "@/lib/admin-auth";
+import { requireAdminPermission } from "@/lib/admin-auth";
 import { buildAnalyticsReport } from "@/lib/analytics-store";
 import { readPublishedStorefrontConfig } from "@/lib/storefront-admin-store";
 
@@ -23,7 +23,7 @@ export default async function CampaignAnalyticsPage({
 }: {
   searchParams: Promise<{ days?: string }>;
 }) {
-  const admin = await requireAdminPage();
+  const admin = await requireAdminPermission("analytics.view");
   const query = await searchParams;
   const days = period(query.days);
   const [report, config] = await Promise.all([

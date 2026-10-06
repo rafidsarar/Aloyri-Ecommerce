@@ -6,14 +6,16 @@ import { redirect } from "next/navigation";
 import {
   ADMIN_COOKIE,
   ADMIN_SESSION_SECONDS,
+  authenticateAdmin,
   changeAdminPassword,
   createAdminOwner,
   createAdminSession,
   currentAdmin,
   generateAdminRecoveryCodes,
+  noteAdminLogin,
+  requireAdminPermission,
   resetAdminPasswordWithRecoveryCode,
   rotateAdminSessions,
-  verifyAdminCredentials,
 } from "@/lib/admin-auth";
 import { rateAllowed } from "@/lib/request-rate-limit";
 import {
@@ -76,12 +78,6 @@ async function setSession(username: string) {
     path: "/",
     maxAge: ADMIN_SESSION_SECONDS,
   });
-}
-
-async function ensureAdmin() {
-  const admin = await currentAdmin();
-  if (!admin) redirect("/admin/login");
-  return admin;
 }
 
 function errorMessage(error: unknown) {
@@ -150,16 +146,20 @@ export async function loginAdmin(formData: FormData) {
 
   const username = text(formData, "username", 48);
   const password = text(formData, "password", 128);
-  const valid = await verifyAdminCredentials(username, password);
+  const account = await authenticateAdmin(username, password);
 
-  if (!valid) {
+  if (!account) {
     redirect(
       "/admin/login?error=" +
         encodeURIComponent("Username or password is incorrect."),
     );
   }
 
-  await setSession(username.trim());
+  await setSession(account.username);
+  await noteAdminLogin(account.username);
+  if (account.mustChangePassword) {
+    redirect("/admin/security?mustChange=1");
+  }
   redirect("/admin");
 }
 
@@ -176,7 +176,7 @@ export async function logoutAdmin() {
 }
 
 export async function updateAdminPassword(formData: FormData) {
-  const admin = await ensureAdmin();
+  const admin = await requireAdminPermission("security.self");
   const currentPassword = text(formData, "currentPassword", 128);
   const newPassword = text(formData, "newPassword", 128);
   const confirmPassword = text(formData, "confirmPassword", 128);
@@ -206,7 +206,7 @@ export async function updateAdminPassword(formData: FormData) {
 }
 
 export async function rotateAllAdminSessions() {
-  const admin = await ensureAdmin();
+  const admin = await requireAdminPermission("security.self");
   await rotateAdminSessions(admin.username);
   await setSession(admin.username);
   redirect("/admin/security?sessionsRotated=1");
@@ -279,14 +279,14 @@ export async function recoverAdminAccount(formData: FormData) {
 }
 
 export async function enableDraftPreview(formData: FormData) {
-  await ensureAdmin();
+  await requireAdminPermission("publishing.preview");
   const preview = await draftMode();
   preview.enable();
   redirect(safePreviewPath(text(formData, "path", 300) || "/"));
 }
 
 export async function publishDraft(formData: FormData) {
-  const admin = await ensureAdmin();
+  const admin = await requireAdminPermission("publishing.publish");
   const note = text(formData, "note", 300);
   try {
     await publishDraftStorefront(admin.username, note);
@@ -300,13 +300,14 @@ export async function publishDraft(formData: FormData) {
 }
 
 export async function discardDraft() {
-  const admin = await ensureAdmin();
+  const admin = await requireAdminPermission("publishing.discard");
   await discardDraftStorefront(admin.username);
   redirect("/admin/publishing?discarded=1");
 }
 
 export async function restoreVersionToDraftAction(formData: FormData) {
-  const admin = await ensureAdmin();
+  const admin = await requireAdminPermission("publishing.restore");
+  if (admin.role !== "owner") redirect("/admin?forbidden=1");
   const versionId = text(formData, "versionId", 64);
   try {
     await restoreStorefrontVersionToDraft(admin.username, versionId);
@@ -319,7 +320,7 @@ export async function restoreVersionToDraftAction(formData: FormData) {
 }
 
 export async function saveHomepage(formData: FormData) {
-  await ensureAdmin();
+  const admin = await requireAdminPermission("homepage.edit");
 
   await updateDraftStorefrontConfig((config) => {
     config.homepage = {
@@ -344,13 +345,17 @@ export async function saveHomepage(formData: FormData) {
       ideaCopy: text(formData, "ideaCopy", 600),
     };
     return config;
+  }, {
+    actor: admin.username,
+    action: "content.homepage_updated",
+    scope: "homepage",
   });
 
   redirect("/admin/homepage?saved=1");
 }
 
 export async function saveSiteSettings(formData: FormData) {
-  await ensureAdmin();
+  const admin = await requireAdminPermission("settings.edit");
 
   await updateDraftStorefrontConfig((config) => {
     config.site = {
@@ -361,13 +366,17 @@ export async function saveSiteSettings(formData: FormData) {
       supportHours: text(formData, "supportHours", 200),
     };
     return config;
+  }, {
+    actor: admin.username,
+    action: "settings.updated",
+    scope: "settings",
   });
 
   redirect("/admin/settings?saved=1");
 }
 
 export async function saveProductEditorial(formData: FormData) {
-  await ensureAdmin();
+  const admin = await requireAdminPermission("products.edit");
 
   const productId = text(formData, "productId", 120);
   if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,119}$/.test(productId)) {
@@ -416,6 +425,11 @@ export async function saveProductEditorial(formData: FormData) {
   await updateDraftStorefrontConfig((config) => {
     config.products[productId] = editorial;
     return config;
+  }, {
+    actor: admin.username,
+    action: "product.editorial_updated",
+    scope: "products",
+    target: productId,
   });
 
   redirect(
@@ -426,7 +440,7 @@ export async function saveProductEditorial(formData: FormData) {
 const pageKeys = new Set(["about", "shipping", "returns", "contact"]);
 
 export async function saveInfoPage(formData: FormData) {
-  await ensureAdmin();
+  const admin = await requireAdminPermission("pages.edit");
 
   const pageKey = text(formData, "pageKey", 40);
   if (!pageKeys.has(pageKey)) redirect("/admin/pages");
@@ -462,13 +476,18 @@ export async function saveInfoPage(formData: FormData) {
       sections,
     };
     return config;
+  }, {
+    actor: admin.username,
+    action: "content.page_updated",
+    scope: "pages",
+    target: pageKey,
   });
 
   redirect("/admin/pages/" + pageKey + "?saved=1");
 }
 
 export async function saveFaq(formData: FormData) {
-  await ensureAdmin();
+  const admin = await requireAdminPermission("pages.edit");
 
   const count = Math.min(
     30,
@@ -489,6 +508,11 @@ export async function saveFaq(formData: FormData) {
       items,
     };
     return config;
+  }, {
+    actor: admin.username,
+    action: "content.faq_updated",
+    scope: "pages",
+    target: "faq",
   });
 
   redirect("/admin/pages/faq?saved=1");

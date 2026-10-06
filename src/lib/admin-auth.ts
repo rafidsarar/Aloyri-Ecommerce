@@ -8,13 +8,152 @@ import {
   writePrivateJson,
 } from "@/lib/storefront-admin-store";
 
+export const ADMIN_COOKIE = "aloyri_ecommerce_admin";
+export const ADMIN_SESSION_SECONDS = 60 * 60 * 10;
+
+export const ADMIN_ROLES = [
+  "owner",
+  "website-manager",
+  "content-editor",
+  "merchandising-manager",
+  "analyst",
+  "support",
+] as const;
+export type AdminRole = (typeof ADMIN_ROLES)[number];
+
+export const ADMIN_PERMISSIONS = [
+  "dashboard.view",
+  "homepage.view",
+  "homepage.edit",
+  "products.view",
+  "products.edit",
+  "pages.view",
+  "pages.edit",
+  "media.view",
+  "media.edit",
+  "media.delete",
+  "merchandising.view",
+  "merchandising.edit",
+  "merchandising.delete",
+  "analytics.view",
+  "analytics.export",
+  "seo.view",
+  "seo.edit",
+  "publishing.view",
+  "publishing.preview",
+  "publishing.publish",
+  "publishing.discard",
+  "publishing.restore",
+  "settings.view",
+  "settings.edit",
+  "staff.view",
+  "staff.manage",
+  "audit.view",
+  "audit.export",
+  "health.view",
+  "health.run",
+  "backups.view",
+  "backups.create",
+  "backups.export",
+  "backups.restore",
+  "security.self",
+  "security.owner",
+] as const;
+export type AdminPermission = (typeof ADMIN_PERMISSIONS)[number];
+
+const ALL_PERMISSIONS = [...ADMIN_PERMISSIONS];
+
+export const ROLE_TEMPLATES: Record<AdminRole, AdminPermission[]> = {
+  owner: ALL_PERMISSIONS,
+  "website-manager": [
+    "dashboard.view",
+    "homepage.view",
+    "homepage.edit",
+    "products.view",
+    "products.edit",
+    "pages.view",
+    "pages.edit",
+    "media.view",
+    "media.edit",
+    "media.delete",
+    "merchandising.view",
+    "merchandising.edit",
+    "merchandising.delete",
+    "analytics.view",
+    "analytics.export",
+    "seo.view",
+    "seo.edit",
+    "publishing.view",
+    "publishing.preview",
+    "publishing.publish",
+    "publishing.discard",
+    "settings.view",
+    "settings.edit",
+    "audit.view",
+    "health.view",
+    "health.run",
+    "backups.view",
+    "backups.create",
+    "backups.export",
+    "security.self",
+  ],
+  "content-editor": [
+    "dashboard.view",
+    "homepage.view",
+    "homepage.edit",
+    "products.view",
+    "products.edit",
+    "pages.view",
+    "pages.edit",
+    "media.view",
+    "media.edit",
+    "seo.view",
+    "seo.edit",
+    "publishing.view",
+    "publishing.preview",
+    "security.self",
+  ],
+  "merchandising-manager": [
+    "dashboard.view",
+    "products.view",
+    "media.view",
+    "media.edit",
+    "merchandising.view",
+    "merchandising.edit",
+    "merchandising.delete",
+    "analytics.view",
+    "seo.view",
+    "publishing.view",
+    "publishing.preview",
+    "security.self",
+  ],
+  analyst: [
+    "dashboard.view",
+    "products.view",
+    "merchandising.view",
+    "analytics.view",
+    "analytics.export",
+    "audit.view",
+    "health.view",
+    "security.self",
+  ],
+  support: [
+    "dashboard.view",
+    "products.view",
+    "pages.view",
+    "analytics.view",
+    "health.view",
+    "security.self",
+  ],
+};
+
 type RecoveryCodeRecord = {
   hash: string;
   createdAt: string;
   usedAt?: string;
 };
 
-type AdminAuthRecord = {
+type LegacyAdminAuthRecord = {
   version: 1;
   username: string;
   salt: string;
@@ -25,14 +164,63 @@ type AdminAuthRecord = {
   updatedAt: string;
 };
 
+export type AdminAccount = {
+  id: string;
+  username: string;
+  displayName: string;
+  role: AdminRole;
+  permissions: AdminPermission[];
+  active: boolean;
+  mustChangePassword: boolean;
+  salt: string;
+  passwordHash: string;
+  sessionSecret: string;
+  recoveryCodes?: RecoveryCodeRecord[];
+  createdAt: string;
+  createdBy: string;
+  updatedAt: string;
+  lastLoginAt?: string;
+};
+
+type AdminDirectory = {
+  version: 2;
+  updatedAt: string;
+  accounts: AdminAccount[];
+};
+
+export type AdminSession = {
+  accountId: string;
+  username: string;
+  displayName: string;
+  role: AdminRole;
+  permissions: AdminPermission[];
+  mustChangePassword: boolean;
+  expiresAt: number;
+};
+
 type SessionPayload = {
+  accountId?: string;
   username: string;
   expiresAt: number;
 };
 
-const AUTH_PATH = "admin/auth.json";
-export const ADMIN_COOKIE = "aloyri_ecommerce_admin";
-export const ADMIN_SESSION_SECONDS = 60 * 60 * 10;
+export type PublicAdminAccount = Pick<
+  AdminAccount,
+  | "id"
+  | "username"
+  | "displayName"
+  | "role"
+  | "permissions"
+  | "active"
+  | "mustChangePassword"
+  | "createdAt"
+  | "createdBy"
+  | "updatedAt"
+  | "lastLoginAt"
+>;
+
+const LEGACY_AUTH_PATH = "admin/auth.json";
+const DIRECTORY_PATH = "admin/accounts.json";
 
 function bytesToBase64Url(bytes: Uint8Array) {
   return Buffer.from(bytes)
@@ -68,6 +256,35 @@ function validatePassword(password: string) {
   if (password.length < 12 || password.length > 128) {
     throw new Error("Password must be between 12 and 128 characters.");
   }
+}
+
+function safeUsername(username: string) {
+  const value = username.trim();
+  if (!/^[A-Za-z0-9._-]{3,48}$/.test(value)) {
+    throw new Error(
+      "Username must be 3–48 characters using letters, numbers, dot, underscore or dash.",
+    );
+  }
+  return value;
+}
+
+function safeDisplayName(value: string, username: string) {
+  const name = value.trim().replace(/\s+/g, " ").slice(0, 80);
+  return name || username;
+}
+
+function safeRole(value: string): AdminRole {
+  if ((ADMIN_ROLES as readonly string[]).includes(value)) {
+    return value as AdminRole;
+  }
+  throw new Error("Unknown staff role.");
+}
+
+export function normalizeAdminPermissions(
+  values: readonly string[],
+): AdminPermission[] {
+  const allowed = new Set<string>(ADMIN_PERMISSIONS);
+  return [...new Set(values.filter((value) => allowed.has(value)))] as AdminPermission[];
 }
 
 async function derivePasswordHash(password: string, salt: Uint8Array) {
@@ -138,52 +355,424 @@ async function passwordRecord(password: string) {
   };
 }
 
-export async function readAdminAuth() {
-  return readPrivateJson<AdminAuthRecord>(AUTH_PATH);
+function publicAccount(account: AdminAccount): PublicAdminAccount {
+  const {
+    id,
+    username,
+    displayName,
+    role,
+    permissions,
+    active,
+    mustChangePassword,
+    createdAt,
+    createdBy,
+    updatedAt,
+    lastLoginAt,
+  } = account;
+  return {
+    id,
+    username,
+    displayName,
+    role,
+    permissions,
+    active,
+    mustChangePassword,
+    createdAt,
+    createdBy,
+    updatedAt,
+    ...(lastLoginAt ? { lastLoginAt } : {}),
+  };
+}
+
+function normalizedAccount(account: AdminAccount): AdminAccount {
+  const role = safeRole(account.role);
+  return {
+    ...account,
+    displayName: safeDisplayName(account.displayName || account.username, account.username),
+    role,
+    permissions:
+      role === "owner"
+        ? ALL_PERMISSIONS
+        : normalizeAdminPermissions([
+            ...(account.permissions || ROLE_TEMPLATES[role]),
+            "dashboard.view",
+            "security.self",
+          ]),
+    active: account.active !== false,
+    mustChangePassword: Boolean(account.mustChangePassword),
+  };
+}
+
+async function readDirectoryRaw() {
+  const stored = await readPrivateJson<AdminDirectory>(DIRECTORY_PATH);
+  if (!stored || stored.version !== 2 || !Array.isArray(stored.accounts)) {
+    return null;
+  }
+  return {
+    version: 2 as const,
+    updatedAt: stored.updatedAt || new Date().toISOString(),
+    accounts: stored.accounts.map(normalizedAccount),
+  };
+}
+
+async function migrateLegacyDirectory() {
+  const legacy = await readPrivateJson<LegacyAdminAuthRecord>(LEGACY_AUTH_PATH);
+  if (!legacy) return null;
+
+  const now = new Date().toISOString();
+  const owner: AdminAccount = {
+    id: "owner",
+    username: legacy.username,
+    displayName: legacy.username,
+    role: "owner",
+    permissions: ALL_PERMISSIONS,
+    active: true,
+    mustChangePassword: false,
+    salt: legacy.salt,
+    passwordHash: legacy.passwordHash,
+    sessionSecret: legacy.sessionSecret,
+    recoveryCodes: legacy.recoveryCodes || [],
+    createdAt: legacy.createdAt || now,
+    createdBy: "system",
+    updatedAt: legacy.updatedAt || now,
+  };
+  const directory: AdminDirectory = {
+    version: 2,
+    updatedAt: now,
+    accounts: [owner],
+  };
+  await writePrivateJson(DIRECTORY_PATH, directory);
+  await writeAdminAuditEvent(
+    legacy.username,
+    "security.staff_directory_migrated",
+    "Existing Ecommerce Admin owner migrated to role-based staff access.",
+  );
+  return directory;
+}
+
+export async function readAdminDirectory() {
+  return (await readDirectoryRaw()) || (await migrateLegacyDirectory());
+}
+
+async function writeDirectory(directory: AdminDirectory) {
+  const next: AdminDirectory = {
+    version: 2,
+    updatedAt: new Date().toISOString(),
+    accounts: directory.accounts.map(normalizedAccount),
+  };
+  await writePrivateJson(DIRECTORY_PATH, next);
+  return next;
+}
+
+async function accountByUsername(username: string) {
+  const directory = await readAdminDirectory();
+  if (!directory) return null;
+  const normalized = username.trim().toLowerCase();
+  return (
+    directory.accounts.find(
+      (account) => account.username.toLowerCase() === normalized,
+    ) || null
+  );
+}
+
+async function accountById(id: string) {
+  const directory = await readAdminDirectory();
+  return directory?.accounts.find((account) => account.id === id) || null;
+}
+
+export async function listAdminAccounts() {
+  const directory = await readAdminDirectory();
+  return (directory?.accounts || []).map(publicAccount);
+}
+
+export async function getAdminAccount(id: string) {
+  const account = await accountById(id);
+  return account ? publicAccount(account) : null;
 }
 
 export async function adminIsConfigured() {
-  return Boolean(await readAdminAuth());
+  return Boolean(await readAdminDirectory());
 }
 
 export async function createAdminOwner(username: string, password: string) {
-  if (await readAdminAuth()) {
+  if (await readAdminDirectory()) {
     throw new Error("Ecommerce Admin is already configured.");
   }
 
-  const safeUsername = username.trim();
-  if (!/^[A-Za-z0-9._-]{3,48}$/.test(safeUsername)) {
-    throw new Error(
-      "Username must be 3–48 characters using letters, numbers, dot, underscore or dash.",
-    );
-  }
-
+  const safe = safeUsername(username);
   const credentials = await passwordRecord(password);
   const now = new Date().toISOString();
-  const record: AdminAuthRecord = {
-    version: 1,
-    username: safeUsername,
+  const account: AdminAccount = {
+    id: "owner",
+    username: safe,
+    displayName: safe,
+    role: "owner",
+    permissions: ALL_PERMISSIONS,
+    active: true,
+    mustChangePassword: false,
     ...credentials,
     sessionSecret: bytesToBase64Url(randomBytes(32)),
     recoveryCodes: [],
     createdAt: now,
+    createdBy: "setup",
     updatedAt: now,
   };
+  await writeDirectory({
+    version: 2,
+    updatedAt: now,
+    accounts: [account],
+  });
+  await writeAdminAuditEvent(safe, "security.owner_created");
+  return account.username;
+}
 
-  await writePrivateJson(AUTH_PATH, record);
-  await writeAdminAuditEvent(safeUsername, "security.owner_created");
-  return record.username;
+export async function authenticateAdmin(username: string, password: string) {
+  const account = await accountByUsername(username);
+  if (!account || !account.active) return null;
+  const derived = await derivePasswordHash(
+    password,
+    base64UrlToBytes(account.salt),
+  );
+  if (!constantTimeEqual(derived, account.passwordHash)) return null;
+  return publicAccount(account);
 }
 
 export async function verifyAdminCredentials(username: string, password: string) {
-  const auth = await readAdminAuth();
-  if (!auth) return false;
-  if (!constantTimeEqual(auth.username, username.trim())) return false;
-  const derived = await derivePasswordHash(
-    password,
-    base64UrlToBytes(auth.salt),
+  return Boolean(await authenticateAdmin(username, password));
+}
+
+export async function noteAdminLogin(username: string) {
+  const directory = await readAdminDirectory();
+  if (!directory) return;
+  const account = directory.accounts.find(
+    (candidate) => candidate.username.toLowerCase() === username.trim().toLowerCase(),
   );
-  return constantTimeEqual(derived, auth.passwordHash);
+  if (!account) return;
+  account.lastLoginAt = new Date().toISOString();
+  account.updatedAt = account.lastLoginAt;
+  await writeDirectory(directory);
+  await writeAdminAuditEvent(account.username, "security.login_success");
+}
+
+export function hasAdminPermission(
+  admin: Pick<AdminSession, "role" | "permissions"> | null | undefined,
+  permission: AdminPermission,
+) {
+  return Boolean(
+    admin &&
+      (admin.role === "owner" || admin.permissions.includes(permission)),
+  );
+}
+
+export async function createStaffAccount(
+  actor: AdminSession,
+  input: {
+    username: string;
+    displayName: string;
+    role: Exclude<AdminRole, "owner">;
+    permissions?: string[];
+    temporaryPassword: string;
+  },
+) {
+  if (!hasAdminPermission(actor, "staff.manage")) {
+    throw new Error("You do not have permission to manage staff.");
+  }
+  const directory = await readAdminDirectory();
+  if (!directory) throw new Error("Admin directory is unavailable.");
+
+  const username = safeUsername(input.username);
+  if (
+    directory.accounts.some(
+      (account) => account.username.toLowerCase() === username.toLowerCase(),
+    )
+  ) {
+    throw new Error("That username is already in use.");
+  }
+
+  const role = safeRole(input.role);
+  if (role === "owner") throw new Error("Owner accounts cannot be created here.");
+  const credentials = await passwordRecord(input.temporaryPassword);
+  const now = new Date().toISOString();
+  const account: AdminAccount = {
+    id: crypto.randomUUID().replace(/-/g, ""),
+    username,
+    displayName: safeDisplayName(input.displayName, username),
+    role,
+    permissions: normalizeAdminPermissions(
+      input.permissions?.length ? input.permissions : ROLE_TEMPLATES[role],
+    ),
+    active: true,
+    mustChangePassword: true,
+    ...credentials,
+    sessionSecret: bytesToBase64Url(randomBytes(32)),
+    recoveryCodes: [],
+    createdAt: now,
+    createdBy: actor.username,
+    updatedAt: now,
+  };
+  directory.accounts.push(account);
+  await writeDirectory(directory);
+  await writeAdminAuditEvent(
+    actor.username,
+    "staff.created",
+    account.username + " · " + account.role,
+  );
+  return publicAccount(account);
+}
+
+export async function updateStaffAccess(
+  actor: AdminSession,
+  input: {
+    accountId: string;
+    displayName: string;
+    role: AdminRole;
+    permissions: string[];
+  },
+) {
+  if (!hasAdminPermission(actor, "staff.manage")) {
+    throw new Error("You do not have permission to manage staff.");
+  }
+  const directory = await readAdminDirectory();
+  if (!directory) throw new Error("Admin directory is unavailable.");
+  const account = directory.accounts.find(
+    (candidate) => candidate.id === input.accountId,
+  );
+  if (!account) throw new Error("Staff account was not found.");
+
+  const before = {
+    displayName: account.displayName,
+    role: account.role,
+    permissions: account.permissions,
+  };
+  if (account.role === "owner" && actor.role !== "owner") {
+    throw new Error("Only the owner can update the owner account.");
+  }
+
+  const role = account.role === "owner" ? "owner" : safeRole(input.role);
+  if (role === "owner" && account.role !== "owner") {
+    throw new Error("Owner role cannot be assigned to another staff account.");
+  }
+
+  account.displayName = safeDisplayName(input.displayName, account.username);
+  account.role = role;
+  account.permissions =
+    role === "owner"
+      ? ALL_PERMISSIONS
+      : normalizeAdminPermissions(input.permissions);
+  account.updatedAt = new Date().toISOString();
+  await writeDirectory(directory);
+
+  await writeAdminAuditEvent(
+    actor.username,
+    "staff.access_updated",
+    JSON.stringify({
+      account: account.username,
+      before,
+      after: {
+        displayName: account.displayName,
+        role: account.role,
+        permissions: account.permissions,
+      },
+    }).slice(0, 500),
+  );
+  return publicAccount(account);
+}
+
+export async function setStaffActive(
+  actor: AdminSession,
+  accountId: string,
+  active: boolean,
+) {
+  if (actor.role !== "owner") {
+    throw new Error("Only the owner can perform this security-sensitive staff action.");
+  }
+  if (!hasAdminPermission(actor, "staff.manage")) {
+    throw new Error("You do not have permission to manage staff.");
+  }
+  const directory = await readAdminDirectory();
+  if (!directory) throw new Error("Admin directory is unavailable.");
+  const account = directory.accounts.find(
+    (candidate) => candidate.id === accountId,
+  );
+  if (!account) throw new Error("Staff account was not found.");
+  if (account.role === "owner") {
+    throw new Error("The owner account cannot be suspended.");
+  }
+  if (account.id === actor.accountId) {
+    throw new Error("You cannot suspend your own account.");
+  }
+  account.active = active;
+  account.sessionSecret = bytesToBase64Url(randomBytes(32));
+  account.updatedAt = new Date().toISOString();
+  await writeDirectory(directory);
+  await writeAdminAuditEvent(
+    actor.username,
+    active ? "staff.reactivated" : "staff.suspended",
+    account.username,
+  );
+}
+
+export async function resetStaffPassword(
+  actor: AdminSession,
+  accountId: string,
+  temporaryPassword: string,
+) {
+  if (actor.role !== "owner") {
+    throw new Error("Only the owner can perform this security-sensitive staff action.");
+  }
+  if (!hasAdminPermission(actor, "staff.manage")) {
+    throw new Error("You do not have permission to manage staff.");
+  }
+  const directory = await readAdminDirectory();
+  if (!directory) throw new Error("Admin directory is unavailable.");
+  const account = directory.accounts.find(
+    (candidate) => candidate.id === accountId,
+  );
+  if (!account) throw new Error("Staff account was not found.");
+  if (account.role === "owner" && actor.role !== "owner") {
+    throw new Error("Only the owner can reset the owner account.");
+  }
+
+  const credentials = await passwordRecord(temporaryPassword);
+  Object.assign(account, credentials);
+  account.mustChangePassword = true;
+  account.sessionSecret = bytesToBase64Url(randomBytes(32));
+  account.updatedAt = new Date().toISOString();
+  await writeDirectory(directory);
+  await writeAdminAuditEvent(
+    actor.username,
+    "staff.password_reset",
+    account.username + " · all previous sessions revoked",
+  );
+}
+
+export async function deleteStaffAccount(
+  actor: AdminSession,
+  accountId: string,
+) {
+  if (actor.role !== "owner") {
+    throw new Error("Only the owner can perform this security-sensitive staff action.");
+  }
+  if (!hasAdminPermission(actor, "staff.manage")) {
+    throw new Error("You do not have permission to manage staff.");
+  }
+  const directory = await readAdminDirectory();
+  if (!directory) throw new Error("Admin directory is unavailable.");
+  const account = directory.accounts.find(
+    (candidate) => candidate.id === accountId,
+  );
+  if (!account) throw new Error("Staff account was not found.");
+  if (account.role === "owner") {
+    throw new Error("The owner account cannot be deleted.");
+  }
+  if (account.id === actor.accountId) {
+    throw new Error("You cannot delete your own account.");
+  }
+  directory.accounts = directory.accounts.filter(
+    (candidate) => candidate.id !== accountId,
+  );
+  await writeDirectory(directory);
+  await writeAdminAuditEvent(actor.username, "staff.deleted", account.username);
 }
 
 export async function changeAdminPassword(
@@ -191,38 +780,45 @@ export async function changeAdminPassword(
   currentPassword: string,
   newPassword: string,
 ) {
-  const auth = await readAdminAuth();
-  if (!auth || !constantTimeEqual(auth.username, username)) {
+  const directory = await readAdminDirectory();
+  if (!directory) throw new Error("Admin account is not available.");
+  const account = directory.accounts.find(
+    (candidate) => candidate.username.toLowerCase() === username.toLowerCase(),
+  );
+  if (!account || !account.active) {
     throw new Error("Admin account is not available.");
   }
 
-  const valid = await verifyAdminCredentials(username, currentPassword);
-  if (!valid) throw new Error("Current password is incorrect.");
+  const derived = await derivePasswordHash(
+    currentPassword,
+    base64UrlToBytes(account.salt),
+  );
+  if (!constantTimeEqual(derived, account.passwordHash)) {
+    throw new Error("Current password is incorrect.");
+  }
   if (constantTimeEqual(currentPassword, newPassword)) {
     throw new Error("Choose a different password.");
   }
 
   const credentials = await passwordRecord(newPassword);
-  const next: AdminAuthRecord = {
-    ...auth,
-    ...credentials,
-    sessionSecret: bytesToBase64Url(randomBytes(32)),
-    updatedAt: new Date().toISOString(),
-  };
-  await writePrivateJson(AUTH_PATH, next);
+  Object.assign(account, credentials);
+  account.mustChangePassword = false;
+  account.sessionSecret = bytesToBase64Url(randomBytes(32));
+  account.updatedAt = new Date().toISOString();
+  await writeDirectory(directory);
   await writeAdminAuditEvent(username, "security.password_changed");
 }
 
 export async function rotateAdminSessions(username: string) {
-  const auth = await readAdminAuth();
-  if (!auth || !constantTimeEqual(auth.username, username)) {
-    throw new Error("Admin account is not available.");
-  }
-  await writePrivateJson(AUTH_PATH, {
-    ...auth,
-    sessionSecret: bytesToBase64Url(randomBytes(32)),
-    updatedAt: new Date().toISOString(),
-  } satisfies AdminAuthRecord);
+  const directory = await readAdminDirectory();
+  if (!directory) throw new Error("Admin account is not available.");
+  const account = directory.accounts.find(
+    (candidate) => candidate.username.toLowerCase() === username.toLowerCase(),
+  );
+  if (!account) throw new Error("Admin account is not available.");
+  account.sessionSecret = bytesToBase64Url(randomBytes(32));
+  account.updatedAt = new Date().toISOString();
+  await writeDirectory(directory);
   await writeAdminAuditEvent(username, "security.sessions_rotated");
 }
 
@@ -230,40 +826,51 @@ export async function generateAdminRecoveryCodes(
   username: string,
   currentPassword: string,
 ) {
-  const auth = await readAdminAuth();
-  if (!auth || !constantTimeEqual(auth.username, username)) {
-    throw new Error("Admin account is not available.");
+  const directory = await readAdminDirectory();
+  if (!directory) throw new Error("Admin account is not available.");
+  const account = directory.accounts.find(
+    (candidate) => candidate.username.toLowerCase() === username.toLowerCase(),
+  );
+  if (!account || account.role !== "owner") {
+    throw new Error("Recovery codes are available only for the owner account.");
   }
-  if (!(await verifyAdminCredentials(username, currentPassword))) {
+
+  const derived = await derivePasswordHash(
+    currentPassword,
+    base64UrlToBytes(account.salt),
+  );
+  if (!constantTimeEqual(derived, account.passwordHash)) {
     throw new Error("Current password is incorrect.");
   }
 
   const codes = Array.from({ length: 8 }, () => makeRecoveryCode());
   const createdAt = new Date().toISOString();
-  const recoveryCodes: RecoveryCodeRecord[] = await Promise.all(
+  account.recoveryCodes = await Promise.all(
     codes.map(async (code) => ({
       hash: await sha256(normalizeRecoveryCode(code)),
       createdAt,
     })),
   );
-
-  await writePrivateJson(AUTH_PATH, {
-    ...auth,
-    recoveryCodes,
-    updatedAt: createdAt,
-  } satisfies AdminAuthRecord);
+  account.updatedAt = createdAt;
+  await writeDirectory(directory);
   await writeAdminAuditEvent(
     username,
     "security.recovery_codes_regenerated",
-    "Eight new one-time recovery codes replaced all previous codes.",
+    "Eight new one-time owner recovery codes replaced all previous codes.",
   );
   return codes;
 }
 
-export async function adminRecoveryStatus() {
-  const auth = await readAdminAuth();
-  const codes = auth?.recoveryCodes || [];
+export async function adminRecoveryStatus(username?: string) {
+  const directory = await readAdminDirectory();
+  const account = username
+    ? directory?.accounts.find(
+        (candidate) => candidate.username.toLowerCase() === username.toLowerCase(),
+      )
+    : directory?.accounts.find((candidate) => candidate.role === "owner");
+  const codes = account?.role === "owner" ? account.recoveryCodes || [] : [];
   return {
+    available: account?.role === "owner",
     configured: codes.length > 0,
     remaining: codes.filter((code) => !code.usedAt).length,
   };
@@ -274,14 +881,17 @@ export async function resetAdminPasswordWithRecoveryCode(
   recoveryCode: string,
   newPassword: string,
 ) {
-  const auth = await readAdminAuth();
-  if (!auth || !constantTimeEqual(auth.username, username.trim())) {
+  const directory = await readAdminDirectory();
+  if (!directory) throw new Error("Recovery details are not valid.");
+  const account = directory.accounts.find(
+    (candidate) => candidate.username.toLowerCase() === username.trim().toLowerCase(),
+  );
+  if (!account || account.role !== "owner") {
     throw new Error("Recovery details are not valid.");
   }
 
-  const normalized = normalizeRecoveryCode(recoveryCode);
-  const incomingHash = await sha256(normalized);
-  const codes = auth.recoveryCodes || [];
+  const incomingHash = await sha256(normalizeRecoveryCode(recoveryCode));
+  const codes = account.recoveryCodes || [];
   const matchIndex = codes.findIndex(
     (record) => !record.usedAt && constantTimeEqual(record.hash, incomingHash),
   );
@@ -291,32 +901,29 @@ export async function resetAdminPasswordWithRecoveryCode(
 
   const credentials = await passwordRecord(newPassword);
   const now = new Date().toISOString();
-  const nextCodes = codes.map((record, index) =>
+  account.recoveryCodes = codes.map((record, index) =>
     index === matchIndex ? { ...record, usedAt: now } : record,
   );
-
-  await writePrivateJson(AUTH_PATH, {
-    ...auth,
-    ...credentials,
-    recoveryCodes: nextCodes,
-    sessionSecret: bytesToBase64Url(randomBytes(32)),
-    updatedAt: now,
-  } satisfies AdminAuthRecord);
+  Object.assign(account, credentials);
+  account.mustChangePassword = false;
+  account.sessionSecret = bytesToBase64Url(randomBytes(32));
+  account.updatedAt = now;
+  await writeDirectory(directory);
   await writeAdminAuditEvent(username, "security.password_recovered");
 }
 
 export async function createAdminSession(username: string) {
-  const auth = await readAdminAuth();
-  if (!auth || !constantTimeEqual(auth.username, username)) {
+  const account = await accountByUsername(username);
+  if (!account || !account.active) {
     throw new Error("Admin account is not available.");
   }
-
   const payload: SessionPayload = {
-    username,
+    accountId: account.id,
+    username: account.username,
     expiresAt: Date.now() + ADMIN_SESSION_SECONDS * 1000,
   };
   const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
-  const signature = await sign(auth.sessionSecret, encoded);
+  const signature = await sign(account.sessionSecret, encoded);
   return encoded + "." + signature;
 }
 
@@ -325,26 +932,40 @@ export async function verifyAdminSession(value?: string | null) {
   const [payloadPart, signature] = value.split(".");
   if (!payloadPart || !signature) return null;
 
-  const auth = await readAdminAuth();
-  if (!auth) return null;
-  const expected = await sign(auth.sessionSecret, payloadPart);
-  if (!constantTimeEqual(expected, signature)) return null;
-
+  let payload: SessionPayload;
   try {
-    const payload = JSON.parse(
+    payload = JSON.parse(
       Buffer.from(payloadPart, "base64url").toString("utf8"),
     ) as SessionPayload;
-    if (
-      payload.username !== auth.username ||
-      !Number.isFinite(payload.expiresAt) ||
-      payload.expiresAt <= Date.now()
-    ) {
-      return null;
-    }
-    return payload;
   } catch {
     return null;
   }
+
+  const account = payload.accountId
+    ? await accountById(payload.accountId)
+    : await accountByUsername(payload.username);
+  if (
+    !account ||
+    !account.active ||
+    account.username !== payload.username ||
+    !Number.isFinite(payload.expiresAt) ||
+    payload.expiresAt <= Date.now()
+  ) {
+    return null;
+  }
+
+  const expected = await sign(account.sessionSecret, payloadPart);
+  if (!constantTimeEqual(expected, signature)) return null;
+
+  return {
+    accountId: account.id,
+    username: account.username,
+    displayName: account.displayName,
+    role: account.role,
+    permissions: account.role === "owner" ? ALL_PERMISSIONS : account.permissions,
+    mustChangePassword: account.mustChangePassword,
+    expiresAt: payload.expiresAt,
+  } satisfies AdminSession;
 }
 
 export async function currentAdmin() {
@@ -355,5 +976,17 @@ export async function currentAdmin() {
 export async function requireAdminPage() {
   const admin = await currentAdmin();
   if (!admin) redirect("/admin/login");
+  return admin;
+}
+
+export async function requireAdminPermission(permission: AdminPermission) {
+  const admin = await currentAdmin();
+  if (!admin) redirect("/admin/login");
+  if (admin.mustChangePassword && permission !== "security.self") {
+    redirect("/admin/security?mustChange=1");
+  }
+  if (!hasAdminPermission(admin, permission)) {
+    redirect("/admin?forbidden=1");
+  }
   return admin;
 }

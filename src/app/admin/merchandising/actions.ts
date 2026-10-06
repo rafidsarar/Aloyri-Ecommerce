@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { currentAdmin } from "@/lib/admin-auth";
+import { requireAdminPermission } from "@/lib/admin-auth";
 import { safeInternalPath } from "@/lib/seo-manager";
 import {
   updateDraftStorefrontConfig,
@@ -37,9 +37,7 @@ function checked(formData: FormData, key: string) {
 }
 
 async function ensureAdmin() {
-  const admin = await currentAdmin();
-  if (!admin) redirect("/admin/login");
-  return admin;
+  return requireAdminPermission("merchandising.edit");
 }
 
 function safeSlug(value: string) {
@@ -143,7 +141,7 @@ const sectionKinds = new Set<HomepageMerchandisingSectionKind>([
 ]);
 
 export async function saveCollection(formData: FormData) {
-  await ensureAdmin();
+  const admin = await ensureAdmin();
   const id = safeId(text(formData, "id", 64));
   const title = text(formData, "title", 120);
   const slug = safeSlug(text(formData, "slug", 100) || title);
@@ -217,6 +215,11 @@ export async function saveCollection(formData: FormData) {
         collection,
       ];
       return config;
+    }, {
+      actor: admin.username,
+      action: "merchandising.collection_saved",
+      scope: "merchandising",
+      target: id,
     });
   } catch (error) {
     redirect(
@@ -235,7 +238,7 @@ export async function saveCollection(formData: FormData) {
 }
 
 export async function deleteCollection(formData: FormData) {
-  await ensureAdmin();
+  const admin = await requireAdminPermission("merchandising.delete");
   const id = text(formData, "id", 64);
 
   try {
@@ -259,6 +262,11 @@ export async function deleteCollection(formData: FormData) {
           (collection) => collection.id !== id,
         );
       return config;
+    }, {
+      actor: admin.username,
+      action: "merchandising.collection_deleted",
+      scope: "merchandising",
+      target: id,
     });
   } catch (error) {
     redirect(
@@ -273,7 +281,7 @@ export async function deleteCollection(formData: FormData) {
 }
 
 export async function saveCampaign(formData: FormData) {
-  await ensureAdmin();
+  const admin = await ensureAdmin();
   const id = safeId(text(formData, "id", 64));
   const title = text(formData, "title", 140);
   if (!title) {
@@ -368,6 +376,11 @@ export async function saveCampaign(formData: FormData) {
         campaign,
       ];
       return config;
+    }, {
+      actor: admin.username,
+      action: "merchandising.campaign_saved",
+      scope: "merchandising",
+      target: id,
     });
   } catch (error) {
     redirect(
@@ -386,7 +399,7 @@ export async function saveCampaign(formData: FormData) {
 }
 
 export async function deleteCampaign(formData: FormData) {
-  await ensureAdmin();
+  const admin = await requireAdminPermission("merchandising.delete");
   const id = text(formData, "id", 64);
 
   try {
@@ -406,6 +419,11 @@ export async function deleteCampaign(formData: FormData) {
           (campaign) => campaign.id !== id,
         );
       return config;
+    }, {
+      actor: admin.username,
+      action: "merchandising.campaign_deleted",
+      scope: "merchandising",
+      target: id,
     });
   } catch (error) {
     redirect(
@@ -420,7 +438,7 @@ export async function deleteCampaign(formData: FormData) {
 }
 
 export async function saveProductMerchandising(formData: FormData) {
-  await ensureAdmin();
+  const admin = await ensureAdmin();
   const ids = text(formData, "catalogIds", 20000)
     .split("\n")
     .map((item) => item.trim())
@@ -459,13 +477,18 @@ export async function saveProductMerchandising(formData: FormData) {
 
     config.merchandising.productRules = rules;
     return config;
+  }, {
+    actor: admin.username,
+    action: "merchandising.product_rules_updated",
+    scope: "merchandising",
+    target: "product-rules",
   });
 
   redirect("/admin/merchandising/products?saved=1");
 }
 
 export async function saveHomepageMerchandising(formData: FormData) {
-  await ensureAdmin();
+  const admin = await ensureAdmin();
   const sectionCount = Math.min(
     20,
     Math.max(0, numberValue(formData, "sectionCount", 0, 0, 20)),
@@ -579,6 +602,11 @@ export async function saveHomepageMerchandising(formData: FormData) {
       config.merchandising.shopSortMode = shopSortMode;
       config.merchandising.homepageSections = sections;
       return config;
+    }, {
+      actor: admin.username,
+      action: "merchandising.homepage_updated",
+      scope: "merchandising",
+      target: "homepage",
     });
   } catch (error) {
     redirect(

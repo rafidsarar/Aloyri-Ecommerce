@@ -4,7 +4,7 @@ import {
   AdminShell,
 } from "@/components/admin/admin-shell";
 import { saveRedirects } from "@/app/admin/seo/actions";
-import { requireAdminPage } from "@/lib/admin-auth";
+import { requireAdminPermission } from "@/lib/admin-auth";
 import { readDraftStorefrontConfig } from "@/lib/storefront-admin-store";
 
 export default async function SeoRedirectsPage({
@@ -12,7 +12,7 @@ export default async function SeoRedirectsPage({
 }: {
   searchParams: Promise<{ saved?: string; error?: string }>;
 }) {
-  const admin = await requireAdminPage();
+  const admin = await requireAdminPermission("seo.view");
   const [query, config] = await Promise.all([
     searchParams,
     readDraftStorefrontConfig(),

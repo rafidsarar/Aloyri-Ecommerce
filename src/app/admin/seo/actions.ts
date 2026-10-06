@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { currentAdmin } from "@/lib/admin-auth";
+import { requireAdminPermission } from "@/lib/admin-auth";
 import {
   redirectValidationError,
   safeInternalPath,
@@ -21,9 +21,7 @@ function text(formData: FormData, key: string, max = 4000) {
 }
 
 async function ensureAdmin() {
-  const admin = await currentAdmin();
-  if (!admin) redirect("/admin/login");
-  return admin;
+  return requireAdminPermission("seo.edit");
 }
 
 function bool(formData: FormData, key: string) {
@@ -75,7 +73,7 @@ function entryFromForm(
 }
 
 export async function savePageSeo(formData: FormData) {
-  await ensureAdmin();
+  const admin = await ensureAdmin();
   const key = text(formData, "key", 60);
   const location = pageLocation(key);
   if (!location) redirect("/admin/seo?error=" + encodeURIComponent("Unknown SEO page."));
@@ -125,6 +123,11 @@ export async function savePageSeo(formData: FormData) {
         config.seo.pages[location.key] = next;
       }
       return config;
+    }, {
+      actor: admin.username,
+      action: "seo.page_updated",
+      scope: "seo",
+      target: key,
     });
   } catch (error) {
     redirect(
@@ -139,7 +142,7 @@ export async function savePageSeo(formData: FormData) {
 }
 
 export async function saveProductSeo(formData: FormData) {
-  await ensureAdmin();
+  const admin = await ensureAdmin();
   const productId = text(formData, "productId", 120);
   if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,119}$/.test(productId)) {
     redirect("/admin/seo/products?error=" + encodeURIComponent("Invalid product."));
@@ -168,6 +171,11 @@ export async function saveProductSeo(formData: FormData) {
         existingImage,
       );
       return config;
+    }, {
+      actor: admin.username,
+      action: "seo.product_updated",
+      scope: "seo",
+      target: productId,
     });
   } catch (error) {
     redirect(
@@ -182,7 +190,7 @@ export async function saveProductSeo(formData: FormData) {
 }
 
 export async function saveRedirects(formData: FormData) {
-  await ensureAdmin();
+  const admin = await ensureAdmin();
   const count = Math.min(200, Math.max(0, Number(text(formData, "count", 4)) || 0));
   const redirects: SeoRedirect[] = [];
 
@@ -236,6 +244,11 @@ export async function saveRedirects(formData: FormData) {
   await updateDraftStorefrontConfig((config) => {
     config.seo.redirects = redirects;
     return config;
+  }, {
+    actor: admin.username,
+    action: "seo.redirects_updated",
+    scope: "seo",
+    target: "redirects",
   });
 
   redirect("/admin/seo/redirects?saved=1");

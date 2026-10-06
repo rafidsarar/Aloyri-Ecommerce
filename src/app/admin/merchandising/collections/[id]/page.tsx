@@ -9,7 +9,7 @@ import {
   AdminNotice,
   AdminShell,
 } from "@/components/admin/admin-shell";
-import { requireAdminPage } from "@/lib/admin-auth";
+import { requireAdminPermission } from "@/lib/admin-auth";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
 import {
   readDraftStorefrontConfig,
@@ -23,7 +23,7 @@ export default async function CollectionEditor({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ saved?: string; error?: string }>;
 }) {
-  const admin = await requireAdminPage();
+  const admin = await requireAdminPermission("merchandising.view");
   const [{ id }, query, config, catalog] = await Promise.all([
     params,
     searchParams,

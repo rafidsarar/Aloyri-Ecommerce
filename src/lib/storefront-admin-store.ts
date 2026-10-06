@@ -595,6 +595,12 @@ export type StorefrontVersionRecord = {
   config: StorefrontConfig;
 };
 
+export type AdminAuditChange = {
+  path: string;
+  before?: string;
+  after?: string;
+};
+
 export type AdminAuditEvent = {
   version: 1;
   id: string;
@@ -602,6 +608,9 @@ export type AdminAuditEvent = {
   actor: string;
   action: string;
   detail?: string;
+  scope?: string;
+  target?: string;
+  changes?: AdminAuditChange[];
 };
 
 function blobConfigured() {
@@ -886,11 +895,97 @@ export async function updateStorefrontConfig(
   return saveStorefrontConfig(updater(structuredClone(current)));
 }
 
+function auditValue(value: unknown) {
+  if (value === undefined) return undefined;
+  if (value === null) return "null";
+  if (typeof value === "string") return value.slice(0, 160);
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  try {
+    return JSON.stringify(value).slice(0, 160);
+  } catch {
+    return "[unserializable]";
+  }
+}
+
+function auditDiff(
+  before: unknown,
+  after: unknown,
+  prefix = "",
+  depth = 0,
+): AdminAuditChange[] {
+  if (depth > 4) return [];
+  if (Object.is(before, after)) return [];
+
+  const beforeObject =
+    before && typeof before === "object" && !Array.isArray(before)
+      ? (before as Record<string, unknown>)
+      : null;
+  const afterObject =
+    after && typeof after === "object" && !Array.isArray(after)
+      ? (after as Record<string, unknown>)
+      : null;
+
+  if (beforeObject && afterObject) {
+    const keys = new Set([
+      ...Object.keys(beforeObject),
+      ...Object.keys(afterObject),
+    ]);
+    const changes: AdminAuditChange[] = [];
+    for (const key of keys) {
+      if (/password|secret|token|hash|recovery/i.test(key)) continue;
+      changes.push(
+        ...auditDiff(
+          beforeObject[key],
+          afterObject[key],
+          prefix ? prefix + "." + key : key,
+          depth + 1,
+        ),
+      );
+      if (changes.length >= 24) break;
+    }
+    return changes.slice(0, 24);
+  }
+
+  const beforeText = auditValue(before);
+  const afterText = auditValue(after);
+  if (beforeText === afterText) return [];
+  return [
+    {
+      path: prefix || "value",
+      ...(beforeText !== undefined ? { before: beforeText } : {}),
+      ...(afterText !== undefined ? { after: afterText } : {}),
+    },
+  ];
+}
+
 export async function updateDraftStorefrontConfig(
   updater: (current: StorefrontConfig) => StorefrontConfig,
+  audit?: {
+    actor: string;
+    action: string;
+    scope?: string;
+    target?: string;
+    detail?: string;
+  },
 ) {
   const current = await readDraftStorefrontConfig();
-  return saveDraftStorefrontConfig(updater(structuredClone(current)));
+  const next = updater(structuredClone(current));
+  const saved = await saveDraftStorefrontConfig(next);
+
+  if (audit) {
+    await writeAdminAuditEvent(
+      audit.actor,
+      audit.action,
+      audit.detail,
+      {
+        scope: audit.scope,
+        target: audit.target,
+        changes: auditDiff(current, saved),
+      },
+    );
+  }
+
+  return saved;
 }
 
 export async function getPublishingStatus() {
@@ -930,6 +1025,11 @@ export async function writeAdminAuditEvent(
   actor: string,
   action: string,
   detail?: string,
+  context?: {
+    scope?: string;
+    target?: string;
+    changes?: AdminAuditChange[];
+  },
 ) {
   const createdAt = new Date().toISOString();
   const event: AdminAuditEvent = {
@@ -939,6 +1039,11 @@ export async function writeAdminAuditEvent(
     actor,
     action,
     ...(detail ? { detail: detail.slice(0, 500) } : {}),
+    ...(context?.scope ? { scope: context.scope.slice(0, 80) } : {}),
+    ...(context?.target ? { target: context.target.slice(0, 120) } : {}),
+    ...(context?.changes?.length
+      ? { changes: context.changes.slice(0, 24) }
+      : {}),
   };
   const pathname =
     AUDIT_PREFIX +
@@ -1012,14 +1117,31 @@ export async function publishDraftStorefront(
     record.id +
     ".json";
   await writePrivateJson(pathname, record);
-  await writeAdminAuditEvent(actor, "storefront.publish", record.note);
+  await writeAdminAuditEvent(
+    actor,
+    "storefront.publish",
+    record.note,
+    {
+      scope: "publishing",
+      target: record.id,
+      changes: auditDiff(current, published),
+    },
+  );
   return record;
 }
 
 export async function discardDraftStorefront(actor: string) {
   const published = await readPublishedStorefrontConfig();
   const draft = await saveDraftStorefrontConfig(published);
-  await writeAdminAuditEvent(actor, "storefront.draft_discard", "Draft reset to current live storefront.");
+  await writeAdminAuditEvent(
+    actor,
+    "storefront.draft_discard",
+    "Draft reset to current live storefront.",
+    {
+      scope: "publishing",
+      target: "draft",
+    },
+  );
   return draft;
 }
 
@@ -1034,11 +1156,17 @@ export async function restoreStorefrontVersionToDraft(
   const record = versions.find((candidate) => candidate.id === versionId);
   if (!record) throw new Error("Storefront version not found.");
 
+  const before = await readDraftStorefrontConfig();
   const restored = await saveDraftStorefrontConfig(record.config);
   await writeAdminAuditEvent(
     actor,
     "storefront.version_restore_to_draft",
     "Restored version from " + record.publishedAt,
+    {
+      scope: "publishing",
+      target: record.id,
+      changes: auditDiff(before, restored),
+    },
   );
   return { restored, record };
 }

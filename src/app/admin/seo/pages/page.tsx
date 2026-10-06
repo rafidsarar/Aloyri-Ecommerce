@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { AdminCard, AdminShell } from "@/components/admin/admin-shell";
-import { requireAdminPage } from "@/lib/admin-auth";
+import { requireAdminPermission } from "@/lib/admin-auth";
 import {
   effectiveSeoEntry,
   publicPageLabels,
@@ -45,7 +45,7 @@ function entryFor(config: Awaited<ReturnType<typeof readDraftStorefrontConfig>>,
 }
 
 export default async function SeoPagesPage() {
-  const admin = await requireAdminPage();
+  const admin = await requireAdminPermission("seo.view");
   const config = await readDraftStorefrontConfig();
 
   return (

@@ -9,7 +9,10 @@ import {
   AdminNotice,
   AdminShell,
 } from "@/components/admin/admin-shell";
-import { requireAdminPage } from "@/lib/admin-auth";
+import {
+  hasAdminPermission,
+  requireAdminPermission,
+} from "@/lib/admin-auth";
 import {
   getPublishingStatus,
   listAdminAuditEvents,
@@ -34,7 +37,13 @@ export default async function AdminPublishingPage({
     error?: string;
   }>;
 }) {
-  const admin = await requireAdminPage();
+  const admin = await requireAdminPermission("publishing.view");
+  const canPreview = hasAdminPermission(admin, "publishing.preview");
+  const canPublish = hasAdminPermission(admin, "publishing.publish");
+  const canDiscard = hasAdminPermission(admin, "publishing.discard");
+  const canRestore =
+    admin.role === "owner" && hasAdminPermission(admin, "publishing.restore");
+
   const [query, status, versions, audit] = await Promise.all([
     searchParams,
     getPublishingStatus(),
@@ -111,39 +120,49 @@ export default async function AdminPublishingPage({
           </p>
 
           <div className="mt-5 flex flex-wrap gap-3">
-            <form action={enableDraftPreview}>
-              <input type="hidden" name="path" value="/" />
-              <button className="rounded-xl border border-[#713a35]/18 px-5 py-3 text-sm font-semibold text-[#713a35]">
-                Preview draft storefront
-              </button>
-            </form>
-            <form action={discardDraft}>
-              <button
-                disabled={!status.hasDraftChanges}
-                className="rounded-xl border border-black/10 px-5 py-3 text-sm font-semibold text-black/60 disabled:opacity-40"
-              >
-                Discard draft changes
-              </button>
-            </form>
+            {canPreview ? (
+              <form action={enableDraftPreview}>
+                <input type="hidden" name="path" value="/" />
+                <button className="rounded-xl border border-[#713a35]/18 px-5 py-3 text-sm font-semibold text-[#713a35]">
+                  Preview draft storefront
+                </button>
+              </form>
+            ) : null}
+            {canDiscard ? (
+              <form action={discardDraft}>
+                <button
+                  disabled={!status.hasDraftChanges}
+                  className="rounded-xl border border-black/10 px-5 py-3 text-sm font-semibold text-black/60 disabled:opacity-40"
+                >
+                  Discard draft changes
+                </button>
+              </form>
+            ) : null}
           </div>
 
-          <form action={publishDraft} className="mt-5 grid gap-3 border-t border-black/7 pt-5">
-            <label className="grid gap-1.5 text-sm font-medium">
-              Publish note
-              <input
-                name="note"
-                maxLength={300}
-                placeholder="Example: Updated homepage and shipping FAQ"
-                className="rounded-xl border border-black/10 px-4 py-3"
-              />
-            </label>
-            <button
-              disabled={!status.hasDraftChanges}
-              className="w-fit rounded-xl bg-[#713a35] px-6 py-3.5 text-sm font-semibold text-white disabled:opacity-40"
-            >
-              Publish draft to live website
-            </button>
-          </form>
+          {canPublish ? (
+            <form action={publishDraft} className="mt-5 grid gap-3 border-t border-black/7 pt-5">
+              <label className="grid gap-1.5 text-sm font-medium">
+                Publish note
+                <input
+                  name="note"
+                  maxLength={300}
+                  placeholder="Example: Updated homepage and shipping FAQ"
+                  className="rounded-xl border border-black/10 px-4 py-3"
+                />
+              </label>
+              <button
+                disabled={!status.hasDraftChanges}
+                className="w-fit rounded-xl bg-[#713a35] px-6 py-3.5 text-sm font-semibold text-white disabled:opacity-40"
+              >
+                Publish draft to live website
+              </button>
+            </form>
+          ) : (
+            <p className="mt-5 border-t border-black/7 pt-5 text-xs text-black/45">
+              Your role can review publishing status but cannot publish the live storefront.
+            </p>
+          )}
         </AdminCard>
 
         <AdminCard>
@@ -189,12 +208,14 @@ export default async function AdminPublishingPage({
                     {when(version.publishedAt)} · {version.publishedBy}
                   </p>
                 </div>
-                <form action={restoreVersionToDraftAction}>
-                  <input type="hidden" name="versionId" value={version.id} />
-                  <button className="rounded-lg border border-[#713a35]/16 px-3 py-2 text-xs font-semibold text-[#713a35]">
-                    Restore to draft
-                  </button>
-                </form>
+                {canRestore ? (
+                  <form action={restoreVersionToDraftAction}>
+                    <input type="hidden" name="versionId" value={version.id} />
+                    <button className="rounded-lg border border-[#713a35]/16 px-3 py-2 text-xs font-semibold text-[#713a35]">
+                      Restore to draft
+                    </button>
+                  </form>
+                ) : null}
               </div>
             ))}
           </div>

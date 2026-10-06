@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { AdminCard, AdminNotice, AdminShell } from "@/components/admin/admin-shell";
-import { requireAdminPage } from "@/lib/admin-auth";
+import { requireAdminPermission } from "@/lib/admin-auth";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
 import { formatPrice } from "@/lib/catalog";
 import { readDraftStorefrontConfig } from "@/lib/storefront-admin-store";
@@ -10,7 +10,7 @@ export default async function AdminProductsPage({
 }: {
   searchParams: Promise<{ error?: string }>;
 }) {
-  const admin = await requireAdminPage();
+  const admin = await requireAdminPermission("products.view");
   const [{ error }, config, catalog] = await Promise.all([
     searchParams,
     readDraftStorefrontConfig(),

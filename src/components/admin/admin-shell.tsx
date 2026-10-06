@@ -1,21 +1,33 @@
 import Link from "next/link";
 import { logoutAdmin } from "@/app/admin/actions";
+import {
+  currentAdmin,
+  hasAdminPermission,
+  type AdminPermission,
+} from "@/lib/admin-auth";
 
-const nav = [
-  ["Overview", "/admin"],
-  ["Homepage", "/admin/homepage"],
-  ["Products", "/admin/products"],
-  ["Pages & FAQ", "/admin/pages"],
-  ["Media", "/admin/media"],
-  ["Merchandising", "/admin/merchandising"],
-  ["Analytics", "/admin/analytics"],
-  ["SEO", "/admin/seo"],
-  ["Publishing", "/admin/publishing"],
-  ["Security", "/admin/security"],
-  ["Settings", "/admin/settings"],
+const nav: Array<{
+  label: string;
+  href: string;
+  permission: AdminPermission;
+}> = [
+  { label: "Overview", href: "/admin", permission: "dashboard.view" },
+  { label: "Homepage", href: "/admin/homepage", permission: "homepage.view" },
+  { label: "Products", href: "/admin/products", permission: "products.view" },
+  { label: "Pages & FAQ", href: "/admin/pages", permission: "pages.view" },
+  { label: "Media", href: "/admin/media", permission: "media.view" },
+  { label: "Merchandising", href: "/admin/merchandising", permission: "merchandising.view" },
+  { label: "Analytics", href: "/admin/analytics", permission: "analytics.view" },
+  { label: "SEO", href: "/admin/seo", permission: "seo.view" },
+  { label: "Publishing", href: "/admin/publishing", permission: "publishing.view" },
+  { label: "Team", href: "/admin/staff", permission: "staff.view" },
+  { label: "Audit", href: "/admin/audit", permission: "audit.view" },
+  { label: "Operations", href: "/admin/operations", permission: "health.view" },
+  { label: "Security", href: "/admin/security", permission: "security.self" },
+  { label: "Settings", href: "/admin/settings", permission: "settings.view" },
 ];
 
-export function AdminShell({
+export async function AdminShell({
   username,
   title,
   subtitle,
@@ -26,6 +38,11 @@ export function AdminShell({
   subtitle: string;
   children: React.ReactNode;
 }) {
+  const session = await currentAdmin();
+  const visibleNav = session
+    ? nav.filter((item) => hasAdminPermission(session, item.permission))
+    : [];
+
   return (
     <div className="min-h-screen bg-[#f7f4f2] text-[#2f211f]">
       <div className="border-b border-black/8 bg-[#2f211f] text-white">
@@ -40,7 +57,8 @@ export function AdminShell({
           </div>
           <div className="flex items-center gap-3">
             <span className="hidden rounded-full border border-white/12 px-3 py-1.5 text-xs text-white/65 sm:inline">
-              {username}
+              {session?.displayName || username}
+              {session?.role ? " · " + session.role : ""}
             </span>
             <form action={logoutAdmin}>
               <button
@@ -57,7 +75,7 @@ export function AdminShell({
       <div className="mx-auto grid max-w-[1500px] lg:grid-cols-[235px_1fr]">
         <aside className="border-b border-black/8 bg-white px-4 py-4 lg:min-h-[calc(100vh-73px)] lg:border-b-0 lg:border-r lg:px-5 lg:py-7">
           <nav className="flex gap-2 overflow-x-auto lg:flex-col" aria-label="Admin navigation">
-            {nav.map(([label, href]) => (
+            {visibleNav.map(({ label, href }) => (
               <Link
                 key={href}
                 href={href}

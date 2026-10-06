@@ -4,7 +4,7 @@ import {
   AdminNotice,
   AdminShell,
 } from "@/components/admin/admin-shell";
-import { requireAdminPage } from "@/lib/admin-auth";
+import { requireAdminPermission } from "@/lib/admin-auth";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
 import { analyzeMerchandisingHealth } from "@/lib/merchandising";
 import {
@@ -13,7 +13,7 @@ import {
 } from "@/lib/storefront-admin-store";
 
 export default async function MerchandisingOverviewPage() {
-  const admin = await requireAdminPage();
+  const admin = await requireAdminPermission("merchandising.view");
   const [config, catalog, publishing] = await Promise.all([
     readDraftStorefrontConfig(),
     fetchCrmCatalog(),

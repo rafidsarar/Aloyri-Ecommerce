@@ -10,7 +10,7 @@ import {
   SeoSearchPreview,
   SeoSocialPreview,
 } from "@/components/admin/seo-preview";
-import { requireAdminPage } from "@/lib/admin-auth";
+import { requireAdminPermission } from "@/lib/admin-auth";
 import {
   effectiveSeoEntry,
   publicPageLabels,
@@ -82,7 +82,7 @@ export default async function SeoPageEditor({
   params: Promise<{ key: string }>;
   searchParams: Promise<{ saved?: string; error?: string }>;
 }) {
-  const admin = await requireAdminPage();
+  const admin = await requireAdminPermission("seo.view");
   const [{ key }, query, config] = await Promise.all([
     params,
     searchParams,

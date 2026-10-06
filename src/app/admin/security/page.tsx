@@ -11,7 +11,7 @@ import {
 import {
   ADMIN_SESSION_SECONDS,
   adminRecoveryStatus,
-  requireAdminPage,
+  requireAdminPermission,
 } from "@/lib/admin-auth";
 
 export default async function AdminSecurityPage({
@@ -22,12 +22,13 @@ export default async function AdminSecurityPage({
     passwordError?: string;
     sessionsRotated?: string;
     recovered?: string;
+    mustChange?: string;
   }>;
 }) {
-  const admin = await requireAdminPage();
+  const admin = await requireAdminPermission("security.self");
   const [query, recovery] = await Promise.all([
     searchParams,
-    adminRecoveryStatus(),
+    adminRecoveryStatus(admin.username),
   ]);
 
   return (
@@ -36,6 +37,11 @@ export default async function AdminSecurityPage({
       title="Account security"
       subtitle="Protect Ecommerce Admin separately from CRM with password rotation, one-time recovery codes and session invalidation."
     >
+      {query.mustChange ? (
+        <AdminNotice tone="warning">
+          Your temporary password must be changed before you can use other Admin areas.
+        </AdminNotice>
+      ) : null}
       {query.passwordChanged ? (
         <AdminNotice>Password changed and all older sessions were invalidated.</AdminNotice>
       ) : null}
@@ -114,23 +120,35 @@ export default async function AdminSecurityPage({
         </AdminCard>
       </div>
 
-      <AdminCard className="mt-5">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold">Recovery codes</p>
-            <p className="mt-1 max-w-2xl text-xs leading-5 text-black/45">
-              Recovery codes let you reset the Ecommerce Admin password without
-              CRM access. Store them somewhere separate from this browser.
-            </p>
+      {recovery.available ? (
+        <AdminCard className="mt-5">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold">Owner recovery codes</p>
+              <p className="mt-1 max-w-2xl text-xs leading-5 text-black/45">
+                One-time recovery codes are owner-only. Staff password recovery
+                is handled by an authorized staff manager, which also revokes
+                the staff member’s previous sessions.
+              </p>
+            </div>
+            <span className="rounded-full bg-[#f2e8e4] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[.12em] text-[#713a35]">
+              {recovery.remaining} remaining
+            </span>
           </div>
-          <span className="rounded-full bg-[#f2e8e4] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[.12em] text-[#713a35]">
-            {recovery.remaining} remaining
-          </span>
-        </div>
-        <div className="mt-5">
-          <RecoveryCodeGenerator />
-        </div>
-      </AdminCard>
+          <div className="mt-5">
+            <RecoveryCodeGenerator />
+          </div>
+        </AdminCard>
+      ) : (
+        <AdminCard className="mt-5">
+          <p className="text-sm font-semibold">Staff account recovery</p>
+          <p className="mt-2 text-xs leading-5 text-black/45">
+            Staff accounts do not receive reusable owner recovery codes. Ask an
+            authorized staff manager to issue a temporary password; all older
+            sessions are revoked automatically.
+          </p>
+        </AdminCard>
+      )}
     </AdminShell>
   );
 }

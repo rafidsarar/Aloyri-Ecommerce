@@ -1,4 +1,4 @@
-import { currentAdmin } from "@/lib/admin-auth";
+import { currentAdmin, hasAdminPermission } from "@/lib/admin-auth";
 import { buildAnalyticsReport } from "@/lib/analytics-store";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +16,7 @@ function csv(rows: Array<Array<unknown>>) {
 
 export async function GET(request: Request) {
   const admin = await currentAdmin();
-  if (!admin) {
+  if (!admin || !hasAdminPermission(admin, "analytics.export")) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 

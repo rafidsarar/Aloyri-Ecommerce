@@ -1,14 +1,23 @@
 import Link from "next/link";
 import { AdminCard, AdminNotice, AdminShell } from "@/components/admin/admin-shell";
-import { requireAdminPage } from "@/lib/admin-auth";
+import {
+  hasAdminPermission,
+  requireAdminPermission,
+  type AdminPermission,
+} from "@/lib/admin-auth";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
 import {
   getPublishingStatus,
   readDraftStorefrontConfig,
 } from "@/lib/storefront-admin-store";
 
-export default async function AdminOverviewPage() {
-  const admin = await requireAdminPage();
+export default async function AdminOverviewPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ forbidden?: string }>;
+}) {
+  const admin = await requireAdminPermission("dashboard.view");
+  const query = await searchParams;
   const [config, catalog, publishing] = await Promise.all([
     readDraftStorefrontConfig(),
     fetchCrmCatalog(),
@@ -30,6 +39,11 @@ export default async function AdminOverviewPage() {
       title="Storefront overview"
       subtitle="Run Aloyri Ecommerce independently while CRM stays responsible only for live price, stock and order operations."
     >
+      {query.forbidden ? (
+        <AdminNotice tone="warning">
+          Your staff account does not have permission to open that Admin area.
+        </AdminNotice>
+      ) : null}
       {publishing.hasDraftChanges ? (
         <AdminNotice tone="warning">
           You have unpublished website changes. Review them in Publishing before customers can see them.
@@ -89,26 +103,35 @@ export default async function AdminOverviewPage() {
           </div>
 
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {[
-              ["Homepage", "Hero, featured content and campaign copy", "/admin/homepage"],
-              ["Product content", "Descriptions, badges, guidance and photography", "/admin/products"],
-              ["Customer pages", "About, shipping, returns, contact and FAQ", "/admin/pages"],
-              ["Store settings", "Announcement, footer and support details", "/admin/settings"],
-              ["Merchandising", "Campaigns, collections, badges and product ordering", "/admin/merchandising"],
-              ["Analytics", "Conversion funnel, attribution and storefront intelligence", "/admin/analytics"],
-              ["SEO", "Search metadata, social previews, sitemap and redirects", "/admin/seo"],
-              ["Publishing", "Preview, publish, restore and version history", "/admin/publishing"],
-              ["Security", "Password, recovery codes and session control", "/admin/security"],
-            ].map(([title, copy, href]) => (
-              <Link
-                key={href}
-                href={href}
-                className="rounded-xl border border-black/8 bg-[#fffaf7] p-4 transition hover:border-[#713a35]/20"
-              >
-                <p className="text-sm font-semibold">{title}</p>
-                <p className="mt-1 text-xs leading-5 text-black/45">{copy}</p>
-              </Link>
-            ))}
+            {(
+              [
+                ["Homepage", "Hero, featured content and campaign copy", "/admin/homepage", "homepage.view"],
+                ["Product content", "Descriptions, badges, guidance and photography", "/admin/products", "products.view"],
+                ["Customer pages", "About, shipping, returns, contact and FAQ", "/admin/pages", "pages.view"],
+                ["Store settings", "Announcement, footer and support details", "/admin/settings", "settings.view"],
+                ["Merchandising", "Campaigns, collections, badges and product ordering", "/admin/merchandising", "merchandising.view"],
+                ["Analytics", "Conversion funnel, attribution and storefront intelligence", "/admin/analytics", "analytics.view"],
+                ["SEO", "Search metadata, social previews, sitemap and redirects", "/admin/seo", "seo.view"],
+                ["Publishing", "Preview, publish, restore and version history", "/admin/publishing", "publishing.view"],
+                ["Team access", "Staff roles, permissions and session revocation", "/admin/staff", "staff.view"],
+                ["Audit history", "Who changed what and when", "/admin/audit", "audit.view"],
+                ["Operations", "Health checks and website configuration backups", "/admin/operations", "health.view"],
+                ["Security", "Password, recovery codes and session control", "/admin/security", "security.self"],
+              ] satisfies Array<[string, string, string, AdminPermission]>
+            )
+              .filter(([, , , permission]) =>
+                hasAdminPermission(admin, permission),
+              )
+              .map(([title, copy, href]) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="rounded-xl border border-black/8 bg-[#fffaf7] p-4 transition hover:border-[#713a35]/20"
+                >
+                  <p className="text-sm font-semibold">{title}</p>
+                  <p className="mt-1 text-xs leading-5 text-black/45">{copy}</p>
+                </Link>
+              ))}
           </div>
         </AdminCard>
 
