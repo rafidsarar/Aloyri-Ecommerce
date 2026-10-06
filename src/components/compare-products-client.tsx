@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { AddToCart } from "@/components/add-to-cart";
 import { useCatalog } from "@/components/catalog-provider";
 import { ProductMedia } from "@/components/product-media";
@@ -12,8 +12,10 @@ import {
 } from "@/lib/catalog";
 import { salePriceFor } from "@/lib/promotions";
 import {
-  PRODUCT_PREFERENCES_EVENT,
   readCompareProductIds,
+  productPreferencesServerSnapshot,
+  productPreferencesSnapshot,
+  subscribeProductPreferences,
   writeCompareProductIds,
 } from "@/lib/product-preferences";
 
@@ -23,14 +25,12 @@ function Cell({ children }: { children: React.ReactNode }) {
 
 export function CompareProductsClient() {
   const { products, synced, error, refresh } = useCatalog();
-  const [ids, setIds] = useState<string[]>([]);
-
-  useEffect(() => {
-    const load = () => setIds(readCompareProductIds());
-    load();
-    window.addEventListener(PRODUCT_PREFERENCES_EVENT, load);
-    return () => window.removeEventListener(PRODUCT_PREFERENCES_EVENT, load);
-  }, []);
+  const snapshot = useSyncExternalStore(
+    subscribeProductPreferences,
+    productPreferencesSnapshot,
+    productPreferencesServerSnapshot,
+  );
+  const ids = useMemo(() => readCompareProductIds(), [snapshot]);
 
   const compared = useMemo(() => {
     const byId = new Map(products.map((product) => [product.id, product]));
