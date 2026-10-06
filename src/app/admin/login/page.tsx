@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { loginAdmin } from "@/app/admin/actions";
 import { adminIsConfigured, currentAdmin } from "@/lib/admin-auth";
@@ -53,6 +54,12 @@ export default async function AdminLoginPage({
             Sign in
           </button>
         </form>
+        <Link
+          href="/admin/recover"
+          className="mt-5 inline-block text-sm font-semibold text-[#713a35]"
+        >
+          Use a recovery code
+        </Link>
       </div>
     </main>
   );

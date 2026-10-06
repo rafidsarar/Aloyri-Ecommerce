@@ -1,19 +1,27 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { cookies, draftMode, headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
   ADMIN_COOKIE,
   ADMIN_SESSION_SECONDS,
+  changeAdminPassword,
   createAdminOwner,
   createAdminSession,
   currentAdmin,
+  generateAdminRecoveryCodes,
+  resetAdminPasswordWithRecoveryCode,
+  rotateAdminSessions,
   verifyAdminCredentials,
 } from "@/lib/admin-auth";
+import { rateAllowed } from "@/lib/request-rate-limit";
 import {
-  readStorefrontConfig,
-  updateStorefrontConfig,
+  discardDraftStorefront,
+  publishDraftStorefront,
+  readDraftStorefrontConfig,
+  restoreStorefrontVersionToDraft,
+  updateDraftStorefrontConfig,
   uploadStorefrontMedia,
   type InfoPageContent,
   type ProductEditorial,
@@ -35,8 +43,27 @@ function list(value: string, maxItems = 20, maxLength = 500) {
 
 function safeHref(value: string, fallback: string) {
   const href = value.trim();
-  if (/^\/[A-Za-z0-9/_?=&.#%-]*$/.test(href)) return href;
+  if (/^\/[A-Za-z0-9/_?=&.#%-]*$/.test(href) && !href.startsWith("//")) {
+    return href;
+  }
   return fallback;
+}
+
+function safePreviewPath(value: string) {
+  const path = value.trim();
+  if (/^\/[A-Za-z0-9/_?=&.#%-]*$/.test(path) && !path.startsWith("//")) {
+    return path;
+  }
+  return "/";
+}
+
+async function requestIp() {
+  const incoming = await headers();
+  return (
+    incoming.get("x-vercel-forwarded-for") ||
+    incoming.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    "unknown"
+  );
 }
 
 async function setSession(username: string) {
@@ -61,7 +88,28 @@ function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Something went wrong.";
 }
 
+function revalidatePublishedStorefront() {
+  revalidatePath("/", "layout");
+  revalidatePath("/");
+  revalidatePath("/shop");
+  revalidatePath("/about");
+  revalidatePath("/faq");
+  revalidatePath("/contact");
+  revalidatePath("/shipping-delivery");
+  revalidatePath("/returns-refunds");
+  revalidatePath("/product/[slug]", "page");
+  revalidatePath("/api/catalog");
+}
+
 export async function setupAdminOwner(formData: FormData) {
+  const ip = await requestIp();
+  if (!rateAllowed("admin-setup", ip, 5, 60 * 60 * 1000)) {
+    redirect(
+      "/admin/setup?error=" +
+        encodeURIComponent("Too many setup attempts. Try again later."),
+    );
+  }
+
   const username = text(formData, "username", 48);
   const password = text(formData, "password", 128);
   const confirm = text(formData, "confirm", 128);
@@ -85,6 +133,14 @@ export async function setupAdminOwner(formData: FormData) {
 }
 
 export async function loginAdmin(formData: FormData) {
+  const ip = await requestIp();
+  if (!rateAllowed("admin-login", ip, 10, 15 * 60 * 1000)) {
+    redirect(
+      "/admin/login?error=" +
+        encodeURIComponent("Too many sign-in attempts. Try again in 15 minutes."),
+    );
+  }
+
   const username = text(formData, "username", 48);
   const password = text(formData, "password", 128);
   const valid = await verifyAdminCredentials(username, password);
@@ -112,10 +168,153 @@ export async function logoutAdmin() {
   redirect("/admin/login");
 }
 
+export async function updateAdminPassword(formData: FormData) {
+  const admin = await ensureAdmin();
+  const currentPassword = text(formData, "currentPassword", 128);
+  const newPassword = text(formData, "newPassword", 128);
+  const confirmPassword = text(formData, "confirmPassword", 128);
+
+  if (newPassword !== confirmPassword) {
+    redirect(
+      "/admin/security?passwordError=" +
+        encodeURIComponent("New passwords do not match."),
+    );
+  }
+
+  try {
+    await changeAdminPassword(
+      admin.username,
+      currentPassword,
+      newPassword,
+    );
+    await setSession(admin.username);
+  } catch (error) {
+    redirect(
+      "/admin/security?passwordError=" +
+        encodeURIComponent(errorMessage(error)),
+    );
+  }
+
+  redirect("/admin/security?passwordChanged=1");
+}
+
+export async function rotateAllAdminSessions() {
+  const admin = await ensureAdmin();
+  await rotateAdminSessions(admin.username);
+  await setSession(admin.username);
+  redirect("/admin/security?sessionsRotated=1");
+}
+
+export type RecoveryCodeActionState = {
+  error?: string;
+  codes?: string[];
+};
+
+export async function generateRecoveryCodesAction(
+  _previous: RecoveryCodeActionState | null,
+  formData: FormData,
+): Promise<RecoveryCodeActionState> {
+  const admin = await currentAdmin();
+  if (!admin) return { error: "Your admin session has expired. Sign in again." };
+
+  const ip = await requestIp();
+  if (!rateAllowed("admin-recovery-generate", ip, 5, 60 * 60 * 1000)) {
+    return { error: "Too many recovery-code requests. Try again later." };
+  }
+
+  try {
+    const codes = await generateAdminRecoveryCodes(
+      admin.username,
+      text(formData, "currentPassword", 128),
+    );
+    return { codes };
+  } catch (error) {
+    return { error: errorMessage(error) };
+  }
+}
+
+export async function recoverAdminAccount(formData: FormData) {
+  const ip = await requestIp();
+  if (!rateAllowed("admin-recover", ip, 6, 60 * 60 * 1000)) {
+    redirect(
+      "/admin/recover?error=" +
+        encodeURIComponent("Too many recovery attempts. Try again later."),
+    );
+  }
+
+  const username = text(formData, "username", 48);
+  const recoveryCode = text(formData, "recoveryCode", 64);
+  const newPassword = text(formData, "newPassword", 128);
+  const confirmPassword = text(formData, "confirmPassword", 128);
+
+  if (newPassword !== confirmPassword) {
+    redirect(
+      "/admin/recover?error=" +
+        encodeURIComponent("New passwords do not match."),
+    );
+  }
+
+  try {
+    await resetAdminPasswordWithRecoveryCode(
+      username,
+      recoveryCode,
+      newPassword,
+    );
+    await setSession(username.trim());
+  } catch {
+    redirect(
+      "/admin/recover?error=" +
+        encodeURIComponent("Recovery details are not valid."),
+    );
+  }
+
+  redirect("/admin/security?recovered=1");
+}
+
+export async function enableDraftPreview(formData: FormData) {
+  await ensureAdmin();
+  const preview = await draftMode();
+  preview.enable();
+  redirect(safePreviewPath(text(formData, "path", 300) || "/"));
+}
+
+export async function publishDraft(formData: FormData) {
+  const admin = await ensureAdmin();
+  const note = text(formData, "note", 300);
+  try {
+    await publishDraftStorefront(admin.username, note);
+    revalidatePublishedStorefront();
+  } catch (error) {
+    redirect(
+      "/admin/publishing?error=" + encodeURIComponent(errorMessage(error)),
+    );
+  }
+  redirect("/admin/publishing?published=1");
+}
+
+export async function discardDraft() {
+  const admin = await ensureAdmin();
+  await discardDraftStorefront(admin.username);
+  redirect("/admin/publishing?discarded=1");
+}
+
+export async function restoreVersionToDraftAction(formData: FormData) {
+  const admin = await ensureAdmin();
+  const versionId = text(formData, "versionId", 64);
+  try {
+    await restoreStorefrontVersionToDraft(admin.username, versionId);
+  } catch (error) {
+    redirect(
+      "/admin/publishing?error=" + encodeURIComponent(errorMessage(error)),
+    );
+  }
+  redirect("/admin/publishing?restored=1");
+}
+
 export async function saveHomepage(formData: FormData) {
   await ensureAdmin();
 
-  await updateStorefrontConfig((config) => {
+  await updateDraftStorefrontConfig((config) => {
     config.homepage = {
       ...config.homepage,
       eyebrow: text(formData, "eyebrow", 120),
@@ -140,14 +339,13 @@ export async function saveHomepage(formData: FormData) {
     return config;
   });
 
-  revalidatePath("/");
   redirect("/admin/homepage?saved=1");
 }
 
 export async function saveSiteSettings(formData: FormData) {
   await ensureAdmin();
 
-  await updateStorefrontConfig((config) => {
+  await updateDraftStorefrontConfig((config) => {
     config.site = {
       announcement: text(formData, "announcement", 180),
       footerDescription: text(formData, "footerDescription", 600),
@@ -158,8 +356,6 @@ export async function saveSiteSettings(formData: FormData) {
     return config;
   });
 
-  revalidatePath("/", "layout");
-  revalidatePath("/contact");
   redirect("/admin/settings?saved=1");
 }
 
@@ -173,7 +369,7 @@ export async function saveProductEditorial(formData: FormData) {
     );
   }
 
-  const existingConfig = await readStorefrontConfig();
+  const existingConfig = await readDraftStorefrontConfig();
   const current = existingConfig.products[productId] || {};
   let mediaPath = current.mediaPath;
 
@@ -210,15 +406,11 @@ export async function saveProductEditorial(formData: FormData) {
     ...(mediaPath ? { mediaPath } : {}),
   };
 
-  await updateStorefrontConfig((config) => {
+  await updateDraftStorefrontConfig((config) => {
     config.products[productId] = editorial;
     return config;
   });
 
-  revalidatePath("/");
-  revalidatePath("/shop");
-  revalidatePath("/product/[slug]", "page");
-  revalidatePath("/api/catalog");
   redirect(
     "/admin/products/" + encodeURIComponent(productId) + "?saved=1",
   );
@@ -255,7 +447,7 @@ export async function saveInfoPage(formData: FormData) {
     }
   }
 
-  await updateStorefrontConfig((config) => {
+  await updateDraftStorefrontConfig((config) => {
     config.pages[pageKey as keyof typeof config.pages] = {
       eyebrow: text(formData, "eyebrow", 120),
       title: text(formData, "title", 180),
@@ -265,13 +457,6 @@ export async function saveInfoPage(formData: FormData) {
     return config;
   });
 
-  const publicPath =
-    pageKey === "shipping"
-      ? "/shipping-delivery"
-      : pageKey === "returns"
-        ? "/returns-refunds"
-        : "/" + pageKey;
-  revalidatePath(publicPath);
   redirect("/admin/pages/" + pageKey + "?saved=1");
 }
 
@@ -289,7 +474,7 @@ export async function saveFaq(formData: FormData) {
     if (question && answer) items.push({ question, answer });
   }
 
-  await updateStorefrontConfig((config) => {
+  await updateDraftStorefrontConfig((config) => {
     config.faq = {
       eyebrow: text(formData, "eyebrow", 120),
       title: text(formData, "title", 180),
@@ -299,6 +484,5 @@ export async function saveFaq(formData: FormData) {
     return config;
   });
 
-  revalidatePath("/faq");
   redirect("/admin/pages/faq?saved=1");
 }

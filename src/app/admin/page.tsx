@@ -2,13 +2,17 @@ import Link from "next/link";
 import { AdminCard, AdminNotice, AdminShell } from "@/components/admin/admin-shell";
 import { requireAdminPage } from "@/lib/admin-auth";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
-import { readStorefrontConfig } from "@/lib/storefront-admin-store";
+import {
+  getPublishingStatus,
+  readDraftStorefrontConfig,
+} from "@/lib/storefront-admin-store";
 
 export default async function AdminOverviewPage() {
   const admin = await requireAdminPage();
-  const [config, catalog] = await Promise.all([
-    readStorefrontConfig(),
+  const [config, catalog, publishing] = await Promise.all([
+    readDraftStorefrontConfig(),
     fetchCrmCatalog(),
+    getPublishingStatus(),
   ]);
 
   const liveProducts = catalog.ok ? catalog.body.products : [];
@@ -26,6 +30,11 @@ export default async function AdminOverviewPage() {
       title="Storefront overview"
       subtitle="Run Aloyri Ecommerce independently while CRM stays responsible only for live price, stock and order operations."
     >
+      {publishing.hasDraftChanges ? (
+        <AdminNotice tone="warning">
+          You have unpublished website changes. Review them in Publishing before customers can see them.
+        </AdminNotice>
+      ) : null}
       {!catalog.ok ? (
         <AdminNotice tone="warning">
           CRM catalog is temporarily unavailable. Website content management is
@@ -85,6 +94,8 @@ export default async function AdminOverviewPage() {
               ["Product content", "Descriptions, badges, guidance and photography", "/admin/products"],
               ["Customer pages", "About, shipping, returns, contact and FAQ", "/admin/pages"],
               ["Store settings", "Announcement, footer and support details", "/admin/settings"],
+              ["Publishing", "Preview, publish, restore and version history", "/admin/publishing"],
+              ["Security", "Password, recovery codes and session control", "/admin/security"],
             ].map(([title, copy, href]) => (
               <Link
                 key={href}

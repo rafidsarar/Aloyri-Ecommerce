@@ -6,7 +6,7 @@ import { requireAdminPage } from "@/lib/admin-auth";
 import { getProductById, formatPrice } from "@/lib/catalog";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
 import {
-  readStorefrontConfig,
+  readDraftStorefrontConfig,
   storefrontMediaUrl,
 } from "@/lib/storefront-admin-store";
 
@@ -21,7 +21,7 @@ export default async function AdminProductPage({
   const [{ id }, query, config, catalog] = await Promise.all([
     params,
     searchParams,
-    readStorefrontConfig(),
+    readDraftStorefrontConfig(),
     fetchCrmCatalog(),
   ]);
 

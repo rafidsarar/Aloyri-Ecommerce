@@ -2,7 +2,7 @@ import { saveHomepage } from "@/app/admin/actions";
 import { AdminCard, AdminNotice, AdminShell } from "@/components/admin/admin-shell";
 import { requireAdminPage } from "@/lib/admin-auth";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
-import { readStorefrontConfig } from "@/lib/storefront-admin-store";
+import { readDraftStorefrontConfig } from "@/lib/storefront-admin-store";
 
 export default async function AdminHomepagePage({
   searchParams,
@@ -12,11 +12,18 @@ export default async function AdminHomepagePage({
   const admin = await requireAdminPage();
   const [{ saved }, config, catalog] = await Promise.all([
     searchParams,
-    readStorefrontConfig(),
+    readDraftStorefrontConfig(),
     fetchCrmCatalog(),
   ]);
   const home = config.homepage;
   const products = catalog.ok ? catalog.body.products : [];
+  const heroProductId = products.some(
+    (product) => product.id === home.heroProductId,
+  )
+    ? home.heroProductId
+    : products.find((product) => product.availableStock > 0)?.id ||
+      products[0]?.id ||
+      "";
 
   return (
     <AdminShell
@@ -24,7 +31,7 @@ export default async function AdminHomepagePage({
       title="Homepage"
       subtitle="Manage hero messaging, calls to action and the featured product without touching CRM."
     >
-      {saved ? <AdminNotice>Homepage changes saved.</AdminNotice> : null}
+      {saved ? <AdminNotice>Homepage draft saved.</AdminNotice> : null}
       <form action={saveHomepage} className="grid gap-5">
         <AdminCard>
           <div className="grid gap-4">
@@ -77,7 +84,7 @@ export default async function AdminHomepagePage({
           <div className="grid gap-4 lg:grid-cols-2">
             <label className="grid gap-1.5 text-sm font-medium">
               Hero product
-              <select name="heroProductId" defaultValue={home.heroProductId} className="rounded-xl border border-black/10 px-4 py-3">
+              <select name="heroProductId" defaultValue={heroProductId} className="rounded-xl border border-black/10 px-4 py-3">
                 {products.map((product) => (
                   <option key={product.id} value={product.id}>
                     {product.brand} · {product.name}

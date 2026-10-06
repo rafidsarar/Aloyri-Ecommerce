@@ -10,10 +10,12 @@ export function SiteChrome({
   children,
   announcement,
   footerDescription,
+  preview,
 }: {
   children: React.ReactNode;
   announcement: string;
   footerDescription: string;
+  preview: boolean;
 }) {
   const pathname = usePathname();
 
@@ -23,6 +25,17 @@ export function SiteChrome({
 
   return (
     <CatalogProvider>
+      {preview ? (
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 bg-amber-100 px-4 py-2 text-center text-xs font-semibold text-amber-950">
+          <span>Draft preview — customers cannot see these changes yet.</span>
+          <a href="/admin/publishing" className="underline underline-offset-2">
+            Back to Publishing
+          </a>
+          <a href="/admin/preview/exit" className="underline underline-offset-2">
+            Exit preview
+          </a>
+        </div>
+      ) : null}
       <a href="#main-content" className="skip-link">
         Skip to main content
       </a>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { draftMode } from "next/headers";
 import { SiteChrome } from "@/components/site-chrome";
 import { safeJsonLd } from "@/lib/seo";
 import { absoluteUrl, siteConfig } from "@/lib/site";
@@ -61,7 +62,10 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const config = await readStorefrontConfig();
+  const [config, previewState] = await Promise.all([
+    readStorefrontConfig(),
+    draftMode(),
+  ]);
 
   return (
     <html lang="en">
@@ -77,6 +81,7 @@ export default async function RootLayout({
         <SiteChrome
           announcement={config.site.announcement}
           footerDescription={config.site.footerDescription}
+          preview={previewState.isEnabled}
         >
           {children}
         </SiteChrome>

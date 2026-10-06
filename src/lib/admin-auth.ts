@@ -4,8 +4,15 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
   readPrivateJson,
+  writeAdminAuditEvent,
   writePrivateJson,
 } from "@/lib/storefront-admin-store";
+
+type RecoveryCodeRecord = {
+  hash: string;
+  createdAt: string;
+  usedAt?: string;
+};
 
 type AdminAuthRecord = {
   version: 1;
@@ -13,6 +20,7 @@ type AdminAuthRecord = {
   salt: string;
   passwordHash: string;
   sessionSecret: string;
+  recoveryCodes?: RecoveryCodeRecord[];
   createdAt: string;
   updatedAt: string;
 };
@@ -45,6 +53,23 @@ function randomBytes(length: number) {
   return bytes;
 }
 
+function constantTimeEqual(a: string, b: string) {
+  const left = Buffer.from(a);
+  const right = Buffer.from(b);
+  if (left.length !== right.length) return false;
+  let different = 0;
+  for (let index = 0; index < left.length; index += 1) {
+    different |= left[index] ^ right[index];
+  }
+  return different === 0;
+}
+
+function validatePassword(password: string) {
+  if (password.length < 12 || password.length > 128) {
+    throw new Error("Password must be between 12 and 128 characters.");
+  }
+}
+
 async function derivePasswordHash(password: string, salt: Uint8Array) {
   const key = await crypto.subtle.importKey(
     "raw",
@@ -66,6 +91,14 @@ async function derivePasswordHash(password: string, salt: Uint8Array) {
   return bytesToBase64Url(new Uint8Array(bits));
 }
 
+async function sha256(value: string) {
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(value),
+  );
+  return bytesToBase64Url(new Uint8Array(digest));
+}
+
 async function sign(secret: string, value: string) {
   const key = await crypto.subtle.importKey(
     "raw",
@@ -82,15 +115,27 @@ async function sign(secret: string, value: string) {
   return bytesToBase64Url(new Uint8Array(signature));
 }
 
-function constantTimeEqual(a: string, b: string) {
-  const left = Buffer.from(a);
-  const right = Buffer.from(b);
-  if (left.length !== right.length) return false;
-  let different = 0;
-  for (let index = 0; index < left.length; index += 1) {
-    different |= left[index] ^ right[index];
+function normalizeRecoveryCode(value: string) {
+  return value.trim().toUpperCase().replace(/\s+/g, "");
+}
+
+function makeRecoveryCode() {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const bytes = randomBytes(12);
+  let body = "";
+  for (let index = 0; index < bytes.length; index += 1) {
+    body += alphabet[bytes[index] % alphabet.length];
   }
-  return different === 0;
+  return "ALY-" + body.slice(0, 4) + "-" + body.slice(4, 8) + "-" + body.slice(8);
+}
+
+async function passwordRecord(password: string) {
+  validatePassword(password);
+  const salt = randomBytes(16);
+  return {
+    salt: bytesToBase64Url(salt),
+    passwordHash: await derivePasswordHash(password, salt),
+  };
 }
 
 export async function readAdminAuth() {
@@ -112,23 +157,21 @@ export async function createAdminOwner(username: string, password: string) {
       "Username must be 3–48 characters using letters, numbers, dot, underscore or dash.",
     );
   }
-  if (password.length < 12 || password.length > 128) {
-    throw new Error("Password must be between 12 and 128 characters.");
-  }
 
-  const salt = randomBytes(16);
+  const credentials = await passwordRecord(password);
   const now = new Date().toISOString();
   const record: AdminAuthRecord = {
     version: 1,
     username: safeUsername,
-    salt: bytesToBase64Url(salt),
-    passwordHash: await derivePasswordHash(password, salt),
+    ...credentials,
     sessionSecret: bytesToBase64Url(randomBytes(32)),
+    recoveryCodes: [],
     createdAt: now,
     updatedAt: now,
   };
 
   await writePrivateJson(AUTH_PATH, record);
+  await writeAdminAuditEvent(safeUsername, "security.owner_created");
   return record.username;
 }
 
@@ -143,6 +186,125 @@ export async function verifyAdminCredentials(username: string, password: string)
   return constantTimeEqual(derived, auth.passwordHash);
 }
 
+export async function changeAdminPassword(
+  username: string,
+  currentPassword: string,
+  newPassword: string,
+) {
+  const auth = await readAdminAuth();
+  if (!auth || !constantTimeEqual(auth.username, username)) {
+    throw new Error("Admin account is not available.");
+  }
+
+  const valid = await verifyAdminCredentials(username, currentPassword);
+  if (!valid) throw new Error("Current password is incorrect.");
+  if (constantTimeEqual(currentPassword, newPassword)) {
+    throw new Error("Choose a different password.");
+  }
+
+  const credentials = await passwordRecord(newPassword);
+  const next: AdminAuthRecord = {
+    ...auth,
+    ...credentials,
+    sessionSecret: bytesToBase64Url(randomBytes(32)),
+    updatedAt: new Date().toISOString(),
+  };
+  await writePrivateJson(AUTH_PATH, next);
+  await writeAdminAuditEvent(username, "security.password_changed");
+}
+
+export async function rotateAdminSessions(username: string) {
+  const auth = await readAdminAuth();
+  if (!auth || !constantTimeEqual(auth.username, username)) {
+    throw new Error("Admin account is not available.");
+  }
+  await writePrivateJson(AUTH_PATH, {
+    ...auth,
+    sessionSecret: bytesToBase64Url(randomBytes(32)),
+    updatedAt: new Date().toISOString(),
+  } satisfies AdminAuthRecord);
+  await writeAdminAuditEvent(username, "security.sessions_rotated");
+}
+
+export async function generateAdminRecoveryCodes(
+  username: string,
+  currentPassword: string,
+) {
+  const auth = await readAdminAuth();
+  if (!auth || !constantTimeEqual(auth.username, username)) {
+    throw new Error("Admin account is not available.");
+  }
+  if (!(await verifyAdminCredentials(username, currentPassword))) {
+    throw new Error("Current password is incorrect.");
+  }
+
+  const codes = Array.from({ length: 8 }, () => makeRecoveryCode());
+  const createdAt = new Date().toISOString();
+  const recoveryCodes: RecoveryCodeRecord[] = await Promise.all(
+    codes.map(async (code) => ({
+      hash: await sha256(normalizeRecoveryCode(code)),
+      createdAt,
+    })),
+  );
+
+  await writePrivateJson(AUTH_PATH, {
+    ...auth,
+    recoveryCodes,
+    updatedAt: createdAt,
+  } satisfies AdminAuthRecord);
+  await writeAdminAuditEvent(
+    username,
+    "security.recovery_codes_regenerated",
+    "Eight new one-time recovery codes replaced all previous codes.",
+  );
+  return codes;
+}
+
+export async function adminRecoveryStatus() {
+  const auth = await readAdminAuth();
+  const codes = auth?.recoveryCodes || [];
+  return {
+    configured: codes.length > 0,
+    remaining: codes.filter((code) => !code.usedAt).length,
+  };
+}
+
+export async function resetAdminPasswordWithRecoveryCode(
+  username: string,
+  recoveryCode: string,
+  newPassword: string,
+) {
+  const auth = await readAdminAuth();
+  if (!auth || !constantTimeEqual(auth.username, username.trim())) {
+    throw new Error("Recovery details are not valid.");
+  }
+
+  const normalized = normalizeRecoveryCode(recoveryCode);
+  const incomingHash = await sha256(normalized);
+  const codes = auth.recoveryCodes || [];
+  const matchIndex = codes.findIndex(
+    (record) => !record.usedAt && constantTimeEqual(record.hash, incomingHash),
+  );
+  if (matchIndex < 0) {
+    throw new Error("Recovery details are not valid.");
+  }
+
+  const credentials = await passwordRecord(newPassword);
+  const now = new Date().toISOString();
+  const nextCodes = codes.map((record, index) =>
+    index === matchIndex ? { ...record, usedAt: now } : record,
+  );
+
+  await writePrivateJson(AUTH_PATH, {
+    ...auth,
+    ...credentials,
+    recoveryCodes: nextCodes,
+    sessionSecret: bytesToBase64Url(randomBytes(32)),
+    updatedAt: now,
+  } satisfies AdminAuthRecord);
+  await writeAdminAuditEvent(username, "security.password_recovered");
+}
+
 export async function createAdminSession(username: string) {
   const auth = await readAdminAuth();
   if (!auth || !constantTimeEqual(auth.username, username)) {
@@ -153,8 +315,7 @@ export async function createAdminSession(username: string) {
     username,
     expiresAt: Date.now() + ADMIN_SESSION_SECONDS * 1000,
   };
-  const encoded = Buffer.from(JSON.stringify(payload))
-    .toString("base64url");
+  const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
   const signature = await sign(auth.sessionSecret, encoded);
   return encoded + "." + signature;
 }

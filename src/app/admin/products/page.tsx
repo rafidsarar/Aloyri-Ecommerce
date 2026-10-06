@@ -3,7 +3,7 @@ import { AdminCard, AdminNotice, AdminShell } from "@/components/admin/admin-she
 import { requireAdminPage } from "@/lib/admin-auth";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
 import { formatPrice } from "@/lib/catalog";
-import { readStorefrontConfig } from "@/lib/storefront-admin-store";
+import { readDraftStorefrontConfig } from "@/lib/storefront-admin-store";
 
 export default async function AdminProductsPage({
   searchParams,
@@ -13,7 +13,7 @@ export default async function AdminProductsPage({
   const admin = await requireAdminPage();
   const [{ error }, config, catalog] = await Promise.all([
     searchParams,
-    readStorefrontConfig(),
+    readDraftStorefrontConfig(),
     fetchCrmCatalog(),
   ]);
 

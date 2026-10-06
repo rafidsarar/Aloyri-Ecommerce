@@ -1,7 +1,7 @@
 import { saveSiteSettings } from "@/app/admin/actions";
 import { AdminCard, AdminNotice, AdminShell } from "@/components/admin/admin-shell";
 import { requireAdminPage } from "@/lib/admin-auth";
-import { readStorefrontConfig } from "@/lib/storefront-admin-store";
+import { readDraftStorefrontConfig } from "@/lib/storefront-admin-store";
 
 export default async function AdminSettingsPage({
   searchParams,
@@ -11,7 +11,7 @@ export default async function AdminSettingsPage({
   const admin = await requireAdminPage();
   const [{ saved }, config] = await Promise.all([
     searchParams,
-    readStorefrontConfig(),
+    readDraftStorefrontConfig(),
   ]);
 
   return (
@@ -20,7 +20,7 @@ export default async function AdminSettingsPage({
       title="Store settings"
       subtitle="Customer-facing website settings live here. Commerce-critical price, stock and order controls remain in CRM."
     >
-      {saved ? <AdminNotice>Store settings saved.</AdminNotice> : null}
+      {saved ? <AdminNotice>Store settings draft saved.</AdminNotice> : null}
 
       <form action={saveSiteSettings} className="grid gap-5">
         <AdminCard>

@@ -7,6 +7,8 @@ const nav = [
   ["Products", "/admin/products"],
   ["Pages & FAQ", "/admin/pages"],
   ["Media", "/admin/media"],
+  ["Publishing", "/admin/publishing"],
+  ["Security", "/admin/security"],
   ["Settings", "/admin/settings"],
 ];
 

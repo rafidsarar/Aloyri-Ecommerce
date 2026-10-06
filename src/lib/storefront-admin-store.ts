@@ -1,6 +1,7 @@
 import "server-only";
 
 import { get, list, put } from "@vercel/blob";
+import { draftMode } from "next/headers";
 import type { LiveCatalogProduct } from "@/lib/catalog";
 
 export type ContentSection = {
@@ -303,7 +304,28 @@ export const defaultStorefrontConfig: StorefrontConfig = {
   products: {},
 };
 
-const CONFIG_PATH = "admin/storefront-config.json";
+const PUBLISHED_CONFIG_PATH = "admin/storefront-config.json";
+const DRAFT_CONFIG_PATH = "admin/storefront-draft.json";
+const HISTORY_PREFIX = "admin/history/";
+const AUDIT_PREFIX = "admin/audit/";
+
+export type StorefrontVersionRecord = {
+  version: 1;
+  id: string;
+  publishedAt: string;
+  publishedBy: string;
+  note: string;
+  config: StorefrontConfig;
+};
+
+export type AdminAuditEvent = {
+  version: 1;
+  id: string;
+  createdAt: string;
+  actor: string;
+  action: string;
+  detail?: string;
+};
 
 function blobConfigured() {
   return Boolean(
@@ -431,25 +453,224 @@ export function applyStorefrontEditorial(
   });
 }
 
-export async function readStorefrontConfig(): Promise<StorefrontConfig> {
-  const stored = await readPrivateJson<Partial<StorefrontConfig>>(CONFIG_PATH);
-  return normalizeConfig(stored);
-}
-
-export async function saveStorefrontConfig(config: StorefrontConfig) {
-  const next = normalizeConfig({
+function normalizedWithTimestamp(config: StorefrontConfig) {
+  return normalizeConfig({
     ...config,
     updatedAt: new Date().toISOString(),
   });
-  await writePrivateJson(CONFIG_PATH, next);
+}
+
+function comparableConfig(config: StorefrontConfig) {
+  const copy = structuredClone(config) as StorefrontConfig;
+  copy.updatedAt = "";
+  return copy;
+}
+
+async function configHash(config: StorefrontConfig) {
+  const data = new TextEncoder().encode(JSON.stringify(comparableConfig(config)));
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return Buffer.from(digest).toString("hex");
+}
+
+function safeId() {
+  return crypto.randomUUID().replace(/-/g, "");
+}
+
+export async function readPublishedStorefrontConfig(): Promise<StorefrontConfig> {
+  const stored = await readPrivateJson<Partial<StorefrontConfig>>(PUBLISHED_CONFIG_PATH);
+  return normalizeConfig(stored);
+}
+
+export async function readDraftStorefrontConfig(): Promise<StorefrontConfig> {
+  const stored = await readPrivateJson<Partial<StorefrontConfig>>(DRAFT_CONFIG_PATH);
+  if (stored) return normalizeConfig(stored);
+  return readPublishedStorefrontConfig();
+}
+
+export async function readStorefrontConfig(): Promise<StorefrontConfig> {
+  try {
+    const preview = await draftMode();
+    if (preview.isEnabled) return readDraftStorefrontConfig();
+  } catch {
+    // Static rendering and non-request contexts always use published content.
+  }
+  return readPublishedStorefrontConfig();
+}
+
+export async function saveStorefrontConfig(config: StorefrontConfig) {
+  const next = normalizedWithTimestamp(config);
+  await writePrivateJson(PUBLISHED_CONFIG_PATH, next);
+  return next;
+}
+
+export async function saveDraftStorefrontConfig(config: StorefrontConfig) {
+  const next = normalizedWithTimestamp(config);
+  await writePrivateJson(DRAFT_CONFIG_PATH, next);
   return next;
 }
 
 export async function updateStorefrontConfig(
   updater: (current: StorefrontConfig) => StorefrontConfig,
 ) {
-  const current = await readStorefrontConfig();
+  const current = await readPublishedStorefrontConfig();
   return saveStorefrontConfig(updater(structuredClone(current)));
+}
+
+export async function updateDraftStorefrontConfig(
+  updater: (current: StorefrontConfig) => StorefrontConfig,
+) {
+  const current = await readDraftStorefrontConfig();
+  return saveDraftStorefrontConfig(updater(structuredClone(current)));
+}
+
+export async function getPublishingStatus() {
+  const [published, draft] = await Promise.all([
+    readPublishedStorefrontConfig(),
+    readDraftStorefrontConfig(),
+  ]);
+  const [publishedHash, draftHash] = await Promise.all([
+    configHash(published),
+    configHash(draft),
+  ]);
+  return {
+    published,
+    draft,
+    publishedHash,
+    draftHash,
+    hasDraftChanges: publishedHash !== draftHash,
+  };
+}
+
+async function historyRecords(limit = 50) {
+  if (!blobConfigured()) return [] as StorefrontVersionRecord[];
+  const result = await list({ prefix: HISTORY_PREFIX, limit: Math.min(limit, 100) });
+  const records = await Promise.all(
+    result.blobs.map((blob) => readPrivateJson<StorefrontVersionRecord>(blob.pathname)),
+  );
+  return records
+    .filter((record): record is StorefrontVersionRecord => Boolean(record))
+    .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+}
+
+export async function listStorefrontVersions(limit = 30) {
+  return (await historyRecords(limit)).slice(0, limit);
+}
+
+export async function writeAdminAuditEvent(
+  actor: string,
+  action: string,
+  detail?: string,
+) {
+  const createdAt = new Date().toISOString();
+  const event: AdminAuditEvent = {
+    version: 1,
+    id: safeId(),
+    createdAt,
+    actor,
+    action,
+    ...(detail ? { detail: detail.slice(0, 500) } : {}),
+  };
+  const pathname =
+    AUDIT_PREFIX +
+    createdAt.replace(/[:.]/g, "-") +
+    "-" +
+    event.id +
+    ".json";
+  await writePrivateJson(pathname, event);
+  return event;
+}
+
+export async function listAdminAuditEvents(limit = 20) {
+  if (!blobConfigured()) return [] as AdminAuditEvent[];
+  const result = await list({ prefix: AUDIT_PREFIX, limit: Math.min(limit, 100) });
+  const events = await Promise.all(
+    result.blobs.map((blob) => readPrivateJson<AdminAuditEvent>(blob.pathname)),
+  );
+  return events
+    .filter((event): event is AdminAuditEvent => Boolean(event))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, limit);
+}
+
+async function ensureBaselineVersion(current: StorefrontConfig) {
+  const existing = await historyRecords(1);
+  if (existing.length) return;
+  const publishedAt = current.updatedAt || new Date().toISOString();
+  const baseline: StorefrontVersionRecord = {
+    version: 1,
+    id: safeId(),
+    publishedAt,
+    publishedBy: "system",
+    note: "Initial live storefront state before version history was enabled.",
+    config: current,
+  };
+  const pathname =
+    HISTORY_PREFIX +
+    publishedAt.replace(/[:.]/g, "-") +
+    "-" +
+    baseline.id +
+    ".json";
+  await writePrivateJson(pathname, baseline);
+}
+
+export async function publishDraftStorefront(
+  actor: string,
+  note: string,
+) {
+  const [current, draft] = await Promise.all([
+    readPublishedStorefrontConfig(),
+    readDraftStorefrontConfig(),
+  ]);
+  await ensureBaselineVersion(current);
+
+  const published = normalizedWithTimestamp(draft);
+  await writePrivateJson(PUBLISHED_CONFIG_PATH, published);
+  await writePrivateJson(DRAFT_CONFIG_PATH, published);
+
+  const record: StorefrontVersionRecord = {
+    version: 1,
+    id: safeId(),
+    publishedAt: published.updatedAt,
+    publishedBy: actor,
+    note: note.trim().slice(0, 300) || "Published storefront draft.",
+    config: published,
+  };
+  const pathname =
+    HISTORY_PREFIX +
+    record.publishedAt.replace(/[:.]/g, "-") +
+    "-" +
+    record.id +
+    ".json";
+  await writePrivateJson(pathname, record);
+  await writeAdminAuditEvent(actor, "storefront.publish", record.note);
+  return record;
+}
+
+export async function discardDraftStorefront(actor: string) {
+  const published = await readPublishedStorefrontConfig();
+  const draft = await saveDraftStorefrontConfig(published);
+  await writeAdminAuditEvent(actor, "storefront.draft_discard", "Draft reset to current live storefront.");
+  return draft;
+}
+
+export async function restoreStorefrontVersionToDraft(
+  actor: string,
+  versionId: string,
+) {
+  if (!/^[a-f0-9]{32}$/.test(versionId)) {
+    throw new Error("Invalid storefront version.");
+  }
+  const versions = await historyRecords(100);
+  const record = versions.find((candidate) => candidate.id === versionId);
+  if (!record) throw new Error("Storefront version not found.");
+
+  const restored = await saveDraftStorefrontConfig(record.config);
+  await writeAdminAuditEvent(
+    actor,
+    "storefront.version_restore_to_draft",
+    "Restored version from " + record.publishedAt,
+  );
+  return { restored, record };
 }
 
 export async function uploadStorefrontMedia(file: File) {

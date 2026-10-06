@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AdminCard, AdminShell } from "@/components/admin/admin-shell";
 import { requireAdminPage } from "@/lib/admin-auth";
-import { readStorefrontConfig } from "@/lib/storefront-admin-store";
+import { readDraftStorefrontConfig } from "@/lib/storefront-admin-store";
 
 const items = [
   ["About", "about", "Brand story and storefront operating philosophy"],
@@ -13,7 +13,7 @@ const items = [
 
 export default async function AdminPagesPage() {
   const admin = await requireAdminPage();
-  await readStorefrontConfig();
+  await readDraftStorefrontConfig();
 
   return (
     <AdminShell
