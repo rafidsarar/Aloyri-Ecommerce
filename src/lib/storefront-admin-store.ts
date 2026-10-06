@@ -3,6 +3,11 @@ import "server-only";
 import { get, list, put } from "@vercel/blob";
 import { draftMode } from "next/headers";
 import type { LiveCatalogProduct } from "@/lib/catalog";
+import {
+  defaultRecommendationConfig,
+  normalizeRecommendationConfig,
+  type RecommendationConfig,
+} from "@/lib/recommendations";
 
 export type ContentSection = {
   title: string;
@@ -112,6 +117,7 @@ export type MerchandisingConfig = {
   shopSortMode: "priority" | "featured";
   productRules: Record<string, ProductMerchandisingRule>;
   discovery: DiscoveryConfig;
+  recommendations: RecommendationConfig;
   collections: MerchandisingCollection[];
   campaigns: MerchandisingCampaign[];
   homepageSections: HomepageMerchandisingSection[];
@@ -327,6 +333,7 @@ export const defaultMerchandisingConfig: MerchandisingConfig = {
     categoryOrder: ["Cleanser", "Moisturizer", "Sunscreen"],
     popularSearches: ["sunscreen", "moisturizer", "cleanser"],
   },
+  recommendations: structuredClone(defaultRecommendationConfig),
   collections: [],
   campaigns: [],
   homepageSections: [
@@ -830,6 +837,9 @@ function normalizeConfig(value: Partial<StorefrontConfig> | null): StorefrontCon
               .slice(0, 20)
           : structuredClone(defaultMerchandisingConfig.discovery.popularSearches),
       },
+      recommendations: normalizeRecommendationConfig(
+        value.merchandising?.recommendations,
+      ),
       collections: Array.isArray(value.merchandising?.collections)
         ? value.merchandising.collections.slice(0, 100)
         : [],
