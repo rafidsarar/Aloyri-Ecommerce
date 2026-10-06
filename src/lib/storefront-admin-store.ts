@@ -42,6 +42,8 @@ export type OutOfStockMode = "keep" | "push-down" | "hide";
 export type ProductMerchandisingRule = {
   badge?: string;
   priority?: number;
+  searchBoost?: number;
+  hideFromSearch?: boolean;
   outOfStockMode?: "inherit" | OutOfStockMode;
 };
 
