@@ -36,6 +36,8 @@ export type Product = {
   mediaPath?: string;
   merchandisingBadge?: string;
   merchandisingPriority?: number;
+  merchandisingSearchBoost?: number;
+  merchandisingHideFromSearch?: boolean;
   merchandisingOutOfStockMode?: "keep" | "push-down" | "hide";
 };
 
@@ -64,6 +66,8 @@ export type LiveCatalogProduct = {
   mediaPath?: string;
   merchandisingBadge?: string;
   merchandisingPriority?: number;
+  merchandisingSearchBoost?: number;
+  merchandisingHideFromSearch?: boolean;
   merchandisingOutOfStockMode?: "keep" | "push-down" | "hide";
 };
 
