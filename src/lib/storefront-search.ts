@@ -60,6 +60,8 @@ function tokenScore(field: string, token: string, weight: number) {
 }
 
 export function productSearchScore(product: Product, query: string) {
+  if (product.merchandisingHideFromSearch) return -1;
+
   const phrase = normalizeSearchText(query);
   if (!phrase) return 0;
 
@@ -100,6 +102,10 @@ export function productSearchScore(product: Product, query: string) {
 
   if (product.featured) score += 2;
   if (product.bestseller) score += 2;
+  score += Math.max(
+    -100,
+    Math.min(100, Math.trunc(product.merchandisingSearchBoost || 0)),
+  );
 
   return score;
 }
