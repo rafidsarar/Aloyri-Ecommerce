@@ -16,6 +16,18 @@ export const CUSTOMER_SESSION_COOKIE = "aloyri_customer_session";
 const MAGIC_TTL_MS = 15 * 60 * 1000;
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
+export type CustomerEmailPreferences = {
+  postDelivery: boolean;
+  reviewRequest: boolean;
+  reorderReminder: boolean;
+};
+
+const defaultEmailPreferences: CustomerEmailPreferences = {
+  postDelivery: false,
+  reviewRequest: false,
+  reorderReminder: false,
+};
+
 type CustomerAccount = {
   version: 1;
   id: string;
@@ -23,6 +35,7 @@ type CustomerAccount = {
   emailHash: string;
   displayName: string;
   savedProductIds: string[];
+  emailPreferences?: CustomerEmailPreferences;
   createdAt: string;
   updatedAt: string;
   lastLoginAt?: string;
@@ -54,7 +67,9 @@ type CustomerSessionRecord = {
 export type PublicCustomerAccount = Pick<
   CustomerAccount,
   "id" | "email" | "displayName" | "savedProductIds" | "createdAt" | "updatedAt" | "lastLoginAt"
->;
+> & {
+  emailPreferences: CustomerEmailPreferences;
+};
 
 const ACCOUNT_PREFIX = "customer-auth/accounts/";
 const EMAIL_PREFIX = "customer-auth/email/";
@@ -90,7 +105,11 @@ function publicAccount(account: CustomerAccount): PublicCustomerAccount {
     id: account.id,
     email: account.email,
     displayName: account.displayName,
-    savedProductIds: account.savedProductIds,
+    savedProductIds: account.savedProductIds || [],
+    emailPreferences: {
+      ...defaultEmailPreferences,
+      ...(account.emailPreferences || {}),
+    },
     createdAt: account.createdAt,
     updatedAt: account.updatedAt,
     ...(account.lastLoginAt ? { lastLoginAt: account.lastLoginAt } : {}),
@@ -160,6 +179,7 @@ async function ensureAccount(email: string) {
     emailHash: hashed,
     displayName: "",
     savedProductIds: [],
+    emailPreferences: { ...defaultEmailPreferences },
     createdAt: now,
     updatedAt: now,
     lastLoginAt: now,
@@ -304,9 +324,20 @@ export async function revokeCurrentCustomerSession() {
   );
 }
 
+export async function customerEmailPreferencesForEmail(email: string) {
+  const account = await accountByEmail(email);
+  return account
+    ? {
+        ...defaultEmailPreferences,
+        ...(account.emailPreferences || {}),
+      }
+    : { ...defaultEmailPreferences };
+}
+
 export async function updateCurrentCustomerAccount(input: {
   displayName?: string;
   savedProductIds?: unknown;
+  emailPreferences?: Partial<CustomerEmailPreferences>;
 }) {
   const current = await currentCustomerSession();
   if (!current) throw new Error("UNAUTHENTICATED");
@@ -321,6 +352,21 @@ export async function updateCurrentCustomerAccount(input: {
   }
   if (input.savedProductIds !== undefined) {
     stored.savedProductIds = safeIds(input.savedProductIds);
+  }
+  if (input.emailPreferences) {
+    stored.emailPreferences = {
+      ...defaultEmailPreferences,
+      ...(stored.emailPreferences || {}),
+      ...(typeof input.emailPreferences.postDelivery === "boolean"
+        ? { postDelivery: input.emailPreferences.postDelivery }
+        : {}),
+      ...(typeof input.emailPreferences.reviewRequest === "boolean"
+        ? { reviewRequest: input.emailPreferences.reviewRequest }
+        : {}),
+      ...(typeof input.emailPreferences.reorderReminder === "boolean"
+        ? { reorderReminder: input.emailPreferences.reorderReminder }
+        : {}),
+    };
   }
   stored.updatedAt = new Date().toISOString();
   await writePrivateJson(ACCOUNT_PREFIX + stored.id + ".json", stored);
