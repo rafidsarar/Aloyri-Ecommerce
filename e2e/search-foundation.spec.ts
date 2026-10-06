@@ -92,3 +92,54 @@ test("common one- and two-character typos still resolve conservatively", () => {
   expect(productSearchScore(moisturizer, "moisterizer")).toBeGreaterThan(0);
   expect(productSearchScore(sunscreen, "serum")).toBe(-1);
 });
+
+
+test("synonym groups expand equivalent customer language", () => {
+  const cleanser = product({
+    id: "cleanser",
+    name: "Gentle Daily Cleanser",
+    brand: "Aloyri",
+    category: "Cleanser",
+  });
+
+  expect(
+    productSearchScore(cleanser, "face wash", [
+      ["cleanser", "face wash", "facial wash"],
+    ]),
+  ).toBeGreaterThan(0);
+  expect(
+    productSearchScore(cleanser, "sunblock", [
+      ["cleanser", "face wash"],
+      ["sunscreen", "sunblock", "spf"],
+    ]),
+  ).toBe(-1);
+});
+
+test("product search controls boost, demote and hide only relevant matches", () => {
+  const base = product({
+    id: "base-spf",
+    name: "Daily Sunscreen",
+    category: "Sunscreen",
+  });
+  const boosted = product({
+    ...base,
+    id: "boosted-spf",
+    merchandisingSearchBoost: 50,
+  });
+  const demoted = product({
+    ...base,
+    id: "demoted-spf",
+    merchandisingSearchBoost: -100,
+  });
+  const hidden = product({
+    ...base,
+    id: "hidden-spf",
+    merchandisingHideFromSearch: true,
+  });
+
+  const baseScore = productSearchScore(base, "sunscreen");
+  expect(productSearchScore(boosted, "sunscreen")).toBeGreaterThan(baseScore);
+  expect(productSearchScore(demoted, "sunscreen")).toBeGreaterThanOrEqual(0);
+  expect(productSearchScore(hidden, "sunscreen")).toBe(-1);
+  expect(productSearchScore(boosted, "cleanser")).toBe(-1);
+});
