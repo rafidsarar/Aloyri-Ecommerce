@@ -3,6 +3,7 @@ import Image from "next/image";
 import { draftMode } from "next/headers";
 import { notFound } from "next/navigation";
 import { MerchandisingProductGrid } from "@/components/merchandising-product-grid";
+import { AnalyticsViewTracker } from "@/components/storefront-analytics-tracker";
 import { mergeLiveCatalog } from "@/lib/catalog";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
 import {
@@ -98,6 +99,11 @@ export default async function CollectionPage({
 
   return (
     <main className="shell py-12 md:py-16">
+      <AnalyticsViewTracker
+        event="collection_view"
+        properties={{ collectionId: collection.id }}
+        context={{ collectionId: collection.id }}
+      />
       <div className="grid gap-8 lg:grid-cols-[1fr_.72fr] lg:items-end">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/48">
@@ -134,6 +140,7 @@ export default async function CollectionPage({
             fallbackProducts={fallbackProducts}
             outOfStockMode={mode}
             overrideProductRules={collection.outOfStockMode !== "inherit"}
+            collectionId={collection.id}
           />
         ) : (
           <div className="rounded-[1.5rem] border border-[#713a35]/10 bg-[#fff4ef] p-7 text-center">

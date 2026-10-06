@@ -13,6 +13,10 @@ export function MerchandisingProductGrid({
   maxProducts,
   promotionOnly = false,
   overrideProductRules = false,
+  collectionId,
+  campaignId,
+  placementId,
+  placementKind,
 }: {
   productIds: string[];
   fallbackProducts: Product[];
@@ -20,6 +24,10 @@ export function MerchandisingProductGrid({
   maxProducts?: number;
   promotionOnly?: boolean;
   overrideProductRules?: boolean;
+  collectionId?: string;
+  campaignId?: string;
+  placementId?: string;
+  placementKind?: string;
 }) {
   const { products, synced } = useCatalog();
 
@@ -88,7 +96,14 @@ export function MerchandisingProductGrid({
   return (
     <div className="grid gap-x-5 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
       {selected.map((product) => (
-        <ProductCard key={product.id} product={product} />
+        <ProductCard
+          key={product.id}
+          product={product}
+          collectionId={collectionId}
+          campaignId={campaignId}
+          placementId={placementId}
+          placementKind={placementKind}
+        />
       ))}
     </div>
   );

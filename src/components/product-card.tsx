@@ -9,8 +9,21 @@ import {
   type Product,
 } from "@/lib/catalog";
 import { hasSalePrice, salePriceFor } from "@/lib/promotions";
+import { trackStorefrontEvent } from "@/lib/analytics";
 
-export function ProductCard({ product: fallback }: { product: Product }) {
+export function ProductCard({
+  product: fallback,
+  collectionId,
+  campaignId,
+  placementId,
+  placementKind,
+}: {
+  product: Product;
+  collectionId?: string;
+  campaignId?: string;
+  placementId?: string;
+  placementKind?: string;
+}) {
   const { product: liveProduct, synced } = useCatalogProduct(fallback.id);
 
   if (synced && !liveProduct) return null;
@@ -21,7 +34,39 @@ export function ProductCard({ product: fallback }: { product: Product }) {
 
   return (
     <article className="group">
-      <Link href={`/product/${product.slug}`} className="block">
+      <Link
+        href={`/product/${product.slug}`}
+        className="block"
+        onClick={() => {
+          trackStorefrontEvent(
+            collectionId ? "collection_product_click" : "product_click",
+            {
+              productId: product.id,
+              ...(collectionId ? { collectionId } : {}),
+              ...(campaignId ? { campaignId } : {}),
+              ...(placementId ? { placementId } : {}),
+              ...(placementKind ? { placementKind } : {}),
+            },
+            {
+              collectionId,
+              campaignId,
+              placementId,
+              placementKind,
+            },
+          );
+          if (placementId) {
+            trackStorefrontEvent(
+              "merchandising_click",
+              {
+                productId: product.id,
+                placementId,
+                ...(placementKind ? { placementKind } : {}),
+              },
+              { placementId, placementKind, collectionId, campaignId },
+            );
+          }
+        }
+      >
         <div className="relative">
           <ProductMedia
             product={product}

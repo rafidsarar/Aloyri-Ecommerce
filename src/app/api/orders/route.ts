@@ -8,8 +8,113 @@ import {
   normalizeBangladeshPhone,
 } from "@/lib/checkout";
 import { rateAllowed, requestIp } from "@/lib/request-rate-limit";
+import { recordConfirmedOrderAnalytics, type AnalyticsDevice } from "@/lib/analytics-store";
 
 export const dynamic = "force-dynamic";
+
+type AnalyticsOrderContext = {
+  visitorId?: string;
+  sessionId?: string;
+  pagePath?: string;
+  device?: AnalyticsDevice;
+  source?: string;
+  medium?: string;
+  campaign?: string;
+  referrerDomain?: string;
+  collectionId?: string;
+  campaignId?: string;
+  placementId?: string;
+  placementKind?: string;
+  searchTerm?: string;
+};
+
+function analyticsToken(value: unknown, max = 120) {
+  if (typeof value !== "string") return undefined;
+  const normalized = value.trim();
+  if (!normalized || normalized.length > max) return undefined;
+  return /^[A-Za-z0-9._+-]+$/.test(normalized)
+    ? normalized
+    : undefined;
+}
+
+function analyticsEntity(value: unknown) {
+  if (typeof value !== "string") return undefined;
+  const normalized = value.trim();
+  return /^[A-Za-z0-9_-]{1,80}$/.test(normalized)
+    ? normalized
+    : undefined;
+}
+
+function analyticsSearchTerm(value: unknown) {
+  if (typeof value !== "string") return undefined;
+  const normalized = value.trim().replace(/\s+/g, " ").slice(0, 50);
+  if (
+    normalized.length < 2 ||
+    normalized.includes("@") ||
+    /\d{6,}/.test(normalized) ||
+    !/^[A-Za-z0-9 .&'+_-]+$/.test(normalized)
+  ) {
+    return undefined;
+  }
+  return normalized;
+}
+
+function analyticsContext(value: unknown): AnalyticsOrderContext {
+  if (!value || typeof value !== "object") return {};
+  const input = value as Record<string, unknown>;
+  const visitorId =
+    typeof input.visitorId === "string" &&
+    /^[A-Za-z0-9_-]{16,80}$/.test(input.visitorId)
+      ? input.visitorId
+      : undefined;
+  const sessionId =
+    typeof input.sessionId === "string" &&
+    /^[A-Za-z0-9_-]{16,80}$/.test(input.sessionId)
+      ? input.sessionId
+      : undefined;
+  const pagePath =
+    typeof input.pagePath === "string" &&
+    input.pagePath.startsWith("/") &&
+    !input.pagePath.startsWith("//") &&
+    input.pagePath.length <= 240
+      ? input.pagePath
+      : undefined;
+  const device =
+    input.device === "mobile" ||
+    input.device === "tablet" ||
+    input.device === "desktop"
+      ? input.device
+      : undefined;
+
+  return {
+    ...(visitorId ? { visitorId } : {}),
+    ...(sessionId ? { sessionId } : {}),
+    ...(pagePath ? { pagePath } : {}),
+    ...(device ? { device } : {}),
+    ...(analyticsToken(input.source) ? { source: analyticsToken(input.source) } : {}),
+    ...(analyticsToken(input.medium) ? { medium: analyticsToken(input.medium) } : {}),
+    ...(analyticsToken(input.campaign) ? { campaign: analyticsToken(input.campaign) } : {}),
+    ...(analyticsToken(input.referrerDomain, 120)
+      ? { referrerDomain: analyticsToken(input.referrerDomain, 120) }
+      : {}),
+    ...(analyticsEntity(input.collectionId)
+      ? { collectionId: analyticsEntity(input.collectionId) }
+      : {}),
+    ...(analyticsEntity(input.campaignId)
+      ? { campaignId: analyticsEntity(input.campaignId) }
+      : {}),
+    ...(analyticsEntity(input.placementId)
+      ? { placementId: analyticsEntity(input.placementId) }
+      : {}),
+    ...(analyticsToken(input.placementKind, 40)
+      ? { placementKind: analyticsToken(input.placementKind, 40) }
+      : {}),
+    ...(analyticsSearchTerm(input.searchTerm)
+      ? { searchTerm: analyticsSearchTerm(input.searchTerm) }
+      : {}),
+  };
+}
+
 
 const districtSet = new Set<string>(bangladeshDistricts);
 
@@ -164,6 +269,10 @@ export async function POST(request: Request) {
   }
 
   const payload = parsePayload(body);
+  const analytics =
+    body && typeof body === "object"
+      ? analyticsContext((body as Record<string, unknown>).analytics)
+      : {};
   if (!payload) {
     return response(
       { error: "Check the checkout details and try again.", code: "INVALID_REQUEST" },
@@ -172,5 +281,21 @@ export async function POST(request: Request) {
   }
 
   const result = await createCrmWebsiteOrder(payload);
+
+  if (result.ok) {
+    try {
+      await recordConfirmedOrderAnalytics({
+        orderNumber: result.body.orderNumber,
+        ...analytics,
+        itemCount: payload.items.reduce((sum, item) => sum + item.qty, 0),
+        items: payload.items,
+        deliveryZone: payload.deliveryZone,
+        totalBdt: result.body.total,
+      });
+    } catch (error) {
+      console.error("Confirmed-order analytics failed", error);
+    }
+  }
+
   return response(result.body, result.status);
 }

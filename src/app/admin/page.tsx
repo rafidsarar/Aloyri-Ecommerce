@@ -95,6 +95,7 @@ export default async function AdminOverviewPage() {
               ["Customer pages", "About, shipping, returns, contact and FAQ", "/admin/pages"],
               ["Store settings", "Announcement, footer and support details", "/admin/settings"],
               ["Merchandising", "Campaigns, collections, badges and product ordering", "/admin/merchandising"],
+              ["Analytics", "Conversion funnel, attribution and storefront intelligence", "/admin/analytics"],
               ["SEO", "Search metadata, social previews, sitemap and redirects", "/admin/seo"],
               ["Publishing", "Preview, publish, restore and version history", "/admin/publishing"],
               ["Security", "Password, recovery codes and session control", "/admin/security"],

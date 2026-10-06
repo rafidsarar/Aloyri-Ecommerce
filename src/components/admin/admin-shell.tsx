@@ -8,6 +8,7 @@ const nav = [
   ["Pages & FAQ", "/admin/pages"],
   ["Media", "/admin/media"],
   ["Merchandising", "/admin/merchandising"],
+  ["Analytics", "/admin/analytics"],
   ["SEO", "/admin/seo"],
   ["Publishing", "/admin/publishing"],
   ["Security", "/admin/security"],

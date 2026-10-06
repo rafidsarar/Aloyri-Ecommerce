@@ -5,6 +5,8 @@ import { BrandMark } from "@/components/brand-mark";
 import { ArrowIcon } from "@/components/icons";
 import { ProductMedia } from "@/components/product-media";
 import { MerchandisingProductGrid } from "@/components/merchandising-product-grid";
+import { AnalyticsViewTracker } from "@/components/storefront-analytics-tracker";
+import { TrackedLink } from "@/components/tracked-link";
 import { mergeLiveCatalog, products as localProducts } from "@/lib/catalog";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
 import {
@@ -99,6 +101,11 @@ export default async function Home() {
 
   return (
     <main>
+      <AnalyticsViewTracker
+        event="merchandising_impression"
+        properties={{ placementId: "homepage-hero", placementKind: "hero" }}
+        context={{ placementId: "homepage-hero", placementKind: "hero" }}
+      />
       <section className="shell pt-5 md:pt-8">
         <div className="grid min-h-[72vh] overflow-hidden rounded-[2rem] border border-[#713a35]/10 bg-[#f5e8e2] lg:grid-cols-[1.03fr_.97fr]">
           <div className="flex flex-col justify-between p-7 sm:p-10 lg:p-14">
@@ -157,13 +164,23 @@ export default async function Home() {
                       <p className="mt-1 text-sm font-semibold">{heroProduct.brand}</p>
                       <p className="mt-0.5 text-sm text-[#321f1c]/65">{heroProduct.name}</p>
                     </div>
-                    <Link
+                    <TrackedLink
                       href={`/product/${heroProduct.slug}`}
+                      analyticsEvent="merchandising_click"
+                      analyticsProperties={{
+                        productId: heroProduct.id,
+                        placementId: "homepage-hero",
+                        placementKind: "hero",
+                      }}
+                      analyticsContext={{
+                        placementId: "homepage-hero",
+                        placementKind: "hero",
+                      }}
                       className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#713a35] text-white"
                       aria-label={`View ${heroProduct.name}`}
                     >
                       <ArrowIcon />
-                    </Link>
+                    </TrackedLink>
                   </div>
                 </div>
               </div>
@@ -194,6 +211,28 @@ export default async function Home() {
 
           return (
             <section key={section.id} className="shell py-10 md:py-16">
+              <AnalyticsViewTracker
+                event="campaign_impression"
+                properties={{
+                  campaignId: campaign.id,
+                  placementId: section.id,
+                  placementKind: section.kind,
+                }}
+                context={{ campaignId: campaign.id }}
+              />
+              <AnalyticsViewTracker
+                event="merchandising_impression"
+                properties={{
+                  placementId: section.id,
+                  placementKind: section.kind,
+                  campaignId: campaign.id,
+                }}
+                context={{
+                  placementId: section.id,
+                  placementKind: section.kind,
+                  campaignId: campaign.id,
+                }}
+              />
               <div className="overflow-hidden rounded-[2rem] border border-[#713a35]/10 bg-[#713a35] text-white">
                 <div className="grid lg:grid-cols-[1.08fr_.92fr]">
                   <div className="p-8 sm:p-10 lg:p-14">
@@ -207,12 +246,23 @@ export default async function Home() {
                       {section.copy || campaign.copy}
                     </p>
                     {campaign.ctaLabel ? (
-                      <Link
+                      <TrackedLink
                         href={campaign.ctaHref || "/shop"}
+                        analyticsEvent="campaign_click"
+                        analyticsProperties={{
+                          campaignId: campaign.id,
+                          placementId: section.id,
+                          placementKind: section.kind,
+                        }}
+                        analyticsContext={{
+                          campaignId: campaign.id,
+                          placementId: section.id,
+                          placementKind: section.kind,
+                        }}
                         className="mt-8 inline-flex items-center gap-3 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[#713a35]"
                       >
                         {campaign.ctaLabel} <ArrowIcon />
-                      </Link>
+                      </TrackedLink>
                     ) : null}
                     {campaign.promotionOnly ? (
                       <p className="mt-4 text-[11px] leading-5 text-white/50">
@@ -255,6 +305,9 @@ export default async function Home() {
                           campaign.outOfStockMode !== "inherit",
                       )
                     }
+                    campaignId={campaign.id}
+                    placementId={section.id}
+                    placementKind={section.kind}
                   />
                 </div>
               ) : null}
@@ -303,6 +356,19 @@ export default async function Home() {
 
         return (
           <section key={section.id} className="shell py-16 md:py-24">
+            <AnalyticsViewTracker
+              event="merchandising_impression"
+              properties={{
+                placementId: section.id,
+                placementKind: section.kind,
+                ...(collection ? { collectionId: collection.id } : {}),
+              }}
+              context={{
+                placementId: section.id,
+                placementKind: section.kind,
+                ...(collection ? { collectionId: collection.id } : {}),
+              }}
+            />
             <div className="mb-10 grid gap-5 md:grid-cols-[1fr_auto] md:items-end">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/48">
@@ -317,12 +383,23 @@ export default async function Home() {
                   </p>
                 ) : null}
               </div>
-              <Link
+              <TrackedLink
                 href={sectionHref}
+                analyticsEvent="merchandising_click"
+                analyticsProperties={{
+                  placementId: section.id,
+                  placementKind: section.kind,
+                  ...(collection ? { collectionId: collection.id } : {}),
+                }}
+                analyticsContext={{
+                  placementId: section.id,
+                  placementKind: section.kind,
+                  ...(collection ? { collectionId: collection.id } : {}),
+                }}
                 className="inline-flex items-center gap-2 text-sm font-medium text-[#713a35]"
               >
                 {collection ? "View collection" : "Shop all"} <ArrowIcon />
-              </Link>
+              </TrackedLink>
             </div>
 
             <MerchandisingProductGrid
@@ -335,6 +412,9 @@ export default async function Home() {
                   collection && collection.outOfStockMode !== "inherit",
                 )
               }
+              collectionId={collection?.id}
+              placementId={section.id}
+              placementKind={section.kind}
             />
           </section>
         );

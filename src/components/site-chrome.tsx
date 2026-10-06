@@ -2,6 +2,8 @@
 
 import { usePathname } from "next/navigation";
 import { CatalogProvider } from "@/components/catalog-provider";
+import { StorefrontAnalyticsTracker } from "@/components/storefront-analytics-tracker";
+import { PerformanceReporter } from "@/components/performance-reporter";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { PerformanceReporter } from "@/components/performance-reporter";
@@ -25,6 +27,8 @@ export function SiteChrome({
 
   return (
     <CatalogProvider>
+      {!preview ? <StorefrontAnalyticsTracker /> : null}
+      {!preview ? <PerformanceReporter /> : null}
       {preview ? (
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 bg-amber-100 px-4 py-2 text-center text-xs font-semibold text-amber-950">
           <span>Draft preview — customers cannot see these changes yet.</span>

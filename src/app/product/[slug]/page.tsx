@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { LiveProductPage } from "@/components/live-product-page";
+import { AnalyticsViewTracker } from "@/components/storefront-analytics-tracker";
 import {
   getProduct,
   getProductById,
@@ -198,6 +199,10 @@ export default async function ProductPage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbSchema) }}
+      />
+      <AnalyticsViewTracker
+        event="product_view"
+        properties={{ productId: schemaProduct.id }}
       />
       <LiveProductPage slug={slug} fallback={fallback ?? null} />
     </>

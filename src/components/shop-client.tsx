@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ProductCard } from "@/components/product-card";
 import { useCatalog } from "@/components/catalog-provider";
 import { salePriceFor } from "@/lib/promotions";
+import { safeSearchTerm, trackStorefrontEvent } from "@/lib/analytics";
 
 type SortKey = "featured" | "price-asc" | "price-desc" | "name";
 
@@ -22,11 +23,23 @@ export function ShopClient({
   const [query, setQuery] = useState(initialQuery || "");
   const [category, setCategory] = useState(initialCategory || "All");
   const [sort, setSort] = useState<SortKey>("featured");
+  const lastTrackedSearch = useRef("");
 
   const categories = useMemo(
     () => [...new Set(products.map((product) => product.category))].sort(),
     [products],
   );
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const term = safeSearchTerm(query);
+      if (!term || term === lastTrackedSearch.current) return;
+      lastTrackedSearch.current = term;
+      trackStorefrontEvent("search", { searchTerm: term });
+    }, 700);
+
+    return () => window.clearTimeout(timer);
+  }, [query]);
 
   const filtered = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();

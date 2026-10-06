@@ -34,7 +34,7 @@ import {
   type PaymentMethod,
 } from "@/lib/checkout";
 import { formatPrice, getProductById } from "@/lib/catalog";
-import { trackStorefrontEvent } from "@/lib/analytics";
+import { getAnalyticsContext, trackStorefrontEvent } from "@/lib/analytics";
 import { salePriceFor, type PromotionQuote } from "@/lib/promotions";
 
 type FieldErrors = Partial<Record<keyof CheckoutDraft, string>>;
@@ -536,6 +536,7 @@ export function CheckoutClient() {
           promotionCode: appliedCode,
           deliveryZone: draft.deliveryZone,
           paymentMethod: "COD",
+          analytics: getAnalyticsContext(),
         }),
       });
 
