@@ -1,11 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ProductCard } from "@/components/product-card";
 import { useCatalog } from "@/components/catalog-provider";
 import { salePriceFor } from "@/lib/promotions";
 import { safeSearchTerm, trackStorefrontEvent } from "@/lib/analytics";
-import { productSearchScore } from "@/lib/storefront-search";
+import {
+  getSearchSuggestions,
+  productSearchScore,
+} from "@/lib/storefront-search";
 
 type SortKey = "featured" | "price-asc" | "price-desc" | "name";
 
@@ -24,11 +28,29 @@ export function ShopClient({
   const [query, setQuery] = useState(initialQuery || "");
   const [category, setCategory] = useState(initialCategory || "All");
   const [sort, setSort] = useState<SortKey>("featured");
+  const [searchFocused, setSearchFocused] = useState(false);
   const lastTrackedSearch = useRef("");
 
   const categories = useMemo(
     () => [...new Set(products.map((product) => product.category))].sort(),
     [products],
+  );
+
+  const suggestions = useMemo(
+    () =>
+      getSearchSuggestions(
+        products.filter(
+          (product) =>
+            !(
+              product.merchandisingOutOfStockMode === "hide" &&
+              (product.availableStock ?? 0) <= 0
+            ) &&
+            (category === "All" || product.category === category),
+        ),
+        query,
+        5,
+      ),
+    [products, category, query],
   );
 
   const filtered = useMemo(() => {
@@ -147,18 +169,63 @@ export function ShopClient({
   return (
     <>
       <div className="grid gap-4 border-b border-[#713a35]/10 py-7 lg:grid-cols-[1fr_auto] lg:items-center">
-        <label className="relative block max-w-xl">
-          <span className="sr-only">Search skincare</span>
+        <div className="relative max-w-xl">
+          <label htmlFor="storefront-search" className="sr-only">
+            Search skincare
+          </label>
           <input
+            id="storefront-search"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded={searchFocused && suggestions.length > 0}
+            aria-controls="storefront-search-suggestions"
             value={query}
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() =>
+              window.setTimeout(() => setSearchFocused(false), 120)
+            }
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search by product or brand"
+            placeholder="Search products, brands, routines or textures"
             className="h-12 w-full rounded-full border border-[#713a35]/14 bg-white px-5 pr-12 text-sm outline-none transition placeholder:text-[#321f1c]/35 focus:border-[#b9725f]/60"
           />
-          <span className="absolute right-5 top-1/2 -translate-y-1/2 text-xs uppercase tracking-[0.16em] text-[#713a35]/45">
+          <span className="pointer-events-none absolute right-5 top-6 -translate-y-1/2 text-xs uppercase tracking-[0.16em] text-[#713a35]/45">
             Find
           </span>
-        </label>
+
+          {searchFocused && suggestions.length > 0 ? (
+            <div
+              id="storefront-search-suggestions"
+              role="listbox"
+              aria-label="Search suggestions"
+              className="absolute left-0 right-0 top-[3.35rem] z-30 overflow-hidden rounded-[1.25rem] border border-[#713a35]/12 bg-white p-2 shadow-xl"
+            >
+              <p className="px-3 pb-2 pt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#713a35]/42">
+                Suggested products
+              </p>
+              {suggestions.map((product) => (
+                <Link
+                  key={product.id}
+                  href={`/product/${product.slug}`}
+                  role="option"
+                  aria-selected="false"
+                  className="flex items-center justify-between gap-4 rounded-xl px-3 py-3 transition hover:bg-[#fff4ef] focus:bg-[#fff4ef] focus:outline-none"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-semibold text-[#321f1c]">
+                      {product.name}
+                    </span>
+                    <span className="mt-0.5 block truncate text-xs text-[#321f1c]/48">
+                      {product.brand} · {product.category} · {product.size}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#713a35]/55">
+                    View
+                  </span>
+                </Link>
+              ))}
+            </div>
+          ) : null}
+        </div>
 
         <label className="flex items-center gap-3 text-xs text-[#321f1c]/50">
           Sort
