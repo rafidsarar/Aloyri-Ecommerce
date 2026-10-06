@@ -1,33 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { useCatalog } from "@/components/catalog-provider";
 import { ProductCard } from "@/components/product-card";
+import type { Product } from "@/lib/catalog";
 import {
-  PRODUCT_PREFERENCES_EVENT,
   readCompareProductIds,
   readRecentProductIds,
   readSavedProductIds,
+  productPreferencesServerSnapshot,
+  productPreferencesSnapshot,
+  subscribeProductPreferences,
   writeCompareProductIds,
   writeRecentProductIds,
   writeSavedProductIds,
 } from "@/lib/product-preferences";
 
 function usePreferenceCounts() {
-  const [saved, setSaved] = useState<string[]>([]);
-  const [compare, setCompare] = useState<string[]>([]);
-
-  useEffect(() => {
-    const refresh = () => {
-      setSaved(readSavedProductIds());
-      setCompare(readCompareProductIds());
-    };
-    refresh();
-    window.addEventListener(PRODUCT_PREFERENCES_EVENT, refresh);
-    return () => window.removeEventListener(PRODUCT_PREFERENCES_EVENT, refresh);
-  }, []);
-
+  const snapshot = useSyncExternalStore(
+    subscribeProductPreferences,
+    productPreferencesSnapshot,
+    productPreferencesServerSnapshot,
+  );
+  const saved = useMemo(() => readSavedProductIds(), [snapshot]);
+  const compare = useMemo(() => readCompareProductIds(), [snapshot]);
   return { saved, compare };
 }
 
@@ -95,13 +92,23 @@ export function RecentlyViewedProducts({
   currentProductId: string;
 }) {
   const { products, synced } = useCatalog();
-  const [recentIds, setRecentIds] = useState<string[]>([]);
+  const snapshot = useSyncExternalStore(
+    subscribeProductPreferences,
+    productPreferencesSnapshot,
+    productPreferencesServerSnapshot,
+  );
+  const recentIds = useMemo(
+    () =>
+      readRecentProductIds()
+        .filter((id) => id !== currentProductId)
+        .slice(0, 4),
+    [currentProductId, snapshot],
+  );
 
   useEffect(() => {
     const previous = readRecentProductIds().filter(
       (id) => id !== currentProductId,
     );
-    setRecentIds(previous.slice(0, 4));
     writeRecentProductIds([currentProductId, ...previous]);
   }, [currentProductId]);
 
@@ -109,7 +116,7 @@ export function RecentlyViewedProducts({
     const byId = new Map(products.map((product) => [product.id, product]));
     return recentIds
       .map((id) => byId.get(id))
-      .filter((product): product is NonNullable<typeof product> => Boolean(product));
+      .filter((product): product is Product => Boolean(product));
   }, [products, recentIds]);
 
   if (!synced || recentProducts.length === 0) return null;
