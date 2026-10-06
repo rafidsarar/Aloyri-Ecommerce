@@ -32,6 +32,13 @@ export function ShopClient({
     const normalizedQuery = query.trim().toLowerCase();
 
     const list = products.filter((product) => {
+      if (
+        product.merchandisingOutOfStockMode === "hide" &&
+        (product.availableStock ?? 0) <= 0
+      ) {
+        return false;
+      }
+
       const matchesCategory =
         category === "All" || product.category === category;
       const matchesSearch =
@@ -48,6 +55,29 @@ export function ShopClient({
       if (sort === "price-asc") return salePriceFor(a) - salePriceFor(b);
       if (sort === "price-desc") return salePriceFor(b) - salePriceFor(a);
       if (sort === "name") return a.name.localeCompare(b.name);
+
+      const outOfStockOrder =
+        Number(
+          a.merchandisingOutOfStockMode === "push-down" &&
+            (a.availableStock ?? 0) <= 0,
+        ) -
+        Number(
+          b.merchandisingOutOfStockMode === "push-down" &&
+            (b.availableStock ?? 0) <= 0,
+        );
+      if (outOfStockOrder !== 0) return outOfStockOrder;
+
+      if (merchandisingSortMode === "featured") {
+        const featured =
+          Number(Boolean(b.featured)) - Number(Boolean(a.featured));
+        if (featured !== 0) return featured;
+      }
+
+      const priority =
+        (b.merchandisingPriority || 0) -
+        (a.merchandisingPriority || 0);
+      if (priority !== 0) return priority;
+
       return Number(Boolean(b.featured)) - Number(Boolean(a.featured));
     });
   }, [products, category, query, sort, merchandisingSortMode]);
