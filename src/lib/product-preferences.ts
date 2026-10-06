@@ -55,3 +55,32 @@ export function readRecentProductIds() {
 export function writeRecentProductIds(ids: string[]) {
   write(RECENT_PRODUCTS_KEY, ids, 12);
 }
+
+
+export function productPreferencesSnapshot() {
+  if (typeof window === "undefined") return "";
+  try {
+    return [
+      localStorage.getItem(SAVED_PRODUCTS_KEY) || "[]",
+      localStorage.getItem(COMPARE_PRODUCTS_KEY) || "[]",
+      localStorage.getItem(RECENT_PRODUCTS_KEY) || "[]",
+    ].join("|");
+  } catch {
+    return "";
+  }
+}
+
+export function productPreferencesServerSnapshot() {
+  return "";
+}
+
+export function subscribeProductPreferences(listener: () => void) {
+  if (typeof window === "undefined") return () => undefined;
+  const onStorage = () => listener();
+  window.addEventListener(PRODUCT_PREFERENCES_EVENT, listener);
+  window.addEventListener("storage", onStorage);
+  return () => {
+    window.removeEventListener(PRODUCT_PREFERENCES_EVENT, listener);
+    window.removeEventListener("storage", onStorage);
+  };
+}
