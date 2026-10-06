@@ -550,6 +550,79 @@ export async function saveDiscoveryMerchandising(formData: FormData) {
   redirect("/admin/merchandising/discovery?saved=1");
 }
 
+
+export async function saveRecommendationMerchandising(formData: FormData) {
+  const admin = await ensureAdmin();
+  const ids = [...new Set(
+    text(formData, "catalogIds", 20000)
+      .split(/\r?\n/)
+      .map((item) => item.trim())
+      .filter((id) => /^[A-Za-z0-9][A-Za-z0-9_-]{0,119}$/.test(id)),
+  )];
+  const allowed = new Set(ids);
+
+  function relationshipIds(key: string, sourceId: string) {
+    return [...new Set(
+      text(formData, key, 6000)
+        .split(/[\r\n,]+/)
+        .map((item) => item.trim())
+        .filter(
+          (id) =>
+            id !== sourceId &&
+            allowed.has(id) &&
+            /^[A-Za-z0-9][A-Za-z0-9_-]{0,119}$/.test(id),
+        ),
+    )].slice(0, 12);
+  }
+
+  const fallbackRaw = text(formData, "fallbackMode", 40);
+  const fallbackMode =
+    fallbackRaw === "category" || fallbackRaw === "off"
+      ? fallbackRaw
+      : "category-and-routine";
+
+  await updateDraftStorefrontConfig((config) => {
+    const rules: typeof config.merchandising.recommendations.rules = {};
+
+    for (const id of ids) {
+      const relatedProductIds = relationshipIds("related_" + id, id);
+      const routineProductIds = relationshipIds("routine_" + id, id);
+      const boost = numberValue(formData, "boost_" + id, 0, -100, 100);
+      const hidden = checked(formData, "hidden_" + id);
+
+      if (
+        relatedProductIds.length ||
+        routineProductIds.length ||
+        boost !== 0 ||
+        hidden
+      ) {
+        rules[id] = {
+          relatedProductIds,
+          routineProductIds,
+          boost,
+          hidden,
+        };
+      }
+    }
+
+    config.merchandising.recommendations = {
+      enabled: checked(formData, "enabled"),
+      fallbackMode,
+      maxRelated: numberValue(formData, "maxRelated", 3, 1, 6),
+      maxRoutine: numberValue(formData, "maxRoutine", 3, 1, 6),
+      rules,
+    };
+    return config;
+  }, {
+    actor: admin.username,
+    action: "merchandising.recommendations_updated",
+    scope: "merchandising",
+    target: "recommendations",
+  });
+
+  redirect("/admin/merchandising/recommendations?saved=1");
+}
+
 export async function saveHomepageMerchandising(formData: FormData) {
   const admin = await ensureAdmin();
   const sectionCount = Math.min(
