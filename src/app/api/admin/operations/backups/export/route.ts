@@ -8,7 +8,11 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const admin = await currentAdmin();
-  if (!admin || !hasAdminPermission(admin, "backups.export")) {
+  if (
+    !admin ||
+    admin.mustChangePassword ||
+    !hasAdminPermission(admin, "backups.export")
+  ) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 

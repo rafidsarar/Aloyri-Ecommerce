@@ -15,11 +15,15 @@ function cell(value: unknown) {
 
 export async function GET() {
   const admin = await currentAdmin();
-  if (!admin || !hasAdminPermission(admin, "audit.export")) {
+  if (
+    !admin ||
+    admin.mustChangePassword ||
+    !hasAdminPermission(admin, "audit.export")
+  ) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const events = await listAdminAuditEvents(100);
+  const events = await listAdminAuditEvents(5000);
   const rows = [
     ["created_at", "actor", "action", "scope", "target", "detail", "changes"],
     ...events.map((event) => [

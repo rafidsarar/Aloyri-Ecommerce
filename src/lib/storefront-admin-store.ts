@@ -1055,16 +1055,40 @@ export async function writeAdminAuditEvent(
   return event;
 }
 
-export async function listAdminAuditEvents(limit = 20) {
+async function auditBlobPaths(maxPaths = 10_000) {
+  if (!blobConfigured()) return [] as string[];
+  const paths: string[] = [];
+  let cursor: string | undefined;
+
+  do {
+    const result = await list({
+      prefix: storefrontStoragePath(AUDIT_PREFIX),
+      limit: Math.min(1000, maxPaths - paths.length),
+      ...(cursor ? { cursor } : {}),
+    });
+    paths.push(...result.blobs.map((blob) => blob.pathname));
+    cursor = result.hasMore ? result.cursor : undefined;
+  } while (cursor && paths.length < maxPaths);
+
+  return paths.sort((a, b) => b.localeCompare(a));
+}
+
+export async function listAdminAuditEvents(limit = 20, offset = 0) {
   if (!blobConfigured()) return [] as AdminAuditEvent[];
-  const result = await list({ prefix: storefrontStoragePath(AUDIT_PREFIX), limit: Math.min(limit, 100) });
+  const safeLimit = Math.min(Math.max(limit, 1), 5000);
+  const safeOffset = Math.max(0, Math.trunc(offset));
+  const paths = await auditBlobPaths(
+    Math.min(10_000, safeOffset + safeLimit + 1000),
+  );
+  const selected = paths.slice(safeOffset, safeOffset + safeLimit);
   const events = await Promise.all(
-    result.blobs.map((blob) => readPrivateJson<AdminAuditEvent>(logicalStorefrontPath(blob.pathname))),
+    selected.map((pathname) =>
+      readPrivateJson<AdminAuditEvent>(logicalStorefrontPath(pathname)),
+    ),
   );
   return events
     .filter((event): event is AdminAuditEvent => Boolean(event))
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, limit);
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 async function ensureBaselineVersion(current: StorefrontConfig) {

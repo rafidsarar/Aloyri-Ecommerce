@@ -16,9 +16,16 @@ function when(value: string) {
   }).format(new Date(value));
 }
 
-export default async function AuditPage() {
+export default async function AuditPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   const admin = await requireAdminPermission("audit.view");
-  const events = await listAdminAuditEvents(100);
+  const query = await searchParams;
+  const page = Math.max(1, Math.trunc(Number(query.page) || 1));
+  const pageSize = 50;
+  const events = await listAdminAuditEvents(pageSize, (page - 1) * pageSize);
 
   return (
     <AdminShell
@@ -83,6 +90,30 @@ export default async function AuditPage() {
           </p>
         )}
       </AdminCard>
+
+      <div className="mt-5 flex items-center justify-between gap-3">
+        {page > 1 ? (
+          <a
+            href={"/admin/audit?page=" + (page - 1)}
+            className="rounded-lg border border-black/10 px-4 py-2 text-xs font-semibold text-black/60"
+          >
+            Previous
+          </a>
+        ) : (
+          <span />
+        )}
+        <span className="text-xs text-black/40">Page {page}</span>
+        {events.length === pageSize ? (
+          <a
+            href={"/admin/audit?page=" + (page + 1)}
+            className="rounded-lg border border-[#713a35]/16 px-4 py-2 text-xs font-semibold text-[#713a35]"
+          >
+            Next
+          </a>
+        ) : (
+          <span />
+        )}
+      </div>
     </AdminShell>
   );
 }

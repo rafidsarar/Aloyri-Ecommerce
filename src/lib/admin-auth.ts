@@ -63,6 +63,25 @@ export type AdminPermission = (typeof ADMIN_PERMISSIONS)[number];
 
 const ALL_PERMISSIONS = [...ADMIN_PERMISSIONS];
 
+const OWNER_ONLY_ASSIGNABLE_PERMISSIONS = new Set<AdminPermission>([
+  "staff.manage",
+  "publishing.restore",
+  "backups.restore",
+  "security.owner",
+]);
+
+function permissionsActorMayAssign(
+  actor: Pick<AdminSession, "role">,
+  values: readonly string[],
+) {
+  const normalized = normalizeAdminPermissions(values);
+  return actor.role === "owner"
+    ? normalized
+    : normalized.filter(
+        (permission) => !OWNER_ONLY_ASSIGNABLE_PERMISSIONS.has(permission),
+      );
+}
+
 export const ROLE_TEMPLATES: Record<AdminRole, AdminPermission[]> = {
   owner: ALL_PERMISSIONS,
   "website-manager": [
@@ -598,7 +617,8 @@ export async function createStaffAccount(
     username,
     displayName: safeDisplayName(input.displayName, username),
     role,
-    permissions: normalizeAdminPermissions(
+    permissions: permissionsActorMayAssign(
+      actor,
       input.permissions?.length ? input.permissions : ROLE_TEMPLATES[role],
     ),
     active: true,
@@ -616,6 +636,7 @@ export async function createStaffAccount(
     actor.username,
     "staff.created",
     account.username + " · " + account.role,
+    { scope: "staff", target: account.id },
   );
   return publicAccount(account);
 }
@@ -658,22 +679,42 @@ export async function updateStaffAccess(
   account.permissions =
     role === "owner"
       ? ALL_PERMISSIONS
-      : normalizeAdminPermissions(input.permissions);
+      : permissionsActorMayAssign(actor, input.permissions);
   account.updatedAt = new Date().toISOString();
   await writeDirectory(directory);
 
   await writeAdminAuditEvent(
     actor.username,
     "staff.access_updated",
-    JSON.stringify({
-      account: account.username,
-      before,
-      after: {
-        displayName: account.displayName,
-        role: account.role,
-        permissions: account.permissions,
-      },
-    }).slice(0, 500),
+    account.username,
+    {
+      scope: "staff",
+      target: account.id,
+      changes: [
+        ...(before.displayName !== account.displayName
+          ? [
+              {
+                path: "displayName",
+                before: before.displayName,
+                after: account.displayName,
+              },
+            ]
+          : []),
+        ...(before.role !== account.role
+          ? [{ path: "role", before: before.role, after: account.role }]
+          : []),
+        ...(JSON.stringify(before.permissions) !==
+        JSON.stringify(account.permissions)
+          ? [
+              {
+                path: "permissions",
+                before: before.permissions.join(", "),
+                after: account.permissions.join(", "),
+              },
+            ]
+          : []),
+      ],
+    },
   );
   return publicAccount(account);
 }
@@ -709,6 +750,7 @@ export async function setStaffActive(
     actor.username,
     active ? "staff.reactivated" : "staff.suspended",
     account.username,
+    { scope: "staff", target: account.id },
   );
 }
 
@@ -743,6 +785,7 @@ export async function resetStaffPassword(
     actor.username,
     "staff.password_reset",
     account.username + " · all previous sessions revoked",
+    { scope: "staff", target: account.id },
   );
 }
 
@@ -772,7 +815,12 @@ export async function deleteStaffAccount(
     (candidate) => candidate.id !== accountId,
   );
   await writeDirectory(directory);
-  await writeAdminAuditEvent(actor.username, "staff.deleted", account.username);
+  await writeAdminAuditEvent(
+    actor.username,
+    "staff.deleted",
+    account.username,
+    { scope: "staff", target: account.id },
+  );
 }
 
 export async function changeAdminPassword(

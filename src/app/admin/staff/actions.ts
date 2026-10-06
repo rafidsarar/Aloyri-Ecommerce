@@ -43,12 +43,15 @@ function errorMessage(error: unknown) {
 export async function createStaffAction(formData: FormData) {
   const admin = await requireAdminPermission("staff.manage");
   const selectedRole = role(text(formData, "role", 40));
+  const selectedPermissions = permissions(formData);
   try {
     const account = await createStaffAccount(admin, {
       username: text(formData, "username", 48),
       displayName: text(formData, "displayName", 80),
       role: selectedRole,
-      permissions: ROLE_TEMPLATES[selectedRole],
+      permissions: selectedPermissions.length
+        ? selectedPermissions
+        : ROLE_TEMPLATES[selectedRole],
       temporaryPassword: text(formData, "temporaryPassword", 128),
     });
     redirect("/admin/staff/" + account.id + "?created=1");

@@ -48,20 +48,6 @@ export default async function NewStaffPage({
               />
             </label>
             <label className="grid gap-1.5 text-sm font-medium">
-              Role template
-              <select
-                name="role"
-                defaultValue="content-editor"
-                className="rounded-xl border border-black/10 px-4 py-3"
-              >
-                <option value="website-manager">Website Manager</option>
-                <option value="content-editor">Content Editor</option>
-                <option value="merchandising-manager">Merchandising Manager</option>
-                <option value="analyst">Analyst</option>
-                <option value="support">Support</option>
-              </select>
-            </label>
-            <label className="grid gap-1.5 text-sm font-medium">
               Temporary password
               <input
                 name="temporaryPassword"
