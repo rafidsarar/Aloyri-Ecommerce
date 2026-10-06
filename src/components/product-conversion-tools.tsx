@@ -5,6 +5,7 @@ import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { useCatalog } from "@/components/catalog-provider";
 import { ProductCard } from "@/components/product-card";
 import type { Product } from "@/lib/catalog";
+import { trackStorefrontEvent } from "@/lib/analytics";
 import {
   readCompareProductIds,
   readRecentProductIds,
@@ -39,6 +40,9 @@ export function ProductPreferenceButtons({ productId }: { productId: string }) {
     writeSavedProductIds(
       isSaved ? saved.filter((id) => id !== productId) : [productId, ...saved],
     );
+    trackStorefrontEvent(isSaved ? "wishlist_remove" : "wishlist_add", {
+      productId,
+    });
   }
 
   function toggleCompare() {
@@ -76,7 +80,7 @@ export function ProductPreferenceButtons({ productId }: { productId: string }) {
       {(saved.length > 0 || compare.length > 0) ? (
         <div className="col-span-full flex flex-wrap justify-center gap-x-5 gap-y-2 pt-1 text-[11px] font-medium text-[#713a35]">
           {saved.length > 0 ? (
-            <Link href="/saved">Saved products · {saved.length}</Link>
+            <Link href="/wishlist">Wishlist · {saved.length}</Link>
           ) : null}
           {compare.length > 0 ? (
             <Link href="/compare">Compare · {compare.length}/3</Link>
@@ -127,8 +131,8 @@ export function RecentlyViewedProducts({
           </p>
           <h2 className="display mt-2 text-4xl">Pick up where you left off.</h2>
         </div>
-        <Link href="/saved" className="text-sm font-semibold text-[#713a35]">
-          Saved products
+        <Link href="/wishlist" className="text-sm font-semibold text-[#713a35]">
+          Wishlist
         </Link>
       </div>
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">

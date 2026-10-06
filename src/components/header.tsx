@@ -13,6 +13,8 @@ const links = [
   ["Moisturizers", "/category/moisturizers"],
   ["Sunscreen", "/category/sunscreen"],
   ["Track order", "/track-order"],
+  ["Wishlist", "/wishlist"],
+  ["Account", "/account"],
 ];
 
 export function Header({ announcement }: { announcement: string }) {

@@ -36,6 +36,10 @@ import {
 import { formatPrice, getProductById } from "@/lib/catalog";
 import { getAnalyticsContext, trackStorefrontEvent } from "@/lib/analytics";
 import { salePriceFor, type PromotionQuote } from "@/lib/promotions";
+import {
+  readCustomerProfile,
+  writeCustomerProfile,
+} from "@/lib/customer-profile";
 
 type FieldErrors = Partial<Record<keyof CheckoutDraft, string>>;
 type DeliveryRates = Record<DeliveryZone, number>;
@@ -211,6 +215,7 @@ export function CheckoutClient() {
 
     const initialize = window.setTimeout(() => {
       setCartItems(readCart());
+      let restoredCheckout = false;
 
       try {
         const saved = sessionStorage.getItem(CHECKOUT_DRAFT_KEY);
@@ -231,7 +236,10 @@ export function CheckoutClient() {
             );
           } else {
             const restored = safeDraft(parsed.draft ?? parsed);
-            if (restored) setDraft(restored);
+            if (restored) {
+              setDraft(restored);
+              restoredCheckout = true;
+            }
           }
         }
       } catch {
@@ -239,6 +247,19 @@ export function CheckoutClient() {
           sessionStorage.removeItem(CHECKOUT_DRAFT_KEY);
         } catch {
           // Checkout still works without browser storage.
+        }
+      }
+
+      if (!restoredCheckout) {
+        const profile = readCustomerProfile();
+        if (profile.fullName || profile.email || profile.phone || profile.district) {
+          setDraft((current) => ({
+            ...current,
+            fullName: profile.fullName,
+            phone: profile.phone,
+            email: profile.email,
+            district: profile.district,
+          }));
         }
       }
 
@@ -677,6 +698,12 @@ export function CheckoutClient() {
 
       writeCart([]);
       setCartItems([]);
+      writeCustomerProfile({
+        fullName: draft.fullName,
+        phone: normalizeBangladeshPhone(draft.phone),
+        email: draft.email,
+        district: draft.district,
+      });
 
       try {
         sessionStorage.setItem(
