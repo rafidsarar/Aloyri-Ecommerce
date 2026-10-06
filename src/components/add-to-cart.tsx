@@ -5,7 +5,13 @@ import { useCatalogProduct } from "@/components/catalog-provider";
 import { readCart, writeCart } from "@/lib/cart";
 import { trackStorefrontEvent } from "@/lib/analytics";
 
-export function AddToCart({ productId }: { productId: string }) {
+export function AddToCart({
+  productId,
+  compact = false,
+}: {
+  productId: string;
+  compact?: boolean;
+}) {
   const [added, setAdded] = useState(false);
   const { product, synced, error } = useCatalogProduct(productId);
   const available = product?.availableStock ?? 0;
@@ -48,11 +54,13 @@ export function AddToCart({ productId }: { productId: string }) {
       type="button"
       onClick={add}
       disabled={disabled}
-      className={`w-full rounded-full px-6 py-4 text-sm font-semibold text-white transition ${
-        disabled
+      className={
+        "w-full rounded-full font-semibold text-white transition " +
+        (compact ? "px-4 py-3 text-xs " : "px-6 py-4 text-sm ") +
+        (disabled
           ? "cursor-not-allowed bg-[#713a35]/30"
-          : "bg-[#713a35] hover:-translate-y-0.5 hover:bg-[#60312d]"
-      }`}
+          : "bg-[#713a35] hover:-translate-y-0.5 hover:bg-[#60312d]")
+      }
     >
       {label}
     </button>
