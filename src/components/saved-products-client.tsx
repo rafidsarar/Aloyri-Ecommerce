@@ -1,31 +1,32 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { useCatalog } from "@/components/catalog-provider";
 import { ProductCard } from "@/components/product-card";
+import type { Product } from "@/lib/catalog";
 import {
-  PRODUCT_PREFERENCES_EVENT,
   readSavedProductIds,
+  productPreferencesServerSnapshot,
+  productPreferencesSnapshot,
+  subscribeProductPreferences,
   writeSavedProductIds,
 } from "@/lib/product-preferences";
 
 export function SavedProductsClient() {
   const { products, synced, error, refresh } = useCatalog();
-  const [ids, setIds] = useState<string[]>([]);
-
-  useEffect(() => {
-    const load = () => setIds(readSavedProductIds());
-    load();
-    window.addEventListener(PRODUCT_PREFERENCES_EVENT, load);
-    return () => window.removeEventListener(PRODUCT_PREFERENCES_EVENT, load);
-  }, []);
+  const snapshot = useSyncExternalStore(
+    subscribeProductPreferences,
+    productPreferencesSnapshot,
+    productPreferencesServerSnapshot,
+  );
+  const ids = useMemo(() => readSavedProductIds(), [snapshot]);
 
   const saved = useMemo(() => {
     const byId = new Map(products.map((product) => [product.id, product]));
     return ids
       .map((id) => byId.get(id))
-      .filter((product): product is NonNullable<typeof product> => Boolean(product));
+      .filter((product): product is Product => Boolean(product));
   }, [ids, products]);
 
   if (!synced) {
