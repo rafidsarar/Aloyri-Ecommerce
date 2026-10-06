@@ -11,6 +11,7 @@ export type ProductReview = {
   body: string;
   verifiedPurchase: true;
   orderHash: string;
+  customerHash?: string;
   status: ReviewStatus;
   featured: boolean;
   helpfulCount: number;

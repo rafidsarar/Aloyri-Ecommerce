@@ -112,6 +112,7 @@ export async function createVerifiedReview(input: {
   title: string;
   body: string;
   orderNumber: string;
+  customerHash?: string;
 }) {
   const orderHash = await sha256(
     "aloyri-review-order-v1:" + input.orderNumber.trim().toUpperCase(),
@@ -134,6 +135,7 @@ export async function createVerifiedReview(input: {
     body: input.body,
     verifiedPurchase: true,
     orderHash,
+    ...(input.customerHash ? { customerHash: input.customerHash } : {}),
     status: "pending",
     featured: false,
     helpfulCount: 0,

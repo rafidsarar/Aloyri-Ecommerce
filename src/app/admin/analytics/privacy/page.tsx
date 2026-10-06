@@ -25,13 +25,14 @@ export default async function AnalyticsPrivacyPage() {
             <p>Product, collection and campaign identifiers.</p>
             <p>Sanitized storefront search phrases with PII-like patterns rejected.</p>
             <p>CRM-confirmed order total, item IDs/quantities and delivery zone for aggregate conversion reporting.</p>
+            <p>A one-way retention customer hash derived server-side from the normalized checkout mobile number after CRM confirms an order. The raw mobile number is not written to analytics.</p>
           </div>
         </AdminCard>
 
         <AdminCard>
           <p className="text-sm font-semibold">Never stored here</p>
           <div className="mt-4 grid gap-2 text-sm leading-6 text-black/58">
-            <p>Customer name, email, mobile number or delivery address.</p>
+            <p>Customer name, email, raw mobile number or delivery address.</p>
             <p>Order number or CRM customer/order IDs.</p>
             <p>IP address or raw browser user-agent.</p>
             <p>Checkout notes, landmark, support messages or arbitrary free text.</p>
@@ -47,7 +48,8 @@ export default async function AnalyticsPrivacyPage() {
           <p>Browser Do Not Track is respected automatically.</p>
           <p>Customers can disable first-party analytics from the existing privacy preference.</p>
           <p>Client-side order-created events are rejected; revenue is recorded only after CRM confirms the order.</p>
-          <p>Confirmed conversions use a one-way hash of the order number only for deduplication.</p>
+          <p>Confirmed conversions use a one-way hash of the order number for deduplication and a separate one-way customer hash for repeat-purchase grouping.</p>
+          <p>The customer hash cannot be submitted by the browser; it is created server-side only after CRM confirms the order.</p>
           <p>Analytics cannot write price, stock, finance or order status.</p>
         </div>
       </AdminCard>

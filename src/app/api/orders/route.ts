@@ -292,6 +292,7 @@ export async function POST(request: Request) {
         items: payload.items,
         deliveryZone: payload.deliveryZone,
         totalBdt: result.body.total,
+        customerIdentity: payload.customer.phone,
       });
     } catch (error) {
       console.error("Confirmed-order analytics failed", error);

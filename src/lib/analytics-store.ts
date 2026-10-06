@@ -1,6 +1,7 @@
 import "server-only";
 
 import { get, list, put } from "@vercel/blob";
+import { hashRetentionCustomerIdentity } from "@/lib/retention-identity";
 
 export type AnalyticsDevice = "mobile" | "tablet" | "desktop";
 export type AnalyticsEventName =
@@ -78,6 +79,7 @@ export type AnalyticsEventRecord = {
   metricValue?: number;
   confirmed?: boolean;
   orderHash?: string;
+  customerHash?: string;
   items?: AnalyticsOrderItem[];
 };
 
@@ -289,12 +291,16 @@ export async function recordConfirmedOrderAnalytics(input: {
   items: AnalyticsOrderItem[];
   deliveryZone: "inside-dhaka" | "outside-dhaka";
   totalBdt: number;
+  customerIdentity?: string;
 }) {
   if (!blobConfigured()) return null;
 
   const orderHash = await sha256(
     "aloyri-order-analytics-v1:" + input.orderNumber,
   );
+  const customerHash = input.customerIdentity
+    ? await hashRetentionCustomerIdentity(input.customerIdentity)
+    : undefined;
   const dedupePath = CONVERSIONS_PREFIX + orderHash + ".json";
 
   try {
@@ -334,6 +340,7 @@ export async function recordConfirmedOrderAnalytics(input: {
     totalBdt: input.totalBdt,
     confirmed: true,
     orderHash,
+    ...(customerHash ? { customerHash } : {}),
   });
 
   if (event) {

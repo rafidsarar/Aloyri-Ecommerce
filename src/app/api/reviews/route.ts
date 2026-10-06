@@ -13,6 +13,7 @@ import {
 } from "@/lib/review-store";
 import type { ReviewSort } from "@/lib/review-types";
 import { matchesTrackedItem, reviewLooksSpam } from "@/lib/review-utils";
+import { hashRetentionCustomerIdentity } from "@/lib/retention-identity";
 
 export const dynamic = "force-dynamic";
 
@@ -227,6 +228,9 @@ export async function POST(request: Request) {
       title,
       body: reviewBody,
       orderNumber,
+      customerHash: await hashRetentionCustomerIdentity(
+        normalizeBangladeshPhone(phone),
+      ),
     });
     await recordReviewMetric("submissions");
     return response(
