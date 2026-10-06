@@ -454,6 +454,62 @@ export function analyzeMerchandisingHealth(
     }
   }
 
+  const recommendation = config.merchandising.recommendations;
+  for (const [sourceId, rule] of Object.entries(recommendation.rules)) {
+    const source = productMap.get(sourceId);
+    if (!source) {
+      issues.push({
+        id: "recommendation-source-missing-" + sourceId,
+        severity: "warning",
+        label: sourceId,
+        href: "/admin/merchandising/recommendations",
+        message: "Recommendation rules exist for a product that is no longer in the CRM catalog.",
+      });
+    }
+
+    for (const targetId of [
+      ...rule.relatedProductIds,
+      ...rule.routineProductIds,
+    ]) {
+      if (targetId === sourceId) {
+        issues.push({
+          id: "recommendation-self-" + sourceId,
+          severity: "error",
+          label: source?.name || sourceId,
+          href: "/admin/merchandising/recommendations",
+          message: "A product cannot recommend itself.",
+        });
+        continue;
+      }
+      const target = productMap.get(targetId);
+      if (!target) {
+        issues.push({
+          id: "recommendation-target-missing-" + sourceId + "-" + targetId,
+          severity: "error",
+          label: source?.name || sourceId,
+          href: "/admin/merchandising/recommendations",
+          message: "Recommendation references a missing CRM product: " + targetId,
+        });
+      } else if (!target.active) {
+        issues.push({
+          id: "recommendation-target-inactive-" + sourceId + "-" + targetId,
+          severity: "warning",
+          label: source?.name || sourceId,
+          href: "/admin/merchandising/recommendations",
+          message: target.name + " is inactive in CRM and will not be recommended.",
+        });
+      } else if (target.availableStock <= 0) {
+        issues.push({
+          id: "recommendation-target-oos-" + sourceId + "-" + targetId,
+          severity: "warning",
+          label: source?.name || sourceId,
+          href: "/admin/merchandising/recommendations",
+          message: target.name + " is out of stock and will be excluded from recommendations.",
+        });
+      }
+    }
+  }
+
   for (const section of config.merchandising.homepageSections) {
     if (!section.enabled) continue;
     if (section.kind === "collection") {
