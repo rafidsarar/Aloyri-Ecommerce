@@ -51,6 +51,11 @@ export function applyMerchandisingRules(
       ...product,
       merchandisingBadge: normalizeBadge(rule?.badge),
       merchandisingPriority: boundedPriority(rule?.priority),
+      merchandisingSearchBoost: Math.max(
+        -100,
+        Math.min(100, Math.trunc(rule?.searchBoost || 0)),
+      ),
+      merchandisingHideFromSearch: Boolean(rule?.hideFromSearch),
       merchandisingOutOfStockMode: effectiveOutOfStockMode(
         rule?.outOfStockMode,
         config.merchandising.outOfStockMode,
