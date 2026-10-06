@@ -21,24 +21,85 @@ export default async function SearchAnalyticsPage({
   const days = period(query.days);
   const report = await buildAnalyticsReport(days);
 
+  const totalSearches = report.searches.reduce(
+    (sum, row) => sum + row.searches,
+    0,
+  );
+  const measuredSearches = report.searches.reduce(
+    (sum, row) => sum + row.resultSamples,
+    0,
+  );
+  const zeroResultSearches = report.searches.reduce(
+    (sum, row) => sum + row.zeroResultSearches,
+    0,
+  );
+  const zeroResultRate = measuredSearches
+    ? Math.round((zeroResultSearches / measuredSearches) * 1000) / 10
+    : 0;
+  const searchOrders = report.searches.reduce(
+    (sum, row) => sum + row.orders,
+    0,
+  );
+
   return (
     <AdminShell
       username={admin.username}
       title="Search analytics"
-      subtitle="Sanitized storefront search terms, engagement and conversion. Email-like text and long digit sequences are rejected before storage."
+      subtitle="Understand what customers search for, whether results were found, and which searches create product engagement and orders."
     >
       <AdminNotice tone="neutral">
-        Search analytics never stores arbitrary checkout/customer free text. Only short sanitized storefront search phrases are eligible.
+        Search analytics stores only short sanitized storefront search phrases.
+        Email-like text, long digit sequences and checkout/customer free text are
+        rejected before storage.
       </AdminNotice>
+
+      <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <AdminCard>
+          <p className="text-xs font-medium uppercase tracking-[.13em] text-black/42">
+            Searches
+          </p>
+          <p className="mt-2 text-3xl font-semibold">{totalSearches}</p>
+          <p className="mt-1 text-xs text-black/45">Last {days} days</p>
+        </AdminCard>
+        <AdminCard>
+          <p className="text-xs font-medium uppercase tracking-[.13em] text-black/42">
+            Measured searches
+          </p>
+          <p className="mt-2 text-3xl font-semibold">{measuredSearches}</p>
+          <p className="mt-1 text-xs text-black/45">
+            Searches with a recorded result count
+          </p>
+        </AdminCard>
+        <AdminCard>
+          <p className="text-xs font-medium uppercase tracking-[.13em] text-black/42">
+            Zero-result rate
+          </p>
+          <p className="mt-2 text-3xl font-semibold">{zeroResultRate.toFixed(1)}%</p>
+          <p className="mt-1 text-xs text-black/45">
+            {zeroResultSearches} searches returned no products
+          </p>
+        </AdminCard>
+        <AdminCard>
+          <p className="text-xs font-medium uppercase tracking-[.13em] text-black/42">
+            Search-attributed orders
+          </p>
+          <p className="mt-2 text-3xl font-semibold">{searchOrders}</p>
+          <p className="mt-1 text-xs text-black/45">
+            Orders retaining a search context
+          </p>
+        </AdminCard>
+      </div>
 
       <AdminCard className="mt-5">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[680px] text-left text-sm">
+          <table className="w-full min-w-[900px] text-left text-sm">
             <thead>
               <tr className="border-b border-black/8 text-[10px] uppercase tracking-[.13em] text-black/42">
                 <th className="pb-3">Search term</th>
                 <th className="pb-3">Searches</th>
-                <th className="pb-3">Sessions</th>
+                <th className="pb-3">Avg. results</th>
+                <th className="pb-3">Zero results</th>
+                <th className="pb-3">Zero-result rate</th>
                 <th className="pb-3">Product clicks</th>
                 <th className="pb-3">Orders</th>
                 <th className="pb-3">Conversion</th>
@@ -49,7 +110,13 @@ export default async function SearchAnalyticsPage({
                 <tr key={row.term}>
                   <td className="py-4 pr-5 font-semibold">{row.term}</td>
                   <td className="py-4 pr-5">{row.searches}</td>
-                  <td className="py-4 pr-5">{row.sessions}</td>
+                  <td className="py-4 pr-5">
+                    {row.resultSamples ? row.averageResults.toFixed(1) : "—"}
+                  </td>
+                  <td className="py-4 pr-5">{row.zeroResultSearches}</td>
+                  <td className="py-4 pr-5">
+                    {row.resultSamples ? `${row.zeroResultRate.toFixed(1)}%` : "—"}
+                  </td>
                   <td className="py-4 pr-5">{row.productClicks}</td>
                   <td className="py-4 pr-5">{row.orders}</td>
                   <td className="py-4">{row.conversionRate.toFixed(1)}%</td>
