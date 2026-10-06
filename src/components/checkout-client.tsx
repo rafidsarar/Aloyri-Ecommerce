@@ -293,6 +293,47 @@ export function CheckoutClient() {
     }
   }, [draft, hydrated]);
 
+  const rows = useMemo(
+    () =>
+      cartItems.map((item) => {
+        const liveProduct = liveProducts.find(
+          (product) => product.id === item.productId,
+        );
+        return {
+          ...item,
+          liveProduct,
+          product: liveProduct ?? getProductById(item.productId),
+        };
+      }),
+    [cartItems, liveProducts],
+  );
+
+  const itemCount = rows.reduce((sum, row) => sum + row.qty, 0);
+  const hasUnavailable = rows.some(
+    (row) =>
+      !row.liveProduct ||
+      (row.liveProduct.availableStock ?? 0) < row.qty,
+  );
+  const subtotal = rows.reduce(
+    (sum, row) =>
+      sum + (row.liveProduct ? salePriceFor(row.liveProduct) * row.qty : 0),
+    0,
+  );
+  const deliveryCharge =
+    draft.deliveryZone && deliveryRates
+      ? deliveryRates[draft.deliveryZone]
+      : 0;
+  const payableTotal = subtotal + deliveryCharge;
+  const quotedSubtotal = promotionQuote?.productsSubtotal ?? subtotal;
+  const quotedDiscount = promotionQuote?.discount ?? 0;
+  const quotedDelivery =
+    promotionQuote?.deliveryCharge ??
+    (draft.deliveryZone && deliveryRates ? deliveryCharge : 0);
+  const quotedTotal =
+    promotionQuote?.total ??
+    (draft.deliveryZone && deliveryRates ? payableTotal : subtotal);
+  const activePromotion = promotionQuote?.promotion ?? null;
+
   useEffect(() => {
     if (
       !hydrated ||
@@ -337,47 +378,6 @@ export function CheckoutClient() {
     recoveryConsent,
     recoverySaved,
   ]);
-
-  const rows = useMemo(
-    () =>
-      cartItems.map((item) => {
-        const liveProduct = liveProducts.find(
-          (product) => product.id === item.productId,
-        );
-        return {
-          ...item,
-          liveProduct,
-          product: liveProduct ?? getProductById(item.productId),
-        };
-      }),
-    [cartItems, liveProducts],
-  );
-
-  const itemCount = rows.reduce((sum, row) => sum + row.qty, 0);
-  const hasUnavailable = rows.some(
-    (row) =>
-      !row.liveProduct ||
-      (row.liveProduct.availableStock ?? 0) < row.qty,
-  );
-  const subtotal = rows.reduce(
-    (sum, row) =>
-      sum + (row.liveProduct ? salePriceFor(row.liveProduct) * row.qty : 0),
-    0,
-  );
-  const deliveryCharge =
-    draft.deliveryZone && deliveryRates
-      ? deliveryRates[draft.deliveryZone]
-      : 0;
-  const payableTotal = subtotal + deliveryCharge;
-  const quotedSubtotal = promotionQuote?.productsSubtotal ?? subtotal;
-  const quotedDiscount = promotionQuote?.discount ?? 0;
-  const quotedDelivery =
-    promotionQuote?.deliveryCharge ??
-    (draft.deliveryZone && deliveryRates ? deliveryCharge : 0);
-  const quotedTotal =
-    promotionQuote?.total ??
-    (draft.deliveryZone && deliveryRates ? payableTotal : subtotal);
-  const activePromotion = promotionQuote?.promotion ?? null;
 
   useEffect(() => {
     const controller = new AbortController();
