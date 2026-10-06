@@ -70,8 +70,11 @@ export function lifecyclePlanForDelivery(input: {
   const delivered = isoDate(input.deliveredAt);
   if (!delivered) return [];
 
-  const reorderDays = input.categoryDays.length
-    ? Math.min(...input.categoryDays.filter((value) => Number.isFinite(value) && value > 0))
+  const validCategoryDays = input.categoryDays.filter(
+    (value) => Number.isFinite(value) && value > 0,
+  );
+  const reorderDays = validCategoryDays.length
+    ? Math.min(...validCategoryDays)
     : 60;
 
   return [

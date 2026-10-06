@@ -105,4 +105,10 @@ test("lifecycle planning creates post-delivery, review and reorder due dates", (
   expect(plan[0].dueAt.startsWith("2026-10-04")).toBe(true);
   expect(plan[1].dueAt.startsWith("2026-10-08")).toBe(true);
   expect(plan[2].dueAt.startsWith("2026-11-07")).toBe(true);
+
+  const fallbackPlan = lifecyclePlanForDelivery({
+    deliveredAt: "2026-10-01",
+    categoryDays: [Number.NaN, 0],
+  });
+  expect(fallbackPlan[2].dueAt.startsWith("2026-11-19")).toBe(true);
 });
