@@ -51,6 +51,7 @@ export async function PUT(request: Request) {
     const body = JSON.parse(raw) as {
       displayName?: unknown;
       savedProductIds?: unknown;
+      emailPreferences?: unknown;
     };
     const account = await updateCurrentCustomerAccount({
       ...(typeof body.displayName === "string"
@@ -58,6 +59,13 @@ export async function PUT(request: Request) {
         : {}),
       ...(body.savedProductIds !== undefined
         ? { savedProductIds: body.savedProductIds }
+        : {}),
+      ...(body.emailPreferences && typeof body.emailPreferences === "object"
+        ? { emailPreferences: body.emailPreferences as {
+            postDelivery?: boolean;
+            reviewRequest?: boolean;
+            reorderReminder?: boolean;
+          } }
         : {}),
     });
     return Response.json(
