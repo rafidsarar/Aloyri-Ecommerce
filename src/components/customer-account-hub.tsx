@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useState, useSyncExternalStore } from "react";
 import { AnalyticsViewTracker } from "@/components/storefront-analytics-tracker";
+import { PostPurchaseOrders } from "@/components/post-purchase-orders";
 import {
   clearCustomerProfile,
   customerProfileServerSnapshot,
@@ -82,7 +83,7 @@ export function CustomerAccountHub() {
         </p>
         <h1 className="display mt-2 text-5xl sm:text-6xl">Customer account.</h1>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-[#321f1c]/52">
-          Your wishlist, cart, compare list and profile basics are organized here on this device. Cloud sign-in and cross-device sync stay disabled until Aloyri can support secure email authentication through a verified domain.
+          Your recent orders, reorder guidance, wishlist, cart, compare list and profile basics are organized here on this device. CRM remains the live source for order status, while cloud sign-in stays disabled until Aloyri can support secure email authentication through a verified domain.
         </p>
       </div>
 
@@ -105,6 +106,8 @@ export function CustomerAccountHub() {
           </Link>
         ))}
       </div>
+
+      <PostPurchaseOrders />
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_.9fr]">
         <section className="rounded-[1.5rem] border border-[#713a35]/10 bg-white/70 p-5 sm:p-7">
