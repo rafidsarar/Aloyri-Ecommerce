@@ -126,6 +126,22 @@ export default async function RetentionAnalyticsPage({
               </div>
             ))}
           </div>
+          <div className="mt-5 border-t border-black/7 pt-4">
+            <p className="text-xs font-semibold">Prepared orchestration policies</p>
+            <div className="mt-3 grid gap-3">
+              {lifecycle.policies.map((policy) => (
+                <div key={policy.trigger} className="rounded-lg bg-[#f7f4f2] p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <strong className="text-xs">{policy.trigger.replaceAll("-", " ")}</strong>
+                    <span className="text-[10px] uppercase tracking-[.1em] text-black/38">
+                      {policy.source} · {policy.timing}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs leading-5 text-black/48">{policy.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </AdminCard>
       </div>
 

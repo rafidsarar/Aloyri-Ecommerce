@@ -84,6 +84,7 @@ export function PostPurchaseOrders() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [adding, setAdding] = useState(false);
+  const [refreshNonce, setRefreshNonce] = useState(0);
 
   useEffect(() => {
     const orders = readCustomerOrders().slice(0, 8);
@@ -144,7 +145,7 @@ export function PostPurchaseOrders() {
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [orderKey]);
+  }, [orderKey, refreshNonce]);
 
   const successful = results.filter(
     (row): row is Extract<PostPurchaseOrderResult, { ok: true }> => row.ok,
@@ -272,12 +273,7 @@ export function PostPurchaseOrders() {
         <button
           type="button"
           disabled={refreshing || !storedOrders.length}
-          onClick={() => {
-            const first = readCustomerOrders()[0];
-            if (!first) return;
-            forgetCustomerOrder(first.orderNumber);
-            rememberCustomerOrder(first);
-          }}
+          onClick={() => setRefreshNonce((value) => value + 1)}
           className="rounded-full border border-[#713a35]/14 px-4 py-2 text-xs font-semibold text-[#713a35] disabled:opacity-35"
         >
           {refreshing ? "Refreshing…" : "Refresh orders"}

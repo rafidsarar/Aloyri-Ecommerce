@@ -7,12 +7,10 @@ function configuredEmail(value: string | undefined) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : "";
 }
 
-export type LifecycleTrigger =
-  | "abandoned-cart"
-  | "post-delivery-follow-up"
-  | "review-request"
-  | "reorder-reminder"
-  | "back-in-stock";
+import {
+  lifecyclePolicies,
+  type LifecycleTrigger,
+} from "@/lib/lifecycle-policy";
 
 export function lifecycleReadiness() {
   const domainReady = process.env.ALOYRI_EMAIL_DOMAIN_VERIFIED === "1";
@@ -38,5 +36,6 @@ export function lifecycleReadiness() {
       "reorder-reminder": lifecycleEnabled,
       "back-in-stock": lifecycleEnabled,
     } satisfies Record<LifecycleTrigger, boolean>,
+    policies: lifecyclePolicies,
   };
 }
