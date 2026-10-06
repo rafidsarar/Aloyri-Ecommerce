@@ -6,7 +6,6 @@ import { StorefrontAnalyticsTracker } from "@/components/storefront-analytics-tr
 import { PerformanceReporter } from "@/components/performance-reporter";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
-import { PerformanceReporter } from "@/components/performance-reporter";
 
 export function SiteChrome({
   children,
@@ -48,7 +47,6 @@ export function SiteChrome({
         {children}
       </div>
       <Footer description={footerDescription} />
-      <PerformanceReporter />
     </CatalogProvider>
   );
 }

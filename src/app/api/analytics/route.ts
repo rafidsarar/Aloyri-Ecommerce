@@ -230,6 +230,8 @@ async function safeContext(value: unknown) {
   const referrerDomain = safeToken(input.referrerDomain, 120);
   const collectionId = safeEntityId(input.collectionId);
   const campaignId = safeEntityId(input.campaignId);
+  const placementId = safeEntityId(input.placementId);
+  const placementKind = safeToken(input.placementKind, 40);
   const searchTerm = safeSearchTerm(input.searchTerm);
   const device =
     typeof input.device === "string" &&
