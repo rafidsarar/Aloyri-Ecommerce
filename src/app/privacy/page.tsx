@@ -46,7 +46,8 @@ export default function PrivacyPage() {
         {
           title: "Storefront analytics & performance",
           paragraphs: [
-            "Aloyri records a limited set of first-party storefront events to understand product views, cart activity, checkout progress, successful order creation, order tracking, return requests and Core Web Vitals. The application analytics payload does not include customer names, phone numbers, email addresses, delivery addresses, order numbers, free-text notes or search text.",
+            "Aloyri records a limited set of first-party storefront events to understand visits, product and collection engagement, cart and checkout progress, CRM-confirmed orders, campaign and merchandising performance, sanitized storefront searches and Core Web Vitals. The analytics layer may use one-way hashed browser-generated visitor/session identifiers, public page paths, coarse device class, sanitized source/medium/campaign labels and external referrer domains.",
+            "The analytics layer does not store customer names, phone numbers, email addresses, delivery addresses, order numbers, IP addresses, raw user-agent strings, checkout notes or other arbitrary customer free text. Storefront search phrases are accepted only after strict sanitization that rejects email-like text and long digit sequences.",
             "These analytics events use strict allowlists rather than arbitrary customer data. The storefront respects browser Do Not Track and also supports a local analytics opt-out. Hosting and security providers may separately process limited technical request information needed to operate and protect the service.",
           ],
         },
