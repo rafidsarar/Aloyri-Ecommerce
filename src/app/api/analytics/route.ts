@@ -151,7 +151,11 @@ function safeProperties(value: unknown) {
   if (campaignId) output.campaignId = campaignId;
 
   const placementId = safeEntityId(input.placementId);
+  if (placementId) output.placementId = placementId;
+
   const placementKind = safeToken(input.placementKind, 40);
+  if (placementKind) output.placementKind = placementKind;
+
   const searchTerm = safeSearchTerm(input.searchTerm);
   if (searchTerm) output.searchTerm = searchTerm;
 

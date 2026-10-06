@@ -65,7 +65,7 @@ export function ProductCard({
               { placementId, placementKind, collectionId, campaignId },
             );
           }
-        }
+        }}
       >
         <div className="relative">
           <ProductMedia
