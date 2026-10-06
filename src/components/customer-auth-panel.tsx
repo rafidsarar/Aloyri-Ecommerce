@@ -41,7 +41,7 @@ export function CustomerAuthPanel(){
   }catch{setError("Unable to send sign-in link.");}finally{setSaving(false);}
  }
  async function save(e:FormEvent<HTMLFormElement>){
-  e.preventDefault(); if(!status.account)return; setSaving(true);setError("");setNotice("");
+  e.preventDefault(); if(!status?.account)return; setSaving(true);setError("");setNotice("");
   const f=new FormData(e.currentTarget);
   try{
    const r=await fetch("/api/customer/account",{method:"PUT",headers:{"content-type":"application/json"},credentials:"same-origin",body:JSON.stringify({
