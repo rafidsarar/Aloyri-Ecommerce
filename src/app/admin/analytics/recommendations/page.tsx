@@ -36,12 +36,12 @@ export default async function RecommendationAnalyticsPage({
     buildAnalyticsReport(days),
     fetchCrmCatalog(),
   ]);
-  const names = new Map(
+  const names = new Map<string, string>(
     catalog.ok
-      ? catalog.body.products.map((product) => [
-          product.id,
-          product.brand + " · " + product.name,
-        ])
+      ? catalog.body.products.map(
+          (product) =>
+            [product.id, product.brand + " · " + product.name] as const,
+        )
       : [],
   );
   const rows = report.placements.filter((row) =>
