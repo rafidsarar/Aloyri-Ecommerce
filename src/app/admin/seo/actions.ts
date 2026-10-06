@@ -81,6 +81,12 @@ export async function savePageSeo(formData: FormData) {
   if (!location) redirect("/admin/seo?error=" + encodeURIComponent("Unknown SEO page."));
 
   try {
+    const file = formData.get("ogImage");
+    let uploaded: string | undefined;
+    if (file instanceof File && file.size > 0) {
+      uploaded = await uploadStorefrontMedia(file);
+    }
+
     await updateDraftStorefrontConfig((config) => {
       const current =
         location.type === "root"
@@ -106,8 +112,11 @@ export async function savePageSeo(formData: FormData) {
                 terms: "/terms",
               }[location.key];
 
-      // The file is handled in the second phase below.
-      const next = entryFromForm(formData, canonicalFallback, current.ogImagePath);
+      const existingImage =
+        formData.get("removeOgImage") === "on"
+          ? undefined
+          : uploaded || current.ogImagePath;
+      const next = entryFromForm(formData, canonicalFallback, existingImage);
       if (location.type === "root") {
         config.seo[location.key] = next;
       } else if (location.type === "category") {
@@ -117,33 +126,6 @@ export async function savePageSeo(formData: FormData) {
       }
       return config;
     });
-
-    const file = formData.get("ogImage");
-    const needsMediaChange =
-      formData.get("removeOgImage") === "on" ||
-      (file instanceof File && file.size > 0);
-
-    if (needsMediaChange) {
-      let uploaded: string | undefined;
-      if (file instanceof File && file.size > 0) {
-        uploaded = await uploadStorefrontMedia(file);
-      }
-      await updateDraftStorefrontConfig((config) => {
-        const current =
-          location.type === "root"
-            ? config.seo[location.key]
-            : location.type === "category"
-              ? config.seo.categories[location.key]
-              : config.seo.pages[location.key];
-        const next = { ...current };
-        if (uploaded) next.ogImagePath = uploaded;
-        else delete next.ogImagePath;
-        if (location.type === "root") config.seo[location.key] = next;
-        else if (location.type === "category") config.seo.categories[location.key] = next;
-        else config.seo.pages[location.key] = next;
-        return config;
-      });
-    }
   } catch (error) {
     redirect(
       "/admin/seo/pages/" +

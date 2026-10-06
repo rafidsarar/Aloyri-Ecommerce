@@ -27,6 +27,8 @@ const protectedRedirectPrefixes = [
   "/order-confirmation",
   "/track-order",
   "/return-request",
+  "/robots.txt",
+  "/sitemap.xml",
 ];
 
 export type SeoHealthIssue = {
@@ -108,7 +110,7 @@ export function buildSeoMetadata(
   const follow = forcedNoIndex ? false : effective.follow !== false;
 
   return {
-    title: effective.title,
+    title: canonical === "/" ? { absolute: effective.title || siteConfig.name } : effective.title,
     description: effective.description,
     alternates: { canonical },
     robots: { index, follow },
@@ -433,6 +435,7 @@ export function analyzeSeoHealth(
   const titleOwners = new Map<string, string[]>();
   const descriptionOwners = new Map<string, string[]>();
   for (const entry of entries) {
+    if (entry.effective.index === false) continue;
     const title = entry.effective.title?.trim().toLowerCase();
     const description = entry.effective.description?.trim().toLowerCase();
     if (title) titleOwners.set(title, [...(titleOwners.get(title) || []), entry.label]);

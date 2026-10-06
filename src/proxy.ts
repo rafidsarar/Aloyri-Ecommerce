@@ -17,6 +17,8 @@ const protectedPrefixes = [
   "/order-confirmation",
   "/track-order",
   "/return-request",
+  "/robots.txt",
+  "/sitemap.xml",
 ];
 
 function safeInternalPath(value: string) {
@@ -79,6 +81,9 @@ export async function proxy(request: NextRequest) {
   }
 
   const pathname = request.nextUrl.pathname;
+  if (/\.[A-Za-z0-9]{2,8}$/.test(pathname)) {
+    return NextResponse.next();
+  }
   if (
     protectedPrefixes.some(
       (prefix) => pathname === prefix || pathname.startsWith(prefix + "/"),
