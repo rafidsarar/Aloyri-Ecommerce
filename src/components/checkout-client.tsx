@@ -173,6 +173,9 @@ export function CheckoutClient() {
   const [promotionQuote, setPromotionQuote] = useState<PromotionQuote | null>(null);
   const [promotionLoading, setPromotionLoading] = useState(false);
   const [promotionError, setPromotionError] = useState("");
+  const [recoveryAvailable, setRecoveryAvailable] = useState(false);
+  const [recoveryConsent, setRecoveryConsent] = useState(false);
+  const [recoverySaved, setRecoverySaved] = useState(false);
   const checkoutTracked = useRef(false);
 
   const loadStoreStatus = useCallback(async () => {
@@ -241,6 +244,13 @@ export function CheckoutClient() {
 
       setHydrated(true);
       void loadStoreStatus();
+      void fetch("/api/cart-recovery/status", { cache: "no-store" })
+        .then(async (response) => {
+          if (!response.ok) return;
+          const result = (await response.json()) as { enabled?: boolean };
+          setRecoveryAvailable(result.enabled === true);
+        })
+        .catch(() => undefined);
     }, 0);
 
     return () => {
@@ -261,6 +271,51 @@ export function CheckoutClient() {
       // Checkout still works when browser storage is unavailable.
     }
   }, [draft, hydrated]);
+
+  useEffect(() => {
+    if (
+      !hydrated ||
+      !recoveryAvailable ||
+      !recoveryConsent ||
+      recoverySaved ||
+      !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(draft.email.trim()) ||
+      cartItems.length === 0
+    ) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      void fetch("/api/cart-recovery", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          consent: true,
+          email: draft.email.trim().toLowerCase(),
+          items: cartItems,
+          totalBdt: quotedTotal,
+        }),
+        signal: controller.signal,
+      })
+        .then((response) => {
+          if (response.ok) setRecoverySaved(true);
+        })
+        .catch(() => undefined);
+    }, 700);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [
+    cartItems,
+    draft.email,
+    hydrated,
+    quotedTotal,
+    recoveryAvailable,
+    recoveryConsent,
+    recoverySaved,
+  ]);
 
   const rows = useMemo(
     () =>
@@ -891,10 +946,34 @@ export function CheckoutClient() {
                   </span>
                 ) : (
                   <span id="email-help" className="mt-2 block text-xs font-normal leading-5 text-[#321f1c]/40">
-                    Reserved for transactional order updates when branded email delivery is available.
+                    Used only for email features you explicitly choose.
                   </span>
                 )}
               </label>
+
+              {recoveryAvailable ? (
+                <label className="mt-4 flex items-start gap-3 rounded-[1rem] border border-[#713a35]/10 bg-[#fffaf7] p-4 text-xs leading-5 text-[#321f1c]/55">
+                  <input
+                    type="checkbox"
+                    checked={recoveryConsent}
+                    onChange={(event) => {
+                      const checked = event.target.checked;
+                      setRecoveryConsent(checked);
+                      setRecoverySaved(false);
+                      if (checked) {
+                        trackStorefrontEvent("recovery_opt_in", {
+                          itemCount,
+                          totalBdt: quotedTotal,
+                        });
+                      }
+                    }}
+                    className="mt-0.5"
+                  />
+                  <span>
+                    Email me one secure link to this cart if I leave checkout unfinished. Live price and stock will be checked again when I return.
+                  </span>
+                </label>
+              ) : null}
             </section>
 
             <section className="rounded-[1.5rem] border border-[#713a35]/10 bg-white/60 p-5 sm:p-7">

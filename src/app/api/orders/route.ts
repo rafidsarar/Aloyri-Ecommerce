@@ -9,6 +9,7 @@ import {
 } from "@/lib/checkout";
 import { rateAllowed, requestIp } from "@/lib/request-rate-limit";
 import { recordConfirmedOrderAnalytics, type AnalyticsDevice } from "@/lib/analytics-store";
+import { cancelPendingCartRecoveries } from "@/lib/cart-recovery";
 
 export const dynamic = "force-dynamic";
 
@@ -294,6 +295,14 @@ export async function POST(request: Request) {
       });
     } catch (error) {
       console.error("Confirmed-order analytics failed", error);
+    }
+
+    if (payload.customer.email) {
+      try {
+        await cancelPendingCartRecoveries(payload.customer.email);
+      } catch (error) {
+        console.error("Cart recovery cancellation failed", error);
+      }
     }
   }
 

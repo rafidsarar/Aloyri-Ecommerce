@@ -154,6 +154,7 @@ export default async function AnalyticsDashboard({
           ["Performance", "Real-user LCP, INP, CLS and TTFB.", "/admin/analytics/performance"],
           ["Funnel", "Visit → product → cart → checkout → order drop-off.", "/admin/analytics/funnel"],
           ["Checkout", "Cart behavior, checkout field friction, submit failures and order conversion.", "/admin/analytics/checkout"],
+          ["Cart recovery", "Readiness and delivery status for consent-only abandoned-cart recovery.", "/admin/analytics/recovery"],
           ["UTM builder", "Create clean trackable campaign links.", "/admin/analytics/utm"],
           ["Privacy", "Understand what analytics stores and deliberately excludes.", "/admin/analytics/privacy"],
         ].map(([title, copy, href]) => (

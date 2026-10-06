@@ -24,8 +24,49 @@ export default function CartPage() {
 
   useEffect(() => {
     const initialize = window.setTimeout(() => {
-      setItems(readCart());
+      const existing = readCart();
+      setItems(existing);
       setHydrated(true);
+
+      const recoveryToken = new URL(window.location.href).searchParams.get("recovery");
+      if (recoveryToken && /^[A-Za-z0-9_-]{40,160}$/.test(recoveryToken)) {
+        void fetch(
+          "/api/cart-recovery/restore?token=" + encodeURIComponent(recoveryToken),
+          { cache: "no-store", credentials: "omit" },
+        )
+          .then(async (response) => {
+            if (!response.ok) return null;
+            return (await response.json()) as { items?: CartItem[] };
+          })
+          .then((result) => {
+            if (!result?.items?.length) return;
+            const merged = new Map(existing.map((item) => [item.productId, item.qty]));
+            for (const item of result.items) {
+              if (
+                item &&
+                typeof item.productId === "string" &&
+                Number.isInteger(item.qty) &&
+                item.qty > 0
+              ) {
+                merged.set(
+                  item.productId,
+                  Math.max(merged.get(item.productId) || 0, item.qty),
+                );
+              }
+            }
+            const restored = [...merged.entries()].map(([productId, qty]) => ({
+              productId,
+              qty,
+            }));
+            setItems(restored);
+            writeCart(restored);
+            trackStorefrontEvent("recovery_restore", {
+              itemCount: restored.reduce((sum, item) => sum + item.qty, 0),
+            });
+            window.history.replaceState({}, "", "/cart");
+          })
+          .catch(() => undefined);
+      }
     }, 0);
 
     return () => window.clearTimeout(initialize);

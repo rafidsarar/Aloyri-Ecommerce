@@ -28,6 +28,7 @@ export type AnalyticsEventName =
   | "wishlist_move_to_cart"
   | "customer_hub_view"
   | "recovery_opt_in"
+  | "recovery_restore"
   | "order_created"
   | "order_tracking_success"
   | "return_request_submitted"
