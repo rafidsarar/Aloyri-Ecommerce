@@ -19,6 +19,15 @@ const protectedPrefixes = [
   "/return-request",
 ];
 
+function safeInternalPath(value: string) {
+  return (
+    value.startsWith("/") &&
+    !value.startsWith("//") &&
+    !value.includes("\\") &&
+    !/[\r\n]/.test(value)
+  );
+}
+
 function storagePath(pathname: string) {
   return process.env.VERCEL_ENV === "production"
     ? pathname
@@ -46,7 +55,9 @@ async function publishedRedirects() {
               row &&
                 row.active &&
                 typeof row.from === "string" &&
-                typeof row.to === "string",
+                typeof row.to === "string" &&
+                safeInternalPath(row.from) &&
+                safeInternalPath(row.to),
             ),
         )
       : [];

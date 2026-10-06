@@ -5,6 +5,7 @@ import {
   effectiveSeoEntry,
   productSeoFallback,
   publicPagePaths,
+  safeInternalPath,
 } from "@/lib/seo-manager";
 import { absoluteUrl } from "@/lib/site";
 import {
@@ -74,7 +75,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes = staticEntries
     .filter(({ entry }) => entry.index !== false)
     .map(({ path, entry, frequency, priority }) => ({
-      url: absoluteUrl(entry.canonical || path),
+      url: absoluteUrl(safeInternalPath(entry.canonical, path)),
       lastModified,
       changeFrequency: frequency,
       priority,
