@@ -39,3 +39,5 @@ Aloyri Ecommerce Admin now owns storefront merchandising while Aloyri CRM remain
 - Version History and restore automatically include merchandising state
 - Health checks detect missing/inactive/out-of-stock CRM targets, bad schedules, duplicate collection slugs and broken homepage references
 - Price, sale price, promotion eligibility, stock and order workflow cannot be edited by this manager
+
+Certification note: the storefront shop view applies published merchandising priority and out-of-stock rules after live catalog refresh.
