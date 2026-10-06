@@ -344,6 +344,30 @@ async function readBlobJson(pathname: string) {
   }
 }
 
+function utcDayKeys(from: Date, to: Date) {
+  const keys: string[] = [];
+  const cursor = new Date(
+    Date.UTC(
+      from.getUTCFullYear(),
+      from.getUTCMonth(),
+      from.getUTCDate(),
+    ),
+  );
+  const last = new Date(
+    Date.UTC(
+      to.getUTCFullYear(),
+      to.getUTCMonth(),
+      to.getUTCDate(),
+    ),
+  );
+
+  while (cursor <= last) {
+    keys.push(cursor.toISOString().slice(0, 10));
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return keys;
+}
+
 export async function readAnalyticsEvents(
   from: Date,
   to = new Date(),
@@ -352,33 +376,39 @@ export async function readAnalyticsEvents(
   if (!blobConfigured()) return [] as AnalyticsEventRecord[];
 
   const records: AnalyticsEventRecord[] = [];
-  let cursor: string | undefined;
+  const days = utcDayKeys(from, to);
 
-  do {
-    const result = await list({
-      prefix: EVENTS_PREFIX,
-      limit: Math.min(1000, Math.max(1, limit - records.length)),
-      ...(cursor ? { cursor } : {}),
-    });
-    const page = await Promise.all(
-      result.blobs.map((blob) => readBlobJson(blob.pathname)),
-    );
+  for (const day of days) {
+    let cursor: string | undefined;
 
-    for (const event of page) {
-      if (!event) continue;
-      const timestamp = Date.parse(event.timestamp);
-      if (
-        Number.isFinite(timestamp) &&
-        timestamp >= from.getTime() &&
-        timestamp <= to.getTime()
-      ) {
-        records.push(event);
-        if (records.length >= limit) break;
+    do {
+      const result = await list({
+        prefix: EVENTS_PREFIX + day + "/",
+        limit: Math.min(1000, Math.max(1, limit - records.length)),
+        ...(cursor ? { cursor } : {}),
+      });
+      const page = await Promise.all(
+        result.blobs.map((blob) => readBlobJson(blob.pathname)),
+      );
+
+      for (const event of page) {
+        if (!event) continue;
+        const timestamp = Date.parse(event.timestamp);
+        if (
+          Number.isFinite(timestamp) &&
+          timestamp >= from.getTime() &&
+          timestamp < to.getTime()
+        ) {
+          records.push(event);
+          if (records.length >= limit) break;
+        }
       }
-    }
 
-    cursor = result.hasMore ? result.cursor : undefined;
-  } while (cursor && records.length < limit);
+      cursor = result.hasMore ? result.cursor : undefined;
+    } while (cursor && records.length < limit);
+
+    if (records.length >= limit) break;
+  }
 
   return records.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
 }
