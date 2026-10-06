@@ -30,21 +30,29 @@ function matchesPriceBand(price: number, band: PriceFilter) {
 export function ShopClient({
   initialCategory,
   initialQuery,
+  initialBrand,
+  initialStock = "all",
+  initialPriceBand = "all",
+  initialSort = "recommended",
   lockCategory = false,
   merchandisingSortMode = "priority",
 }: {
   initialCategory?: string;
   initialQuery?: string;
+  initialBrand?: string;
+  initialStock?: StockFilter;
+  initialPriceBand?: PriceFilter;
+  initialSort?: SortKey;
   lockCategory?: boolean;
   merchandisingSortMode?: "priority" | "featured";
 }) {
   const { products, synced, refreshing, error, refresh } = useCatalog();
   const [query, setQuery] = useState(initialQuery || "");
   const [category, setCategory] = useState(initialCategory || "All");
-  const [brand, setBrand] = useState("All");
-  const [stock, setStock] = useState<StockFilter>("all");
-  const [priceBand, setPriceBand] = useState<PriceFilter>("all");
-  const [sort, setSort] = useState<SortKey>("recommended");
+  const [brand, setBrand] = useState(initialBrand || "All");
+  const [stock, setStock] = useState<StockFilter>(initialStock);
+  const [priceBand, setPriceBand] = useState<PriceFilter>(initialPriceBand);
+  const [sort, setSort] = useState<SortKey>(initialSort);
   const [searchFocused, setSearchFocused] = useState(false);
   const lastTrackedSearch = useRef("");
 
@@ -56,6 +64,19 @@ export function ShopClient({
     () => [...new Set(products.map((product) => product.brand))].sort(),
     [products],
   );
+  const categoryCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const product of products) {
+      if (
+        product.merchandisingOutOfStockMode === "hide" &&
+        (product.availableStock ?? 0) <= 0
+      ) {
+        continue;
+      }
+      counts.set(product.category, (counts.get(product.category) || 0) + 1);
+    }
+    return counts;
+  }, [products]);
 
   const suggestions = useMemo(
     () =>
@@ -172,6 +193,29 @@ export function ShopClient({
     Number(stock !== "all") +
     Number(priceBand !== "all") +
     Number(!lockCategory && category !== "All");
+
+  useEffect(() => {
+    if (lockCategory || typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const update = (key: string, value: string, fallback: string) => {
+      if (!value || value === fallback) params.delete(key);
+      else params.set(key, value);
+    };
+
+    update("q", query.trim(), "");
+    update("category", category, "All");
+    update("brand", brand, "All");
+    update("stock", stock, "all");
+    update("price", priceBand, "all");
+    update("sort", sort, "recommended");
+
+    const next = params.toString();
+    const nextUrl = window.location.pathname + (next ? "?" + next : "");
+    const currentUrl = window.location.pathname + window.location.search;
+    if (nextUrl !== currentUrl) {
+      window.history.replaceState(window.history.state, "", nextUrl);
+    }
+  }, [query, category, brand, stock, priceBand, sort, lockCategory]);
 
   useEffect(() => {
     if (!synced) return;
@@ -322,7 +366,19 @@ export function ShopClient({
                       : "border-[#713a35]/12 bg-white/65 text-[#321f1c]/65 hover:border-[#713a35]/30"
                   }`}
                 >
-                  {item === "All" ? "All skincare" : item}
+                  <span>{item === "All" ? "All skincare" : item}</span>
+                  <span
+                    className={`ml-1.5 text-[10px] ${
+                      active ? "text-white/70" : "text-[#321f1c]/35"
+                    }`}
+                  >
+                    {item === "All"
+                      ? [...categoryCounts.values()].reduce(
+                          (sum, count) => sum + count,
+                          0,
+                        )
+                      : categoryCounts.get(item) || 0}
+                  </span>
                 </button>
               );
             })
