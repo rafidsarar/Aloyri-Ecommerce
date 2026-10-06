@@ -15,12 +15,12 @@ import {
 
 export function SavedProductsClient() {
   const { products, synced, error, refresh } = useCatalog();
-  const snapshot = useSyncExternalStore(
+  useSyncExternalStore(
     subscribeProductPreferences,
     productPreferencesSnapshot,
     productPreferencesServerSnapshot,
   );
-  const ids = useMemo(() => readSavedProductIds(), [snapshot]);
+  const ids = readSavedProductIds();
 
   const saved = useMemo(() => {
     const byId = new Map(products.map((product) => [product.id, product]));
