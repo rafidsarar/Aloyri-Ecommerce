@@ -34,6 +34,9 @@ export function ShopClient({
   initialStock = "all",
   initialPriceBand = "all",
   initialSort = "recommended",
+  searchSynonymGroups = [],
+  categoryOrder = [],
+  popularSearches = [],
   lockCategory = false,
   merchandisingSortMode = "priority",
 }: {
@@ -43,6 +46,9 @@ export function ShopClient({
   initialStock?: StockFilter;
   initialPriceBand?: PriceFilter;
   initialSort?: SortKey;
+  searchSynonymGroups?: string[][];
+  categoryOrder?: string[];
+  popularSearches?: string[];
   lockCategory?: boolean;
   merchandisingSortMode?: "priority" | "featured";
 }) {
@@ -56,10 +62,17 @@ export function ShopClient({
   const [searchFocused, setSearchFocused] = useState(false);
   const lastTrackedSearch = useRef("");
 
-  const categories = useMemo(
-    () => [...new Set(products.map((product) => product.category))].sort(),
-    [products],
-  );
+  const categories = useMemo(() => {
+    const order = new Map(
+      categoryOrder.map((item, index) => [item.toLowerCase(), index]),
+    );
+    return [...new Set(products.map((product) => product.category))].sort(
+      (a, b) =>
+        (order.get(a.toLowerCase()) ?? 10_000) -
+          (order.get(b.toLowerCase()) ?? 10_000) ||
+        a.localeCompare(b),
+    );
+  }, [products, categoryOrder]);
   const brands = useMemo(
     () => [...new Set(products.map((product) => product.brand))].sort(),
     [products],
@@ -91,8 +104,9 @@ export function ShopClient({
         ),
         query,
         5,
+        searchSynonymGroups,
       ),
-    [products, category, query],
+    [products, category, query, searchSynonymGroups],
   );
 
   const filtered = useMemo(() => {
@@ -118,7 +132,9 @@ export function ShopClient({
       })
       .map((product) => ({
         product,
-        searchScore: hasQuery ? productSearchScore(product, query) : 0,
+        searchScore: hasQuery
+          ? productSearchScore(product, query, searchSynonymGroups)
+          : 0,
       }))
       .filter((row) => !hasQuery || row.searchScore >= 0);
 
@@ -186,6 +202,7 @@ export function ShopClient({
     query,
     sort,
     merchandisingSortMode,
+    searchSynonymGroups,
   ]);
 
   const activeFilterCount =
@@ -349,6 +366,27 @@ export function ShopClient({
           </select>
         </label>
       </div>
+
+      {!query.trim() && popularSearches.length > 0 ? (
+        <div className="flex flex-wrap items-center gap-2 border-b border-[#713a35]/8 py-4">
+          <span className="mr-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#713a35]/42">
+            Popular searches
+          </span>
+          {popularSearches.slice(0, 8).map((term) => (
+            <button
+              key={term}
+              type="button"
+              onClick={() => {
+                setQuery(term);
+                setSearchFocused(false);
+              }}
+              className="rounded-full border border-[#713a35]/12 bg-white/65 px-3 py-1.5 text-xs text-[#321f1c]/62 transition hover:border-[#713a35]/30"
+            >
+              {term}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap items-center gap-2 py-6">
         {!lockCategory
