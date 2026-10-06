@@ -20,7 +20,6 @@ export function ProductAlertSignup({
   const [status, setStatus] = useState<AlertStatus | null>(null);
   const [backInStock, setBackInStock] = useState(outOfStock);
   const [priceDrop, setPriceDrop] = useState(!outOfStock);
-  const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -36,13 +35,28 @@ export function ProductAlertSignup({
         if (!response.ok) return;
         const body = (await response.json()) as AlertStatus;
         setStatus(body);
-        if (body.email) setEmail(body.email);
       })
       .catch(() => undefined);
     return () => controller.abort();
   }, []);
 
   if (!status?.enabled) return null;
+  if (!status.authenticated) {
+    return (
+      <div className="mt-4 rounded-[1.1rem] border border-[#713a35]/10 bg-[#fffaf7] p-4">
+        <p className="text-xs font-semibold">Email product alerts</p>
+        <p className="mt-1 text-[11px] leading-5 text-[#321f1c]/45">
+          Sign in securely to create back-in-stock or price-drop alerts tied to your verified account email.
+        </p>
+        <a
+          href="/account"
+          className="mt-3 inline-flex rounded-full border border-[#713a35]/14 px-4 py-2.5 text-xs font-semibold text-[#713a35]"
+        >
+          Sign in to create alerts
+        </a>
+      </div>
+    );
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -65,7 +79,6 @@ export function ProductAlertSignup({
         body: JSON.stringify({
           productId,
           kinds,
-          ...(status.authenticated ? {} : { email }),
         }),
       });
       const body = (await response.json()) as {
@@ -113,24 +126,9 @@ export function ProductAlertSignup({
           Price drop
         </label>
       </div>
-      {!status.authenticated ? (
-        <label className="mt-3 block text-xs font-medium">
-          Email address
-          <input
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            type="email"
-            autoComplete="email"
-            required
-            placeholder="you@example.com"
-            className="mt-2 h-11 w-full rounded-xl border border-[#713a35]/12 bg-white px-3 text-sm"
-          />
-        </label>
-      ) : (
-        <p className="mt-3 text-xs text-[#321f1c]/50">
-          Alert will be sent to your signed-in Aloyri account email.
-        </p>
-      )}
+      <p className="mt-3 text-xs text-[#321f1c]/50">
+        Alert will be sent to your signed-in Aloyri account email.
+      </p>
       <button
         disabled={saving}
         className="mt-3 rounded-full bg-[#713a35] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50"

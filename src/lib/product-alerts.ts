@@ -137,7 +137,6 @@ export async function listProductAlerts(limit = 5000) {
 export async function createProductAlert(input: {
   productId: string;
   kinds: unknown;
-  email?: string;
 }) {
   if (!productAlertsReadiness().enabled) {
     throw new Error("ALERTS_NOT_READY");
@@ -150,7 +149,8 @@ export async function createProductAlert(input: {
   if (!product) throw new Error("PRODUCT_NOT_FOUND");
 
   const session = await currentCustomerSession();
-  const email = cleanEmail(input.email || session?.account.email || "");
+  if (!session) throw new Error("SIGN_IN_REQUIRED");
+  const email = cleanEmail(session.account.email);
   if (!email) throw new Error("INVALID_EMAIL");
   const kinds = safeKinds(input.kinds, product);
   if (!kinds.length) throw new Error("NO_ALERT_KIND");

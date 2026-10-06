@@ -32,7 +32,6 @@ export async function POST(request: Request) {
     const body = JSON.parse(raw) as {
       productId?: unknown;
       kinds?: unknown;
-      email?: unknown;
     };
     if (
       typeof body.productId !== "string" ||
@@ -44,7 +43,6 @@ export async function POST(request: Request) {
     const record = await createProductAlert({
       productId: body.productId,
       kinds: body.kinds,
-      ...(typeof body.email === "string" ? { email: body.email } : {}),
     });
     return response(
       {
@@ -66,7 +64,8 @@ export async function POST(request: Request) {
         503,
       ],
       PRODUCT_NOT_FOUND: ["This product is not available for alerts.", 404],
-      INVALID_EMAIL: ["Enter a valid email address.", 400],
+      SIGN_IN_REQUIRED: ["Sign in securely before creating a product alert.", 401],
+      INVALID_EMAIL: ["Your account email is unavailable.", 400],
       NO_ALERT_KIND: ["Choose an available alert type.", 400],
     };
     const [message, status] = messages[code] || [
