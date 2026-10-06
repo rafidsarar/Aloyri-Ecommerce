@@ -9,20 +9,25 @@ type Status={enabled:boolean;authenticated:boolean;account?:Account};
 export function CustomerAuthPanel(){
  const [status,setStatus]=useState<Status|null>(null);
  const [notice,setNotice]=useState(""); const [error,setError]=useState(""); const [saving,setSaving]=useState(false);
- async function refresh(){
-  try{
-   const r=await fetch("/api/customer-auth/status",{cache:"no-store",credentials:"same-origin"});
-   if(!r.ok)return; const b=await r.json() as Status; setStatus(b);
-   if(b.authenticated&&b.account){
-    const local=readSavedProductIds(); const merged=[...new Set([...b.account.savedProductIds,...local])].slice(0,100);
-    if(JSON.stringify(merged)!==JSON.stringify(local)) writeSavedProductIds(merged);
-    if(JSON.stringify(merged)!==JSON.stringify(b.account.savedProductIds)){
-      void fetch("/api/customer/account",{method:"PUT",headers:{"content-type":"application/json"},credentials:"same-origin",body:JSON.stringify({savedProductIds:merged})});
+ useEffect(()=>{
+  const controller=new AbortController();
+  void fetch("/api/customer-auth/status",{cache:"no-store",credentials:"same-origin",signal:controller.signal})
+   .then(async(r)=>r.ok?(await r.json() as Status):null)
+   .then((b)=>{
+    if(!b||controller.signal.aborted)return;
+    setStatus(b);
+    if(b.authenticated&&b.account){
+      const local=readSavedProductIds();
+      const merged=[...new Set([...b.account.savedProductIds,...local])].slice(0,100);
+      if(JSON.stringify(merged)!==JSON.stringify(local)) writeSavedProductIds(merged);
+      if(JSON.stringify(merged)!==JSON.stringify(b.account.savedProductIds)){
+        void fetch("/api/customer/account",{method:"PUT",headers:{"content-type":"application/json"},credentials:"same-origin",body:JSON.stringify({savedProductIds:merged})});
+      }
     }
-   }
-  }catch{}
- }
- useEffect(()=>{void refresh();},[]);
+   })
+   .catch(()=>undefined);
+  return()=>controller.abort();
+ },[]);
  if(!status?.enabled)return null;
 
  async function requestLink(e:FormEvent<HTMLFormElement>){
