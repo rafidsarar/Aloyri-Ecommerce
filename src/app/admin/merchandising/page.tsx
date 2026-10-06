@@ -82,7 +82,7 @@ export default async function MerchandisingOverviewPage() {
         </AdminCard>
       </div>
 
-      <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         {[
           [
             "Collections",
@@ -96,8 +96,13 @@ export default async function MerchandisingOverviewPage() {
           ],
           [
             "Product merchandising",
-            "Badges, priority and per-product out-of-stock behavior.",
+            "Badges, browse priority, search ranking and per-product out-of-stock behavior.",
             "/admin/merchandising/products",
+          ],
+          [
+            "Search & discovery",
+            "Synonyms, category order, popular searches and discovery tuning.",
+            "/admin/merchandising/discovery",
           ],
           [
             "Homepage",
