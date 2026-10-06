@@ -5,6 +5,7 @@ import { ProductCard } from "@/components/product-card";
 import { useCatalog } from "@/components/catalog-provider";
 import { salePriceFor } from "@/lib/promotions";
 import { safeSearchTerm, trackStorefrontEvent } from "@/lib/analytics";
+import { productSearchScore } from "@/lib/storefront-search";
 
 type SortKey = "featured" | "price-asc" | "price-desc" | "name";
 
@@ -30,21 +31,11 @@ export function ShopClient({
     [products],
   );
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      const term = safeSearchTerm(query);
-      if (!term || term === lastTrackedSearch.current) return;
-      lastTrackedSearch.current = term;
-      trackStorefrontEvent("search", { searchTerm: term });
-    }, 700);
-
-    return () => window.clearTimeout(timer);
-  }, [query]);
-
   const filtered = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
+    const hasQuery = query.trim().length > 0;
 
-    const list = products.filter((product) => {
+    const list = products
+      .filter((product) => {
       if (
         product.merchandisingOutOfStockMode === "hide" &&
         (product.availableStock ?? 0) <= 0
@@ -52,48 +43,78 @@ export function ShopClient({
         return false;
       }
 
-      const matchesCategory =
-        category === "All" || product.category === category;
-      const matchesSearch =
-        normalizedQuery.length === 0 ||
-        [product.name, product.brand, product.category, product.size]
-          .join(" ")
-          .toLowerCase()
-          .includes(normalizedQuery);
+        const matchesCategory =
+          category === "All" || product.category === category;
+        return matchesCategory;
+      })
+      .map((product) => ({
+        product,
+        searchScore: hasQuery ? productSearchScore(product, query) : 0,
+      }))
+      .filter((row) => !hasQuery || row.searchScore >= 0);
 
-      return matchesCategory && matchesSearch;
-    });
+    return [...list]
+      .sort((a, b) => {
+        if (sort === "price-asc") {
+          return salePriceFor(a.product) - salePriceFor(b.product);
+        }
+        if (sort === "price-desc") {
+          return salePriceFor(b.product) - salePriceFor(a.product);
+        }
+        if (sort === "name") {
+          return a.product.name.localeCompare(b.product.name);
+        }
 
-    return [...list].sort((a, b) => {
-      if (sort === "price-asc") return salePriceFor(a) - salePriceFor(b);
-      if (sort === "price-desc") return salePriceFor(b) - salePriceFor(a);
-      if (sort === "name") return a.name.localeCompare(b.name);
+        if (hasQuery && a.searchScore !== b.searchScore) {
+          return b.searchScore - a.searchScore;
+        }
 
-      const outOfStockOrder =
-        Number(
-          a.merchandisingOutOfStockMode === "push-down" &&
-            (a.availableStock ?? 0) <= 0,
-        ) -
-        Number(
-          b.merchandisingOutOfStockMode === "push-down" &&
-            (b.availableStock ?? 0) <= 0,
+        const outOfStockOrder =
+          Number(
+            a.product.merchandisingOutOfStockMode === "push-down" &&
+              (a.product.availableStock ?? 0) <= 0,
+          ) -
+          Number(
+            b.product.merchandisingOutOfStockMode === "push-down" &&
+              (b.product.availableStock ?? 0) <= 0,
+          );
+        if (outOfStockOrder !== 0) return outOfStockOrder;
+
+        if (merchandisingSortMode === "featured") {
+          const featured =
+            Number(Boolean(b.product.featured)) -
+            Number(Boolean(a.product.featured));
+          if (featured !== 0) return featured;
+        }
+
+        const priority =
+          (b.product.merchandisingPriority || 0) -
+          (a.product.merchandisingPriority || 0);
+        if (priority !== 0) return priority;
+
+        return (
+          Number(Boolean(b.product.featured)) -
+          Number(Boolean(a.product.featured))
         );
-      if (outOfStockOrder !== 0) return outOfStockOrder;
-
-      if (merchandisingSortMode === "featured") {
-        const featured =
-          Number(Boolean(b.featured)) - Number(Boolean(a.featured));
-        if (featured !== 0) return featured;
-      }
-
-      const priority =
-        (b.merchandisingPriority || 0) -
-        (a.merchandisingPriority || 0);
-      if (priority !== 0) return priority;
-
-      return Number(Boolean(b.featured)) - Number(Boolean(a.featured));
-    });
+      })
+      .map((row) => row.product);
   }, [products, category, query, sort, merchandisingSortMode]);
+
+  useEffect(() => {
+    if (!synced) return;
+
+    const timer = window.setTimeout(() => {
+      const term = safeSearchTerm(query);
+      if (!term || term === lastTrackedSearch.current) return;
+      lastTrackedSearch.current = term;
+      trackStorefrontEvent("search", {
+        searchTerm: term,
+        resultCount: filtered.length,
+      });
+    }, 700);
+
+    return () => window.clearTimeout(timer);
+  }, [query, filtered.length, synced]);
 
   if (!synced) {
     return (
