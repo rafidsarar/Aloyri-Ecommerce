@@ -8,6 +8,11 @@ import { ArrowIcon } from "@/components/icons";
 import { ProductMedia } from "@/components/product-media";
 import { ProductCard } from "@/components/product-card";
 import {
+  ProductPreferenceButtons,
+  RecentlyViewedProducts,
+} from "@/components/product-conversion-tools";
+import { AnalyticsViewTracker } from "@/components/storefront-analytics-tracker";
+import {
   formatPrice,
   productStockLabel,
   type Product,
@@ -15,13 +20,20 @@ import {
 import { getVerifiedProductContent } from "@/lib/product-verification";
 import { hasSalePrice, salePriceFor } from "@/lib/promotions";
 import { trackStorefrontEvent } from "@/lib/analytics";
+import {
+  buildProductRecommendations,
+  recommendationPlacementId,
+  type RecommendationConfig,
+} from "@/lib/recommendations";
 
 export function LiveProductPage({
   slug,
   fallback,
+  recommendationConfig,
 }: {
   slug: string;
   fallback: Product | null;
+  recommendationConfig: RecommendationConfig;
 }) {
   const { products, synced, error, refresh } = useCatalog();
   const product = products.find(
@@ -85,12 +97,15 @@ export function LiveProductPage({
   const directions = verified?.directions ?? product.howToUse;
   const careNotes = verified?.warnings ?? product.careNotes;
 
-  const related = products
-    .filter(
-      (candidate) =>
-        candidate.id !== product.id && candidate.category === product.category,
-    )
-    .slice(0, 3);
+  const recommendations = buildProductRecommendations(
+    product,
+    products,
+    recommendationConfig,
+  );
+  const related = recommendations.related;
+  const routine = recommendations.routine;
+  const relatedPlacementId = recommendationPlacementId("related", product.id);
+  const routinePlacementId = recommendationPlacementId("routine", product.id);
 
   return (
     <main className="shell py-8 md:py-12">
@@ -218,6 +233,7 @@ export function LiveProductPage({
 
           <div className="mt-7">
             <AddToCart productId={product.id} />
+            <ProductPreferenceButtons productId={product.id} />
             <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[10px] uppercase tracking-[0.14em] text-[#321f1c]/38">
               <span>Live price</span>
               <span>Live availability</span>
@@ -405,14 +421,69 @@ export function LiveProductPage({
         </Link>
       </section>
 
-      {related.length > 0 ? (
+
+      {routine.length > 0 ? (
         <section className="mt-20 border-t border-[#713a35]/10 pt-12 md:mt-24">
-          <div className="mb-8 flex items-end justify-between gap-5">
+          <AnalyticsViewTracker
+            event="merchandising_impression"
+            properties={{
+              placementId: routinePlacementId,
+              placementKind: "recommendation-routine",
+            }}
+            context={{
+              placementId: routinePlacementId,
+              placementKind: "recommendation-routine",
+            }}
+          />
+          <div className="mb-8 flex flex-wrap items-end justify-between gap-5">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#713a35]/48">
-                Keep exploring
+                Complete the routine
               </p>
-              <h2 className="display mt-2 text-4xl">More {product.category.toLowerCase()}.</h2>
+              <h2 className="display mt-2 text-4xl">Build the next step.</h2>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#321f1c]/50">
+                Complementary skincare selected from your published recommendation rules and current live availability.
+              </p>
+            </div>
+            <Link href="/shop" className="text-sm font-semibold text-[#713a35]">
+              Shop all
+            </Link>
+          </div>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {routine.map((candidate) => (
+              <ProductCard
+                key={candidate.id}
+                product={candidate}
+                placementId={routinePlacementId}
+                placementKind="recommendation-routine"
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {related.length > 0 ? (
+        <section className="mt-20 border-t border-[#713a35]/10 pt-12 md:mt-24">
+          <AnalyticsViewTracker
+            event="merchandising_impression"
+            properties={{
+              placementId: relatedPlacementId,
+              placementKind: "recommendation-related",
+            }}
+            context={{
+              placementId: relatedPlacementId,
+              placementKind: "recommendation-related",
+            }}
+          />
+          <div className="mb-8 flex flex-wrap items-end justify-between gap-5">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#713a35]/48">
+                You may also like
+              </p>
+              <h2 className="display mt-2 text-4xl">Relevant alternatives.</h2>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#321f1c]/50">
+                Related products are ordered by your website merchandising rules, while CRM remains the source of live price and stock.
+              </p>
             </div>
             <Link href="/shop" className="text-sm font-semibold text-[#713a35]">
               Shop all
@@ -420,11 +491,31 @@ export function LiveProductPage({
           </div>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {related.map((candidate) => (
-              <ProductCard key={candidate.id} product={candidate} />
+              <ProductCard
+                key={candidate.id}
+                product={candidate}
+                placementId={relatedPlacementId}
+                placementKind="recommendation-related"
+              />
             ))}
           </div>
         </section>
       ) : null}
+
+      <RecentlyViewedProducts currentProductId={product.id} />
+
+      <div className="h-24 lg:hidden" aria-hidden="true" />
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#713a35]/10 bg-[#fffaf7]/95 px-3 pt-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] shadow-[0_-14px_40px_rgba(50,31,28,.09)] backdrop-blur lg:hidden">
+        <div className="mx-auto grid max-w-xl grid-cols-[1fr_160px] items-center gap-3">
+          <div className="min-w-0">
+            <p className="truncate text-xs font-semibold">{product.name}</p>
+            <p className="mt-0.5 text-xs text-[#713a35]">
+              {formatPrice(salePrice)}
+            </p>
+          </div>
+          <AddToCart productId={product.id} compact />
+        </div>
+      </div>
     </main>
   );
 }
