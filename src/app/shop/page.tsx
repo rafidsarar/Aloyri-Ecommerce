@@ -77,6 +77,9 @@ export default async function ShopPage({
                 | "name")
             : "recommended"
         }
+        searchSynonymGroups={config.merchandising.discovery.synonymGroups}
+        categoryOrder={config.merchandising.discovery.categoryOrder}
+        popularSearches={config.merchandising.discovery.popularSearches}
         merchandisingSortMode={config.merchandising.shopSortMode}
       />
     </main>
