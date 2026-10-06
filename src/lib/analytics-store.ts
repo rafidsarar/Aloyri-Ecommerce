@@ -127,6 +127,10 @@ export type AnalyticsReport = {
     sessions: number;
     productClicks: number;
     orders: number;
+    resultSamples: number;
+    averageResults: number;
+    zeroResultSearches: number;
+    zeroResultRate: number;
     conversionRate: number;
   }>;
   sources: Array<{
@@ -762,6 +766,9 @@ function searchRows(events: AnalyticsEventRecord[]) {
       sessions: Set<string>;
       productClicks: number;
       orders: number;
+      resultSamples: number;
+      resultTotal: number;
+      zeroResultSearches: number;
     }
   >();
 
@@ -774,10 +781,20 @@ function searchRows(events: AnalyticsEventRecord[]) {
         sessions: new Set(),
         productClicks: 0,
         orders: 0,
+        resultSamples: 0,
+        resultTotal: 0,
+        zeroResultSearches: 0,
       };
       map.set(event.searchTerm, row);
     }
-    if (event.event === "search") row.searches += 1;
+    if (event.event === "search") {
+      row.searches += 1;
+      if (typeof event.resultCount === "number") {
+        row.resultSamples += 1;
+        row.resultTotal += event.resultCount;
+        if (event.resultCount === 0) row.zeroResultSearches += 1;
+      }
+    }
     if (
       event.event === "product_click" ||
       event.event === "collection_product_click"
@@ -795,6 +812,12 @@ function searchRows(events: AnalyticsEventRecord[]) {
       sessions: row.sessions.size,
       productClicks: row.productClicks,
       orders: row.orders,
+      resultSamples: row.resultSamples,
+      averageResults: row.resultSamples
+        ? Math.round((row.resultTotal / row.resultSamples) * 10) / 10
+        : 0,
+      zeroResultSearches: row.zeroResultSearches,
+      zeroResultRate: pct(row.zeroResultSearches, row.resultSamples),
       conversionRate: pct(row.orders, row.sessions.size),
     }))
     .sort((a, b) => b.searches - a.searches)
@@ -1010,16 +1033,20 @@ function recommendations(
   }
 
   for (const search of report.searches.slice(0, 20)) {
-    if (search.searches >= 5 && search.productClicks === 0) {
+    if (search.resultSamples >= 3 && search.zeroResultSearches > 0) {
       output.push({
         kind: "zero-result-search",
-        title: "Search demand without product engagement",
+        title: "Customers are reaching zero search results",
         detail:
           "“" +
           search.term +
-          "” was searched " +
-          search.searches +
-          " times with no product clicks.",
+          "” returned zero products " +
+          search.zeroResultSearches +
+          " of " +
+          search.resultSamples +
+          " measured searches (" +
+          search.zeroResultRate +
+          "%).",
         href: "/admin/analytics/search",
       });
     }
