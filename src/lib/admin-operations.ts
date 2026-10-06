@@ -7,6 +7,7 @@ import {
   type PublicAdminAccount,
 } from "@/lib/admin-auth";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
+import { listRuntimeErrors } from "@/lib/runtime-error-store";
 import {
   getPublishingStatus,
   listAdminAuditEvents,
@@ -76,14 +77,21 @@ export async function runOperationalHealth(
 ): Promise<OperationalHealthSnapshot> {
   const checks: OperationalHealthCheck[] = [];
 
-  const [catalog, staffResult, publishingResult, analyticsResult, auditResult] =
-    await Promise.allSettled([
-      fetchCrmCatalog(),
-      listAdminAccounts(),
-      getPublishingStatus(),
-      buildAnalyticsReport(1),
-      listAdminAuditEvents(50),
-    ]);
+  const [
+    catalog,
+    staffResult,
+    publishingResult,
+    analyticsResult,
+    auditResult,
+    runtimeErrorsResult,
+  ] = await Promise.allSettled([
+    fetchCrmCatalog(),
+    listAdminAccounts(),
+    getPublishingStatus(),
+    buildAnalyticsReport(1),
+    listAdminAuditEvents(50),
+    listRuntimeErrors(30),
+  ]);
 
   if (catalog.status === "fulfilled" && catalog.value.ok) {
     checks.push({
@@ -211,6 +219,24 @@ export async function runOperationalHealth(
       ? recentFailures +
         " recent audit event(s) contain failure/unavailable signals."
       : "No failure/unavailable signals in the latest private audit events.",
+  });
+
+  const runtimeErrors =
+    runtimeErrorsResult.status === "fulfilled"
+      ? runtimeErrorsResult.value
+      : [];
+  const last24Hours = Date.now() - 24 * 60 * 60 * 1000;
+  const recentRuntimeErrors = runtimeErrors.filter(
+    (event) => Date.parse(event.createdAt) >= last24Hours,
+  );
+  checks.push({
+    id: "runtime-errors",
+    label: "Recent captured runtime errors",
+    state: recentRuntimeErrors.length ? "warning" : "healthy",
+    detail: recentRuntimeErrors.length
+      ? recentRuntimeErrors.length +
+        " caught application error(s) recorded in the last 24 hours."
+      : "No caught CRM/order/analytics runtime errors recorded in the last 24 hours.",
   });
 
   const environment = process.env.VERCEL_ENV || "development";

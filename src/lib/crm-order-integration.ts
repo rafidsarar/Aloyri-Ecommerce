@@ -1,3 +1,5 @@
+import { recordRuntimeError } from "@/lib/runtime-error-store";
+
 const enc = new TextEncoder();
 
 const hex = (bytes: Uint8Array) =>
@@ -142,6 +144,7 @@ export async function createCrmWebsiteOrder(payload: WebsiteOrderPayload) {
         };
   } catch (error) {
     console.error("CRM website order request failed", error);
+    await recordRuntimeError("crm.order", error);
     return {
       ok: false as const,
       status: 503,

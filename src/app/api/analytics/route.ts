@@ -4,6 +4,7 @@ import {
   type AnalyticsDevice,
   type AnalyticsEventName,
 } from "@/lib/analytics-store";
+import { recordRuntimeError } from "@/lib/runtime-error-store";
 
 export const dynamic = "force-dynamic";
 
@@ -297,7 +298,8 @@ export async function POST(request: Request) {
       ...context,
       ...properties,
     });
-  } catch {
+  } catch (error) {
+    await recordRuntimeError("analytics.ingestion", error);
     // Analytics must never affect storefront behavior.
   }
 

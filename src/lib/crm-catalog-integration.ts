@@ -1,4 +1,5 @@
 import type { LiveCatalogProduct } from "@/lib/catalog";
+import { recordRuntimeError } from "@/lib/runtime-error-store";
 
 const enc = new TextEncoder();
 
@@ -146,6 +147,7 @@ export async function fetchCrmCatalog() {
     };
   } catch (error) {
     console.error("CRM catalog request failed", error);
+    await recordRuntimeError("crm.catalog", error);
     return {
       ok: false as const,
       status: 503,

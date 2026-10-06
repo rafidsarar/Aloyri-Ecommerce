@@ -17,6 +17,7 @@ import {
   listOperationalHealthSnapshots,
   runOperationalHealth,
 } from "@/lib/admin-operations";
+import { listRuntimeErrors } from "@/lib/runtime-error-store";
 import { listAdminAuditEvents } from "@/lib/storefront-admin-store";
 
 function when(value: string) {
@@ -44,7 +45,7 @@ export default async function OperationsPage({
   }>;
 }) {
   const admin = await requireAdminPermission("health.view");
-  const [query, live, history, backups, audit] = await Promise.all([
+  const [query, live, history, backups, audit, runtimeErrors] = await Promise.all([
     searchParams,
     runOperationalHealth(admin.username, false),
     listOperationalHealthSnapshots(10),
@@ -52,6 +53,7 @@ export default async function OperationsPage({
       ? listAdminBackups(20)
       : Promise.resolve([]),
     listAdminAuditEvents(30),
+    listRuntimeErrors(20),
   ]);
   const canRun = hasAdminPermission(admin, "health.run");
   const canCreateBackup = hasAdminPermission(admin, "backups.create");
@@ -211,6 +213,33 @@ export default async function OperationsPage({
           </div>
         </AdminCard>
       ) : null}
+
+      <AdminCard className="mt-5">
+        <p className="text-sm font-semibold">Recent captured runtime errors</p>
+        <p className="mt-1 text-xs leading-5 text-black/45">
+          Caught CRM catalog, CRM order-bridge and analytics-ingestion failures
+          are stored here without request/customer payloads. Provider-level
+          infrastructure logs remain in Vercel.
+        </p>
+        <div className="mt-4 divide-y divide-black/7">
+          {runtimeErrors.length ? (
+            runtimeErrors.map((event) => (
+              <div key={event.id} className="grid gap-2 py-3 md:grid-cols-[180px_160px_1fr] md:items-start">
+                <span className="text-xs text-black/42">{when(event.createdAt)}</span>
+                <span className="text-xs font-semibold">{event.source}</span>
+                <div>
+                  <p className="text-sm font-medium">{event.name}</p>
+                  <p className="mt-1 text-xs leading-5 text-black/45">{event.message}</p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="py-3 text-sm text-black/45">
+              No caught application runtime errors recorded.
+            </p>
+          )}
+        </div>
+      </AdminCard>
 
       <AdminCard className="mt-5">
         <p className="text-sm font-semibold">Saved health history</p>
