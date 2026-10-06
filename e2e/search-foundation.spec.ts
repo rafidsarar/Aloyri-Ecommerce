@@ -72,3 +72,23 @@ test("search can match discovery fields beyond the old four-field search", () =>
   expect(productSearchScore(sunscreen, "morning protection")).toBeGreaterThan(0);
   expect(productSearchScore(sunscreen, "night repair")).toBe(-1);
 });
+
+
+test("common one- and two-character typos still resolve conservatively", () => {
+  const sunscreen = product({
+    id: "sun",
+    name: "Daily Sunscreen",
+    brand: "Aloyri",
+    category: "Sunscreen",
+  });
+  const moisturizer = product({
+    id: "moist",
+    name: "Light Moisturizer",
+    brand: "Aloyri",
+    category: "Moisturizer",
+  });
+
+  expect(productSearchScore(sunscreen, "suncreen")).toBeGreaterThan(0);
+  expect(productSearchScore(moisturizer, "moisterizer")).toBeGreaterThan(0);
+  expect(productSearchScore(sunscreen, "serum")).toBe(-1);
+});
