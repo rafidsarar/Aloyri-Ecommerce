@@ -15,8 +15,19 @@ export type AnalyticsEventName =
   | "merchandising_click"
   | "search"
   | "add_to_cart"
+  | "cart_view"
+  | "cart_quantity_change"
+  | "cart_remove"
   | "checkout_start"
+  | "checkout_validation_error"
   | "checkout_review"
+  | "checkout_submit"
+  | "checkout_failure"
+  | "wishlist_add"
+  | "wishlist_remove"
+  | "wishlist_move_to_cart"
+  | "customer_hub_view"
+  | "recovery_opt_in"
   | "order_created"
   | "order_tracking_success"
   | "return_request_submitted"
@@ -55,6 +66,10 @@ export type AnalyticsEventRecord = {
   reason?: string;
   resolution?: string;
   totalBdt?: number;
+  checkoutStep?: "details" | "review" | "submit";
+  errorCode?: string;
+  field?: string;
+  quantityDelta?: number;
   metric?: "LCP" | "CLS" | "INP" | "TTFB";
   metricValue?: number;
   confirmed?: boolean;

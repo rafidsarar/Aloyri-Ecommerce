@@ -1,17 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useCatalog } from "@/components/catalog-provider";
 import { ArrowIcon } from "@/components/icons";
 import { ProductMedia } from "@/components/product-media";
 import { readCart, type CartItem, writeCart } from "@/lib/cart";
 import { formatPrice, getProductById } from "@/lib/catalog";
 import { hasSalePrice, salePriceFor } from "@/lib/promotions";
+import { trackStorefrontEvent } from "@/lib/analytics";
 
 export default function CartPage() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const cartViewed = useRef(false);
   const {
     products: liveProducts,
     synced,
@@ -29,9 +31,25 @@ export default function CartPage() {
     return () => window.clearTimeout(initialize);
   }, []);
 
-  function save(next: CartItem[]) {
+  function save(
+    next: CartItem[],
+    event?: {
+      name: "cart_quantity_change" | "cart_remove";
+      productId: string;
+      quantityDelta?: number;
+    },
+  ) {
     setItems(next);
     writeCart(next);
+    if (event) {
+      trackStorefrontEvent(event.name, {
+        productId: event.productId,
+        itemCount: next.reduce((total, item) => total + item.qty, 0),
+        ...(typeof event.quantityDelta === "number"
+          ? { quantityDelta: event.quantityDelta }
+          : {}),
+      });
+    }
   }
 
   const rows = useMemo(
@@ -62,6 +80,21 @@ export default function CartPage() {
   );
   const canCheckout =
     synced && !error && rows.length > 0 && !hasUnavailable;
+
+  useEffect(() => {
+    if (
+      hydrated &&
+      synced &&
+      rows.length > 0 &&
+      !cartViewed.current
+    ) {
+      cartViewed.current = true;
+      trackStorefrontEvent("cart_view", {
+        itemCount: rows.reduce((total, row) => total + row.qty, 0),
+        totalBdt: subtotal,
+      });
+    }
+  }, [hydrated, rows, subtotal, synced]);
 
   if (!hydrated || (items.length > 0 && !synced && !error)) {
     return (
@@ -170,6 +203,11 @@ export default function CartPage() {
                                   ? { ...item, qty: Math.max(1, item.qty - 1) }
                                   : item,
                               ),
+                              {
+                                name: "cart_quantity_change",
+                                productId,
+                                quantityDelta: qty > 1 ? -1 : 0,
+                              },
                             )
                           }
                         >
@@ -191,6 +229,11 @@ export default function CartPage() {
                                     }
                                   : item,
                               ),
+                              {
+                                name: "cart_quantity_change",
+                                productId,
+                                quantityDelta: qty < available ? 1 : 0,
+                              },
                             )
                           }
                         >
@@ -217,7 +260,14 @@ export default function CartPage() {
                     <button
                       type="button"
                       onClick={() =>
-                        save(items.filter((item) => item.productId !== productId))
+                        save(
+                          items.filter((item) => item.productId !== productId),
+                          {
+                            name: "cart_remove",
+                            productId,
+                            quantityDelta: -qty,
+                          },
+                        )
                       }
                       className="mt-6 text-xs text-[#713a35]/48 underline decoration-[#713a35]/25 underline-offset-4"
                     >

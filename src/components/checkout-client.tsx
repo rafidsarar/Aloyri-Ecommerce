@@ -441,30 +441,51 @@ export function CheckoutClient() {
     setSubmitFailure(null);
 
     if (!orderingStatusLoaded || !orderingEnabled || !deliveryRates) {
-      setSubmitFailure({
+      const failure = {
         message: "Checkout is not ready yet. Refresh the delivery and ordering status, then try again.",
         code: "STORE_STATUS_UNAVAILABLE",
         recoverable: true,
         cartAction: false,
         uncertain: false,
+      } as const;
+      setSubmitFailure(failure);
+      trackStorefrontEvent("checkout_failure", {
+        itemCount,
+        checkoutStep: "details",
+        errorCode: failure.code,
+        totalBdt: quotedTotal,
       });
       return;
     }
 
     if (!catalogSynced || catalogError || hasUnavailable) {
-      setSubmitFailure({
+      const failure = {
         message:
           "Live stock changed or could not be verified. Review the current cart before continuing.",
         code: "STOCK_CHANGED",
         recoverable: true,
         cartAction: true,
         uncertain: false,
+      } as const;
+      setSubmitFailure(failure);
+      trackStorefrontEvent("checkout_failure", {
+        itemCount,
+        checkoutStep: "details",
+        errorCode: failure.code,
+        totalBdt: quotedTotal,
       });
       return;
     }
 
     const next = validate();
     if (Object.keys(next).length > 0) {
+      const firstField = Object.keys(next)[0] as keyof CheckoutDraft;
+      trackStorefrontEvent("checkout_validation_error", {
+        itemCount,
+        checkoutStep: "details",
+        field: firstField,
+        totalBdt: quotedTotal,
+      });
       focusFirstError(next);
       return;
     }
@@ -501,6 +522,13 @@ export function CheckoutClient() {
 
     setSubmitting(true);
     setSubmitFailure(null);
+    trackStorefrontEvent("checkout_submit", {
+      itemCount,
+      checkoutStep: "submit",
+      deliveryZone: draft.deliveryZone || undefined,
+      paymentMethod: "COD",
+      totalBdt: quotedTotal,
+    });
 
     let externalOrderId = "";
     try {
@@ -556,6 +584,14 @@ export function CheckoutClient() {
           result.error || "",
         );
         setSubmitFailure(failure);
+        trackStorefrontEvent("checkout_failure", {
+          itemCount,
+          checkoutStep: "submit",
+          errorCode: failure.code,
+          deliveryZone: draft.deliveryZone || undefined,
+          paymentMethod: "COD",
+          totalBdt: quotedTotal,
+        });
 
         if (!failure.uncertain) {
           clearAttemptReference();
@@ -610,13 +646,20 @@ export function CheckoutClient() {
         `/order-confirmation?order=${encodeURIComponent(result.orderNumber)}`,
       );
     } catch {
-      setSubmitFailure(
-        failureFor(
-          503,
-          "ORDER_SERVICE_UNAVAILABLE",
-          "The order service is temporarily unavailable.",
-        ),
+      const failure = failureFor(
+        503,
+        "ORDER_SERVICE_UNAVAILABLE",
+        "The order service is temporarily unavailable.",
       );
+      setSubmitFailure(failure);
+      trackStorefrontEvent("checkout_failure", {
+        itemCount,
+        checkoutStep: "submit",
+        errorCode: failure.code,
+        deliveryZone: draft.deliveryZone || undefined,
+        paymentMethod: "COD",
+        totalBdt: quotedTotal,
+      });
     } finally {
       setSubmitting(false);
     }

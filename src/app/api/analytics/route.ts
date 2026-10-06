@@ -20,8 +20,19 @@ const events = new Set<AnalyticsEventName>([
   "merchandising_click",
   "search",
   "add_to_cart",
+  "cart_view",
+  "cart_quantity_change",
+  "cart_remove",
   "checkout_start",
+  "checkout_validation_error",
   "checkout_review",
+  "checkout_submit",
+  "checkout_failure",
+  "wishlist_add",
+  "wishlist_remove",
+  "wishlist_move_to_cart",
+  "customer_hub_view",
+  "recovery_opt_in",
   "order_created",
   "order_tracking_success",
   "return_request_submitted",
@@ -187,6 +198,25 @@ function safeProperties(value: unknown) {
     output.deliveryZone = input.deliveryZone;
   }
   if (input.paymentMethod === "COD") output.paymentMethod = "COD";
+  if (
+    input.checkoutStep === "details" ||
+    input.checkoutStep === "review" ||
+    input.checkoutStep === "submit"
+  ) {
+    output.checkoutStep = input.checkoutStep;
+  }
+  const errorCode = safeToken(input.errorCode, 60);
+  if (errorCode) output.errorCode = errorCode;
+  const field = safeToken(input.field, 40);
+  if (field) output.field = field;
+  if (
+    typeof input.quantityDelta === "number" &&
+    Number.isInteger(input.quantityDelta) &&
+    input.quantityDelta >= -100 &&
+    input.quantityDelta <= 100
+  ) {
+    output.quantityDelta = input.quantityDelta;
+  }
   if (typeof input.orderStatus === "string" && statuses.has(input.orderStatus)) {
     output.orderStatus = input.orderStatus;
   }
