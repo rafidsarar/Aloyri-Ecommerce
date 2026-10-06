@@ -3,6 +3,16 @@ import { shopSeoMetadata } from "@/lib/seo-manager";
 import { ShopClient } from "@/components/shop-client";
 import { readStorefrontConfig } from "@/lib/storefront-admin-store";
 
+const stocks = new Set(["all", "in-stock", "out-of-stock"]);
+const prices = new Set(["all", "under-600", "600-999", "1000-plus"]);
+const sorts = new Set([
+  "recommended",
+  "bestseller",
+  "price-asc",
+  "price-desc",
+  "name",
+]);
+
 export async function generateMetadata(): Promise<Metadata> {
   const config = await readStorefrontConfig();
   return shopSeoMetadata(config);
@@ -11,9 +21,16 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function ShopPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; q?: string }>;
+  searchParams: Promise<{
+    category?: string;
+    q?: string;
+    brand?: string;
+    stock?: string;
+    price?: string;
+    sort?: string;
+  }>;
 }) {
-  const [{ category, q }, config] = await Promise.all([
+  const [query, config] = await Promise.all([
     searchParams,
     readStorefrontConfig(),
   ]);
@@ -31,14 +48,35 @@ export default async function ShopPage({
         </div>
         <p className="max-w-xl text-sm leading-7 text-[#321f1c]/52 lg:justify-self-end">
           Cleanse, moisturize and protect with a focused collection priced in
-          BDT. Use search, category filters and sorting to find the right place
-          to start.
+          BDT. Search by product, brand, routine or texture, then refine by
+          category, stock and price.
         </p>
       </div>
 
       <ShopClient
-        initialCategory={category}
-        initialQuery={q}
+        initialCategory={query.category}
+        initialQuery={query.q}
+        initialBrand={query.brand}
+        initialStock={
+          stocks.has(query.stock || "")
+            ? (query.stock as "all" | "in-stock" | "out-of-stock")
+            : "all"
+        }
+        initialPriceBand={
+          prices.has(query.price || "")
+            ? (query.price as "all" | "under-600" | "600-999" | "1000-plus")
+            : "all"
+        }
+        initialSort={
+          sorts.has(query.sort || "")
+            ? (query.sort as
+                | "recommended"
+                | "bestseller"
+                | "price-asc"
+                | "price-desc"
+                | "name")
+            : "recommended"
+        }
         merchandisingSortMode={config.merchandising.shopSortMode}
       />
     </main>
