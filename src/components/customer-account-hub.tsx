@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useState, useSyncExternalStore } from "react";
 import { AnalyticsViewTracker } from "@/components/storefront-analytics-tracker";
 import { PostPurchaseOrders } from "@/components/post-purchase-orders";
+import { CustomerAuthPanel } from "@/components/customer-auth-panel";
 import {
   clearCustomerProfile,
   customerProfileServerSnapshot,
@@ -83,9 +84,11 @@ export function CustomerAccountHub() {
         </p>
         <h1 className="display mt-2 text-5xl sm:text-6xl">Customer account.</h1>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-[#321f1c]/52">
-          Your recent orders, reorder guidance, wishlist, cart, compare list and profile basics are organized here on this device. CRM remains the live source for order status, while cloud sign-in stays disabled until Aloyri can support secure email authentication through a verified domain.
+          Your recent orders, reorder guidance, wishlist, cart, compare list and profile basics are organized here. CRM remains the live source for order status; when secure email is active, passwordless sign-in adds cloud wishlist sync and customer-controlled lifecycle preferences.
         </p>
       </div>
+
+      <CustomerAuthPanel />
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
@@ -199,7 +202,7 @@ export function CustomerAccountHub() {
             </Link>
           </div>
           <p className="mt-5 text-[11px] leading-5 text-[#321f1c]/40">
-            No customer password is created yet. This avoids launching an account system without a secure recovery/sign-in channel.
+            Aloyri customer accounts use passwordless one-time email links when email infrastructure is active. Recent order credentials and checkout profile details remain device-local.
           </p>
         </section>
       </div>
