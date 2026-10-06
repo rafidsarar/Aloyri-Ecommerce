@@ -15,6 +15,7 @@ import {
   writePrivateJson,
 } from "@/lib/storefront-admin-store";
 import { siteConfig } from "@/lib/site";
+import { productAlertTriggers } from "@/lib/product-alert-utils";
 
 export type ProductAlertKind = "back-in-stock" | "price-drop";
 export type ProductAlertStatus = "active" | "sent" | "cancelled";
@@ -307,21 +308,13 @@ export async function sendDueProductAlerts(limit = 100) {
     if (!product) continue;
     const effectivePrice = currentPrice(product);
     const stock = product.availableStock ?? 0;
-    const triggered: ProductAlertKind[] = [];
-
-    if (
-      row.kinds.includes("back-in-stock") &&
-      row.baselineStock <= 0 &&
-      stock > 0
-    ) {
-      triggered.push("back-in-stock");
-    }
-    if (
-      row.kinds.includes("price-drop") &&
-      effectivePrice < row.baselinePrice
-    ) {
-      triggered.push("price-drop");
-    }
+    const triggered = productAlertTriggers({
+      kinds: row.kinds,
+      baselinePrice: row.baselinePrice,
+      baselineStock: row.baselineStock,
+      currentPrice: effectivePrice,
+      currentStock: stock,
+    });
 
     if (!triggered.length) {
       await writePrivateJson(
