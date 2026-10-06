@@ -148,6 +148,7 @@ export default async function AnalyticsDashboard({
           ["Collections", "Views, product engagement and attributed conversion.", "/admin/analytics/collections"],
           ["Merchandising", "Hero and homepage section impressions, clicks and conversion.", "/admin/analytics/merchandising"],
           ["Search", "Popular searches, product engagement and demand gaps.", "/admin/analytics/search"],
+          ["Recommendations", "Related-product and routine recommendation impressions, clicks and attributed conversion.", "/admin/analytics/recommendations"],
           ["Traffic", "Source, medium and device conversion performance.", "/admin/analytics/traffic"],
           ["Performance", "Real-user LCP, INP, CLS and TTFB.", "/admin/analytics/performance"],
           ["Funnel", "Visit → product → cart → checkout → order drop-off.", "/admin/analytics/funnel"],
