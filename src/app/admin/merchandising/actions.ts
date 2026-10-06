@@ -459,17 +459,33 @@ export async function saveProductMerchandising(formData: FormData) {
         -1000,
         1000,
       );
+      const searchBoost = numberValue(
+        formData,
+        "searchBoost_" + id,
+        0,
+        -100,
+        100,
+      );
+      const hideFromSearch = checked(formData, "hideFromSearch_" + id);
       const modeRaw = text(formData, "outOfStock_" + id, 32);
       const outOfStockMode = outOfStockValues.has(modeRaw)
         ? (modeRaw as ProductMerchandisingRule["outOfStockMode"])
         : "inherit";
 
-      if (!badge && priority === 0 && outOfStockMode === "inherit") {
+      if (
+        !badge &&
+        priority === 0 &&
+        searchBoost === 0 &&
+        !hideFromSearch &&
+        outOfStockMode === "inherit"
+      ) {
         delete rules[id];
       } else {
         rules[id] = {
           ...(badge ? { badge } : {}),
           ...(priority !== 0 ? { priority } : {}),
+          ...(searchBoost !== 0 ? { searchBoost } : {}),
+          ...(hideFromSearch ? { hideFromSearch: true } : {}),
           ...(outOfStockMode !== "inherit" ? { outOfStockMode } : {}),
         };
       }
