@@ -40,6 +40,7 @@ import {
   readCustomerProfile,
   writeCustomerProfile,
 } from "@/lib/customer-profile";
+import { rememberCustomerOrder } from "@/lib/customer-orders";
 
 type FieldErrors = Partial<Record<keyof CheckoutDraft, string>>;
 type DeliveryRates = Record<DeliveryZone, number>;
@@ -694,6 +695,17 @@ export function CheckoutClient() {
         deliveryZone: draft.deliveryZone || undefined,
         paymentMethod: "COD",
         totalBdt: finalTotal,
+      });
+
+      rememberCustomerOrder({
+        orderNumber: result.orderNumber,
+        phone: normalizeBangladeshPhone(draft.phone),
+        createdAt: new Date().toISOString(),
+        items: rows.map((row) => ({
+          productId: row.liveProduct!.id,
+          qty: row.qty,
+        })),
+        total: finalTotal,
       });
 
       writeCart([]);

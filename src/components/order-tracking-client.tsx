@@ -9,6 +9,7 @@ import {
   normalizeBangladeshPhone,
 } from "@/lib/checkout";
 import { trackStorefrontEvent } from "@/lib/analytics";
+import { rememberCustomerOrder } from "@/lib/customer-orders";
 import type {
   PublicTrackedOrder,
   TrackingStatus,
@@ -96,6 +97,13 @@ export function OrderTrackingClient({
       }
 
       setResult(body);
+      rememberCustomerOrder({
+        orderNumber: body.orderNumber,
+        phone: normalizeBangladeshPhone(phone),
+        createdAt: body.created,
+        items: [],
+        total: body.total,
+      });
       trackStorefrontEvent("order_tracking_success", {
         orderStatus: body.status,
       });
