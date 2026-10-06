@@ -36,7 +36,7 @@ function errorMessage(error: unknown) {
 
 function pageLocation(key: string) {
   if (key === "homepage" || key === "shop") {
-    return { type: "root" as const, key };
+    return { type: "root" as const, key: key as "homepage" | "shop" };
   }
   if (key.startsWith("category-")) {
     const category = key.slice("category-".length);
