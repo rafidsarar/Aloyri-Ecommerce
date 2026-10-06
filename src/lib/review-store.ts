@@ -161,14 +161,18 @@ export async function moderateReview(
 ) {
   const review = await getReview(id);
   if (!review) throw new Error("Review not found.");
+  const now = new Date().toISOString();
   const updated: ProductReview = {
     ...review,
     status: input.status,
     featured: input.status === "approved" ? input.featured : false,
+    ...(input.status === "approved"
+      ? { approvedAt: review.approvedAt || now }
+      : {}),
     ...(input.moderationNote
       ? { moderationNote: input.moderationNote.slice(0, 500) }
       : {}),
-    updatedAt: new Date().toISOString(),
+    updatedAt: now,
   };
   await writePrivateJson(ITEM_PREFIX + id + ".json", updated);
   return updated;

@@ -87,9 +87,13 @@ export async function buildReviewAnalytics(days = 30) {
   const products = [...groups.entries()]
     .map(([productId, rows]) => {
       const sorted = [...rows].sort((a, b) =>
-        a.createdAt.localeCompare(b.createdAt),
+        (a.approvedAt || a.updatedAt || a.createdAt).localeCompare(
+          b.approvedAt || b.updatedAt || b.createdAt,
+        ),
       );
-      const firstApprovedAt = Date.parse(sorted[0].updatedAt || sorted[0].createdAt);
+      const firstApprovedAt = Date.parse(
+        sorted[0].approvedAt || sorted[0].updatedAt || sorted[0].createdAt,
+      );
       const windowMs = 30 * 24 * 60 * 60 * 1000;
       const before = productConversion(
         analytics,

@@ -17,6 +17,7 @@ export type ProductReview = {
   media: [];
   createdAt: string;
   updatedAt: string;
+  approvedAt?: string;
   moderationNote?: string;
 };
 
