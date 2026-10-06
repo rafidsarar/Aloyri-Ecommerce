@@ -8,7 +8,6 @@ import {
 import { requireAdminPermission } from "@/lib/admin-auth";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
 import { listProductReviews } from "@/lib/review-store";
-import type { ReviewStatus } from "@/lib/review-types";
 
 const filters = ["all", "pending", "approved", "flagged", "hidden"] as const;
 
