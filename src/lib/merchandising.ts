@@ -199,8 +199,10 @@ export function productsForHomepageSection(
 
   if (section.kind === "bestsellers") {
     selected = products.filter((product) => product.bestseller);
+    if (!selected.length) selected = products;
   } else if (section.kind === "featured") {
     selected = products.filter((product) => product.featured);
+    if (!selected.length) selected = products;
   } else if (section.kind === "new-arrivals") {
     selected = products.filter(
       (product) =>
