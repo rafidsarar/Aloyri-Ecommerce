@@ -503,6 +503,53 @@ export async function saveProductMerchandising(formData: FormData) {
   redirect("/admin/merchandising/products?saved=1");
 }
 
+export async function saveDiscoveryMerchandising(formData: FormData) {
+  const admin = await ensureAdmin();
+
+  const synonymGroups = text(formData, "synonymGroups", 12000)
+    .split(/\r?\n/)
+    .map((line) =>
+      [...new Set(
+        line
+          .split(",")
+          .map((term) => term.trim().toLowerCase().slice(0, 60))
+          .filter(Boolean),
+      )].slice(0, 12),
+    )
+    .filter((group) => group.length >= 2)
+    .slice(0, 50);
+
+  const categoryOrder = [...new Set(
+    text(formData, "categoryOrder", 6000)
+      .split(/\r?\n/)
+      .map((term) => term.trim().slice(0, 80))
+      .filter(Boolean),
+  )].slice(0, 50);
+
+  const popularSearches = [...new Set(
+    text(formData, "popularSearches", 6000)
+      .split(/\r?\n/)
+      .map((term) => term.trim().slice(0, 60))
+      .filter(Boolean),
+  )].slice(0, 20);
+
+  await updateDraftStorefrontConfig((config) => {
+    config.merchandising.discovery = {
+      synonymGroups,
+      categoryOrder,
+      popularSearches,
+    };
+    return config;
+  }, {
+    actor: admin.username,
+    action: "merchandising.discovery_updated",
+    scope: "merchandising",
+    target: "discovery",
+  });
+
+  redirect("/admin/merchandising/discovery?saved=1");
+}
+
 export async function saveHomepageMerchandising(formData: FormData) {
   const admin = await ensureAdmin();
   const sectionCount = Math.min(
