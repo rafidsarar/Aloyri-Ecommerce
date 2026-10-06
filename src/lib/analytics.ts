@@ -25,6 +25,7 @@ export type StorefrontEventProperties = {
   placementId?: string;
   placementKind?: string;
   searchTerm?: string;
+  resultCount?: number;
   itemCount?: number;
   deliveryZone?: "inside-dhaka" | "outside-dhaka";
   paymentMethod?: "COD";
