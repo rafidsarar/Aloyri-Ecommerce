@@ -59,12 +59,45 @@ function tokenScore(field: string, token: string, weight: number) {
   return bestFuzzy;
 }
 
-export function productSearchScore(product: Product, query: string) {
-  if (product.merchandisingHideFromSearch) return -1;
+function normalizedSynonymGroups(groups: string[][]) {
+  return groups
+    .map((group) =>
+      [...new Set(group.map(normalizeSearchText).filter(Boolean))].slice(0, 12),
+    )
+    .filter((group) => group.length >= 2)
+    .slice(0, 50);
+}
 
+function queryAlternatives(query: string, synonymGroups: string[][]) {
   const phrase = normalizeSearchText(query);
-  if (!phrase) return 0;
+  if (!phrase) return [];
 
+  const alternatives = new Set([phrase]);
+  const groups = normalizedSynonymGroups(synonymGroups);
+
+  for (const group of groups) {
+    if (group.includes(phrase)) {
+      for (const synonym of group) alternatives.add(synonym);
+    }
+  }
+
+  const tokens = phrase.split(" ");
+  for (let index = 0; index < tokens.length; index += 1) {
+    for (const group of groups) {
+      if (!group.includes(tokens[index])) continue;
+      for (const synonym of group) {
+        const next = [...tokens];
+        next[index] = synonym;
+        alternatives.add(next.join(" "));
+        if (alternatives.size >= 16) return [...alternatives];
+      }
+    }
+  }
+
+  return [...alternatives];
+}
+
+function scorePhrase(product: Product, phrase: string) {
   const fields = [
     [normalizeSearchText(product.name), 14],
     [normalizeSearchText(product.brand), 12],
@@ -102,18 +135,37 @@ export function productSearchScore(product: Product, query: string) {
 
   if (product.featured) score += 2;
   if (product.bestseller) score += 2;
-  score += Math.max(
+  return score;
+}
+
+export function productSearchScore(
+  product: Product,
+  query: string,
+  synonymGroups: string[][] = [],
+) {
+  if (product.merchandisingHideFromSearch) return -1;
+
+  const alternatives = queryAlternatives(query, synonymGroups);
+  if (!alternatives.length) return 0;
+
+  let best = -1;
+  for (const phrase of alternatives) {
+    best = Math.max(best, scorePhrase(product, phrase));
+  }
+  if (best < 0) return -1;
+
+  const boost = Math.max(
     -100,
     Math.min(100, Math.trunc(product.merchandisingSearchBoost || 0)),
   );
-
-  return score;
+  return Math.max(0, best + boost);
 }
 
 export function getSearchSuggestions(
   products: Product[],
   query: string,
   limit = 6,
+  synonymGroups: string[][] = [],
 ) {
   const normalized = normalizeSearchText(query);
   if (normalized.length < 2) return [];
@@ -121,10 +173,13 @@ export function getSearchSuggestions(
   return products
     .map((product) => ({
       product,
-      score: productSearchScore(product, normalized),
+      score: productSearchScore(product, normalized, synonymGroups),
     }))
     .filter((row) => row.score >= 0)
-    .sort((a, b) => b.score - a.score || a.product.name.localeCompare(b.product.name))
+    .sort(
+      (a, b) =>
+        b.score - a.score || a.product.name.localeCompare(b.product.name),
+    )
     .slice(0, Math.max(1, Math.min(10, limit)))
     .map((row) => row.product);
 }
