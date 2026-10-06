@@ -30,7 +30,7 @@ export default async function ProductMerchandisingPage({
     <AdminShell
       username={admin.username}
       title="Product merchandising"
-      subtitle="Set website badges, merchandising priority and out-of-stock presentation. CRM selling price, promotion price and stock remain read-only."
+      subtitle="Control website badges, browse priority, search ranking and out-of-stock presentation. CRM price, promotions and stock remain read-only."
     >
       {query.saved ? <AdminNotice>Product merchandising draft saved.</AdminNotice> : null}
       {!catalog.ok ? (
@@ -48,13 +48,15 @@ export default async function ProductMerchandisingPage({
 
         <AdminCard>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[980px] text-left text-sm">
+            <table className="w-full min-w-[1280px] text-left text-sm">
               <thead>
                 <tr className="border-b border-black/8 text-[10px] uppercase tracking-[.13em] text-black/42">
                   <th className="pb-3 font-semibold">Product</th>
                   <th className="pb-3 font-semibold">CRM commerce</th>
                   <th className="pb-3 font-semibold">Website badge</th>
-                  <th className="pb-3 font-semibold">Priority</th>
+                  <th className="pb-3 font-semibold">Browse priority</th>
+                  <th className="pb-3 font-semibold">Search boost</th>
+                  <th className="pb-3 font-semibold">Search visibility</th>
                   <th className="pb-3 font-semibold">Out of stock</th>
                 </tr>
               </thead>
@@ -112,6 +114,34 @@ export default async function ProductMerchandisingPage({
                           Higher appears earlier.
                         </p>
                       </td>
+                      <td className="py-4 pr-5">
+                        <input
+                          type="number"
+                          name={"searchBoost_" + product.id}
+                          defaultValue={rule?.searchBoost || 0}
+                          min={-100}
+                          max={100}
+                          className="w-24 rounded-lg border border-black/10 px-3 py-2"
+                        />
+                        <p className="mt-1 text-[10px] text-black/38">
+                          -100 to +100. Relevant matches only.
+                        </p>
+                      </td>
+                      <td className="py-4 pr-5">
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            name={"hideFromSearch_" + product.id}
+                            defaultChecked={Boolean(rule?.hideFromSearch)}
+                          />
+                          <span className="text-xs font-medium">
+                            Hide from search
+                          </span>
+                        </label>
+                        <p className="mt-1 max-w-40 text-[10px] text-black/38">
+                          Product still remains available in normal storefront browsing.
+                        </p>
+                      </td>
                       <td className="py-4">
                         <select
                           name={"outOfStock_" + product.id}
@@ -133,7 +163,7 @@ export default async function ProductMerchandisingPage({
         </AdminCard>
 
         <AdminNotice tone="neutral">
-          Website badges such as New, Trending or Staff Pick do not change selling price. When CRM supplies a valid sale price/promotion badge, that CRM promotion is displayed first.
+          Search boost changes the order of products only after they already match the customer query. It cannot make an unrelated product appear. “Hide from search” affects search/autocomplete only and does not deactivate the CRM product or remove it from ordinary storefront browsing. Website badges never change selling price.
         </AdminNotice>
 
         <div className="flex justify-end">
