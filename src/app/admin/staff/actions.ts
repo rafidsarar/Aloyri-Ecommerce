@@ -12,7 +12,6 @@ import {
   resetStaffPassword,
   setStaffActive,
   updateStaffAccess,
-  type AdminPermission,
   type AdminRole,
 } from "@/lib/admin-auth";
 

@@ -97,7 +97,7 @@ export async function runOperationalHealth(
   } else {
     const detail =
       catalog.status === "fulfilled"
-        ? catalog.value.body.error
+        ? catalog.value.body.error || "CRM catalog health request failed."
         : "CRM catalog health request failed.";
     checks.push({
       id: "crm-catalog",
