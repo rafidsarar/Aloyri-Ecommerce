@@ -14,6 +14,7 @@ const nav: Array<{
   { label: "Overview", href: "/admin", permission: "dashboard.view" },
   { label: "Homepage", href: "/admin/homepage", permission: "homepage.view" },
   { label: "Products", href: "/admin/products", permission: "products.view" },
+  { label: "Reviews", href: "/admin/reviews", permission: "products.view" },
   { label: "Pages & FAQ", href: "/admin/pages", permission: "pages.view" },
   { label: "Media", href: "/admin/media", permission: "media.view" },
   { label: "Merchandising", href: "/admin/merchandising", permission: "merchandising.view" },
