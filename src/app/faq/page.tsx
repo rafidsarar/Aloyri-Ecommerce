@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
+import { staticPageSeoMetadata } from "@/lib/seo-manager";
 import Link from "next/link";
 import { safeJsonLd } from "@/lib/seo";
 import { readStorefrontConfig } from "@/lib/storefront-admin-store";
 
-export const metadata: Metadata = {
-  title: "Frequently asked questions",
-  description:
-    "Answers about Aloyri products, stock, delivery, payment, order tracking and returns.",
-  alternates: { canonical: "/faq" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const config = await readStorefrontConfig();
+  return staticPageSeoMetadata(config, "faq");
+}
 
 export default async function FAQPage() {
   const config = await readStorefrontConfig();

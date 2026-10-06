@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ShopClient } from "@/components/shop-client";
 import { safeJsonLd } from "@/lib/seo";
+import { categorySeoMetadata } from "@/lib/seo-manager";
+import { readStorefrontConfig } from "@/lib/storefront-admin-store";
 import { absoluteUrl } from "@/lib/site";
 
 const categories = {
@@ -43,11 +45,11 @@ export async function generateMetadata({
   const { category } = await params;
   const entry = categories[category as keyof typeof categories];
   if (!entry) return {};
-  return {
-    title: entry.title,
-    description: entry.description,
-    alternates: { canonical: "/category/" + category },
-  };
+  const config = await readStorefrontConfig();
+  return categorySeoMetadata(
+    config,
+    category as keyof typeof config.seo.categories,
+  );
 }
 
 export default async function CategoryPage({

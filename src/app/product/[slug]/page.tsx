@@ -10,6 +10,11 @@ import {
 } from "@/lib/catalog";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
 import { safeJsonLd } from "@/lib/seo";
+import {
+  buildSeoMetadata,
+  effectiveSeoEntry,
+  productSeoFallback,
+} from "@/lib/seo-manager";
 import { absoluteUrl } from "@/lib/site";
 import { getVerifiedProductContent } from "@/lib/product-verification";
 import { salePriceFor } from "@/lib/promotions";
@@ -61,7 +66,10 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const product = await resolveProduct(slug);
+  const [product, config] = await Promise.all([
+    resolveProduct(slug),
+    readStorefrontConfig(),
+  ]);
 
   if (!product) {
     return {
@@ -73,23 +81,19 @@ export async function generateMetadata({
 
   const verified = getVerifiedProductContent(product.id);
   const image = product.mediaPath
-    ? absoluteUrl("/api/storefront-media/" + product.mediaPath.startsWith("media/") ? product.mediaPath.slice(6) : product.mediaPath)
+    ? absoluteUrl(
+        "/api/storefront-media/" +
+          (product.mediaPath.startsWith("media/")
+            ? product.mediaPath.slice(6)
+            : product.mediaPath),
+      )
     : verified?.photo?.src;
 
-  return {
-    title: `${product.brand} ${product.name}`,
-    description: product.description,
-    alternates: {
-      canonical: "/product/" + product.slug,
-    },
-    openGraph: {
-      type: "website",
-      url: "/product/" + product.slug,
-      title: `${product.brand} ${product.name}`,
-      description: product.description,
-      images: image ? [{ url: image, alt: `${product.brand} ${product.name}` }] : undefined,
-    },
-  };
+  return buildSeoMetadata(
+    config.seo.products[product.id] || {},
+    productSeoFallback(product),
+    { imageFallback: image },
+  );
 }
 
 export default async function ProductPage({
@@ -98,7 +102,10 @@ export default async function ProductPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = await resolveProduct(slug);
+  const [product, config] = await Promise.all([
+    resolveProduct(slug),
+    readStorefrontConfig(),
+  ]);
   const fallback = getProduct(slug) ?? product;
 
   if (!product && !fallback) notFound();
@@ -106,8 +113,20 @@ export default async function ProductPage({
   const schemaProduct = product ?? fallback!;
   const verified = getVerifiedProductContent(schemaProduct.id);
   const schemaImage = schemaProduct.mediaPath
-    ? absoluteUrl("/api/storefront-media/" + schemaProduct.mediaPath.startsWith("media/") ? schemaProduct.mediaPath.slice(6) : schemaProduct.mediaPath)
+    ? absoluteUrl(
+        "/api/storefront-media/" +
+          (schemaProduct.mediaPath.startsWith("media/")
+            ? schemaProduct.mediaPath.slice(6)
+            : schemaProduct.mediaPath),
+      )
     : verified?.photo?.src;
+  const seo = effectiveSeoEntry(
+    config.seo.products[schemaProduct.id],
+    productSeoFallback(schemaProduct),
+  );
+  const schemaCanonical = absoluteUrl(
+    seo.canonical || "/product/" + schemaProduct.slug,
+  );
   const availability =
     schemaProduct.availableStock === undefined
       ? undefined
@@ -126,18 +145,22 @@ export default async function ProductPage({
       name: schemaProduct.brand || "Aloyri",
     },
     category: schemaProduct.category,
-    url: absoluteUrl("/product/" + schemaProduct.slug),
+    url: schemaCanonical,
     ...(schemaImage ? { image: [schemaImage] } : {}),
   };
 
   if (schemaProduct.live && availability) {
     productSchema.offers = {
       "@type": "Offer",
-      url: absoluteUrl("/product/" + schemaProduct.slug),
+      url: schemaCanonical,
       priceCurrency: "BDT",
       price: salePriceFor(schemaProduct),
       availability,
       itemCondition: "https://schema.org/NewCondition",
+      seller: {
+        "@type": "Organization",
+        name: "Aloyri",
+      },
     };
   }
 
@@ -161,7 +184,7 @@ export default async function ProductPage({
         "@type": "ListItem",
         position: 3,
         name: schemaProduct.name,
-        item: absoluteUrl("/product/" + schemaProduct.slug),
+        item: schemaCanonical,
       },
     ],
   };

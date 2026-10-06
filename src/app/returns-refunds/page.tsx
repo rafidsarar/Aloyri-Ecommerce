@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
+import { staticPageSeoMetadata } from "@/lib/seo-manager";
 import Link from "next/link";
 import { CustomerInfoPage } from "@/components/customer-info-page";
 import { readStorefrontConfig } from "@/lib/storefront-admin-store";
 
-export const metadata: Metadata = {
-  title: "Returns & refunds",
-  description:
-    "How Aloyri reviews product returns, wrong or damaged items and eligible refunds.",
-  alternates: { canonical: "/returns-refunds" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const config = await readStorefrontConfig();
+  return staticPageSeoMetadata(config, "returns");
+}
 
 export default async function ReturnsRefundsPage() {
   const config = await readStorefrontConfig();

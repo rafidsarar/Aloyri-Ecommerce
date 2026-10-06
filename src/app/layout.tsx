@@ -14,21 +14,10 @@ export const metadata: Metadata = {
     template: "%s | Aloyri",
   },
   description: siteConfig.description,
-  alternates: {
-    canonical: "/",
-  },
   openGraph: {
     type: "website",
     locale: siteConfig.locale,
-    url: "/",
     siteName: siteConfig.name,
-    title: "Aloyri — Let Your Skin Glow.",
-    description: siteConfig.description,
-  },
-  twitter: {
-    card: "summary",
-    title: "Aloyri — Let Your Skin Glow.",
-    description: siteConfig.description,
   },
   robots: {
     index: true,

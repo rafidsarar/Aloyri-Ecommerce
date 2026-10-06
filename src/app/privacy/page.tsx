@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
+import { staticPageSeoMetadata } from "@/lib/seo-manager";
 import { AnalyticsPreference } from "@/components/analytics-preference";
+import { readStorefrontConfig } from "@/lib/storefront-admin-store";
 import { CustomerInfoPage } from "@/components/customer-info-page";
 
-export const metadata: Metadata = {
-  title: "Privacy policy",
-  description: "How Aloyri handles information used for shopping, orders and customer support.",
-  alternates: { canonical: "/privacy" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const config = await readStorefrontConfig();
+  return staticPageSeoMetadata(config, "privacy");
+}
 
 export default function PrivacyPage() {
   return (

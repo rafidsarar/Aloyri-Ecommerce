@@ -37,6 +37,46 @@ export type ProductEditorial = {
   mediaPath?: string;
 };
 
+export type SeoEntry = {
+  title?: string;
+  description?: string;
+  canonical?: string;
+  index?: boolean;
+  follow?: boolean;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImagePath?: string;
+};
+
+export type SeoRedirect = {
+  id: string;
+  from: string;
+  to: string;
+  permanent: boolean;
+  active: boolean;
+};
+
+export type SeoPageKey =
+  | "about"
+  | "faq"
+  | "shipping"
+  | "returns"
+  | "contact"
+  | "customerCare"
+  | "privacy"
+  | "terms";
+
+export type SeoCategoryKey = "cleansers" | "moisturizers" | "sunscreen";
+
+export type SeoConfig = {
+  homepage: SeoEntry;
+  shop: SeoEntry;
+  categories: Record<SeoCategoryKey, SeoEntry>;
+  pages: Record<SeoPageKey, SeoEntry>;
+  products: Record<string, SeoEntry>;
+  redirects: SeoRedirect[];
+};
+
 export type StorefrontConfig = {
   version: 1;
   updatedAt: string;
@@ -74,6 +114,123 @@ export type StorefrontConfig = {
     items: FaqItem[];
   };
   products: Record<string, ProductEditorial>;
+  seo: SeoConfig;
+};
+
+export const defaultSeoConfig: SeoConfig = {
+  homepage: {
+    title: "Aloyri — Let Your Skin Glow.",
+    description:
+      "Aloyri is a curated skincare storefront for Bangladesh with live product availability, BDT pricing, secure checkout and order tracking.",
+    canonical: "/",
+    index: true,
+    follow: true,
+    ogTitle: "Aloyri — Let Your Skin Glow.",
+    ogDescription:
+      "Curated skincare for Bangladesh with live availability and clear BDT pricing.",
+  },
+  shop: {
+    title: "Shop skincare",
+    description:
+      "Shop Aloyri cleansers, moisturizers and sunscreen in BDT with live product availability.",
+    canonical: "/shop",
+    index: true,
+    follow: true,
+  },
+  categories: {
+    cleansers: {
+      title: "Cleansers",
+      description:
+        "Shop Aloyri facial cleansers with live BDT pricing and current CRM availability.",
+      canonical: "/category/cleansers",
+      index: true,
+      follow: true,
+    },
+    moisturizers: {
+      title: "Moisturizers",
+      description:
+        "Shop Aloyri moisturizers with live BDT pricing and current CRM availability.",
+      canonical: "/category/moisturizers",
+      index: true,
+      follow: true,
+    },
+    sunscreen: {
+      title: "Sunscreen",
+      description:
+        "Shop Aloyri daily sunscreen with live BDT pricing and current CRM availability.",
+      canonical: "/category/sunscreen",
+      index: true,
+      follow: true,
+    },
+  },
+  pages: {
+    about: {
+      title: "About Aloyri",
+      description:
+        "Learn about Aloyri's approach to clear, considered skincare shopping in Bangladesh.",
+      canonical: "/about",
+      index: true,
+      follow: true,
+    },
+    faq: {
+      title: "Frequently asked questions",
+      description:
+        "Answers about Aloyri products, stock, delivery, payment, order tracking and returns.",
+      canonical: "/faq",
+      index: true,
+      follow: true,
+    },
+    shipping: {
+      title: "Shipping & delivery",
+      description:
+        "Aloyri delivery charges, order handling and tracking information for Bangladesh.",
+      canonical: "/shipping-delivery",
+      index: true,
+      follow: true,
+    },
+    returns: {
+      title: "Returns & refunds",
+      description:
+        "How Aloyri reviews product returns, wrong or damaged items and eligible refunds.",
+      canonical: "/returns-refunds",
+      index: true,
+      follow: true,
+    },
+    contact: {
+      title: "Contact Aloyri",
+      description:
+        "Prepare the information Aloyri needs to help with a website order, delivery or return.",
+      canonical: "/contact",
+      index: true,
+      follow: true,
+    },
+    customerCare: {
+      title: "Customer care",
+      description:
+        "Aloyri customer care: order tracking, delivery information, returns, FAQs and contact guidance.",
+      canonical: "/customer-care",
+      index: true,
+      follow: true,
+    },
+    privacy: {
+      title: "Privacy policy",
+      description:
+        "How Aloyri handles information used for shopping, orders and customer support.",
+      canonical: "/privacy",
+      index: true,
+      follow: true,
+    },
+    terms: {
+      title: "Terms & conditions",
+      description:
+        "Terms that apply when using the Aloyri skincare storefront and placing website orders.",
+      canonical: "/terms",
+      index: true,
+      follow: true,
+    },
+  },
+  products: {},
+  redirects: [],
 };
 
 export const defaultStorefrontConfig: StorefrontConfig = {
@@ -302,6 +459,7 @@ export const defaultStorefrontConfig: StorefrontConfig = {
     ],
   },
   products: {},
+  seo: defaultSeoConfig,
 };
 
 const PUBLISHED_CONFIG_PATH = "admin/storefront-config.json";
@@ -433,6 +591,71 @@ function normalizeConfig(value: Partial<StorefrontConfig> | null): StorefrontCon
       value.products && typeof value.products === "object"
         ? value.products
         : {},
+    seo: {
+      homepage: {
+        ...defaultSeoConfig.homepage,
+        ...(value.seo?.homepage || {}),
+      },
+      shop: {
+        ...defaultSeoConfig.shop,
+        ...(value.seo?.shop || {}),
+      },
+      categories: {
+        cleansers: {
+          ...defaultSeoConfig.categories.cleansers,
+          ...(value.seo?.categories?.cleansers || {}),
+        },
+        moisturizers: {
+          ...defaultSeoConfig.categories.moisturizers,
+          ...(value.seo?.categories?.moisturizers || {}),
+        },
+        sunscreen: {
+          ...defaultSeoConfig.categories.sunscreen,
+          ...(value.seo?.categories?.sunscreen || {}),
+        },
+      },
+      pages: {
+        about: {
+          ...defaultSeoConfig.pages.about,
+          ...(value.seo?.pages?.about || {}),
+        },
+        faq: {
+          ...defaultSeoConfig.pages.faq,
+          ...(value.seo?.pages?.faq || {}),
+        },
+        shipping: {
+          ...defaultSeoConfig.pages.shipping,
+          ...(value.seo?.pages?.shipping || {}),
+        },
+        returns: {
+          ...defaultSeoConfig.pages.returns,
+          ...(value.seo?.pages?.returns || {}),
+        },
+        contact: {
+          ...defaultSeoConfig.pages.contact,
+          ...(value.seo?.pages?.contact || {}),
+        },
+        customerCare: {
+          ...defaultSeoConfig.pages.customerCare,
+          ...(value.seo?.pages?.customerCare || {}),
+        },
+        privacy: {
+          ...defaultSeoConfig.pages.privacy,
+          ...(value.seo?.pages?.privacy || {}),
+        },
+        terms: {
+          ...defaultSeoConfig.pages.terms,
+          ...(value.seo?.pages?.terms || {}),
+        },
+      },
+      products:
+        value.seo?.products && typeof value.seo.products === "object"
+          ? value.seo.products
+          : {},
+      redirects: Array.isArray(value.seo?.redirects)
+        ? value.seo.redirects.slice(0, 200)
+        : [],
+    },
   };
 }
 

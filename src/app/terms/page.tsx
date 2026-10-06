@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import { staticPageSeoMetadata } from "@/lib/seo-manager";
 import { CustomerInfoPage } from "@/components/customer-info-page";
+import { readStorefrontConfig } from "@/lib/storefront-admin-store";
 
-export const metadata: Metadata = {
-  title: "Terms & conditions",
-  description: "Terms that apply when using the Aloyri skincare storefront and placing website orders.",
-  alternates: { canonical: "/terms" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const config = await readStorefrontConfig();
+  return staticPageSeoMetadata(config, "terms");
+}
 
 export default function TermsPage() {
   return (

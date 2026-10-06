@@ -92,12 +92,18 @@ function revalidatePublishedStorefront() {
   revalidatePath("/", "layout");
   revalidatePath("/");
   revalidatePath("/shop");
+  revalidatePath("/category/[category]", "page");
   revalidatePath("/about");
   revalidatePath("/faq");
   revalidatePath("/contact");
   revalidatePath("/shipping-delivery");
   revalidatePath("/returns-refunds");
+  revalidatePath("/customer-care");
+  revalidatePath("/privacy");
+  revalidatePath("/terms");
   revalidatePath("/product/[slug]", "page");
+  revalidatePath("/sitemap.xml");
+  revalidatePath("/robots.txt");
   revalidatePath("/api/catalog");
 }
 

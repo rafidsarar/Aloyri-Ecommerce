@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
 import { ArrowIcon } from "@/components/icons";
@@ -5,8 +6,10 @@ import { ProductMedia } from "@/components/product-media";
 import { ProductCard } from "@/components/product-card";
 import { mergeLiveCatalog, products as localProducts } from "@/lib/catalog";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
+import { buildSeoMetadata } from "@/lib/seo-manager";
 import {
   applyStorefrontEditorial,
+  defaultSeoConfig,
   readStorefrontConfig,
 } from "@/lib/storefront-admin-store";
 
@@ -30,6 +33,22 @@ const routine = [
     href: "/category/sunscreen",
   },
 ];
+
+export async function generateMetadata(): Promise<Metadata> {
+  const config = await readStorefrontConfig();
+  return buildSeoMetadata(config.seo.homepage, {
+    title: defaultSeoConfig.homepage.title || "Aloyri — Let Your Skin Glow.",
+    description:
+      defaultSeoConfig.homepage.description ||
+      "Curated skincare for Bangladesh.",
+    canonical: "/",
+    index: true,
+    follow: true,
+    ogTitle: defaultSeoConfig.homepage.ogTitle,
+    ogDescription: defaultSeoConfig.homepage.ogDescription,
+    ogImagePath: defaultSeoConfig.homepage.ogImagePath,
+  });
+}
 
 export default async function Home() {
   const [config, crm] = await Promise.all([

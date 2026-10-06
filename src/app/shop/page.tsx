@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import { shopSeoMetadata } from "@/lib/seo-manager";
 import { ShopClient } from "@/components/shop-client";
+import { readStorefrontConfig } from "@/lib/storefront-admin-store";
 
-export const metadata: Metadata = {
-  title: "Shop skincare",
-  description: "Shop Aloyri cleansers, moisturizers and sunscreen in BDT with live product availability.",
-  alternates: { canonical: "/shop" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const config = await readStorefrontConfig();
+  return shopSeoMetadata(config);
+}
 
 export default async function ShopPage({
   searchParams,

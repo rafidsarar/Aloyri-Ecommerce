@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
+import { staticPageSeoMetadata } from "@/lib/seo-manager";
 import Link from "next/link";
 import { ArrowIcon } from "@/components/icons";
+import { readStorefrontConfig } from "@/lib/storefront-admin-store";
 
-export const metadata: Metadata = {
-  title: "Customer care",
-  description:
-    "Aloyri customer care: order tracking, delivery information, returns, FAQs and contact guidance.",
-  alternates: { canonical: "/customer-care" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const config = await readStorefrontConfig();
+  return staticPageSeoMetadata(config, "customerCare");
+}
 
 const cards = [
   {

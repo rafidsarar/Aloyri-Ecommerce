@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
+import { staticPageSeoMetadata } from "@/lib/seo-manager";
 import { CustomerInfoPage } from "@/components/customer-info-page";
 import { readStorefrontConfig } from "@/lib/storefront-admin-store";
 
-export const metadata: Metadata = {
-  title: "Shipping & delivery",
-  description:
-    "Aloyri delivery charges, order handling and tracking information for Bangladesh.",
-  alternates: { canonical: "/shipping-delivery" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const config = await readStorefrontConfig();
+  return staticPageSeoMetadata(config, "shipping");
+}
 
 export default async function ShippingDeliveryPage() {
   const config = await readStorefrontConfig();

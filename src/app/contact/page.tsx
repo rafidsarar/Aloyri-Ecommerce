@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
+import { staticPageSeoMetadata } from "@/lib/seo-manager";
 import Link from "next/link";
 import { CustomerInfoPage } from "@/components/customer-info-page";
 import { readStorefrontConfig } from "@/lib/storefront-admin-store";
 
-export const metadata: Metadata = {
-  title: "Contact Aloyri",
-  description:
-    "Prepare the information Aloyri needs to help with a website order, delivery or return.",
-  alternates: { canonical: "/contact" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const config = await readStorefrontConfig();
+  return staticPageSeoMetadata(config, "contact");
+}
 
 export default async function ContactPage() {
   const config = await readStorefrontConfig();
