@@ -82,7 +82,7 @@ export default async function MerchandisingOverviewPage() {
         </AdminCard>
       </div>
 
-      <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {[
           [
             "Collections",
@@ -105,6 +105,11 @@ export default async function MerchandisingOverviewPage() {
             "/admin/merchandising/discovery",
           ],
           [
+            "Recommendations",
+            "Related products, complete-the-routine relationships, priority and visibility.",
+            "/admin/merchandising/recommendations",
+          ],
+          [
             "Homepage",
             "Hero product, section ordering, collection/campaign placement and shop defaults.",
             "/admin/merchandising/homepage",
@@ -124,7 +129,7 @@ export default async function MerchandisingOverviewPage() {
           <div>
             <p className="text-sm font-semibold">Merchandising health checks</p>
             <p className="mt-1 text-xs leading-5 text-black/45">
-              Detects missing CRM products, inactive products, out-of-stock targets, broken collection/campaign references, duplicate collection slugs, invalid schedules and promotion-only campaigns without a CRM sale.
+              Detects missing CRM products, inactive or out-of-stock recommendation targets, broken collection/campaign/recommendation references, duplicate collection slugs, invalid schedules and promotion-only campaigns without a CRM sale.
             </p>
           </div>
           <Link
