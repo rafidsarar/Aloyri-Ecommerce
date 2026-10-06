@@ -8,3 +8,5 @@ Ecommerce Admin data is now namespaced by Vercel environment.
 - Public Production content continues to use the existing production Blob records.
 
 This allows full destructive certification of Draft/Preview/Publish and Security workflows in Preview without touching the live website.
+
+Certification note: destructive admin workflow tests must run only against the isolated preview namespace.
