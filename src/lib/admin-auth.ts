@@ -617,10 +617,14 @@ export async function createStaffAccount(
     username,
     displayName: safeDisplayName(input.displayName, username),
     role,
-    permissions: permissionsActorMayAssign(
-      actor,
-      input.permissions?.length ? input.permissions : ROLE_TEMPLATES[role],
-    ),
+    permissions: normalizeAdminPermissions([
+      ...permissionsActorMayAssign(
+        actor,
+        input.permissions?.length ? input.permissions : ROLE_TEMPLATES[role],
+      ),
+      "dashboard.view",
+      "security.self",
+    ]),
     active: true,
     mustChangePassword: true,
     ...credentials,
@@ -679,7 +683,11 @@ export async function updateStaffAccess(
   account.permissions =
     role === "owner"
       ? ALL_PERMISSIONS
-      : permissionsActorMayAssign(actor, input.permissions);
+      : normalizeAdminPermissions([
+          ...permissionsActorMayAssign(actor, input.permissions),
+          "dashboard.view",
+          "security.self",
+        ]);
   account.updatedAt = new Date().toISOString();
   await writeDirectory(directory);
 
