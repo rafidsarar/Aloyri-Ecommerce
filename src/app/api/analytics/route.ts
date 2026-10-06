@@ -160,6 +160,15 @@ function safeProperties(value: unknown) {
   const searchTerm = safeSearchTerm(input.searchTerm);
   if (searchTerm) output.searchTerm = searchTerm;
 
+  if (
+    typeof input.resultCount === "number" &&
+    Number.isInteger(input.resultCount) &&
+    input.resultCount >= 0 &&
+    input.resultCount <= 5000
+  ) {
+    output.resultCount = input.resultCount;
+  }
+
   if (typeof input.category === "string" && categories.has(input.category)) {
     output.category = input.category;
   }
