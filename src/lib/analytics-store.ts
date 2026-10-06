@@ -370,7 +370,7 @@ export async function readAnalyticsEvents(
       if (
         Number.isFinite(timestamp) &&
         timestamp >= from.getTime() &&
-        timestamp < to.getTime()
+        timestamp <= to.getTime()
       ) {
         records.push(event);
         if (records.length >= limit) break;
