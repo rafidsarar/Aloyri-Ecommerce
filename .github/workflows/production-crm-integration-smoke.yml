@@ -32,7 +32,7 @@ jobs:
           products=data.get("products")
           assert isinstance(products,list) and products, "catalog must contain products"
           required={"id","name","brand","size","category","price","active","availableStock"}
-          optional={"salePrice","promotionBadge","slug","description","routineStep","skinNote","texture","bestFor","howToUse","careNotes","ingredientNote","featured","bestseller","mediaPath"}
+          optional={"salePrice","promotionBadge","slug","description","routineStep","skinNote","texture","bestFor","howToUse","careNotes","ingredientNote","featured","bestseller","mediaPath","merchandisingBadge","merchandisingPriority","merchandisingOutOfStockMode"}
           allowed=required|optional
           for product in products:
               assert set(product) <= allowed, f"unexpected catalog fields: {set(product)-allowed}"
@@ -46,6 +46,14 @@ jobs:
               if "promotionBadge" in product:
                   assert isinstance(product["promotionBadge"],str)
                   assert 0 < len(product["promotionBadge"]) <= 40
+              if "merchandisingBadge" in product:
+                  assert isinstance(product["merchandisingBadge"],str)
+                  assert 0 < len(product["merchandisingBadge"]) <= 24
+              if "merchandisingPriority" in product:
+                  assert isinstance(product["merchandisingPriority"],int)
+                  assert -1000 <= product["merchandisingPriority"] <= 1000
+              if "merchandisingOutOfStockMode" in product:
+                  assert product["merchandisingOutOfStockMode"] in {"keep","push-down","hide"}
           forbidden={"cost","unitCost","batchId","supplierId","targetQty","reorderAt","holds","finance","ownerId"}
           text=json.dumps(data)
           for key in forbidden:

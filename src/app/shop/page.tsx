@@ -13,7 +13,10 @@ export default async function ShopPage({
 }: {
   searchParams: Promise<{ category?: string; q?: string }>;
 }) {
-  const { category, q } = await searchParams;
+  const [{ category, q }, config] = await Promise.all([
+    searchParams,
+    readStorefrontConfig(),
+  ]);
 
   return (
     <main className="shell py-12 md:py-16">
@@ -33,7 +36,11 @@ export default async function ShopPage({
         </p>
       </div>
 
-      <ShopClient initialCategory={category} initialQuery={q} />
+      <ShopClient
+        initialCategory={category}
+        initialQuery={q}
+        merchandisingSortMode={config.merchandising.shopSortMode}
+      />
     </main>
   );
 }

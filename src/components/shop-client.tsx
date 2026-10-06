@@ -11,10 +11,12 @@ export function ShopClient({
   initialCategory,
   initialQuery,
   lockCategory = false,
+  merchandisingSortMode = "priority",
 }: {
   initialCategory?: string;
   initialQuery?: string;
   lockCategory?: boolean;
+  merchandisingSortMode?: "priority" | "featured";
 }) {
   const { products, synced, refreshing, error, refresh } = useCatalog();
   const [query, setQuery] = useState(initialQuery || "");
@@ -48,7 +50,7 @@ export function ShopClient({
       if (sort === "name") return a.name.localeCompare(b.name);
       return Number(Boolean(b.featured)) - Number(Boolean(a.featured));
     });
-  }, [products, category, query, sort]);
+  }, [products, category, query, sort, merchandisingSortMode]);
 
   if (!synced) {
     return (

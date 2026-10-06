@@ -358,6 +358,9 @@ export function analyzeSeoHealth(
     "/category/moisturizers",
     "/category/sunscreen",
     ...Object.values(publicPagePaths),
+    ...config.merchandising.collections
+      .filter((collection) => collection.active)
+      .map((collection) => "/collections/" + collection.slug),
     ...products.map((product) => "/product/" + (product.slug || product.id)),
   ]);
 

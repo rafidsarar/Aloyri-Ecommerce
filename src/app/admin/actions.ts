@@ -93,6 +93,7 @@ function revalidatePublishedStorefront() {
   revalidatePath("/");
   revalidatePath("/shop");
   revalidatePath("/category/[category]", "page");
+  revalidatePath("/collections/[slug]", "page");
   revalidatePath("/about");
   revalidatePath("/faq");
   revalidatePath("/contact");

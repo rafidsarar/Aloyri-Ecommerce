@@ -57,7 +57,10 @@ export default async function CategoryPage({
 }: {
   params: Promise<{ category: string }>;
 }) {
-  const { category } = await params;
+  const [{ category }, config] = await Promise.all([
+    params,
+    readStorefrontConfig(),
+  ]);
   const entry = categories[category as keyof typeof categories];
   if (!entry) notFound();
 
@@ -105,7 +108,11 @@ export default async function CategoryPage({
           {entry.intro}
         </p>
       </div>
-      <ShopClient initialCategory={entry.name} lockCategory />
+      <ShopClient
+        initialCategory={entry.name}
+        lockCategory
+        merchandisingSortMode={config.merchandising.shopSortMode}
+      />
     </main>
   );
 }

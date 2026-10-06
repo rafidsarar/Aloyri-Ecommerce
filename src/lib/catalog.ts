@@ -34,6 +34,9 @@ export type Product = {
   salePrice?: number;
   promotionBadge?: string;
   mediaPath?: string;
+  merchandisingBadge?: string;
+  merchandisingPriority?: number;
+  merchandisingOutOfStockMode?: "keep" | "push-down" | "hide";
 };
 
 export type LiveCatalogProduct = {
@@ -59,6 +62,9 @@ export type LiveCatalogProduct = {
   featured?: boolean;
   bestseller?: boolean;
   mediaPath?: string;
+  merchandisingBadge?: string;
+  merchandisingPriority?: number;
+  merchandisingOutOfStockMode?: "keep" | "push-down" | "hide";
 };
 
 const categoryVisuals: Record<string, ProductVisual> = {
@@ -357,6 +363,9 @@ export function mergeLiveCatalog(liveProducts: LiveCatalogProduct[]): Product[] 
           availableStock: live.availableStock,
           salePrice: live.salePrice,
           promotionBadge: live.promotionBadge,
+          merchandisingBadge: live.merchandisingBadge,
+          merchandisingPriority: live.merchandisingPriority,
+          merchandisingOutOfStockMode: live.merchandisingOutOfStockMode,
           live: true,
         };
       }
@@ -413,6 +422,9 @@ export function mergeLiveCatalog(liveProducts: LiveCatalogProduct[]): Product[] 
         availableStock: live.availableStock,
         salePrice: live.salePrice,
         promotionBadge: live.promotionBadge,
+        merchandisingBadge: live.merchandisingBadge,
+        merchandisingPriority: live.merchandisingPriority,
+        merchandisingOutOfStockMode: live.merchandisingOutOfStockMode,
         live: true,
       } satisfies Product;
     });

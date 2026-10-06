@@ -31,6 +31,10 @@ export function ProductCard({ product: fallback }: { product: Product }) {
             <span className="absolute left-4 top-4 rounded-full border border-white/50 bg-[#713a35] px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-white shadow-sm">
               {product.promotionBadge || "Sale"}
             </span>
+          ) : product.merchandisingBadge ? (
+            <span className="absolute left-4 top-4 rounded-full border border-white/50 bg-white/80 px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-[#713a35] backdrop-blur">
+              {product.merchandisingBadge}
+            </span>
           ) : product.bestseller ? (
             <span className="absolute left-4 top-4 rounded-full border border-white/50 bg-white/75 px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-[#713a35] backdrop-blur">
               Bestseller

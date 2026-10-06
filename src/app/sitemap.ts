@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
 import { mergeLiveCatalog, products as localProducts } from "@/lib/catalog";
+import { applyMerchandisingRules } from "@/lib/merchandising";
 import {
   effectiveSeoEntry,
   productSeoFallback,
@@ -29,7 +30,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const live = await fetchCrmCatalog();
     if (live.ok && live.body.products.length > 0) {
       catalog = mergeLiveCatalog(
-        applyStorefrontEditorial(live.body.products, config),
+        applyMerchandisingRules(
+          applyStorefrontEditorial(live.body.products, config),
+          config,
+        ),
       );
     }
   } catch {
@@ -97,8 +101,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     }));
 
+  const collectionRoutes = config.merchandising.collections
+    .filter(
+      (collection) =>
+        collection.active && collection.seo.index !== false,
+    )
+    .map((collection) => ({
+      url: absoluteUrl(
+        safeInternalPath(
+          collection.seo.canonical,
+          "/collections/" + collection.slug,
+        ),
+      ),
+      lastModified: Number.isNaN(Date.parse(collection.updatedAt))
+        ? lastModified
+        : new Date(collection.updatedAt),
+      changeFrequency: "weekly" as const,
+      priority: 0.75,
+    }));
+
   const seen = new Set<string>();
-  return [...staticRoutes, ...productRoutes].filter((entry) => {
+  return [...staticRoutes, ...collectionRoutes, ...productRoutes].filter((entry) => {
     if (seen.has(entry.url)) return false;
     seen.add(entry.url);
     return true;

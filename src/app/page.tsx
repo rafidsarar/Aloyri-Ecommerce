@@ -1,16 +1,25 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
 import { ArrowIcon } from "@/components/icons";
 import { ProductMedia } from "@/components/product-media";
-import { ProductCard } from "@/components/product-card";
+import { MerchandisingProductGrid } from "@/components/merchandising-product-grid";
 import { mergeLiveCatalog, products as localProducts } from "@/lib/catalog";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
+import {
+  applyMerchandisingRules,
+  collectionHref,
+  isCampaignActive,
+  productsForHomepageSection,
+  selectCampaignProducts,
+} from "@/lib/merchandising";
 import { buildSeoMetadata } from "@/lib/seo-manager";
 import {
   applyStorefrontEditorial,
   defaultSeoConfig,
   readStorefrontConfig,
+  storefrontMediaUrl,
 } from "@/lib/storefront-admin-store";
 
 const routine = [
@@ -57,11 +66,26 @@ export default async function Home() {
   ]);
 
   const catalogProducts = crm.ok
-    ? mergeLiveCatalog(applyStorefrontEditorial(crm.body.products, config))
-    : localProducts.map((product) => ({
-        ...product,
-        ...(config.products[product.id] || {}),
-      }));
+    ? mergeLiveCatalog(
+        applyMerchandisingRules(
+          applyStorefrontEditorial(crm.body.products, config),
+          config,
+        ),
+      )
+    : localProducts.map((product) => {
+        const rule = config.merchandising.productRules[product.id];
+        const outOfStockMode =
+          rule?.outOfStockMode && rule.outOfStockMode !== "inherit"
+            ? rule.outOfStockMode
+            : config.merchandising.outOfStockMode;
+        return {
+          ...product,
+          ...(config.products[product.id] || {}),
+          merchandisingBadge: rule?.badge,
+          merchandisingPriority: rule?.priority || 0,
+          merchandisingOutOfStockMode: outOfStockMode,
+        };
+      });
 
   const home = config.homepage;
   const heroProduct =
@@ -69,8 +93,9 @@ export default async function Home() {
     catalogProducts.find((product) => (product.availableStock ?? 0) > 0) ??
     catalogProducts[0] ??
     localProducts[0];
-  const bestsellers = catalogProducts.filter((product) => product.bestseller);
-  const featuredProducts = catalogProducts.filter((product) => product.featured);
+  const homepageSections = config.merchandising.homepageSections.filter(
+    (section) => section.enabled,
+  );
 
   return (
     <main>
@@ -147,32 +172,173 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="shell py-20 md:py-28">
-        <div className="mb-10 flex items-end justify-between gap-6">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/48">
-              Bestsellers
-            </p>
-            <h2 className="display mt-3 text-4xl text-[#321f1c] sm:text-5xl">
-              The products people start with.
-            </h2>
-          </div>
-          <Link
-            href="/shop"
-            className="hidden items-center gap-2 text-sm font-medium text-[#713a35] md:flex"
-          >
-            Shop all <ArrowIcon />
-          </Link>
-        </div>
+      {homepageSections.map((section) => {
+        if (section.kind === "campaign") {
+          const campaign = config.merchandising.campaigns.find(
+            (candidate) =>
+              candidate.id === section.referenceId &&
+              isCampaignActive(candidate),
+          );
+          if (!campaign) return null;
 
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {(bestsellers.length ? bestsellers : catalogProducts.slice(0, 3)).map(
-            (product) => (
-              <ProductCard key={product.id} product={product} />
-            ),
-          )}
-        </div>
-      </section>
+          const campaignProducts = campaign.showProducts
+            ? selectCampaignProducts(
+                campaign,
+                catalogProducts,
+                config.merchandising,
+              ).slice(0, section.maxProducts)
+            : [];
+          const campaignProductIds = campaignProducts.map(
+            (product) => product.id,
+          );
+
+          return (
+            <section key={section.id} className="shell py-10 md:py-16">
+              <div className="overflow-hidden rounded-[2rem] border border-[#713a35]/10 bg-[#713a35] text-white">
+                <div className="grid lg:grid-cols-[1.08fr_.92fr]">
+                  <div className="p-8 sm:p-10 lg:p-14">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/55">
+                      {campaign.badgeText || section.eyebrow || campaign.eyebrow}
+                    </p>
+                    <h2 className="display mt-4 max-w-3xl text-5xl leading-[0.94] sm:text-6xl">
+                      {section.title || campaign.title}
+                    </h2>
+                    <p className="mt-6 max-w-2xl text-sm leading-7 text-white/65">
+                      {section.copy || campaign.copy}
+                    </p>
+                    {campaign.ctaLabel ? (
+                      <Link
+                        href={campaign.ctaHref || "/shop"}
+                        className="mt-8 inline-flex items-center gap-3 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[#713a35]"
+                      >
+                        {campaign.ctaLabel} <ArrowIcon />
+                      </Link>
+                    ) : null}
+                    {campaign.promotionOnly ? (
+                      <p className="mt-4 text-[11px] leading-5 text-white/50">
+                        Promotional product pricing is shown only when currently supplied by Aloyri CRM.
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="relative min-h-[300px] bg-[#9c5d50]">
+                    {campaign.imagePath ? (
+                      <Image
+                        src={storefrontMediaUrl(campaign.imagePath)}
+                        alt={campaign.title}
+                        fill
+                        sizes="(min-width: 1024px) 42vw, 100vw"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_65%_30%,rgba(255,255,255,.24),transparent_40%)]" />
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {campaign.showProducts && campaignProductIds.length ? (
+                <div className="mt-10">
+                  <MerchandisingProductGrid
+                    productIds={campaignProductIds}
+                    fallbackProducts={campaignProducts}
+                    outOfStockMode={
+                      campaign.outOfStockMode &&
+                      campaign.outOfStockMode !== "inherit"
+                        ? campaign.outOfStockMode
+                        : config.merchandising.outOfStockMode
+                    }
+                    maxProducts={section.maxProducts}
+                    promotionOnly={campaign.promotionOnly}
+                    overrideProductRules={
+                      Boolean(
+                        campaign.outOfStockMode &&
+                          campaign.outOfStockMode !== "inherit",
+                      )
+                    }
+                  />
+                </div>
+              ) : null}
+            </section>
+          );
+        }
+
+        const selected = productsForHomepageSection(
+          section,
+          config.merchandising,
+          catalogProducts,
+        );
+        if (!selected.length) return null;
+
+        const productIds = selected.map((product) => product.id);
+        const collection =
+          section.kind === "collection"
+            ? config.merchandising.collections.find(
+                (candidate) => candidate.id === section.referenceId,
+              )
+            : undefined;
+        const sectionHref = collection ? collectionHref(collection) : "/shop";
+        const displayEyebrow =
+          section.eyebrow ||
+          collection?.eyebrow ||
+          (section.kind === "new-arrivals"
+            ? "New arrivals"
+            : section.kind === "bestsellers"
+              ? "Bestsellers"
+              : "Aloyri selection");
+        const displayTitle =
+          section.title ||
+          collection?.title ||
+          (section.kind === "new-arrivals"
+            ? "New to the Aloyri edit."
+            : section.kind === "bestsellers"
+              ? "The products people start with."
+              : "Everyday skincare, clearly presented.");
+        const displayCopy =
+          section.copy || collection?.description || "";
+        const mode = collection
+          ? collection.outOfStockMode === "inherit"
+            ? config.merchandising.outOfStockMode
+            : collection.outOfStockMode
+          : config.merchandising.outOfStockMode;
+
+        return (
+          <section key={section.id} className="shell py-16 md:py-24">
+            <div className="mb-10 grid gap-5 md:grid-cols-[1fr_auto] md:items-end">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/48">
+                  {displayEyebrow}
+                </p>
+                <h2 className="display mt-3 text-4xl text-[#321f1c] sm:text-5xl">
+                  {displayTitle}
+                </h2>
+                {displayCopy ? (
+                  <p className="mt-4 max-w-2xl text-sm leading-7 text-[#321f1c]/52">
+                    {displayCopy}
+                  </p>
+                ) : null}
+              </div>
+              <Link
+                href={sectionHref}
+                className="inline-flex items-center gap-2 text-sm font-medium text-[#713a35]"
+              >
+                {collection ? "View collection" : "Shop all"} <ArrowIcon />
+              </Link>
+            </div>
+
+            <MerchandisingProductGrid
+              productIds={productIds}
+              fallbackProducts={selected}
+              outOfStockMode={mode}
+              maxProducts={section.maxProducts}
+              overrideProductRules={
+                Boolean(
+                  collection && collection.outOfStockMode !== "inherit",
+                )
+              }
+            />
+          </section>
+        );
+      })}
 
       <section className="border-y border-[#713a35]/10 bg-[#f5e8e2]">
         <div className="shell py-16 md:py-20">
@@ -205,31 +371,6 @@ export default async function Home() {
               ))}
             </div>
           </div>
-        </div>
-      </section>
-
-      <section className="shell py-20 md:py-28">
-        <div className="mb-10 grid gap-6 lg:grid-cols-[1fr_.7fr] lg:items-end">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/48">
-              Aloyri selection
-            </p>
-            <h2 className="display mt-3 text-4xl sm:text-5xl">
-              Everyday skincare, clearly presented.
-            </h2>
-          </div>
-          <p className="max-w-xl text-sm leading-7 text-[#321f1c]/52 lg:justify-self-end">
-            Browse current products with clear routine guidance, live BDT pricing
-            and availability that is checked again before an order is placed.
-          </p>
-        </div>
-
-        <div className="grid gap-x-5 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-          {(featuredProducts.length ? featuredProducts : catalogProducts.slice(0, 6)).map(
-            (product) => (
-              <ProductCard key={product.id} product={product} />
-            ),
-          )}
         </div>
       </section>
 

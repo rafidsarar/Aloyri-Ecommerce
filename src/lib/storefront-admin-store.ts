@@ -37,6 +37,77 @@ export type ProductEditorial = {
   mediaPath?: string;
 };
 
+export type OutOfStockMode = "keep" | "push-down" | "hide";
+
+export type ProductMerchandisingRule = {
+  badge?: string;
+  priority?: number;
+  outOfStockMode?: "inherit" | OutOfStockMode;
+};
+
+export type MerchandisingCollection = {
+  id: string;
+  slug: string;
+  title: string;
+  eyebrow: string;
+  description: string;
+  active: boolean;
+  productIds: string[];
+  outOfStockMode: "inherit" | OutOfStockMode;
+  imagePath?: string;
+  seo: SeoEntry;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type MerchandisingCampaign = {
+  id: string;
+  title: string;
+  eyebrow: string;
+  copy: string;
+  active: boolean;
+  startAt: string;
+  endAt: string;
+  ctaLabel: string;
+  ctaHref: string;
+  imagePath?: string;
+  collectionId?: string;
+  productIds: string[];
+  outOfStockMode: "inherit" | OutOfStockMode;
+  badgeText?: string;
+  showProducts: boolean;
+  promotionOnly: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type HomepageMerchandisingSectionKind =
+  | "bestsellers"
+  | "featured"
+  | "new-arrivals"
+  | "collection"
+  | "campaign";
+
+export type HomepageMerchandisingSection = {
+  id: string;
+  kind: HomepageMerchandisingSectionKind;
+  enabled: boolean;
+  eyebrow: string;
+  title: string;
+  copy: string;
+  referenceId?: string;
+  maxProducts: number;
+};
+
+export type MerchandisingConfig = {
+  outOfStockMode: OutOfStockMode;
+  shopSortMode: "priority" | "featured";
+  productRules: Record<string, ProductMerchandisingRule>;
+  collections: MerchandisingCollection[];
+  campaigns: MerchandisingCampaign[];
+  homepageSections: HomepageMerchandisingSection[];
+};
+
 export type SeoEntry = {
   title?: string;
   description?: string;
@@ -115,6 +186,7 @@ export type StorefrontConfig = {
   };
   products: Record<string, ProductEditorial>;
   seo: SeoConfig;
+  merchandising: MerchandisingConfig;
 };
 
 export const defaultSeoConfig: SeoConfig = {
@@ -231,6 +303,35 @@ export const defaultSeoConfig: SeoConfig = {
   },
   products: {},
   redirects: [],
+};
+
+export const defaultMerchandisingConfig: MerchandisingConfig = {
+  outOfStockMode: "push-down",
+  shopSortMode: "priority",
+  productRules: {},
+  collections: [],
+  campaigns: [],
+  homepageSections: [
+    {
+      id: "homepage-bestsellers",
+      kind: "bestsellers",
+      enabled: true,
+      eyebrow: "Bestsellers",
+      title: "The products people start with.",
+      copy: "",
+      maxProducts: 3,
+    },
+    {
+      id: "homepage-featured",
+      kind: "featured",
+      enabled: true,
+      eyebrow: "Aloyri selection",
+      title: "Everyday skincare, clearly presented.",
+      copy:
+        "Browse current products with clear routine guidance, live BDT pricing and availability that is checked again before an order is placed.",
+      maxProducts: 6,
+    },
+  ],
 };
 
 export const defaultStorefrontConfig: StorefrontConfig = {
@@ -460,6 +561,7 @@ export const defaultStorefrontConfig: StorefrontConfig = {
   },
   products: {},
   seo: defaultSeoConfig,
+  merchandising: defaultMerchandisingConfig,
 };
 
 const PUBLISHED_CONFIG_PATH = "admin/storefront-config.json";
@@ -655,6 +757,34 @@ function normalizeConfig(value: Partial<StorefrontConfig> | null): StorefrontCon
       redirects: Array.isArray(value.seo?.redirects)
         ? value.seo.redirects.slice(0, 200)
         : [],
+    },
+    merchandising: {
+      outOfStockMode:
+        value.merchandising?.outOfStockMode === "keep" ||
+        value.merchandising?.outOfStockMode === "hide" ||
+        value.merchandising?.outOfStockMode === "push-down"
+          ? value.merchandising.outOfStockMode
+          : defaultMerchandisingConfig.outOfStockMode,
+      shopSortMode:
+        value.merchandising?.shopSortMode === "featured"
+          ? "featured"
+          : defaultMerchandisingConfig.shopSortMode,
+      productRules:
+        value.merchandising?.productRules &&
+        typeof value.merchandising.productRules === "object"
+          ? value.merchandising.productRules
+          : {},
+      collections: Array.isArray(value.merchandising?.collections)
+        ? value.merchandising.collections.slice(0, 100)
+        : [],
+      campaigns: Array.isArray(value.merchandising?.campaigns)
+        ? value.merchandising.campaigns.slice(0, 100)
+        : [],
+      homepageSections:
+        Array.isArray(value.merchandising?.homepageSections) &&
+        value.merchandising.homepageSections.length
+          ? value.merchandising.homepageSections.slice(0, 20)
+          : structuredClone(defaultMerchandisingConfig.homepageSections),
     },
   };
 }
