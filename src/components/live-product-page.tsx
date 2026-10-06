@@ -8,6 +8,11 @@ import { ArrowIcon } from "@/components/icons";
 import { ProductMedia } from "@/components/product-media";
 import { ProductCard } from "@/components/product-card";
 import {
+  ProductRatingSummary,
+  ProductReviews,
+} from "@/components/product-reviews";
+import { ProductTrustPanel } from "@/components/product-trust-panel";
+import {
   ProductPreferenceButtons,
   RecentlyViewedProducts,
 } from "@/components/product-conversion-tools";
@@ -20,6 +25,7 @@ import {
 import { getVerifiedProductContent } from "@/lib/product-verification";
 import { hasSalePrice, salePriceFor } from "@/lib/promotions";
 import { trackStorefrontEvent } from "@/lib/analytics";
+import type { PublicReviewData } from "@/lib/review-types";
 import {
   buildProductRecommendations,
   recommendationPlacementId,
@@ -30,10 +36,12 @@ export function LiveProductPage({
   slug,
   fallback,
   recommendationConfig,
+  reviewData,
 }: {
   slug: string;
   fallback: Product | null;
   recommendationConfig: RecommendationConfig;
+  reviewData: PublicReviewData;
 }) {
   const { products, synced, error, refresh } = useCatalog();
   const product = products.find(
@@ -197,6 +205,7 @@ export function LiveProductPage({
           <h1 className="display mt-3 text-5xl leading-[0.94] sm:text-6xl">
             {product.name}
           </h1>
+          <ProductRatingSummary data={reviewData} />
 
           <div className="mt-6 flex items-end justify-between gap-5 border-b border-[#713a35]/10 pb-7">
             <div>
@@ -391,6 +400,11 @@ export function LiveProductPage({
         </div>
       </section>
 
+      <ProductTrustPanel
+        manufacturerVerified={Boolean(verified)}
+        sourceLabel={verified?.sourceLabel}
+      />
+
       <section className="mt-5 grid gap-4 md:grid-cols-3">
         <Link
           href="/shipping-delivery"
@@ -421,6 +435,12 @@ export function LiveProductPage({
         </Link>
       </section>
 
+
+      <ProductReviews
+        productId={product.id}
+        productName={product.name}
+        initialData={reviewData}
+      />
 
       {routine.length > 0 ? (
         <section className="mt-20 border-t border-[#713a35]/10 pt-12 md:mt-24">

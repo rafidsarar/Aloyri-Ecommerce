@@ -18,6 +18,7 @@ import {
 import { absoluteUrl } from "@/lib/site";
 import { getVerifiedProductContent } from "@/lib/product-verification";
 import { salePriceFor } from "@/lib/promotions";
+import { productReviewData } from "@/lib/review-store";
 import {
   applyStorefrontEditorial,
   readStorefrontConfig,
@@ -111,7 +112,10 @@ export default async function ProductPage({
   if (!product && !fallback) notFound();
 
   const schemaProduct = product ?? fallback!;
-  const verified = getVerifiedProductContent(schemaProduct.id);
+  const [verified, reviewData] = await Promise.all([
+    Promise.resolve(getVerifiedProductContent(schemaProduct.id)),
+    productReviewData(schemaProduct.id, { sort: "helpful", limit: 60 }),
+  ]);
   const schemaImage = schemaProduct.mediaPath
     ? absoluteUrl(
         "/api/storefront-media/" +
@@ -148,6 +152,29 @@ export default async function ProductPage({
     url: schemaCanonical,
     ...(schemaImage ? { image: [schemaImage] } : {}),
   };
+
+  if (reviewData.summary.count > 0) {
+    productSchema.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: reviewData.summary.average,
+      reviewCount: reviewData.summary.count,
+      bestRating: 5,
+      worstRating: 1,
+    };
+    productSchema.review = reviewData.reviews.slice(0, 5).map((review) => ({
+      "@type": "Review",
+      author: { "@type": "Person", name: review.reviewerName },
+      datePublished: review.createdAt.slice(0, 10),
+      name: review.title,
+      reviewBody: review.body,
+      reviewRating: {
+        "@type": "Rating",
+        ratingValue: review.rating,
+        bestRating: 5,
+        worstRating: 1,
+      },
+    }));
+  }
 
   if (schemaProduct.live && availability) {
     productSchema.offers = {
@@ -203,6 +230,7 @@ export default async function ProductPage({
         slug={slug}
         fallback={fallback ?? null}
         recommendationConfig={config.merchandising.recommendations}
+        reviewData={reviewData}
       />
     </>
   );
