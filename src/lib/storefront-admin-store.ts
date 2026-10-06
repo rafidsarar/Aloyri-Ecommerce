@@ -101,10 +101,17 @@ export type HomepageMerchandisingSection = {
   maxProducts: number;
 };
 
+export type DiscoveryConfig = {
+  synonymGroups: string[][];
+  categoryOrder: string[];
+  popularSearches: string[];
+};
+
 export type MerchandisingConfig = {
   outOfStockMode: OutOfStockMode;
   shopSortMode: "priority" | "featured";
   productRules: Record<string, ProductMerchandisingRule>;
+  discovery: DiscoveryConfig;
   collections: MerchandisingCollection[];
   campaigns: MerchandisingCampaign[];
   homepageSections: HomepageMerchandisingSection[];
@@ -311,6 +318,15 @@ export const defaultMerchandisingConfig: MerchandisingConfig = {
   outOfStockMode: "push-down",
   shopSortMode: "priority",
   productRules: {},
+  discovery: {
+    synonymGroups: [
+      ["moisturizer", "moisturiser"],
+      ["sunscreen", "sunblock", "spf"],
+      ["cleanser", "face wash", "facial wash"],
+    ],
+    categoryOrder: ["Cleanser", "Moisturizer", "Sunscreen"],
+    popularSearches: ["sunscreen", "moisturizer", "cleanser"],
+  },
   collections: [],
   campaigns: [],
   homepageSections: [
@@ -785,6 +801,35 @@ function normalizeConfig(value: Partial<StorefrontConfig> | null): StorefrontCon
         typeof value.merchandising.productRules === "object"
           ? value.merchandising.productRules
           : {},
+      discovery: {
+        synonymGroups: Array.isArray(value.merchandising?.discovery?.synonymGroups)
+          ? value.merchandising.discovery.synonymGroups
+              .filter((group) => Array.isArray(group))
+              .map((group) =>
+                group
+                  .filter((term): term is string => typeof term === "string")
+                  .map((term) => term.trim().slice(0, 60))
+                  .filter(Boolean)
+                  .slice(0, 12),
+              )
+              .filter((group) => group.length >= 2)
+              .slice(0, 50)
+          : structuredClone(defaultMerchandisingConfig.discovery.synonymGroups),
+        categoryOrder: Array.isArray(value.merchandising?.discovery?.categoryOrder)
+          ? value.merchandising.discovery.categoryOrder
+              .filter((term): term is string => typeof term === "string")
+              .map((term) => term.trim().slice(0, 80))
+              .filter(Boolean)
+              .slice(0, 50)
+          : structuredClone(defaultMerchandisingConfig.discovery.categoryOrder),
+        popularSearches: Array.isArray(value.merchandising?.discovery?.popularSearches)
+          ? value.merchandising.discovery.popularSearches
+              .filter((term): term is string => typeof term === "string")
+              .map((term) => term.trim().slice(0, 60))
+              .filter(Boolean)
+              .slice(0, 20)
+          : structuredClone(defaultMerchandisingConfig.discovery.popularSearches),
+      },
       collections: Array.isArray(value.merchandising?.collections)
         ? value.merchandising.collections.slice(0, 100)
         : [],
