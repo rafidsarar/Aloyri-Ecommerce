@@ -1,6 +1,5 @@
 import "server-only";
 
-import { get, list } from "@vercel/blob";
 import { neon } from "@neondatabase/serverless";
 
 const RECOVERY_BASELINE_COUNT = 849;
@@ -242,6 +241,7 @@ async function readLegacyBlobJson<T>(pathname: string): Promise<T | null> {
     return null;
   }
   try {
+    const { get } = await import("@vercel/blob");
     const result = await get(blobNamespacePath(pathname), {
       access: "private",
       useCache: false,
@@ -488,9 +488,14 @@ export async function migrateLegacyBlobRecords() {
   }> = [];
   let cursor: string | undefined;
 
+  let legacyGet: typeof import("@vercel/blob").get;
+  let legacyList: typeof import("@vercel/blob").list;
   try {
+    const legacy = await import("@vercel/blob");
+    legacyGet = legacy.get;
+    legacyList = legacy.list;
     do {
-      const page = await list({
+      const page = await legacyList({
         limit: 1000,
         ...(cursor ? { cursor } : {}),
       });
@@ -524,7 +529,7 @@ export async function migrateLegacyBlobRecords() {
     const results = await Promise.all(
       batch.map(async (blob) => {
         try {
-          const result = await get(blob.pathname, {
+          const result = await legacyGet(blob.pathname, {
             access: "private",
             useCache: false,
           });
