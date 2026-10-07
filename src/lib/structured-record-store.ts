@@ -3,8 +3,6 @@ import "server-only";
 import { get, list, put } from "@vercel/blob";
 import { neon } from "@neondatabase/serverless";
 
-const RECORD_TABLE = "ecommerce_records";
-const MIGRATION_TABLE = "ecommerce_migration_runs";
 const RECOVERY_BASELINE_COUNT = 849;
 const RECOVERY_BASELINE_BYTES = 427831;
 
@@ -508,7 +506,7 @@ export async function migrateLegacyBlobRecords() {
     return status;
   }
 
-  let blobs: Array<{
+  const blobs: Array<{
     pathname: string;
     size: number;
   }> = [];
