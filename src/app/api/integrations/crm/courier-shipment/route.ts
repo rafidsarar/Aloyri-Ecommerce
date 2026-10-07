@@ -193,6 +193,8 @@ export async function POST(request: Request) {
     if (
       [
         "INVALID_SHIPMENT_TRANSITION",
+        "EVENT_ID_CONFLICT",
+        "STALE_COD_EVENT",
         "INVALID_COD_AMOUNTS",
         "COD_NOT_APPLICABLE",
         "REATTEMPT_TIME_REQUIRED",

@@ -1,3 +1,4 @@
+import { withRecordRetry } from "@/lib/structured-record-store";
 import "server-only";
 
 import type { ReturnRequestInput } from "@/lib/crm-return-integration";
@@ -34,6 +35,7 @@ export type SupportCase = {
   orderNumber?: string;
   customerName?: string;
   phone: string;
+  accountId?: string;
   email?: string;
   crmReturnRequestId?: string;
   crmReturnStatus?: string;
@@ -99,6 +101,7 @@ export async function createReturnSupportCase(input: {
   requestId: string;
   crmStatus?: string;
   phone: string;
+  accountId?: string;
   request: ReturnRequestInput;
 }) {
   const id = (await sha256Hex("aloyri-support-return-v1:" + input.requestId)).slice(0, 32);
@@ -112,6 +115,7 @@ export async function createReturnSupportCase(input: {
     version: 1,
     id,
     source: "return-request",
+    ...(input.accountId ? { accountId: input.accountId } : {}),
     category,
     status: "new",
     priority: suggestedSupportPriority({
@@ -145,6 +149,7 @@ export async function createReturnSupportCase(input: {
 export async function createCustomerSupportCase(input: {
   customerName: string;
   phone: string;
+  accountId?: string;
   email?: string;
   orderNumber?: string;
   category: Exclude<SupportCaseCategory, "return" | "refund">;
@@ -156,6 +161,7 @@ export async function createCustomerSupportCase(input: {
     version: 1,
     id,
     source: "customer-support",
+    ...(input.accountId ? { accountId: input.accountId } : {}),
     category: input.category,
     status: "new",
     priority: suggestedSupportPriority({ category: input.category }),
@@ -183,6 +189,8 @@ export async function updateSupportCase(
     internalNote?: string;
   },
 ) {
+  return withRecordRetry(async () => {
+
   const current = await getSupportCase(id);
   if (!current) throw new Error("Support case not found.");
 
@@ -220,10 +228,14 @@ export async function updateSupportCase(
     { scope: "support", target: current.id },
   );
   return next;
+
+  });
 }
 
 
 export async function appendCustomerSupportReply(id: string, note: string) {
+  return withRecordRetry(async () => {
+
   const current = await getSupportCase(id);
   if (!current) throw new Error("Support case not found.");
   const clean = note.trim().replace(/\s+/g, " ").slice(0, 1200);
@@ -237,4 +249,6 @@ export async function appendCustomerSupportReply(id: string, note: string) {
   };
   await writePrivateJson(casePath(id), next);
   return next;
+
+  });
 }

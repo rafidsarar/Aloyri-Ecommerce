@@ -1,3 +1,4 @@
+import { withRecordRetry } from "@/lib/structured-record-store";
 import "server-only";
 
 import {
@@ -60,6 +61,7 @@ export type CourierShipmentRecord = {
     issues: string[];
     lastCheckedAt?: string;
   };
+  appliedEvents?: Record<string, string>;
   events: ShipmentEvent[];
   createdAt: string;
   updatedAt: string;
@@ -121,6 +123,8 @@ export async function recordShipmentIntent(input: {
   orderTotal: number;
   paymentMethod: "COD" | "bKash" | "Nagad" | "Bank";
 }) {
+  return withRecordRetry(async () => {
+
   if (!blobConfigured()) return null;
   const pathname = pathFor(input.orderNumber);
   const existing = await readPrivateJson<CourierShipmentRecord>(pathname);
@@ -166,6 +170,8 @@ export async function recordShipmentIntent(input: {
   };
   await writePrivateJson(pathname, record);
   return record;
+
+  });
 }
 
 export async function reconcileShipmentFromTracking(input: {
@@ -175,6 +181,8 @@ export async function reconcileShipmentFromTracking(input: {
   orderStatus: string;
   trackingReference: string;
 }) {
+  return withRecordRetry(async () => {
+
   let record = await getCourierShipment(input.orderNumber);
   if (!record) {
     record = await recordShipmentIntent({
@@ -233,6 +241,8 @@ export async function reconcileShipmentFromTracking(input: {
     await writePrivateJson(pathFor(record.orderNumber), updated);
   }
   return updated;
+
+  });
 }
 
 export async function applyCrmCourierEvent(input: {
@@ -250,6 +260,8 @@ export async function applyCrmCourierEvent(input: {
   reattemptAt?: string;
   publicMessage?: string;
 }) {
+  return withRecordRetry(async () => {
+
   let record = await getCourierShipment(input.orderNumber);
   if (!record) {
     record = await recordShipmentIntent({
@@ -261,7 +273,10 @@ export async function applyCrmCourierEvent(input: {
     });
   }
   if (!record) throw new Error("SHIPMENT_DATASTORE_UNAVAILABLE");
-  if (record.events.some((row) => row.id === input.eventId)) {
+  const eventPayload = JSON.stringify(input);
+  const applied = record.appliedEvents?.[input.eventId];
+  if (applied && applied !== eventPayload) throw new Error("EVENT_ID_CONFLICT");
+  if (applied || record.events.some((row) => row.id === input.eventId)) {
     return { record, duplicate: true };
   }
   if (!canTransitionShipment(record.state, input.state)) {
@@ -278,6 +293,7 @@ export async function applyCrmCourierEvent(input: {
       ? record.cod.remittedAmount
       : normalizeCourierAmount(input.remittedCodAmount);
 
+  if (collectedAmount < record.cod.collectedAmount || remittedAmount < record.cod.remittedAmount) throw new Error("STALE_COD_EVENT");
   if (
     !validCourierCodAmounts(
       record.cod.expectedAmount,
@@ -318,6 +334,7 @@ export async function applyCrmCourierEvent(input: {
       : record.deliveryAttempts;
   const updated: CourierShipmentRecord = {
     ...record,
+    appliedEvents: { ...record.appliedEvents, [input.eventId]: eventPayload },
     provider: input.provider,
     state: input.state,
     trackingReference:
@@ -365,6 +382,8 @@ export async function applyCrmCourierEvent(input: {
     { scope: "delivery", target: record.orderNumber },
   );
   return { record: updated, duplicate: false };
+
+  });
 }
 
 export function publicShipmentTracking(

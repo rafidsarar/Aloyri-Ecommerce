@@ -106,7 +106,7 @@ function revalidatePublishedStorefront() {
 
 export async function setupAdminOwner(formData: FormData) {
   const ip = await requestIp();
-  if (!rateAllowed("admin-setup", ip, 5, 60 * 60 * 1000)) {
+  if (!await rateAllowed("admin-setup", ip, 5, 60 * 60 * 1000)) {
     redirect(
       "/admin/setup?error=" +
         encodeURIComponent("Too many setup attempts. Try again later."),
@@ -137,7 +137,7 @@ export async function setupAdminOwner(formData: FormData) {
 
 export async function loginAdmin(formData: FormData) {
   const ip = await requestIp();
-  if (!rateAllowed("admin-login", ip, 10, 15 * 60 * 1000)) {
+  if (!await rateAllowed("admin-login", ip, 10, 15 * 60 * 1000)) {
     redirect(
       "/admin/login?error=" +
         encodeURIComponent("Too many sign-in attempts. Try again in 15 minutes."),
@@ -225,7 +225,7 @@ export async function generateRecoveryCodesAction(
   if (!admin) return { error: "Your admin session has expired. Sign in again." };
 
   const ip = await requestIp();
-  if (!rateAllowed("admin-recovery-generate", ip, 5, 60 * 60 * 1000)) {
+  if (!await rateAllowed("admin-recovery-generate", ip, 5, 60 * 60 * 1000)) {
     return { error: "Too many recovery-code requests. Try again later." };
   }
 
@@ -242,7 +242,7 @@ export async function generateRecoveryCodesAction(
 
 export async function recoverAdminAccount(formData: FormData) {
   const ip = await requestIp();
-  if (!rateAllowed("admin-recover", ip, 6, 60 * 60 * 1000)) {
+  if (!await rateAllowed("admin-recover", ip, 6, 60 * 60 * 1000)) {
     redirect(
       "/admin/recover?error=" +
         encodeURIComponent("Too many recovery attempts. Try again later."),

@@ -14,7 +14,7 @@ function response(data: unknown, status = 200) {
 }
 
 export async function POST(request: Request) {
-  if (!rateAllowed("customer-auth", requestIp(request), 6, 60 * 60_000)) {
+  if (!await rateAllowed("customer-auth", requestIp(request), 6, 60 * 60_000)) {
     return response(
       { error: "Too many sign-in attempts. Try again later." },
       429,

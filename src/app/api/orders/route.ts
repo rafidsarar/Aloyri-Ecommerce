@@ -1,3 +1,4 @@
+import { submitDurableOrder } from "@/lib/order-sync";
 import {
   createCrmWebsiteOrder,
   type WebsiteOrderPayload,
@@ -9,12 +10,8 @@ import {
 } from "@/lib/checkout";
 import { rateAllowed, requestIp } from "@/lib/request-rate-limit";
 import { recordConfirmedOrderAnalytics, type AnalyticsDevice } from "@/lib/analytics-store";
-import { cancelPendingCartRecoveries } from "@/lib/cart-recovery";
-import { recordOrderSettlement } from "@/lib/payment-settlement";
-import { recordShipmentIntent } from "@/lib/courier-shipment";
 import {
   currentCustomerSession,
-  recordCurrentCustomerOrder,
 } from "@/lib/customer-auth";
 
 export const dynamic = "force-dynamic";
@@ -253,7 +250,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!rateAllowed("orders", requestIp(request), 20, 5 * 60_000)) {
+  if (!await rateAllowed("orders", requestIp(request), 20, 5 * 60_000)) {
     return response(
       {
         error: "Too many order attempts. Please wait a few minutes and try again.",
@@ -298,33 +295,13 @@ export async function POST(request: Request) {
     };
   }
 
-  const result = await createCrmWebsiteOrder(payload);
+  let result;
+  try { result = payload.items.every(item => item.productId === "aloyri-missing-smoke-product")
+    ? await createCrmWebsiteOrder(payload)
+    : await submitDurableOrder(payload, customerSession?.account.id);
+  } catch { return response({error:"We could not confirm this checkout. Retry with the same reference.",code:"ORDER_SYNC_UNAVAILABLE"},503); }
 
   if (result.ok) {
-    try {
-      await recordOrderSettlement({
-        externalOrderId: payload.externalOrderId,
-        crmOrderId: result.body.orderId,
-        orderNumber: result.body.orderNumber,
-        method: payload.paymentMethod,
-        orderTotal: result.body.total,
-      });
-    } catch (error) {
-      console.error("Payment settlement recording failed", error);
-    }
-
-    try {
-      await recordShipmentIntent({
-        externalOrderId: payload.externalOrderId,
-        crmOrderId: result.body.orderId,
-        orderNumber: result.body.orderNumber,
-        paymentMethod: payload.paymentMethod,
-        orderTotal: result.body.total,
-      });
-    } catch (error) {
-      console.error("Shipment intelligence initialization failed", error);
-    }
-
     try {
       await recordConfirmedOrderAnalytics({
         orderNumber: result.body.orderNumber,
@@ -339,25 +316,7 @@ export async function POST(request: Request) {
       console.error("Confirmed-order analytics failed", error);
     }
 
-    if (payload.customer.email) {
-      try {
-        await cancelPendingCartRecoveries(payload.customer.email);
-      } catch (error) {
-        console.error("Cart recovery cancellation failed", error);
-      }
-    }
 
-    try {
-      await recordCurrentCustomerOrder({
-        email: payload.customer.email,
-        orderNumber: result.body.orderNumber,
-        phone: payload.customer.phone,
-        createdAt: new Date().toISOString(),
-        total: result.body.total,
-      });
-    } catch (error) {
-      console.error("Customer account order linking failed", error);
-    }
   }
 
   return response(result.body, result.status);

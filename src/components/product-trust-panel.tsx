@@ -9,15 +9,15 @@ export function ProductTrustPanel({
 }) {
   const items = [
     {
-      title: "Product facts checked",
+      title: manufacturerVerified ? "Product facts checked" : "Product information",
       copy: manufacturerVerified
         ? `Key facts are checked against ${sourceLabel || "the manufacturer"} and the exact pack should remain the final reference.`
-        : "Aloyri separates verified product facts from live CRM price and stock information.",
+        : "Manufacturer details for this exact variant are awaiting verification. Refer to the supplied packaging for directions and ingredients.",
     },
     {
       title: "Authenticity & packaging",
       copy:
-        "Product identity is matched against manufacturer information. Contact Aloyri if seals, labeling or packaging appear inconsistent on delivery.",
+        "Check the seals, labeling and exact variant on delivery. Contact Aloyri if packaging appears inconsistent.",
     },
     {
       title: "COD & clear delivery",

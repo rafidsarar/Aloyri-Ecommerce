@@ -1,3 +1,5 @@
+import { sharedRateAllowed, structuredDatastoreConfigured } from "@/lib/structured-record-store";
+import { createHash } from "node:crypto";
 type RateEntry = { count: number; resetAt: number };
 
 const globalRate = globalThis as typeof globalThis & {
@@ -16,12 +18,17 @@ export function requestIp(request: Request) {
   );
 }
 
-export function rateAllowed(
+export async function rateAllowed(
   namespace: string,
   key: string,
   limit: number,
   windowMs: number,
 ) {
+  if (structuredDatastoreConfigured()) {
+    try { return await sharedRateAllowed(namespace + ":" + createHash("sha256").update(key).digest("hex"), limit, windowMs); }
+    catch { return false; }
+  }
+  if (process.env.VERCEL_ENV === "production") return false;
   const now = Date.now();
 
   if (rateStore.size > 4000) {

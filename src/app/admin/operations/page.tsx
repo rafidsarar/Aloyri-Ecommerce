@@ -1,7 +1,11 @@
+import { OperationalRestore } from "@/components/admin/operational-restore";
+import { orderSyncHealth } from "@/lib/order-sync";
 import {
   createBackupAction,
   restoreBackupAction,
   runHealthCheckAction,
+  retryOrderSyncAction,
+  recoverLegacyAction,
 } from "@/app/admin/operations/actions";
 import {
   AdminCard,
@@ -56,6 +60,7 @@ export default async function OperationsPage({
     listRuntimeErrors(20),
   ]);
   const canRun = hasAdminPermission(admin, "health.run");
+  const sync = await orderSyncHealth();
   const canCreateBackup = hasAdminPermission(admin, "backups.create");
   const canExportBackup = hasAdminPermission(admin, "backups.export");
   const canRestore =
@@ -70,9 +75,11 @@ export default async function OperationsPage({
     <AdminShell
       username={admin.username}
       title="Operational health"
-      subtitle="Read-only checks across the storefront datastore, CRM catalog/order bridge, analytics, staff directory and current runtime. Backups contain website-owned configuration only—never CRM operational data."
+      subtitle="Read-only checks across the storefront datastore, CRM catalog/order bridge, analytics, staff directory and current runtime. Configuration backups cover drafts; operational backups cover website-owned records. CRM remains the authority for stock, prices and order fulfillment."
     >
       {query.healthRun ? <AdminNotice>Health snapshot saved.</AdminNotice> : null}
+      {admin.role === "owner" && canExportBackup ? <section className="rounded-2xl border p-5"><h2 className="font-semibold">Operational data recovery</h2><p className="mt-2 text-sm">Download a complete snapshot of website records, including customer accounts, payments, delivery and support. Active customer sessions are excluded. Keep this file private.</p><a className="mt-3 inline-block underline" href="/api/admin/operations/data-backup">Download operational backup</a><p className="mt-2 text-xs">Configuration backups below restore website drafts only. Operational restore validates the snapshot checksum and requires owner confirmation.</p>{canRestore ? <OperationalRestore /> : null}{canRestore ? <form action={recoverLegacyAction} className="mt-4"><button className="rounded border px-3 py-2 text-sm">Recover and verify legacy inventory</button><p className="mt-2 text-xs">Imports missing records and referenced media; never overwrites current records. Original storage access is required.</p></form> : null}</section> : null}
+      <section className="rounded-2xl border p-5"><h2 className="font-semibold">CRM synchronization</h2>{canRun ? <form action={retryOrderSyncAction} className="mt-3"><button className="rounded border px-3 py-2 text-sm">Retry pending order updates</button></form> : null}<p className="mt-2 text-sm">{sync.totals.completed} synchronized · {sync.totals.pending} awaiting retry · {sync.totals.attention} need review</p>{sync.issues.slice(0,30).map(issue=><p className="mt-2 text-xs" key={issue.id}>{issue.id} · {issue.state} · {issue.error}</p>)}</section>
       {query.backupCreated ? <AdminNotice>Private Ecommerce Admin backup created.</AdminNotice> : null}
       {query.backupRestored ? (
         <AdminNotice>

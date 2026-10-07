@@ -85,7 +85,7 @@ export function CustomerAccountHub() {
         </p>
         <h1 className="display mt-2 text-5xl sm:text-6xl">Customer account.</h1>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-[#321f1c]/52">
-          Your recent orders, reorder guidance, wishlist, cart, compare list and profile basics are organized here. CRM remains the live source for order status; when secure email is active, passwordless sign-in adds cloud wishlist sync and customer-controlled lifecycle preferences.
+          Your recent orders, reorder guidance, wishlist, cart, compare list and profile basics are organized here. Sign in with Google to access saved addresses, cloud wishlist, order history and your email preferences.
         </p>
       </div>
 
@@ -118,7 +118,7 @@ export function CustomerAccountHub() {
         <section className="rounded-[1.5rem] border border-[#713a35]/10 bg-white/70 p-5 sm:p-7">
           <p className="text-sm font-semibold">Checkout profile</p>
           <p className="mt-1 text-xs leading-5 text-[#321f1c]/45">
-            Saved locally in this browser to prefill future checkout. Your delivery address is intentionally not stored here.
+            Saved locally in this browser to prefill future checkout. Sign in with Google to save delivery addresses securely in your account.
           </p>
 
           <form key={profileSnapshot} onSubmit={saveProfile} className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -204,7 +204,7 @@ export function CustomerAccountHub() {
             </Link>
           </div>
           <p className="mt-5 text-[11px] leading-5 text-[#321f1c]/40">
-            Aloyri customer accounts use passwordless one-time email links when email infrastructure is active. Recent order credentials and checkout profile details remain device-local.
+            Google sign-in keeps your account details together across devices. Guest checkout details are saved only in this browser.
           </p>
         </section>
       </div>

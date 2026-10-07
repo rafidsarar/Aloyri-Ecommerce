@@ -145,7 +145,7 @@ export async function runOperationalHealth(
     checks.push({
       id: "structured-datastore",
       label: "Ecommerce structured datastore",
-      state: migration?.state === "partial" ? "warning" : "healthy",
+      state: migration?.state === "verified" ? "healthy" : "warning",
       detail:
         datastoreResult.value.recordCount +
         " Neon record(s) · namespace " +

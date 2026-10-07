@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { formatPrice } from "@/lib/catalog";
 import { readCustomerOrders, rememberCustomerOrder } from "@/lib/customer-orders";
 
@@ -19,7 +19,7 @@ type OrderRow =
   | { ok: false; orderNumber: string; createdAt: string; total?: number };
 type SupportCase = { id:string; category:string; status:string; orderNumber?:string; note:string; createdAt:string; updatedAt:string; events:Array<{id:string;at:string;type:string;detail?:string}> };
 type ProductAlert = { id:string; productName:string; productSlug:string; kinds:string[]; createdAt:string };
-type Data = { account: Account; orders: OrderRow[]; supportCases: SupportCase[]; productAlerts: ProductAlert[] };
+type Data = { pagination: { page: number; pages: number; total: number }; account: Account; orders: OrderRow[]; supportCases: SupportCase[]; productAlerts: ProductAlert[] };
 
 function dateLabel(value:string){
   const d=new Date(value);
@@ -38,8 +38,8 @@ export function CustomerPostPurchaseCenter(){
   const [error,setError]=useState("");
   const [busy,setBusy]=useState("");
 
-  async function refresh(){
-    const response=await fetch("/api/customer/post-purchase",{cache:"no-store",credentials:"same-origin"});
+  const refresh = useCallback(async (page = 1) => {
+    const response=await fetch("/api/customer/post-purchase?page="+page,{cache:"no-store",credentials:"same-origin"});
     if(response.status===401){setData(null);return;}
     if(!response.ok)throw new Error("Unable to load account history.");
     const next=await response.json() as Data;
@@ -55,7 +55,7 @@ export function CustomerPostPurchaseCenter(){
         });
       }
     }
-  }
+  }, []);
 
   useEffect(()=>{
     let cancelled=false;
@@ -69,7 +69,7 @@ export function CustomerPostPurchaseCenter(){
     void fetch("/api/customer/security",{cache:"no-store",credentials:"same-origin"})
       .then(async r=>r.ok?(await r.json()):null).then(v=>{if(!cancelled&&v)setSecurity(v);}).catch(()=>undefined);
     return()=>{cancelled=true;};
-  },[]);
+  },[refresh]);
 
   async function saveAddresses(addresses:Address[]){
     setBusy("address");setError("");setNotice("");
@@ -169,6 +169,7 @@ export function CustomerPostPurchaseCenter(){
           </div>
         </article>:<article key={row.orderNumber} className="rounded-[1.25rem] border border-[#713a35]/10 p-5"><p className="font-mono text-xs">{row.orderNumber}</p><p className="mt-2 text-xs text-[#321f1c]/45">Live CRM status is temporarily unavailable. This order remains linked to your account.</p></article>):<p className="text-sm text-[#321f1c]/50">No cloud-linked orders yet. Orders placed while signed in are added automatically; valid recent orders on this browser are claimed after sign-in.</p>}
       </div>
+      <nav aria-label="Order history pages" className="mt-5 flex items-center gap-4"><button disabled={data.pagination.page <= 1} onClick={()=>void refresh(data.pagination.page-1).catch(()=>setError("Unable to load orders."))}>Previous</button><span>Page {data.pagination.page} of {data.pagination.pages} · {data.pagination.total} orders</span><button disabled={data.pagination.page >= data.pagination.pages} onClick={()=>void refresh(data.pagination.page+1).catch(()=>setError("Unable to load orders."))}>Next</button></nav>
     </div>
 
     <div className="grid gap-6 lg:grid-cols-2">
@@ -191,7 +192,7 @@ export function CustomerPostPurchaseCenter(){
       <section className="rounded-[1.5rem] border border-[#713a35]/10 bg-[#f5e8e2] p-5 sm:p-7">
         <p className="text-sm font-semibold">Account security</p>
         {security?<><p className="mt-3 text-3xl font-semibold">{security.activeSessions}</p><p className="text-xs text-[#321f1c]/45">active secure session(s)</p><p className="mt-4 text-xs leading-5 text-[#321f1c]/48">This session expires {dateLabel(security.currentSessionExpiresAt)}. Sign out everywhere else if you used a shared device.</p><button disabled={busy==="security"||security.activeSessions<=1} onClick={()=>void revokeOthers()} className="mt-4 rounded-full bg-[#713a35] px-5 py-3 text-xs font-semibold text-white disabled:opacity-40">Sign out other sessions</button></>:<p className="mt-3 text-xs text-[#321f1c]/45">Loading session security…</p>}
-        <p className="mt-6 text-xs leading-5 text-[#321f1c]/48">Aloyri uses passwordless one-time email links. Product back-in-stock and price-drop alerts are tied to your signed-in account and can be managed from product pages.</p>
+        <p className="mt-6 text-xs leading-5 text-[#321f1c]/48">Aloyri uses Google sign-in. Product back-in-stock and price-drop alerts are tied to your signed-in account and can be managed from product pages.</p>
         {data.productAlerts.length?<div className="mt-4 grid gap-2">{data.productAlerts.map(alert=><Link key={alert.id} href={"/product/"+alert.productSlug} className="rounded-xl bg-white/65 p-3 text-xs"><strong>{alert.productName}</strong><span className="mt-1 block text-[#321f1c]/45">{alert.kinds.map(kind=>kind==="back-in-stock"?"Back in stock":"Price drop").join(" · ")}</span></Link>)}</div>:null}
       </section>
     </div>

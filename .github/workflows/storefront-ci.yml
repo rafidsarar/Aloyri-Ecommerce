@@ -20,7 +20,7 @@ jobs:
           node-version: 24
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Production dependency audit
         run: npm audit --omit=dev --audit-level=high
@@ -30,6 +30,9 @@ jobs:
 
       - name: Typecheck
         run: npm run typecheck
+
+      - name: Database regression checks
+        run: npm run test:audit
 
       - name: Build
         run: npm run build

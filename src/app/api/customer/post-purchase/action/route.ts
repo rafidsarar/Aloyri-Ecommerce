@@ -1,3 +1,4 @@
+import { ownsSupportCase } from "@/lib/support-ownership";
 import { currentCustomerSession } from "@/lib/customer-auth";
 import { fetchCrmOrderTracking } from "@/lib/crm-tracking-integration";
 import {
@@ -42,13 +43,10 @@ export async function POST(request: Request) {
     const note = typeof body.note === "string" ? body.note : "";
     const refs = session.account.orderRefs;
     const orderNumbers = new Set(refs.map((row) => row.orderNumber));
-    const phones = new Set(refs.map((row) => row.phone));
     const owned = (await listSupportCases(1000)).find(
       (row) =>
         row.id === caseId &&
-        (row.email?.toLowerCase() === session.account.email ||
-          Boolean(row.orderNumber && orderNumbers.has(row.orderNumber)) ||
-          phones.has(row.phone)),
+        ownsSupportCase(row, session.account.id, orderNumbers),
     );
     if (!owned) return reply({ error: "Support case not found." }, 404);
     if (note.trim().length < 2 || note.length > 1200) {
@@ -95,6 +93,7 @@ export async function POST(request: Request) {
         : "Customer reported a delivery issue from the signed-in account.";
 
   const row = await createCustomerSupportCase({
+    accountId: session.account.id,
     customerName: session.account.displayName || "Aloyri customer",
     phone: ref.phone,
     email: session.account.email,

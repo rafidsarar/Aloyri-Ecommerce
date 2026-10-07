@@ -19,7 +19,7 @@ export function ProductMedia({
   const verified = getVerifiedProductContent(product.id);
   const photo = product.mediaPath
     ? {
-        src: "/api/storefront-media/" + product.mediaPath.startsWith("media/") ? product.mediaPath.slice(6) : product.mediaPath,
+        src: "/api/storefront-media/" + (product.mediaPath.startsWith("media/") ? product.mediaPath.slice(6) : product.mediaPath),
         alt: `${product.brand} ${product.name}`,
       }
     : verified?.photo;

@@ -136,7 +136,7 @@ function failureFor(status: number, code: string, fallback: string): OrderFailur
     };
   }
 
-  if (code === "IDEMPOTENCY_CONFLICT") {
+  if ((code === "IDEMPOTENCY_CONFLICT" || code === "CHECKOUT_CONFLICT")) {
     return {
       message:
         "This checkout reference may already have been used. To avoid creating a duplicate order, do not start a new attempt from this screen.",

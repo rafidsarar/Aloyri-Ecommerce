@@ -164,6 +164,7 @@ export async function POST(request: Request) {
     if (code === "SETTLEMENT_NOT_FOUND") {
       return Response.json({ error: "Settlement not found.", code }, { status: 404 });
     }
+    if (["EVENT_ID_CONFLICT", "STALE_REFUND_EVENT", "STALE_COD_EVENT"].includes(code)) return Response.json({ error: "Event conflicts with current state.", code }, { status: 409, headers: { "Cache-Control": "no-store" } });
     if (
       code === "INVALID_SETTLEMENT_TRANSITION" ||
       code === "INVALID_REFUND_AMOUNT"

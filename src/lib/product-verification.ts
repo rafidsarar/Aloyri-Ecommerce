@@ -2,7 +2,7 @@ export type VerifiedProductContent = {
   sourceLabel: string;
   sourceUrl: string;
   verifiedAt: string;
-  photo: {
+  photo?: {
     src: string;
     alt: string;
     sourceLabel: string;
@@ -20,6 +20,98 @@ export type VerifiedProductContent = {
 };
 
 export const verifiedProductContent: Record<string, VerifiedProductContent> = {
+"bd26-cosrx-patch": {
+  "sourceLabel": "COSRX Official",
+  "sourceUrl": "https://www.cosrx.com/products/acne-pimple-master-patch",
+  "verifiedAt": "2026-10-07",
+  "claims": [
+    "Hydrocolloid patches absorb discharge from a covered blemish."
+  ],
+  "directions": [
+    "Clean and dry the area.",
+    "Choose a patch that covers the blemish and apply it directly to dry skin."
+  ],
+  "sourceNote": "These directions reference the manufacturer product family. Regional formulas and packaging may differ; the exact supplied pack is the final reference. No exact-pack photograph or full ingredient list has been verified for this listing."
+},
+"bd26-cosrx-snail": {
+  "sourceLabel": "COSRX Official",
+  "sourceUrl": "https://www.cosrx.com/products/advanced-snail-96-mucin-power-essence",
+  "verifiedAt": "2026-10-07",
+  "claims": [
+    "A hydrating essence formulated with snail secretion filtrate."
+  ],
+  "directions": [
+    "After cleansing and toner, apply a small amount over the face.",
+    "Pat gently and follow with moisturizer."
+  ],
+  "sourceNote": "These directions reference the manufacturer product family. Regional formulas and packaging may differ; the exact supplied pack is the final reference. No exact-pack photograph or full ingredient list has been verified for this listing."
+},
+"bd26-cetaphil-cleanser": {
+  "sourceLabel": "Cetaphil Official",
+  "sourceUrl": "https://www.cetaphil.com/us/products/product-categories/all-cleansers/cetaphil-gentle-skin-cleanser/302990110227.html",
+  "verifiedAt": "2026-10-07",
+  "claims": [
+    "A creamy, fragrance-free cleanser for normal to dry skin."
+  ],
+  "directions": [
+    "Apply and massage gently.",
+    "For use with water, rinse thoroughly; follow the supplied pack for any water-free directions."
+  ],
+  "sourceNote": "These directions reference the manufacturer product family. Regional formulas and packaging may differ; the exact supplied pack is the final reference. No exact-pack photograph or full ingredient list has been verified for this listing."
+},
+"bd26-cerave-cream": {
+  "sourceLabel": "CeraVe Official",
+  "sourceUrl": "https://www.cerave.com/skincare/moisturizers/moisturizing-cream",
+  "verifiedAt": "2026-10-07",
+  "claims": [
+    "A rich face and body moisturizer for normal to dry skin."
+  ],
+  "directions": [
+    "Apply to the skin as needed.",
+    "Follow the supplied packaging for the current directions."
+  ],
+  "sourceNote": "These directions reference the manufacturer product family. Regional formulas and packaging may differ; the exact supplied pack is the final reference. No exact-pack photograph or full ingredient list has been verified for this listing."
+},
+"bd26-neutrogena-hydro": {
+  "sourceLabel": "Neutrogena Official",
+  "sourceUrl": "https://www.neutrogena.co.uk/skincare/moisturisers/hydro-boost-water-gel",
+  "verifiedAt": "2026-10-07",
+  "claims": [
+    "A water-gel moisturizer."
+  ],
+  "directions": [
+    "Apply a small amount to a cleansed face and neck.",
+    "Massage gently until absorbed."
+  ],
+  "sourceNote": "These directions reference the manufacturer product family. Regional formulas and packaging may differ; the exact supplied pack is the final reference. No exact-pack photograph or full ingredient list has been verified for this listing."
+},
+"bd26-ordinary-niacinamide": {
+  "sourceLabel": "The Ordinary Official",
+  "sourceUrl": "https://theordinary.com/en-us/niacinamide-10-zinc-1-serum-100436.html",
+  "verifiedAt": "2026-10-07",
+  "claims": [
+    "A water-based serum with niacinamide 10% and zinc 1%."
+  ],
+  "directions": [
+    "Apply a few drops after cleansing, before heavier moisturizers.",
+    "Use on unbroken skin and follow the supplied pack directions."
+  ],
+  "sourceNote": "These directions reference the manufacturer product family. Regional formulas and packaging may differ; the exact supplied pack is the final reference. No exact-pack photograph or full ingredient list has been verified for this listing."
+},
+"bd26-boj-relief-sun": {
+  "sourceLabel": "Beauty of Joseon Official",
+  "sourceUrl": "https://ie.beautyofjoseon.com/products/relief-sun-rice-probiotics-duo-global",
+  "verifiedAt": "2026-10-07",
+  "claims": [
+    "A daily sunscreen used as the final morning skincare step."
+  ],
+  "directions": [
+    "Apply an even layer as the final morning skincare step, following the quantity on your exact pack.",
+    "Reapply during sun exposure as directed on the supplied packaging."
+  ],
+  "sourceNote": "These directions reference the manufacturer product family. Regional formulas and packaging may differ; the exact supplied pack is the final reference. No exact-pack photograph or full ingredient list has been verified for this listing. The manufacturer now also publishes revised Relief Sun formulas; this listing is Rice + Probiotics, so revised ingredient lists must not be substituted."
+},
+
   "simple-wash": {
     sourceLabel: "Simple Official",
     sourceUrl:
@@ -370,5 +462,6 @@ export const verifiedProductContent: Record<string, VerifiedProductContent> = {
 };
 
 export function getVerifiedProductContent(productId: string) {
-  return verifiedProductContent[productId];
+  const exactAliases: Record<string, string> = { "bd26-simple-wash": "simple-wash", "bd26-simple-light": "simple-light" };
+  return verifiedProductContent[productId] || verifiedProductContent[exactAliases[productId]];
 }

@@ -56,7 +56,7 @@ export async function POST(request: Request) {
     return response({ error: "Invalid request." }, 415);
   }
 
-  if (!rateAllowed("post-purchase", requestIp(request), 12, 5 * 60_000)) {
+  if (!await rateAllowed("post-purchase", requestIp(request), 12, 5 * 60_000)) {
     return response({ error: "Too many order refresh attempts." }, 429);
   }
 

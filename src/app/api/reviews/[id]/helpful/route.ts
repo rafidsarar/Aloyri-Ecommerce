@@ -28,7 +28,7 @@ export async function POST(
   ) {
     return response({ error: "Invalid request." }, 415);
   }
-  if (!rateAllowed("review-helpful", requestIp(request), 40, 60 * 60_000)) {
+  if (!await rateAllowed("review-helpful", requestIp(request), 40, 60 * 60_000)) {
     return response({ error: "Too many votes. Please try again later." }, 429);
   }
 

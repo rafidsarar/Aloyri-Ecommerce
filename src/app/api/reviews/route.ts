@@ -146,7 +146,7 @@ export async function POST(request: Request) {
     return response({ error: "Content-Type must be application/json." }, 415);
   }
   const ip = requestIp(request);
-  if (!rateAllowed("reviews", ip, 12, 60 * 60_000)) {
+  if (!await rateAllowed("reviews", ip, 12, 60 * 60_000)) {
     return response(
       { error: "Too many review attempts. Please try again later." },
       429,

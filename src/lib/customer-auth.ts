@@ -1,3 +1,4 @@
+import { withRecordRetry } from "@/lib/structured-record-store";
 import "server-only";
 
 import { cookies } from "next/headers";
@@ -210,8 +211,7 @@ function safeOrderRefs(value: unknown) {
       return { orderNumber, phone, createdAt, ...(total !== undefined ? { total } : {}) };
     })
     .filter((row): row is CustomerOrderRef => Boolean(row))
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, 20);
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 function publicAccount(account: CustomerAccount): PublicCustomerAccount {
@@ -376,6 +376,7 @@ export async function requestCustomerMagicLink(
 }
 
 export async function consumeCustomerMagicLink(token: string) {
+  if (!customerAuthReadiness().emailLinkEnabled) throw new Error("EMAIL_LINK_DISABLED");
   if (!/^[A-Za-z0-9_-]{30,100}$/.test(token)) {
     throw new Error("INVALID_TOKEN");
   }
@@ -480,6 +481,8 @@ export async function updateCurrentCustomerAccount(input: {
   emailPreferences?: Partial<CustomerEmailPreferences>;
   savedAddresses?: unknown;
 }) {
+  return withRecordRetry(async () => {
+
   const current = await currentCustomerSession();
   if (!current) throw new Error("UNAUTHENTICATED");
   const stored = await accountById(current.account.id);
@@ -515,6 +518,8 @@ export async function updateCurrentCustomerAccount(input: {
   stored.updatedAt = new Date().toISOString();
   await writePrivateJson(ACCOUNT_PREFIX + stored.id + ".json", stored);
   return publicAccount(stored);
+
+  });
 }
 
 
@@ -538,22 +543,23 @@ export async function claimCurrentCustomerOrder(input: {
   createdAt?: string;
   total?: number;
 }) {
+  return withRecordRetry(async () => {
+
   const current = await currentCustomerSession();
   if (!current) throw new Error("UNAUTHENTICATED");
-  const stored = await accountById(current.account.id);
-  if (!stored) throw new Error("UNAUTHENTICATED");
-  stored.orderRefs = safeOrderRefs([
-    {
-      orderNumber: input.orderNumber,
-      phone: input.phone,
-      createdAt: input.createdAt || new Date().toISOString(),
-      ...(typeof input.total === "number" ? { total: input.total } : {}),
-    },
-    ...(stored.orderRefs || []),
-  ]);
+  return recordCustomerOrderForAccount(current.account.id, { ...input, createdAt: input.createdAt || new Date().toISOString() });
+  });
+}
+
+export async function recordCustomerOrderForAccount(accountId: string, input: CustomerOrderRef) {
+  return withRecordRetry(async () => {
+  const stored = await accountById(accountId);
+  if (!stored) throw new Error("ACCOUNT_NOT_FOUND");
+  stored.orderRefs = safeOrderRefs([input, ...(stored.orderRefs || [])]);
   stored.updatedAt = new Date().toISOString();
   await writePrivateJson(ACCOUNT_PREFIX + stored.id + ".json", stored);
   return publicAccount(stored);
+  });
 }
 
 export async function customerSecuritySummary() {
@@ -608,6 +614,8 @@ export async function createCustomerSessionFromGoogleIdentity(input: {
   email: string;
   displayName?: string;
 }) {
+  return withRecordRetry(async () => {
+
   if (
     !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
       input.supabaseUserId,
@@ -660,4 +668,6 @@ export async function createCustomerSessionFromGoogleIdentity(input: {
     sessionToken,
     account: publicAccount(account),
   };
+
+  });
 }

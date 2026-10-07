@@ -74,7 +74,7 @@ export default async function CartRecoveryAdminPage() {
           <p>3. Set <code>RESEND_API_KEY</code> securely in Vercel.</p>
           <p>4. Set <code>ALOYRI_EMAIL_DOMAIN_VERIFIED=1</code>.</p>
           <p>5. Set <code>ALOYRI_CART_RECOVERY_ENABLED=1</code>.</p>
-          <p>6. Schedule the protected <code>/api/cron/cart-recovery</code> endpoint using the existing <code>CRON_SECRET</code>.</p>
+          <p>6. The daily customer automation schedule includes cart recovery and uses the existing <code>CRON_SECRET</code>.</p>
         </div>
         <p className="mt-5 text-xs leading-6 text-black/42">
           No paid Vercel upgrade is required by this implementation itself. Scheduling cadence can be chosen later based on the hosting limits available at that time.

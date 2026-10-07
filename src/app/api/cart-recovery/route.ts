@@ -25,7 +25,7 @@ export async function POST(request: Request) {
       503,
     );
   }
-  if (!rateAllowed("cart-recovery", requestIp(request), 12, 60 * 60_000)) {
+  if (!await rateAllowed("cart-recovery", requestIp(request), 12, 60 * 60_000)) {
     return response({ error: "Too many recovery requests." }, 429);
   }
   if (

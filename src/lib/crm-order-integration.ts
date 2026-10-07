@@ -131,6 +131,12 @@ export async function createCrmWebsiteOrder(payload: WebsiteOrderPayload) {
       };
     }
 
+    if (response.ok) {
+      const value = result as Partial<CrmOrderResult> | null;
+      if (!value || typeof value.orderId !== "string" || !value.orderId || typeof value.orderNumber !== "string" || !/^WEB-[A-Z0-9-]{8,90}$/i.test(value.orderNumber) || typeof value.total !== "number" || !Number.isFinite(value.total) || value.total < 0) {
+        return { ok: false as const, status: 503, body: { error: "The order response could not be verified. Retry the same checkout.", code: "INVALID_ORDER_RESPONSE" } };
+      }
+    }
     return {
       ok: response.ok,
       status: response.status,

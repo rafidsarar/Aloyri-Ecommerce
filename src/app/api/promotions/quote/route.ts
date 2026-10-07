@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     return response({ error: "Content-Type must be application/json.", code: "INVALID_CONTENT_TYPE" }, 415);
   }
 
-  if (!rateAllowed("promotions", requestIp(request), 120, 5 * 60_000)) {
+  if (!await rateAllowed("promotions", requestIp(request), 120, 5 * 60_000)) {
     return response(
       {
         error: "Too many promotion requests. Please wait a few minutes and try again.",
