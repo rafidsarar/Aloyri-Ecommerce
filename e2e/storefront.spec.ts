@@ -55,7 +55,7 @@ test("catalog search and mobile navigation", async ({ page }) => {
   await mockCommerce(page);
   await page.goto("/shop");
   await expect(page.getByText("Refreshing Facial Wash")).toBeVisible();
-  await page.getByPlaceholder("Search by product or brand").fill("Skin Aqua");
+  await page.getByPlaceholder("Search products, brands, routines or textures").fill("Skin Aqua");
   await expect(page.getByText("Skin Aqua Super Moisture UV Gel")).toBeVisible();
 
   await page.setViewportSize({ width: 390, height: 844 });
