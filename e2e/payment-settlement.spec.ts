@@ -3,6 +3,7 @@ import {
   canTransitionSettlement,
   normalizeBdt,
   paymentProviderFor,
+  refundAmountMatchesSettlementState,
   refundStateForAmount,
   validRefundAmount,
 } from "../src/lib/payment-settlement-model";
@@ -21,6 +22,10 @@ test("refund amounts cannot exceed the captured order total", () => {
   expect(validRefundAmount(1500, 1500.01)).toBe(false);
   expect(refundStateForAmount(1500, 500)).toBe("partially_refunded");
   expect(refundStateForAmount(1500, 1500)).toBe("refunded");
+  expect(refundAmountMatchesSettlementState("refunded", 1500, 1500)).toBe(true);
+  expect(refundAmountMatchesSettlementState("refunded", 1500, 500)).toBe(false);
+  expect(refundAmountMatchesSettlementState("partially_refunded", 1500, 500)).toBe(true);
+  expect(refundAmountMatchesSettlementState("partially_refunded", 1500, 0)).toBe(false);
 });
 
 test("money and payment providers normalize deterministically", () => {

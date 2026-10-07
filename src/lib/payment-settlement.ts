@@ -12,8 +12,8 @@ import {
   canTransitionSettlement,
   normalizeBdt,
   paymentProviderFor,
+  refundAmountMatchesSettlementState,
   refundStateForAmount,
-  validRefundAmount,
   type RefundState,
   type SettlementPaymentMethod,
   type SettlementState,
@@ -276,7 +276,13 @@ export async function applyCrmSettlementEvent(input: {
     input.refundedAmount === undefined
       ? record.refundedAmount
       : normalizeBdt(input.refundedAmount);
-  if (!validRefundAmount(record.orderTotal, refundedAmount)) {
+  if (
+    !refundAmountMatchesSettlementState(
+      input.state,
+      record.orderTotal,
+      refundedAmount,
+    )
+  ) {
     throw new Error("INVALID_REFUND_AMOUNT");
   }
 

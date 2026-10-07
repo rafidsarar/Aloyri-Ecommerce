@@ -33,6 +33,21 @@ export function validRefundAmount(orderTotal: number, refundedAmount: number) {
   return normalizeBdt(refundedAmount) <= normalizeBdt(orderTotal);
 }
 
+export function refundAmountMatchesSettlementState(
+  state: SettlementState,
+  orderTotal: number,
+  refundedAmount: number,
+) {
+  if (!validRefundAmount(orderTotal, refundedAmount)) return false;
+  const total = normalizeBdt(orderTotal);
+  const refunded = normalizeBdt(refundedAmount);
+  if (state === "refunded") return Math.abs(total - refunded) <= 0.009;
+  if (state === "partially_refunded") {
+    return refunded > 0 && refunded + 0.009 < total;
+  }
+  return true;
+}
+
 export function refundStateForAmount(orderTotal: number, refundedAmount: number): RefundState {
   const total = normalizeBdt(orderTotal);
   const refunded = normalizeBdt(refundedAmount);
