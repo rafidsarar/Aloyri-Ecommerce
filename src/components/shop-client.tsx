@@ -310,9 +310,6 @@ export function ShopClient({
             placeholder="Search products, brands, routines or textures"
             className="h-12 w-full rounded-full border border-[#713a35]/14 bg-white px-5 pr-12 text-sm outline-none transition placeholder:text-[#321f1c]/35 focus:border-[#b9725f]/60"
           />
-          <span className="pointer-events-none absolute right-5 top-6 -translate-y-1/2 text-xs uppercase tracking-[0.16em] text-[#713a35]/45">
-            Find
-          </span>
 
           {searchFocused && suggestions.length > 0 ? (
             <div
