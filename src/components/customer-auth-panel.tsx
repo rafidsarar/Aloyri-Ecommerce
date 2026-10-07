@@ -17,6 +17,7 @@ type Account = {
   id: string;
   email: string;
   displayName: string;
+  phone?: string;
   savedProductIds: string[];
   emailPreferences: Prefs;
 };
@@ -73,6 +74,7 @@ export function CustomerAuthPanel() {
         credentials: "same-origin",
         body: JSON.stringify({
           displayName: form.get("displayName"),
+          phone: form.get("phone"),
           emailPreferences: {
             postDelivery: form.get("postDelivery") === "on",
             reviewRequest: form.get("reviewRequest") === "on",
@@ -148,6 +150,9 @@ export function CustomerAuthPanel() {
             />
           </label>
 
+          <label className="text-xs font-medium">Mobile number
+            <input name="phone" type="tel" autoComplete="tel" required defaultValue={status.account.phone || ""} placeholder="01XXXXXXXXX" className="mt-2 h-11 w-full max-w-md rounded-xl border border-[#713a35]/12 bg-white px-3 text-sm" />
+          </label>
           <div className="grid gap-3 rounded-xl bg-[#f5e8e2] p-4 text-xs leading-5">
             <p className="font-semibold">Email preferences</p>
             <label className="flex gap-3">
