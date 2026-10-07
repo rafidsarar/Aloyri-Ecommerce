@@ -9,6 +9,7 @@ const assert = require('node:assert/strict');
 const db = new PGlite();
 const root=path.resolve(__dirname,'../src');
 let crmCalls=0, failAccount=true;
+let draftPreview=false, draftSignal=null;
 const linked=new Map();
 const originalLoad=Module._load;
 function sql(strings,...values){
@@ -18,6 +19,8 @@ function sql(strings,...values){
 sql.transaction=queries=>db.transaction(async tx=>{const results=[];for(const q of queries)results.push((await tx.query(q.query,q.values)).rows);return results;});
 Module._load=function(name,parent,isMain){
  if(name==='server-only')return {};
+ if(name==='next/server')return {connection:async()=>{}};
+ if(name==='next/headers')return {draftMode:async()=>{if(draftSignal)throw draftSignal;return {isEnabled:draftPreview};}};
  if(name==='@neondatabase/serverless')return {neon:()=>sql};
  if(name==='@/lib/customer-auth')return {recordCustomerOrderForAccount:async(id,order)=>{if(failAccount)throw new Error('injected-account-failure');linked.set(id+':'+order.orderNumber,order);}};
  if(name==='@/lib/cart-recovery')return {cancelPendingCartRecoveries:async()=>{}};
@@ -36,9 +39,25 @@ const {ownsSupportCase}=require('../src/lib/support-ownership.ts');
 const payments=require('../src/lib/payment-settlement.ts');
 const delivery=require('../src/lib/courier-shipment.ts');
 const sync=require('../src/lib/order-sync.ts');
+const publishing=require('../src/lib/storefront-admin-store.ts');
 let passed=0;
 async function check(name,fn){await fn();passed++;console.log('PASS '+name);}
 (async()=>{
+ await check('draft stays private until publish and subsequent reads see new content',async()=>{
+  const initial=await publishing.readPublishedStorefrontConfig();
+  initial.homepage.headline='Published fixture';await publishing.saveStorefrontConfig(initial);
+  const draft=structuredClone(initial);draft.homepage.headline='New draft fixture';await publishing.saveDraftStorefrontConfig(draft);
+  assert.equal((await publishing.readStorefrontConfig()).homepage.headline,'Published fixture');
+  draftPreview=true;assert.equal((await publishing.readStorefrontConfig()).homepage.headline,'New draft fixture');draftPreview=false;
+  await publishing.publishDraftStorefront('fixture-owner','Acceptance fixture');
+  assert.equal((await publishing.readStorefrontConfig()).homepage.headline,'New draft fixture');
+ });
+ await check('draft-mode rendering signals escape instead of freezing published content',async()=>{
+  const {DynamicServerError}=require('next/dist/client/components/hooks-server-context');
+  draftSignal=new DynamicServerError('draftMode');
+  await assert.rejects(publishing.readStorefrontConfig(),error=>error===draftSignal);
+  draftSignal=null;
+ });
  await check('phone/email cannot grant unrelated support access',async()=>{
   assert.equal(ownsSupportCase({phone:'01700000000',email:'owner@test'},'account-a',new Set()),false);
   assert.equal(ownsSupportCase({accountId:'account-b',orderNumber:'WEB-OWNED'},'account-a',new Set(['WEB-OWNED'])),false);
