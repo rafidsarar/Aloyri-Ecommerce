@@ -50,10 +50,13 @@ export async function listMediaObjects(prefix: string): Promise<MediaObject[]> {
   const { url } = gateway();
   if (!mediaStorageConfigured()) return [];
 
-  const response = await fetch(url + "/list", {
-    headers: headers(),
-    cache: "no-store",
-  });
+  const response = await fetch(
+    url + "/list?prefix=" + encodeURIComponent(prefix),
+    {
+      headers: headers(),
+      cache: "no-store",
+    },
+  );
   if (!response.ok) {
     throw new Error("Media listing failed (" + response.status + ").");
   }
