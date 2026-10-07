@@ -6,6 +6,7 @@ import {
   type PublicAdminAccount,
 } from "@/lib/admin-auth";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
+import { crmSyncSummary } from "@/lib/crm-sync-hardening";
 import { listRuntimeErrors } from "@/lib/runtime-error-store";
 import { structuredDatastoreHealth } from "@/lib/structured-record-store";
 import {
@@ -77,6 +78,7 @@ export async function runOperationalHealth(
     auditResult,
     runtimeErrorsResult,
     datastoreResult,
+    syncSummaryResult,
   ] = await Promise.allSettled([
     fetchCrmCatalog(),
     listAdminAccounts(),
@@ -85,6 +87,7 @@ export async function runOperationalHealth(
     listAdminAuditEvents(50),
     listRuntimeErrors(30),
     structuredDatastoreHealth(),
+    crmSyncSummary(),
   ]);
 
   if (catalog.status === "fulfilled" && catalog.value.ok) {
@@ -136,6 +139,31 @@ export async function runOperationalHealth(
         " BDT."
       : "Ordering integration or delivery-rate configuration is incomplete.",
   });
+
+  if (syncSummaryResult.status === "fulfilled") {
+    const sync = syncSummaryResult.value;
+    checks.push({
+      id: "crm-sync-hardening",
+      label: "CRM ↔ Ecommerce sync health",
+      state: sync.failed24h ? "warning" : "healthy",
+      detail:
+        sync.failed24h +
+        " failed · " +
+        sync.retries24h +
+        " retried in 24h · catalog snapshot " +
+        (sync.catalog
+          ? sync.catalog.productCount + " products at " + sync.catalog.checkedAt
+          : "not recorded yet") +
+        ".",
+    });
+  } else {
+    checks.push({
+      id: "crm-sync-hardening",
+      label: "CRM ↔ Ecommerce sync health",
+      state: "warning",
+      detail: "Sync event history could not be read.",
+    });
+  }
 
   if (
     datastoreResult.status === "fulfilled" &&
@@ -376,4 +404,18 @@ export async function restoreBackupToDraft(actor: string, id: string) {
     { scope: "backup", target: backup.id },
   );
   return backup;
+}
+
+export async function reconcileCrmIntegration(actor: string) {
+  const catalog = await fetchCrmCatalog();
+  if (!catalog.ok) {
+    throw new Error(catalog.body.error || "CRM reconciliation failed.");
+  }
+  await writeAdminAuditEvent(
+    actor,
+    "operations.crm_reconciliation_run",
+    catalog.body.products.length + " price/stock records reconciled.",
+    { scope: "operations", target: "crm-sync" },
+  );
+  return catalog.body.products.length;
 }
