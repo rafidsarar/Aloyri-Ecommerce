@@ -18,8 +18,6 @@ export type RuntimeErrorRecord = {
 
 const PREFIX = "admin/runtime-errors/";
 
-function safeMessage
-
 function safeMessage(error: unknown) {
   if (error instanceof Error) {
     return {
