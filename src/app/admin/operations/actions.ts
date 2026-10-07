@@ -5,6 +5,7 @@ import {
   createAdminBackup,
   restoreBackupToDraft,
   runOperationalHealth,
+  reconcileCrmIntegration,
 } from "@/lib/admin-operations";
 import { requireAdminPermission } from "@/lib/admin-auth";
 
@@ -27,6 +28,16 @@ export async function runHealthCheckAction() {
     );
   }
   redirect("/admin/operations?healthRun=1");
+}
+
+export async function reconcileCrmAction() {
+  const admin = await requireAdminPermission("health.run");
+  try {
+    await reconcileCrmIntegration(admin.username);
+  } catch (error) {
+    redirect("/admin/operations?error=" + encodeURIComponent(errorMessage(error)));
+  }
+  redirect("/admin/operations?crmReconciled=1");
 }
 
 export async function createBackupAction(formData: FormData) {
