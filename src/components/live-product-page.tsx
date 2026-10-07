@@ -258,8 +258,14 @@ export function LiveProductPage({
         </div>
       </div>
 
+      <nav aria-label="Product information" className="mt-8 flex flex-wrap gap-3 border-y border-[#713a35]/10 py-4 text-sm font-semibold text-[#713a35]">
+        {verified ? <a href="#product-guidance" className="rounded-full bg-[#f5e8e2] px-4 py-3">Product guidance</a> : null}
+        <a href="#reviews" className="rounded-full bg-[#f5e8e2] px-4 py-3">Customer reviews</a>
+        <a href="#delivery-information" className="rounded-full bg-[#f5e8e2] px-4 py-3">Delivery &amp; returns</a>
+      </nav>
+
       {verified ? (
-        <section className="mt-16 rounded-[1.6rem] border border-[#713a35]/10 bg-[#f7ebe6] p-6 sm:p-8">
+        <section id="product-guidance" className="mt-8 rounded-[1.6rem] border border-[#713a35]/10 bg-[#f7ebe6] p-6 sm:p-8">
           <div className="grid gap-7 lg:grid-cols-[.72fr_1.28fr]">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#713a35]/48">
@@ -411,7 +417,7 @@ export function LiveProductPage({
         sourceLabel={verified?.sourceLabel}
       />
 
-      <section className="mt-5 grid gap-4 md:grid-cols-3">
+      <section id="delivery-information" aria-label="Delivery and returns" className="mt-5 grid gap-4 md:grid-cols-3">
         <Link
           href="/shipping-delivery"
           className="rounded-[1.3rem] border border-[#713a35]/10 bg-white/60 p-5 transition hover:bg-white"

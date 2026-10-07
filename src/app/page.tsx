@@ -107,16 +107,15 @@ export default async function Home() {
         context={{ placementId: "homepage-hero", placementKind: "hero" }}
       />
       <section className="shell pt-5 md:pt-8">
-        <div className="grid min-h-[72vh] overflow-hidden rounded-[2rem] border border-[#713a35]/10 bg-[#f5e8e2] lg:grid-cols-[1.03fr_.97fr]">
+        <div className="grid min-h-[440px] overflow-hidden rounded-[2rem] border border-[#713a35]/10 bg-[#f5e8e2] lg:grid-cols-[1.03fr_.97fr]">
           <div className="flex flex-col justify-between p-7 sm:p-10 lg:p-14">
             <div className="flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/55">
               <span className="h-px w-8 bg-[#b9725f]/55" />
               {home.eyebrow}
             </div>
 
-            <div className="max-w-2xl py-14 lg:py-20">
-              <BrandMark className="items-start" />
-              <h1 className="display mt-9 text-[clamp(3.5rem,7.5vw,7rem)] leading-[0.88] text-[#321f1c]">
+            <div className="max-w-2xl py-8 lg:py-10">
+              <h1 className="display text-[clamp(2.75rem,5.5vw,5.5rem)] leading-[1.02] text-[#321f1c]">
                 {home.headline}
               </h1>
               <p className="mt-7 max-w-xl text-base leading-7 text-[#321f1c]/60 sm:text-lg">
@@ -146,20 +145,20 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="relative min-h-[470px] p-6 sm:p-9 lg:p-12">
+          <div className="relative min-h-[280px] lg:min-h-[420px] p-6 sm:p-9 lg:p-12">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_18%,rgba(255,255,255,.85),transparent_36%)]" />
             <div className="relative mx-auto flex h-full max-w-[580px] items-center">
               <div className="relative w-full">
                 <ProductMedia
                   product={heroProduct}
                   priority
-                  className="aspect-[4/5] rounded-[2rem] soft-shadow"
+                  className="aspect-square max-h-[440px] rounded-[2rem] soft-shadow"
                 />
                 <div className="absolute -bottom-5 left-5 right-5 rounded-[1.35rem] border border-white/70 bg-white/82 p-5 backdrop-blur-md sm:left-8 sm:right-8">
                   <div className="flex items-end justify-between gap-5">
                     <div>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#713a35]/50">
-                        Featured protection
+                        Featured skincare
                       </p>
                       <p className="mt-1 text-sm font-semibold">{heroProduct.brand}</p>
                       <p className="mt-0.5 text-sm text-[#321f1c]/65">{heroProduct.name}</p>
@@ -186,6 +185,18 @@ export default async function Home() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="shell py-8 md:py-10" aria-labelledby="shop-by-category">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <h2 id="shop-by-category" className="display text-3xl">Shop by category</h2>
+          <Link href="/shop" className="text-sm font-semibold text-[#713a35] underline underline-offset-4">View all skincare</Link>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {routine.map(item => <Link key={item.step} href={item.href} className="group flex items-center justify-between gap-4 rounded-2xl border border-[#713a35]/12 bg-white p-5 transition hover:border-[#713a35]/35">
+            <div><p className="text-xs text-[#796762]">Step {item.step}</p><h3 className="mt-1 text-lg font-semibold">{item.title === "Cleanse" ? "Cleansers" : item.title === "Moisturize" ? "Moisturizers" : "Sunscreen"}</h3></div><ArrowIcon className="h-4 w-4 text-[#713a35]" />
+          </Link>)}
         </div>
       </section>
 
@@ -266,7 +277,7 @@ export default async function Home() {
                     ) : null}
                     {campaign.promotionOnly ? (
                       <p className="mt-4 text-[11px] leading-5 text-white/50">
-                        Promotional product pricing is shown only when currently supplied by Aloyri CRM.
+                        Current offers are shown on eligible products.
                       </p>
                     ) : null}
                   </div>
@@ -355,7 +366,7 @@ export default async function Home() {
           : config.merchandising.outOfStockMode;
 
         return (
-          <section key={section.id} className="shell py-16 md:py-24">
+          <section key={section.id} className="shell py-10 md:py-14">
             <AnalyticsViewTracker
               event="merchandising_impression"
               properties={{
@@ -369,7 +380,7 @@ export default async function Home() {
                 ...(collection ? { collectionId: collection.id } : {}),
               }}
             />
-            <div className="mb-10 grid gap-5 md:grid-cols-[1fr_auto] md:items-end">
+            <div className="mb-7 grid gap-5 md:grid-cols-[1fr_auto] md:items-end">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/48">
                   {displayEyebrow}
@@ -454,7 +465,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="shell pb-20 md:pb-28">
+      <section className="shell py-12 md:py-16">
         <div className="overflow-hidden rounded-[2rem] bg-[#713a35] text-[#fff8f5]">
           <div className="grid lg:grid-cols-[1.18fr_.82fr]">
             <div className="p-8 sm:p-10 lg:p-14">

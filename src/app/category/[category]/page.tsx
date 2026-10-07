@@ -95,12 +95,12 @@ export default async function CategoryPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumb) }}
       />
-      <div className="grid gap-8 border-b border-[#713a35]/10 pb-10 lg:grid-cols-[1fr_.7fr] lg:items-end">
+      <div className="grid gap-4 border-b border-[#713a35]/10 pb-6 lg:grid-cols-[1fr_.7fr] lg:items-end">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/48">
             Shop by routine
           </p>
-          <h1 className="display mt-3 text-6xl leading-[0.92] sm:text-7xl">
+          <h1 className="display mt-3 text-4xl leading-tight sm:text-5xl">
             {entry.title}.
           </h1>
         </div>

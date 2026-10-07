@@ -93,19 +93,19 @@ export function ProductCard({
         </div>
 
         <div className="px-1 pt-4">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-3">
             <div className="min-w-0">
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#713a35]/48">
                 {product.brand}
               </p>
-              <h3 className="mt-1 truncate text-[15px] font-medium text-[#321f1c]">
+              <h3 className="mt-1 text-[15px] leading-6 font-medium text-[#321f1c]">
                 {product.name}
               </h3>
               <p className="mt-1 text-xs text-[#321f1c]/45">
                 {product.size} · {stockLabel}
               </p>
             </div>
-            <div className="shrink-0 text-right">
+            <div className="flex items-baseline gap-2">
               <p className="text-sm font-medium text-[#321f1c]">
                 {synced ? formatPrice(salePrice) : "—"}
               </p>

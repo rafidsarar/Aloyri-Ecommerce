@@ -310,9 +310,6 @@ export function ShopClient({
             placeholder="Search products, brands, routines or textures"
             className="h-12 w-full rounded-full border border-[#713a35]/14 bg-white px-5 pr-12 text-sm outline-none transition placeholder:text-[#321f1c]/35 focus:border-[#b9725f]/60"
           />
-          <span className="pointer-events-none absolute right-5 top-6 -translate-y-1/2 text-xs uppercase tracking-[0.16em] text-[#713a35]/45">
-            Find
-          </span>
 
           {searchFocused && suggestions.length > 0 ? (
             <div
@@ -352,6 +349,7 @@ export function ShopClient({
         <label className="flex items-center gap-3 text-xs text-[#321f1c]/50">
           Sort
           <select
+            aria-label="Sort"
             value={sort}
             onChange={(event) => setSort(event.target.value as SortKey)}
             className="h-11 rounded-full border border-[#713a35]/14 bg-white px-4 text-sm text-[#321f1c] outline-none"
@@ -427,10 +425,17 @@ export function ShopClient({
             )}
       </div>
 
-      <div className="mb-7 grid gap-3 rounded-[1.35rem] border border-[#713a35]/10 bg-white/55 p-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-end">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <p role="status" className="text-sm text-[#796762]">{refreshing ? "Refreshing…" : `${filtered.length} ${filtered.length === 1 ? "product" : "products"}`}</p>
+        {activeFilterCount > 0 ? <button type="button" onClick={clearFilters} className="min-h-11 rounded-full border border-[#713a35]/14 px-4 text-xs font-semibold text-[#713a35]">Clear {activeFilterCount} filters</button> : null}
+      </div>
+      <details className="mb-7 rounded-2xl border border-[#713a35]/10 bg-white/55" open={brand !== "All" || stock !== "all" || priceBand !== "all" ? true : undefined}>
+        <summary className="cursor-pointer px-5 py-4 text-sm font-semibold text-[#713a35]">Filter by brand, availability &amp; price</summary>
+        <div className="grid gap-3 px-4 pb-4 sm:grid-cols-3">
         <label className="grid gap-1.5 text-xs font-medium text-[#321f1c]/55">
           Brand
           <select
+            aria-label="Brand"
             value={brand}
             onChange={(event) => setBrand(event.target.value)}
             className="h-11 rounded-xl border border-[#713a35]/12 bg-white px-3 text-sm text-[#321f1c] outline-none"
@@ -447,6 +452,7 @@ export function ShopClient({
         <label className="grid gap-1.5 text-xs font-medium text-[#321f1c]/55">
           Availability
           <select
+            aria-label="Availability"
             value={stock}
             onChange={(event) => setStock(event.target.value as StockFilter)}
             className="h-11 rounded-xl border border-[#713a35]/12 bg-white px-3 text-sm text-[#321f1c] outline-none"
@@ -460,6 +466,7 @@ export function ShopClient({
         <label className="grid gap-1.5 text-xs font-medium text-[#321f1c]/55">
           Price
           <select
+            aria-label="Price"
             value={priceBand}
             onChange={(event) => setPriceBand(event.target.value as PriceFilter)}
             className="h-11 rounded-xl border border-[#713a35]/12 bg-white px-3 text-sm text-[#321f1c] outline-none"
@@ -471,26 +478,11 @@ export function ShopClient({
           </select>
         </label>
 
-        <div className="flex min-h-11 items-center justify-between gap-3 lg:justify-end">
-          <span className="text-xs text-[#321f1c]/42">
-            {refreshing
-              ? "Refreshing…"
-              : `${filtered.length} ${filtered.length === 1 ? "product" : "products"}`}
-          </span>
-          {activeFilterCount > 0 ? (
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="rounded-full border border-[#713a35]/14 bg-white px-4 py-2 text-xs font-semibold text-[#713a35]"
-            >
-              Clear {activeFilterCount}
-            </button>
-          ) : null}
         </div>
-      </div>
+      </details>
 
       {filtered.length > 0 ? (
-        <div className="grid gap-x-5 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-8 lg:grid-cols-3 xl:grid-cols-4">
           {filtered.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
