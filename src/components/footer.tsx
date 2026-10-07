@@ -3,17 +3,17 @@ import { BrandMark } from "@/components/brand-mark";
 
 export function Footer({ description }: { description: string }) {
   return (
-    <footer id="about" className="border-t border-[#713a35]/10 bg-[#f5e8e2]">
+    <footer id="about" className="store-footer border-t">
       <div className="shell py-10 md:py-14">
         <div className="grid grid-cols-2 gap-x-6 gap-y-8 lg:grid-cols-[1.3fr_.55fr_.7fr_.65fr]">
           <div className="col-span-2 lg:col-span-1">
             <BrandMark className="items-start" />
-            <p className="mt-6 max-w-md text-sm leading-7 text-[#321f1c]/58">
+            <p className="store-footer-description mt-6 max-w-md text-sm leading-7">
               {description}
             </p>
             <Link
               href="/about"
-              className="mt-5 inline-flex text-sm font-semibold text-[#713a35] underline decoration-[#713a35]/25 underline-offset-4"
+              className="store-footer-accent mt-5 inline-flex text-sm font-semibold underline underline-offset-4"
             >
               About Aloyri
             </Link>
@@ -59,7 +59,7 @@ export function Footer({ description }: { description: string }) {
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col gap-3 border-t border-[#713a35]/10 pt-6 text-xs text-[#321f1c]/42 sm:flex-row sm:items-center sm:justify-between">
+        <div className="store-footer-bottom mt-10 flex flex-col gap-3 border-t pt-6 text-xs sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} Aloyri. All rights reserved.</p>
           <p>Let Your Skin Glow.</p>
         </div>
