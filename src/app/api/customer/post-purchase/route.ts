@@ -1,3 +1,4 @@
+import { ownsSupportCase } from "@/lib/support-ownership";
 import {
   claimCurrentCustomerOrder,
   currentCustomerSession,
@@ -16,10 +17,11 @@ function reply(data: unknown, status = 200) {
   });
 }
 
-async function payload() {
+async function payload(page = 1) {
   const session = await currentCustomerSession();
   if (!session) return null;
-  const refs = session.account.orderRefs.slice(0, 12);
+  const allRefs = session.account.orderRefs;
+  const refs = allRefs.slice((page - 1) * 12, page * 12);
   const tracked = await Promise.all(
     refs.map(async (ref) => {
       const result = await fetchCrmOrderTracking({
@@ -45,14 +47,11 @@ async function payload() {
     }),
   );
 
-  const orderNumbers = new Set(refs.map((ref) => ref.orderNumber));
-  const phones = new Set(refs.map((ref) => ref.phone));
+  const orderNumbers = new Set(allRefs.map((ref) => ref.orderNumber));
   const cases = (await listSupportCases(1000))
     .filter(
       (row) =>
-        row.email?.toLowerCase() === session.account.email ||
-        Boolean(row.orderNumber && orderNumbers.has(row.orderNumber)) ||
-        phones.has(row.phone),
+        ownsSupportCase(row, session.account.id, orderNumbers),
     )
     .slice(0, 30)
     .map((row) => ({
@@ -98,13 +97,16 @@ async function payload() {
   return {
     account: session.account,
     orders: tracked,
+    pagination: { page, pageSize: 12, total: allRefs.length, pages: Math.max(1, Math.ceil(allRefs.length / 12)) },
     supportCases: cases,
     productAlerts: alerts,
   };
 }
 
-export async function GET() {
-  const data = await payload();
+export async function GET(request: Request) {
+  const raw = Number(new URL(request.url).searchParams.get("page") || 1);
+  if (!Number.isSafeInteger(raw) || raw < 1) return reply({ error: "Invalid page." }, 400);
+  const data = await payload(raw);
   return data ? reply(data) : reply({ error: "Sign in required." }, 401);
 }
 

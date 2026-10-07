@@ -340,10 +340,12 @@ export function mergeLiveCatalog(liveProducts: LiveCatalogProduct[]): Product[] 
   return liveProducts
     .filter((product) => product.active)
     .map((live) => {
-      const local = getProductById(live.id);
+      const editorialIds: Record<string,string> = {"bd26-simple-wash":"simple-wash","bd26-simple-light":"simple-light"};
+      const local = getProductById(editorialIds[live.id] || live.id);
       if (local) {
         return {
           ...local,
+          id: live.id,
           ...(live.slug ? { slug: live.slug } : {}),
           ...(live.description ? { description: live.description } : {}),
           ...(live.routineStep ? { routineStep: live.routineStep } : {}),

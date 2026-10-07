@@ -1,3 +1,4 @@
+import { withRecordRetry } from "@/lib/structured-record-store";
 import "server-only";
 
 import {
@@ -50,6 +51,7 @@ export type PaymentSettlementRecord = {
     issues: string[];
     lastCheckedAt?: string;
   };
+  appliedEvents?: Record<string, string>;
   events: SettlementEvent[];
   createdAt: string;
   updatedAt: string;
@@ -94,6 +96,8 @@ export async function recordOrderSettlement(input: {
   method: SettlementPaymentMethod;
   orderTotal: number;
 }) {
+  return withRecordRetry(async () => {
+
   if (!blobConfigured()) return null;
   const pathname = pathFor(input.orderNumber);
   const existing = await readPrivateJson<PaymentSettlementRecord>(pathname);
@@ -156,6 +160,8 @@ export async function recordOrderSettlement(input: {
   };
   await writePrivateJson(pathname, record);
   return record;
+
+  });
 }
 
 export async function reconcileSettlementFromTracking(input: {
@@ -164,6 +170,8 @@ export async function reconcileSettlementFromTracking(input: {
   total: number;
   orderStatus: string;
 }) {
+  return withRecordRetry(async () => {
+
   const record = await getPaymentSettlement(input.orderNumber);
   if (!record) return null;
 
@@ -214,6 +222,8 @@ export async function reconcileSettlementFromTracking(input: {
     await writePrivateJson(pathFor(record.orderNumber), updated);
   }
   return updated;
+
+  });
 }
 
 export async function noteReturnRequest(input: {
@@ -221,6 +231,8 @@ export async function noteReturnRequest(input: {
   requestId: string;
   preferredResolution: string;
 }) {
+  return withRecordRetry(async () => {
+
   const record = await getPaymentSettlement(input.orderNumber);
   if (!record) return null;
   const wantsRefund = input.preferredResolution === "Refund";
@@ -249,6 +261,8 @@ export async function noteReturnRequest(input: {
   };
   await writePrivateJson(pathFor(record.orderNumber), updated);
   return updated;
+
+  });
 }
 
 export async function applyCrmSettlementEvent(input: {
@@ -261,9 +275,14 @@ export async function applyCrmSettlementEvent(input: {
   refundState?: RefundState;
   providerTransactionId?: string;
 }) {
+  return withRecordRetry(async () => {
+
   const record = await getPaymentSettlement(input.orderNumber);
   if (!record) throw new Error("SETTLEMENT_NOT_FOUND");
-  if (record.events.some((row) => row.id === input.eventId)) {
+  const eventPayload = JSON.stringify(input);
+  const applied = record.appliedEvents?.[input.eventId];
+  if (applied && applied !== eventPayload) throw new Error("EVENT_ID_CONFLICT");
+  if (applied || record.events.some((row) => row.id === input.eventId)) {
     return { record, duplicate: true };
   }
   if (!canTransitionSettlement(record.state, input.state)) {
@@ -285,6 +304,7 @@ export async function applyCrmSettlementEvent(input: {
     throw new Error("INVALID_REFUND_AMOUNT");
   }
 
+  if (refundedAmount < record.refundedAmount) throw new Error("STALE_REFUND_EVENT");
   const issues: string[] = [];
   if (record.method !== input.paymentMethod) {
     issues.push("CRM payment method does not match website settlement.");
@@ -303,6 +323,7 @@ export async function applyCrmSettlementEvent(input: {
   const now = new Date().toISOString();
   const updated: PaymentSettlementRecord = {
     ...record,
+    appliedEvents: { ...record.appliedEvents, [input.eventId]: eventPayload },
     state: input.state,
     refundState,
     refundedAmount,
@@ -334,6 +355,8 @@ export async function applyCrmSettlementEvent(input: {
     { scope: "payments", target: record.orderNumber },
   );
   return { record: updated, duplicate: false };
+
+  });
 }
 
 export async function listPaymentSettlements(limit = 250) {

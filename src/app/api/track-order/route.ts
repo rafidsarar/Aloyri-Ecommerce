@@ -1,3 +1,4 @@
+import { rateAllowed } from "@/lib/request-rate-limit";
 import { fetchCrmOrderTracking } from "@/lib/crm-tracking-integration";
 import {
   isValidBangladeshPhone,
@@ -11,15 +12,7 @@ import {
 
 export const dynamic = "force-dynamic";
 
-type RateEntry = { count: number; resetAt: number };
 
-const globalRate = globalThis as typeof globalThis & {
-  __aloyriTrackingRate?: Map<string, RateEntry>;
-};
-
-const rateStore =
-  globalRate.__aloyriTrackingRate ??
-  (globalRate.__aloyriTrackingRate = new Map<string, RateEntry>());
 
 function response(data: unknown, status: number) {
   return Response.json(data, {
@@ -39,32 +32,14 @@ function requestIp(request: Request) {
   );
 }
 
-function rateAllowed(key: string) {
-  const now = Date.now();
 
-  if (rateStore.size > 2000) {
-    for (const [entryKey, entry] of rateStore) {
-      if (entry.resetAt <= now) rateStore.delete(entryKey);
-    }
-  }
-
-  const current = rateStore.get(key);
-  if (!current || current.resetAt <= now) {
-    rateStore.set(key, { count: 1, resetAt: now + 5 * 60_000 });
-    return true;
-  }
-
-  if (current.count >= 12) return false;
-  current.count += 1;
-  return true;
-}
 
 export async function POST(request: Request) {
   if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
     return response({ error: "Content-Type must be application/json.", code: "INVALID_CONTENT_TYPE" }, 415);
   }
 
-  if (!rateAllowed(requestIp(request))) {
+  if (!await rateAllowed("track-order", requestIp(request), 12, 300000)) {
     return response(
       {
         error: "Too many tracking attempts. Please wait a few minutes and try again.",

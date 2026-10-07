@@ -21,14 +21,14 @@ test.describe("Google account checkout integration", () => {
     expect(response.status()).toBe(503);
   });
 
-  test("account completion banner is safe for a valid web order reference", async ({
+  test("unverified checkout URL cannot claim order confirmation or account ownership", async ({
     page,
   }) => {
     const response = await page.goto(
       "/account?checkout=complete&order=WEB-TEST-12345678",
     );
     expect(response?.status()).toBe(200);
-    await expect(page.getByText("Order confirmed.")).toBeVisible();
-    await expect(page.getByText(/WEB-TEST-12345678 is now linked/)).toBeVisible();
+    await expect(page.getByText("Order confirmed.")).not.toBeVisible();
+    await expect(page.getByText(/WEB-TEST-12345678 is now linked/)).not.toBeVisible();
   });
 });

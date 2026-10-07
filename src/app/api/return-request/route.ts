@@ -1,3 +1,5 @@
+import { rateAllowed } from "@/lib/request-rate-limit";
+import { currentCustomerSession } from "@/lib/customer-auth";
 import { submitCrmReturnRequest, type ReturnRequestInput } from "@/lib/crm-return-integration";
 import {
   isValidBangladeshPhone,
@@ -8,13 +10,7 @@ import { createReturnSupportCase } from "@/lib/support-cases";
 
 export const dynamic = "force-dynamic";
 
-type RateEntry = { count: number; resetAt: number };
-const globalRate = globalThis as typeof globalThis & {
-  __aloyriReturnRate?: Map<string, RateEntry>;
-};
-const rateStore =
-  globalRate.__aloyriReturnRate ??
-  (globalRate.__aloyriReturnRate = new Map<string, RateEntry>());
+
 
 const reasons = new Set([
   "Wrong product delivered",
@@ -51,24 +47,14 @@ function requestIp(request: Request) {
   );
 }
 
-function rateAllowed(key: string) {
-  const now = Date.now();
-  const current = rateStore.get(key);
-  if (!current || current.resetAt <= now) {
-    rateStore.set(key, { count: 1, resetAt: now + 10 * 60_000 });
-    return true;
-  }
-  if (current.count >= 8) return false;
-  current.count += 1;
-  return true;
-}
+
 
 export async function POST(request: Request) {
   if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
     return response({ error: "Content-Type must be application/json.", code: "INVALID_CONTENT_TYPE" }, 415);
   }
 
-  if (!rateAllowed(requestIp(request))) {
+  if (!await rateAllowed("return-request", requestIp(request), 8, 600000)) {
     return response(
       {
         error: "Too many return attempts. Please wait a few minutes and try again.",
@@ -138,6 +124,7 @@ export async function POST(request: Request) {
     items: input.items,
   } satisfies ReturnRequestInput;
 
+  const session = await currentCustomerSession();
   const result = await submitCrmReturnRequest(returnRequest);
 
   /* CRM remains authoritative for return acceptance. Website support context is
@@ -150,6 +137,7 @@ export async function POST(request: Request) {
         preferredResolution: input.preferredResolution as string,
       }),
       createReturnSupportCase({
+        ...(session && session.account.orderRefs.some(ref => ref.orderNumber === returnRequest.orderNumber.toUpperCase()) ? { accountId: session.account.id } : {}),
         requestId: result.body.requestId,
         crmStatus: result.body.status,
         phone: normalizedPhone,

@@ -1,3 +1,5 @@
+import { rateAllowed } from "@/lib/request-rate-limit";
+import { currentCustomerSession } from "@/lib/customer-auth";
 import {
   isValidBangladeshPhone,
   normalizeBangladeshPhone,
@@ -7,13 +9,7 @@ import type { SupportCaseCategory } from "@/lib/support-case-model";
 
 export const dynamic = "force-dynamic";
 
-type RateEntry = { count: number; resetAt: number };
-const globalRate = globalThis as typeof globalThis & {
-  __aloyriSupportRate?: Map<string, RateEntry>;
-};
-const rateStore =
-  globalRate.__aloyriSupportRate ??
-  (globalRate.__aloyriSupportRate = new Map<string, RateEntry>());
+
 
 const categories = new Set<SupportCaseCategory>([
   "delivery",
@@ -41,23 +37,13 @@ function ip(request: Request) {
   );
 }
 
-function rateAllowed(key: string) {
-  const now = Date.now();
-  const current = rateStore.get(key);
-  if (!current || current.resetAt <= now) {
-    rateStore.set(key, { count: 1, resetAt: now + 10 * 60_000 });
-    return true;
-  }
-  if (current.count >= 5) return false;
-  current.count += 1;
-  return true;
-}
+
 
 export async function POST(request: Request) {
   if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
     return reply({ error: "Content-Type must be application/json.", code: "INVALID_CONTENT_TYPE" }, 415);
   }
-  if (!rateAllowed(ip(request))) {
+  if (!await rateAllowed("support-request", ip(request), 5, 600000)) {
     return reply({ error: "Too many support requests. Please try again later.", code: "RATE_LIMITED" }, 429);
   }
 
@@ -93,7 +79,9 @@ export async function POST(request: Request) {
     return reply({ error: "Check your contact and support-request details.", code: "INVALID_REQUEST" }, 400);
   }
 
+  const session = await currentCustomerSession();
   const row = await createCustomerSupportCase({
+    ...(session ? { accountId: session.account.id } : {}),
     customerName,
     phone: normalizeBangladeshPhone(phone),
     ...(email ? { email } : {}),

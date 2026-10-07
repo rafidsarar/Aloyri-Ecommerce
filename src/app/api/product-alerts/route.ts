@@ -14,7 +14,7 @@ function response(data: unknown, status = 200) {
 }
 
 export async function POST(request: Request) {
-  if (!rateAllowed("product-alerts", requestIp(request), 12, 60 * 60_000)) {
+  if (!await rateAllowed("product-alerts", requestIp(request), 12, 60 * 60_000)) {
     return response({ error: "Too many alert requests. Try again later." }, 429);
   }
   if (

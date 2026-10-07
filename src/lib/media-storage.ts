@@ -42,6 +42,7 @@ export async function putMediaObject(pathname: string, file: File) {
     headers: headers(),
     body: form,
     cache: "no-store",
+    signal: AbortSignal.timeout(15_000),
   });
   if (!response.ok) {
     throw new Error("Media upload failed (" + response.status + ").");
@@ -49,43 +50,18 @@ export async function putMediaObject(pathname: string, file: File) {
 }
 
 export async function listMediaObjects(prefix: string): Promise<MediaObject[]> {
-  const { url } = gateway();
-  if (!mediaStorageConfigured()) return [];
-
-  const response = await fetch(
-    url + "/list?prefix=" + encodeURIComponent(prefix),
-    {
-      headers: headers(),
-      cache: "no-store",
-    },
-  );
-  if (!response.ok) {
-    throw new Error("Media listing failed (" + response.status + ").");
+  const { url } = gateway(); if (!mediaStorageConfigured()) return [];
+  const objects = new Map<string, MediaObject>(); const seen = new Set<string>(); let cursor = "";
+  for (let page = 0; page < 100; page++) {
+    const response = await fetch(url + "/list?prefix=" + encodeURIComponent(prefix) + (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""), { headers: headers(), cache: "no-store", signal: AbortSignal.timeout(15_000) });
+    if (!response.ok) throw new Error("Media listing failed (" + response.status + ").");
+    const payload = await response.json() as { objects?: MediaObject[]; cursor?: string; nextCursor?: string; hasMore?: boolean };
+    for (const item of payload.objects || []) if (typeof item.pathname === "string" && item.pathname.startsWith(prefix)) objects.set(item.pathname, { ...item, size: Number(item.size || 0) });
+    const next = payload.nextCursor || (payload.hasMore ? payload.cursor : "");
+    if (!next) { if (payload.hasMore) throw new Error("MEDIA_PAGINATION_INCOMPLETE"); return [...objects.values()]; }
+    if (seen.has(next)) throw new Error("MEDIA_CURSOR_REPEATED"); seen.add(next); cursor = next;
   }
-
-  const payload = (await response.json()) as {
-    objects?: Array<{
-      pathname?: string;
-      size?: number;
-      uploadedAt?: string;
-    }>;
-  };
-
-  return (payload.objects || [])
-    .filter(
-      (value): value is {
-        pathname: string;
-        size?: number;
-        uploadedAt?: string;
-      } =>
-        typeof value.pathname === "string" &&
-        value.pathname.startsWith(prefix),
-    )
-    .map((value) => ({
-      pathname: value.pathname,
-      size: Number(value.size || 0),
-      uploadedAt: value.uploadedAt,
-    }));
+  throw new Error("MEDIA_PAGINATION_LIMIT");
 }
 
 export async function getMediaObject(pathname: string) {
@@ -97,6 +73,7 @@ export async function getMediaObject(pathname: string) {
     {
       headers: headers(),
       cache: "no-store",
+      signal: AbortSignal.timeout(15_000),
     },
   );
   if (response.status === 404) return null;

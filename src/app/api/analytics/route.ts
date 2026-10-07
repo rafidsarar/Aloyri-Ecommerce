@@ -1,3 +1,4 @@
+import { rateAllowed } from "@/lib/request-rate-limit";
 import {
   hashAnalyticsIdentifier,
   rawBlobAnalyticsEnabled,
@@ -68,13 +69,7 @@ const reasons = new Set([
 const resolutions = new Set(["Refund", "Replacement", "Store credit", "Other"]);
 const devices = new Set<AnalyticsDevice>(["mobile", "tablet", "desktop"]);
 
-type RateEntry = { count: number; resetAt: number };
-const globalRate = globalThis as typeof globalThis & {
-  __aloyriAnalyticsRate?: Map<string, RateEntry>;
-};
-const rateStore =
-  globalRate.__aloyriAnalyticsRate ??
-  (globalRate.__aloyriAnalyticsRate = new Map<string, RateEntry>());
+
 
 function requestIp(request: Request) {
   return (
@@ -84,24 +79,7 @@ function requestIp(request: Request) {
   );
 }
 
-function rateAllowed(key: string) {
-  const now = Date.now();
-  if (rateStore.size > 3000) {
-    for (const [entryKey, entry] of rateStore) {
-      if (entry.resetAt <= now) rateStore.delete(entryKey);
-    }
-  }
 
-  const current = rateStore.get(key);
-  if (!current || current.resetAt <= now) {
-    rateStore.set(key, { count: 1, resetAt: now + 60_000 });
-    return true;
-  }
-
-  if (current.count >= 180) return false;
-  current.count += 1;
-  return true;
-}
 
 function safeToken(value: unknown, max = 80) {
   if (typeof value !== "string") return undefined;
@@ -324,7 +302,7 @@ export async function POST(request: Request) {
     return new Response(null, { status: 204 });
   }
 
-  if (!rateAllowed(requestIp(request))) {
+  if (!await rateAllowed("analytics", requestIp(request), 180, 60000)) {
     return new Response(null, { status: 204 });
   }
 

@@ -91,7 +91,7 @@ export default async function Home() {
 
   const home = config.homepage;
   const heroProduct =
-    catalogProducts.find((product) => product.id === home.heroProductId) ??
+    catalogProducts.find((product) => product.id === home.heroProductId && (product.availableStock ?? 0) > 0) ??
     catalogProducts.find((product) => (product.availableStock ?? 0) > 0) ??
     catalogProducts[0] ??
     localProducts[0];

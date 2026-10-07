@@ -263,10 +263,10 @@ export function LiveProductPage({
           <div className="grid gap-7 lg:grid-cols-[.72fr_1.28fr]">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#713a35]/48">
-                Manufacturer-verified
+                Manufacturer reference
               </p>
               <h2 className="display mt-2 text-3xl">
-                Product facts from {verified.sourceLabel}.
+                Product guidance from {verified.sourceLabel}.
               </h2>
               <a
                 href={verified.sourceUrl}
@@ -347,7 +347,7 @@ export function LiveProductPage({
               Ingredients
             </p>
             <h2 className="display mt-2 text-3xl">
-              {verified ? "Verified formulation details." : "Verified information first."}
+              {verified ? "Manufacturer product guidance." : "Verified information first."}
             </h2>
           </div>
 

@@ -1,3 +1,4 @@
+import { currentCustomerSession } from "@/lib/customer-auth";
 import type { Metadata } from "next";
 import { CustomerAccountHub } from "@/components/customer-account-hub";
 
@@ -20,9 +21,11 @@ export default async function CustomerAccountPage({
       ? params.order.toUpperCase()
       : "";
 
+  const session = completed && order ? await currentCustomerSession() : null;
+  const verified = Boolean(session?.account.orderRefs.some(ref => ref.orderNumber === order));
   return (
     <>
-      {completed ? (
+      {verified ? (
         <div className="shell pt-8">
           <div className="rounded-[1.2rem] border border-emerald-700/10 bg-emerald-50 px-5 py-4 text-sm text-emerald-800">
             <strong>Order confirmed.</strong>

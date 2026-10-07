@@ -1,5 +1,7 @@
 "use server";
 
+import { runOrderSync } from "@/lib/order-sync";
+import { migrateLegacyBlobRecords, acquireRecordLease, releaseRecordLease } from "@/lib/structured-record-store";
 import { redirect } from "next/navigation";
 import {
   createAdminBackup,
@@ -60,4 +62,21 @@ export async function restoreBackupAction(formData: FormData) {
     );
   }
   redirect("/admin/operations?backupRestored=1");
+}
+
+export async function retryOrderSyncAction() {
+  await requireAdminPermission("health.run");
+  try { await runOrderSync(50); } catch (error) { redirect("/admin/operations?error=" + encodeURIComponent(errorMessage(error))); }
+  redirect("/admin/operations");
+}
+export async function recoverLegacyAction() {
+  const admin = await requireAdminPermission("backups.restore");
+  if (admin.role !== "owner") redirect("/admin?forbidden=1");
+  const token = await acquireRecordLease("legacy-recovery", 300);
+  if (!token) redirect("/admin/operations?error=Recovery%20already%20running");
+  let detail = "";
+  try { const result = await migrateLegacyBlobRecords(); detail = result.detail; }
+  catch (error) { detail = errorMessage(error); }
+  finally { await releaseRecordLease("legacy-recovery", token); }
+  redirect("/admin/operations?error=" + encodeURIComponent(detail));
 }
