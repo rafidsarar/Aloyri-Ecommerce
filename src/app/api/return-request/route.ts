@@ -169,5 +169,3 @@ export async function POST(request: Request) {
   return response(result.body, result.status);
 }
 
-/* legacy body removed */
-
