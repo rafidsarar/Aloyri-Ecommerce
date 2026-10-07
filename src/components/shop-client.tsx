@@ -352,6 +352,7 @@ export function ShopClient({
         <label className="flex items-center gap-3 text-xs text-[#321f1c]/50">
           Sort
           <select
+            aria-label="Sort"
             value={sort}
             onChange={(event) => setSort(event.target.value as SortKey)}
             className="h-11 rounded-full border border-[#713a35]/14 bg-white px-4 text-sm text-[#321f1c] outline-none"
@@ -437,6 +438,7 @@ export function ShopClient({
         <label className="grid gap-1.5 text-xs font-medium text-[#321f1c]/55">
           Brand
           <select
+            aria-label="Brand"
             value={brand}
             onChange={(event) => setBrand(event.target.value)}
             className="h-11 rounded-xl border border-[#713a35]/12 bg-white px-3 text-sm text-[#321f1c] outline-none"
@@ -453,6 +455,7 @@ export function ShopClient({
         <label className="grid gap-1.5 text-xs font-medium text-[#321f1c]/55">
           Availability
           <select
+            aria-label="Availability"
             value={stock}
             onChange={(event) => setStock(event.target.value as StockFilter)}
             className="h-11 rounded-xl border border-[#713a35]/12 bg-white px-3 text-sm text-[#321f1c] outline-none"
@@ -466,6 +469,7 @@ export function ShopClient({
         <label className="grid gap-1.5 text-xs font-medium text-[#321f1c]/55">
           Price
           <select
+            aria-label="Price"
             value={priceBand}
             onChange={(event) => setPriceBand(event.target.value as PriceFilter)}
             className="h-11 rounded-xl border border-[#713a35]/12 bg-white px-3 text-sm text-[#321f1c] outline-none"
