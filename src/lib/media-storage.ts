@@ -8,19 +8,21 @@ export type MediaObject = {
 
 function gateway() {
   const url = process.env.SUPABASE_MEDIA_GATEWAY_URL || "";
+  const key = process.env.SUPABASE_MEDIA_GATEWAY_KEY || "";
   const oidc = process.env.VERCEL_OIDC_TOKEN || "";
-  return { url, oidc };
+  return { url, key, oidc };
 }
 
 export function mediaStorageConfigured() {
-  const { url, oidc } = gateway();
-  return Boolean(url && oidc);
+  const { url, key, oidc } = gateway();
+  return Boolean(url && (key || oidc));
 }
 
 function headers(extra: HeadersInit = {}) {
-  const { oidc } = gateway();
+  const { key, oidc } = gateway();
   return {
-    "x-vercel-oidc-idp-token": oidc,
+    ...(key ? { "x-aloyri-storage-key": key } : {}),
+    ...(oidc ? { "x-vercel-oidc-idp-token": oidc } : {}),
     ...extra,
   };
 }
@@ -105,24 +107,4 @@ export async function getMediaObject(pathname: string) {
     stream: response.body,
     contentType: response.headers.get("content-type") || "application/octet-stream",
   };
-}
-
-export async function deleteMediaObject(pathname: string) {
-  const { url } = gateway();
-  if (!mediaStorageConfigured()) {
-    throw new Error("Independent media storage is not configured.");
-  }
-
-  const response = await fetch(
-    url + "/object?path=" + encodeURIComponent(pathname),
-    {
-      method: "DELETE",
-      headers: headers(),
-      cache: "no-store",
-    },
-  );
-
-  if (!response.ok && response.status !== 404) {
-    throw new Error("Media delete failed (" + response.status + ").");
-  }
 }
