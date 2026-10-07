@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { AdminSubmitButton } from "@/components/admin/admin-submit-button";
 import { saveHomepage } from "@/app/admin/actions";
 import { AdminCard, AdminNotice, AdminShell } from "@/components/admin/admin-shell";
 import { requireAdminPermission } from "@/lib/admin-auth";
@@ -29,14 +31,15 @@ export default async function AdminHomepagePage({
     <AdminShell
       username={admin.username}
       title="Homepage"
-      subtitle="Manage hero messaging, calls to action and the featured product without touching CRM."
+      subtitle="Edit your homepage, save a draft, then preview and publish when ready."
     >
-      {saved ? <AdminNotice>Homepage draft saved.</AdminNotice> : null}
+      {saved ? <AdminNotice>Draft saved. <Link href="/admin/publishing" className="font-semibold underline">Preview and publish →</Link></AdminNotice> : null}
       <form action={saveHomepage} className="grid gap-5">
         <AdminCard>
+          <h2 className="mb-4 text-sm font-semibold">Main banner</h2>
           <div className="grid gap-4">
             <label className="grid gap-1.5 text-sm font-medium">
-              Eyebrow
+              Short label above heading
               <input name="eyebrow" defaultValue={home.eyebrow} maxLength={120} className="rounded-xl border border-black/10 px-4 py-3" />
             </label>
             <label className="grid gap-1.5 text-sm font-medium">
@@ -44,7 +47,7 @@ export default async function AdminHomepagePage({
               <textarea name="headline" defaultValue={home.headline} rows={3} maxLength={180} className="rounded-xl border border-black/10 px-4 py-3" />
             </label>
             <label className="grid gap-1.5 text-sm font-medium">
-              Intro
+              Introduction
               <textarea name="intro" defaultValue={home.intro} rows={4} maxLength={500} className="rounded-xl border border-black/10 px-4 py-3" />
             </label>
           </div>
@@ -52,28 +55,28 @@ export default async function AdminHomepagePage({
 
         <div className="grid gap-5 xl:grid-cols-2">
           <AdminCard>
-            <p className="text-sm font-semibold">Primary call to action</p>
+            <p className="text-sm font-semibold">Main button</p>
             <div className="mt-4 grid gap-4">
               <label className="grid gap-1.5 text-sm font-medium">
                 Label
                 <input name="primaryLabel" defaultValue={home.primaryLabel} maxLength={80} className="rounded-xl border border-black/10 px-4 py-3" />
               </label>
               <label className="grid gap-1.5 text-sm font-medium">
-                Internal URL
+                Destination (e.g. /shop)
                 <input name="primaryHref" defaultValue={home.primaryHref} maxLength={200} className="rounded-xl border border-black/10 px-4 py-3" />
               </label>
             </div>
           </AdminCard>
 
           <AdminCard>
-            <p className="text-sm font-semibold">Secondary call to action</p>
+            <p className="text-sm font-semibold">Secondary button</p>
             <div className="mt-4 grid gap-4">
               <label className="grid gap-1.5 text-sm font-medium">
                 Label
                 <input name="secondaryLabel" defaultValue={home.secondaryLabel} maxLength={80} className="rounded-xl border border-black/10 px-4 py-3" />
               </label>
               <label className="grid gap-1.5 text-sm font-medium">
-                Internal URL
+                Destination (e.g. /shop)
                 <input name="secondaryHref" defaultValue={home.secondaryHref} maxLength={200} className="rounded-xl border border-black/10 px-4 py-3" />
               </label>
             </div>
@@ -96,7 +99,7 @@ export default async function AdminHomepagePage({
               </span>
             </label>
             <label className="grid gap-1.5 text-sm font-medium">
-              Feature chips
+              Highlights
               <textarea
                 name="featureChips"
                 defaultValue={home.featureChips.join("\n")}
@@ -109,7 +112,7 @@ export default async function AdminHomepagePage({
         </AdminCard>
 
         <AdminCard>
-          <p className="text-sm font-semibold">Brand story block</p>
+          <p className="text-sm font-semibold">Brand story</p>
           <div className="mt-4 grid gap-4">
             <label className="grid gap-1.5 text-sm font-medium">
               Eyebrow
@@ -126,10 +129,9 @@ export default async function AdminHomepagePage({
           </div>
         </AdminCard>
 
-        <div className="flex justify-end">
-          <button className="rounded-xl bg-[#713a35] px-6 py-3.5 text-sm font-semibold text-white">
-            Save homepage
-          </button>
+        <div className="admin-save-bar">
+          <p className="text-xs text-black/60">Saving updates your draft. Publish to show changes to customers.</p>
+          <AdminSubmitButton pendingLabel="Saving…">Save draft</AdminSubmitButton>
         </div>
       </form>
     </AdminShell>
