@@ -34,7 +34,16 @@ export default async function AdminHomepagePage({
       subtitle="Edit your homepage, save a draft, then preview and publish when ready."
     >
       {saved ? <AdminNotice>Draft saved. <Link href="/admin/publishing" className="font-semibold underline">Preview and publish →</Link></AdminNotice> : null}
+      <div className="grid gap-3 sm:grid-cols-3"><Link href="/admin/merchandising" className="rounded-xl border border-black/10 bg-white p-4 text-sm font-semibold hover:border-[#713a35]/40">Arrange featured sections →</Link><Link href="/admin/media" className="rounded-xl border border-black/10 bg-white p-4 text-sm font-semibold hover:border-[#713a35]/40">Manage imagery →</Link><Link href="/admin/publishing" className="rounded-xl border border-black/10 bg-white p-4 text-sm font-semibold hover:border-[#713a35]/40">Preview and publish →</Link></div>
       <form action={saveHomepage} className="grid gap-5">
+        <AdminCard>
+          <h2 className="mb-3 text-sm font-semibold">Appearance and layout</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="grid gap-1.5 text-sm font-medium">Banner appearance<select name="heroStyle" defaultValue={home.heroStyle ?? "blush"} className="rounded-xl border border-black/10 px-4 py-3"><option value="blush">Signature blush</option><option value="cream">Soft cream</option><option value="minimal">Minimal white</option></select></label>
+            <label className="flex items-center gap-3 text-sm font-medium"><input type="checkbox" name="showCategories" defaultChecked={home.showCategories !== false} className="h-5 w-5 accent-[#713a35]" /> Show shopping categories on homepage</label>
+          </div>
+          <p className="mt-3 text-xs text-black/50">Choose an appearance and control homepage visibility. Product sections and campaigns are arranged in Merchandising.</p>
+        </AdminCard>
         <AdminCard>
           <h2 className="mb-4 text-sm font-semibold">Main banner</h2>
           <div className="grid gap-4">

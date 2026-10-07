@@ -68,7 +68,7 @@ export function Header({ announcement }: { announcement: string }) {
   }, [open]);
 
   const current = (href: string) =>
-    pathname === href || (href !== "/shop" && pathname.startsWith(href));
+    pathname === href || (href !== "/shop" && pathname.startsWith(href + "/"));
 
   return (
     <>
@@ -108,7 +108,7 @@ export function Header({ announcement }: { announcement: string }) {
 
           <div className="flex items-center justify-end gap-2">
             <Link href="/track-order" className="hidden rounded-full px-3 py-2 text-xs font-medium text-[#713a35] xl:block">Track order</Link>
-            <Link href="/account" aria-current={current("/account") ? "page" : undefined} className="hidden rounded-full px-3 py-2 text-sm font-semibold text-[#713a35] sm:block">Account</Link>
+            <Link href="/account" aria-current={current("/account") ? "page" : undefined} className="inline-flex min-h-11 items-center rounded-full px-2 py-2 text-xs font-semibold text-[#713a35] sm:px-3 sm:text-sm">Account</Link>
             <Link
               href="/shop"
               className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#713a35]/15 bg-white/70 transition hover:bg-white"
@@ -158,7 +158,7 @@ export function Header({ announcement }: { announcement: string }) {
           </nav>
 
           <nav aria-label="Customer tools" className="mt-6 grid grid-cols-2 gap-3">
-            <Link href="/account" onClick={() => setOpen(false)} className="rounded-2xl bg-[#f5e8e2] p-4 text-sm font-semibold">My account</Link>
+            <Link href="/account" onClick={() => setOpen(false)} className="rounded-2xl bg-[#f5e8e2] p-4 text-sm font-semibold">My account & orders</Link>
             <Link href="/track-order" onClick={() => setOpen(false)} className="rounded-2xl bg-[#f5e8e2] p-4 text-sm font-semibold">Track order</Link>
           </nav>
 

@@ -194,6 +194,8 @@ export type StorefrontConfig = {
     ideaEyebrow: string;
     ideaHeadline: string;
     ideaCopy: string;
+    heroStyle?: "blush" | "cream" | "minimal";
+    showCategories?: boolean;
   };
   pages: {
     about: InfoPageContent;
@@ -393,6 +395,8 @@ export const defaultStorefrontConfig: StorefrontConfig = {
       "BDT pricing",
       "Bangladesh-first storefront",
     ],
+    heroStyle: "blush",
+    showCategories: true,
     ideaEyebrow: "The Aloyri idea",
     ideaHeadline: "Less noise. Better product choices.",
     ideaCopy:
