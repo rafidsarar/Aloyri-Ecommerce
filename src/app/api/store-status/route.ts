@@ -1,4 +1,5 @@
 import { paymentProviderReadiness } from "@/lib/payment-provider-readiness";
+import { structuredDatastoreHealth } from "@/lib/structured-record-store";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,7 @@ export async function GET() {
   );
   const ratesReady = insideDhaka !== null && outsideDhaka !== null;
   const payments = paymentProviderReadiness();
+  const datastore = await structuredDatastoreHealth();
 
   return Response.json(
     {
@@ -21,6 +23,13 @@ export async function GET() {
         process.env.ALOYRI_ORDERING_ENABLED === "1" && ratesReady,
       paymentMethods: payments.paymentMethods,
       paymentReadiness: payments.providers,
+      datastore: {
+        configured: datastore.databaseConfigured,
+        reachable: datastore.databaseReachable,
+        namespace: datastore.namespace,
+        recordCount: datastore.recordCount,
+        migrationState: datastore.migration?.state || "not-started",
+      },
       deliveryRates: ratesReady
         ? {
             "inside-dhaka": insideDhaka,
