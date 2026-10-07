@@ -12,7 +12,6 @@ import {
   getPublishingStatus,
   listAdminAuditEvents,
   listPrivateJsonRecords,
-  readPrivateJson,
   readPublishedStorefrontConfig,
   saveDraftStorefrontConfig,
   writeAdminAuditEvent,
