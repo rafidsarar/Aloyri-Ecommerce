@@ -1,6 +1,11 @@
 import "server-only";
 
-import { get, list, put } from "@vercel/blob";
+import {
+  listStructuredJson,
+  readStructuredJson,
+  structuredDatastoreConfigured,
+  writeStructuredJson,
+} from "@/lib/structured-record-store";
 import { hashRetentionCustomerIdentity } from "@/lib/retention-identity";
 
 export type AnalyticsDevice = "mobile" | "tablet" | "desktop";
@@ -198,20 +203,13 @@ export type AnalyticsReport = {
   }>;
 };
 
-const ROOT_PREFIX =
-  process.env.VERCEL_ENV === "production"
-    ? "analytics/"
-    : "preview/analytics/";
+const ROOT_PREFIX = "analytics/";
 const EVENTS_PREFIX = ROOT_PREFIX + "events/";
 const CONVERSIONS_PREFIX = ROOT_PREFIX + "conversions/";
 const MAX_EVENTS = 20_000;
 
 function blobConfigured() {
-  return Boolean(
-    process.env.BLOB_READ_WRITE_TOKEN ||
-      process.env.VERCEL_OIDC_TOKEN ||
-      process.env.VERCEL,
-  );
+  return structuredDatastoreConfigured();
 }
 
 export function rawBlobAnalyticsEnabled() {
@@ -268,12 +266,7 @@ export async function recordAnalyticsEvent(
     record.id +
     ".json";
 
-  await put(pathname, JSON.stringify(record), {
-    access: "private",
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    contentType: "application/json",
-  });
+  await writeStructuredJson(pathname, record);
 
   return record;
 }
@@ -309,15 +302,8 @@ export async function recordConfirmedOrderAnalytics(input: {
     : undefined;
   const dedupePath = CONVERSIONS_PREFIX + orderHash + ".json";
 
-  try {
-    const existing = await get(dedupePath, {
-      access: "private",
-      useCache: false,
-    });
-    if (existing) return null;
-  } catch {
-    // A missing dedupe marker is expected for a new conversion.
-  }
+  const existing = await readStructuredJson(dedupePath);
+  if (existing) return null;
 
   const [visitorHash, sessionHash] = await Promise.all([
     hashAnalyticsIdentifier(input.visitorId),
@@ -350,36 +336,17 @@ export async function recordConfirmedOrderAnalytics(input: {
   }, { operational: true });
 
   if (event) {
-    await put(
-      dedupePath,
-      JSON.stringify({
-        version: 1,
-        recordedAt: event.timestamp,
-        eventId: event.id,
-      }),
-      {
-        access: "private",
-        addRandomSuffix: false,
-        allowOverwrite: true,
-        contentType: "application/json",
-      },
-    );
+    await writeStructuredJson(dedupePath, {
+      version: 1,
+      recordedAt: event.timestamp,
+      eventId: event.id,
+    });
   }
 
   return event;
 }
 
-async function readBlobJson(pathname: string) {
-  try {
-    const result = await get(pathname, { access: "private", useCache: false });
-    if (!result) return null;
-    return JSON.parse(
-      await new Response(result.stream).text(),
-    ) as AnalyticsEventRecord;
-  } catch {
-    return null;
-  }
-}
+function utcDayKeys
 
 function utcDayKeys(from: Date, to: Date) {
   const keys: string[] = [];
@@ -418,20 +385,16 @@ export async function readAnalyticsEvents(
   const days = utcDayKeys(from, to);
 
   for (const day of days) {
-    let cursor: string | undefined;
-
-    do {
-      const result = await list({
-        prefix: EVENTS_PREFIX + day + "/",
-        limit: Math.min(1000, Math.max(1, limit - records.length)),
-        ...(cursor ? { cursor } : {}),
-      });
-      const page = await Promise.all(
-        result.blobs.map((blob) => readBlobJson(blob.pathname)),
+    let offset = 0;
+    while (records.length < limit) {
+      const page = await listStructuredJson<AnalyticsEventRecord>(
+        EVENTS_PREFIX + day + "/",
+        Math.min(1000, Math.max(1, limit - records.length)),
+        offset,
       );
-
-      for (const event of page) {
-        if (!event) continue;
+      if (!page.length) break;
+      for (const row of page) {
+        const event = row.value;
         const timestamp = Date.parse(event.timestamp);
         if (
           Number.isFinite(timestamp) &&
@@ -442,10 +405,9 @@ export async function readAnalyticsEvents(
           if (records.length >= limit) break;
         }
       }
-
-      cursor = result.hasMore ? result.cursor : undefined;
-    } while (cursor && records.length < limit);
-
+      offset += page.length;
+      if (page.length < 1000) break;
+    }
     if (records.length >= limit) break;
   }
 
