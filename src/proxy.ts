@@ -37,6 +37,10 @@ function storagePath(pathname: string) {
 }
 
 async function publishedRedirects() {
+  if (!process.env.BLOB_READ_WRITE_TOKEN && !process.env.VERCEL_OIDC_TOKEN) {
+    return [];
+  }
+
   if (redirectCache && redirectCache.expiresAt > Date.now()) {
     return redirectCache.redirects;
   }

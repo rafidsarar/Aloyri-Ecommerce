@@ -1,11 +1,9 @@
 import "server-only";
 
 import { cartRecoveryReadiness } from "@/lib/cart-recovery";
-
-function configuredEmail(value: string | undefined) {
-  const email = (value || "").trim().toLowerCase();
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : "";
-}
+import { customerAuthReadiness } from "@/lib/customer-auth";
+import { transactionalEmailReadiness } from "@/lib/email-delivery";
+import { productAlertsReadiness } from "@/lib/product-alerts";
 
 import {
   lifecyclePolicies,
@@ -13,28 +11,34 @@ import {
 } from "@/lib/lifecycle-policy";
 
 export function lifecycleReadiness() {
-  const domainReady = process.env.ALOYRI_EMAIL_DOMAIN_VERIFIED === "1";
+  const email = transactionalEmailReadiness();
   const lifecycleSwitch = process.env.ALOYRI_LIFECYCLE_EMAIL_ENABLED === "1";
-  const crmEventsReady = process.env.ALOYRI_CRM_LIFECYCLE_EVENTS_READY === "1";
-  const fromEmail = configuredEmail(process.env.ALOYRI_LIFECYCLE_FROM_EMAIL);
-  const senderReady = Boolean(process.env.RESEND_API_KEY) && Boolean(fromEmail);
+  const crmEventsReady =
+    process.env.ALOYRI_CRM_LIFECYCLE_EVENTS_READY === "1" &&
+    Boolean(process.env.CRM_INTEGRATION_ID) &&
+    Boolean(process.env.CRM_INTEGRATION_SECRET);
   const lifecycleEnabled =
-    domainReady && lifecycleSwitch && senderReady && crmEventsReady;
+    email.ready && lifecycleSwitch && crmEventsReady;
   const cartRecovery = cartRecoveryReadiness();
+  const alerts = productAlertsReadiness();
+  const auth = customerAuthReadiness();
 
   return {
-    domainReady,
-    senderReady,
+    domainReady: email.domainReady,
+    senderReady: email.senderReady,
     lifecycleSwitch,
     crmEventsReady,
     lifecycleEnabled,
-    fromEmail: senderReady ? fromEmail : undefined,
+    fromEmail: email.fromEmail,
+    productAlertsEnabled: alerts.enabled,
+    customerAuthEnabled: auth.enabled,
     triggers: {
       "abandoned-cart": cartRecovery.enabled,
       "post-delivery-follow-up": lifecycleEnabled,
       "review-request": lifecycleEnabled,
       "reorder-reminder": lifecycleEnabled,
-      "back-in-stock": lifecycleEnabled,
+      "back-in-stock": alerts.enabled,
+      "price-drop": alerts.enabled,
     } satisfies Record<LifecycleTrigger, boolean>,
     policies: lifecyclePolicies,
   };

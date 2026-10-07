@@ -6,6 +6,7 @@ import { useCatalog } from "@/components/catalog-provider";
 import { ProductCard } from "@/components/product-card";
 import type { Product } from "@/lib/catalog";
 import { trackStorefrontEvent } from "@/lib/analytics";
+import { syncSignedInWishlist } from "@/lib/customer-account-sync";
 import {
   readCompareProductIds,
   readRecentProductIds,
@@ -37,9 +38,11 @@ export function ProductPreferenceButtons({ productId }: { productId: string }) {
   const compareFull = compare.length >= 3 && !isCompared;
 
   function toggleSaved() {
-    writeSavedProductIds(
-      isSaved ? saved.filter((id) => id !== productId) : [productId, ...saved],
-    );
+    const next = isSaved
+      ? saved.filter((id) => id !== productId)
+      : [productId, ...saved];
+    writeSavedProductIds(next);
+    void syncSignedInWishlist(next);
     trackStorefrontEvent(isSaved ? "wishlist_remove" : "wishlist_add", {
       productId,
     });

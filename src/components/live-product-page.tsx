@@ -12,6 +12,7 @@ import {
   ProductReviews,
 } from "@/components/product-reviews";
 import { ProductTrustPanel } from "@/components/product-trust-panel";
+import { ProductAlertSignup } from "@/components/product-alert-signup";
 import {
   ProductPreferenceButtons,
   RecentlyViewedProducts,
@@ -243,6 +244,11 @@ export function LiveProductPage({
           <div className="mt-7">
             <AddToCart productId={product.id} />
             <ProductPreferenceButtons productId={product.id} />
+            <ProductAlertSignup
+              productId={product.id}
+              productName={product.name}
+              outOfStock={(product.availableStock ?? 0) <= 0}
+            />
             <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[10px] uppercase tracking-[0.14em] text-[#321f1c]/38">
               <span>Live price</span>
               <span>Live availability</span>

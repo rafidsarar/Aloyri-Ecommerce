@@ -3,7 +3,8 @@ export type LifecycleTrigger =
   | "post-delivery-follow-up"
   | "review-request"
   | "reorder-reminder"
-  | "back-in-stock";
+  | "back-in-stock"
+  | "price-drop";
 
 export type LifecyclePolicy = {
   trigger: LifecycleTrigger;
@@ -45,9 +46,16 @@ export const lifecyclePolicies: LifecyclePolicy[] = [
   {
     trigger: "back-in-stock",
     description: "Availability notification only after a customer explicitly asks to watch an unavailable product.",
-    timing: "Event-driven after CRM stock becomes available",
+    timing: "Checked against live CRM catalog availability",
     requiresConsent: true,
-    source: "crm",
+    source: "website",
+  },
+  {
+    trigger: "price-drop",
+    description: "One-shot alert when the live website price falls below the price captured when the customer subscribed.",
+    timing: "Checked against live CRM catalog pricing",
+    requiresConsent: true,
+    source: "website",
   },
 ];
 

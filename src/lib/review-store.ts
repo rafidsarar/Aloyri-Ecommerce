@@ -2,6 +2,7 @@ import "server-only";
 
 import { get, list } from "@vercel/blob";
 import {
+  blobConfigured,
   readPrivateJson,
   storefrontStoragePath,
   writePrivateJson,
@@ -47,6 +48,8 @@ async function readBlobJson<T>(pathname: string): Promise<T | null> {
 }
 
 export async function listProductReviews(limit = MAX_REVIEWS) {
+  if (!blobConfigured()) return [] as ProductReview[];
+
   const output: ProductReview[] = [];
   let cursor: string | undefined;
 
@@ -228,6 +231,8 @@ export async function recordReviewMetric(
 }
 
 export async function readReviewMetrics(days = 30) {
+  if (!blobConfigured()) return [] as ReviewMetricDay[];
+
   const result: ReviewMetricDay[] = [];
   const page = await list({
     prefix: storefrontStoragePath(METRIC_PREFIX),

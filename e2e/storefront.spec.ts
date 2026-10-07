@@ -55,8 +55,10 @@ test("catalog search and mobile navigation", async ({ page }) => {
   await mockCommerce(page);
   await page.goto("/shop");
   await expect(page.getByText("Refreshing Facial Wash")).toBeVisible();
-  await page.getByPlaceholder("Search by product or brand").fill("Skin Aqua");
-  await expect(page.getByText("Skin Aqua Super Moisture UV Gel")).toBeVisible();
+  await page.getByPlaceholder("Search products, brands, routines or textures").fill("Skin Aqua");
+  await expect(
+    page.getByRole("link", { name: /Skin Aqua Super Moisture UV Gel/i }),
+  ).toBeVisible();
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
@@ -92,7 +94,9 @@ test("tracking can continue into a return request", async ({ page }) => {
   await page.getByRole("button", { name: "Track order" }).click();
   await expect(page.getByRole("heading", { name: "Delivered" })).toBeVisible();
   await page.getByRole("link", { name: "Request return / refund review" }).click();
+  await expect(page).toHaveURL(/\/return-request\?order=/);
   await page.getByLabel("Mobile number").fill("01700000000");
+  await expect(page.getByLabel("Mobile number")).toHaveValue("01700000000");
   await page.getByRole("button", { name: "Verify order" }).click();
   await page.getByLabel("Return quantity for Refreshing Facial Wash").selectOption("1");
   await page.getByRole("button", { name: "Submit return request" }).click();

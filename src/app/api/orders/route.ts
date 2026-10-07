@@ -230,6 +230,13 @@ function parsePayload(value: unknown): WebsiteOrderPayload | null {
 }
 
 export async function POST(request: Request) {
+  if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
+    return response(
+      { error: "Content-Type must be application/json.", code: "INVALID_CONTENT_TYPE" },
+      415,
+    );
+  }
+
   if (process.env.ALOYRI_ORDERING_ENABLED !== "1") {
     return response(
       {
@@ -237,13 +244,6 @@ export async function POST(request: Request) {
         code: "ORDERING_NOT_CONFIGURED",
       },
       503,
-    );
-  }
-
-  if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
-    return response(
-      { error: "Content-Type must be application/json.", code: "INVALID_CONTENT_TYPE" },
-      415,
     );
   }
 

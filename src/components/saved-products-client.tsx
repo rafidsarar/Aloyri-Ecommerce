@@ -8,6 +8,7 @@ import { readCart, writeCart } from "@/lib/cart";
 import { formatPrice, type Product } from "@/lib/catalog";
 import { trackStorefrontEvent } from "@/lib/analytics";
 import { salePriceFor } from "@/lib/promotions";
+import { syncSignedInWishlist } from "@/lib/customer-account-sync";
 import {
   readSavedProductIds,
   productPreferencesServerSnapshot,
@@ -72,7 +73,7 @@ export function SavedProductsClient() {
         {ids.length ? (
           <button
             type="button"
-            onClick={() => writeSavedProductIds([])}
+            onClick={() => { writeSavedProductIds([]); void syncSignedInWishlist([]); }}
             className="rounded-full border border-[#713a35]/16 px-4 py-2.5 text-xs font-semibold text-[#713a35]"
           >
             Clear saved
@@ -97,7 +98,9 @@ export function SavedProductsClient() {
                   <button
                     type="button"
                     onClick={() => {
-                      writeSavedProductIds(ids.filter((id) => id !== product.id));
+                      const next = ids.filter((id) => id !== product.id);
+                      writeSavedProductIds(next);
+                      void syncSignedInWishlist(next);
                       trackStorefrontEvent("wishlist_remove", { productId: product.id });
                     }}
                     className="font-semibold text-[#713a35]"
