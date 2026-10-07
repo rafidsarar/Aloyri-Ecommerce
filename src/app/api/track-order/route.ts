@@ -3,6 +3,7 @@ import {
   isValidBangladeshPhone,
   normalizeBangladeshPhone,
 } from "@/lib/checkout";
+import { reconcileSettlementFromTracking } from "@/lib/payment-settlement";
 
 export const dynamic = "force-dynamic";
 
@@ -125,6 +126,19 @@ export async function POST(request: Request) {
     orderNumber: input.orderNumber.trim(),
     phone: normalizeBangladeshPhone(input.phone),
   });
+
+  if (result.ok) {
+    try {
+      await reconcileSettlementFromTracking({
+        orderNumber: result.body.orderNumber,
+        paymentMethod: result.body.paymentMethod,
+        total: result.body.total,
+        orderStatus: result.body.status,
+      });
+    } catch (error) {
+      console.error("Payment reconciliation failed", error);
+    }
+  }
 
   return response(result.body, result.status);
 }
