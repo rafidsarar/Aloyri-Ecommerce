@@ -55,6 +55,7 @@ type CustomerAccount = {
   email: string;
   emailHash: string;
   displayName: string;
+  phone?: string;
   savedProductIds: string[];
   savedAddresses?: CustomerAddress[];
   orderRefs?: CustomerOrderRef[];
@@ -94,7 +95,7 @@ type CustomerSessionRecord = {
 
 export type PublicCustomerAccount = Pick<
   CustomerAccount,
-  "id" | "email" | "displayName" | "savedProductIds" | "createdAt" | "updatedAt" | "lastLoginAt"
+  "id" | "email" | "displayName" | "phone" | "savedProductIds" | "createdAt" | "updatedAt" | "lastLoginAt"
 > & {
   savedAddresses: CustomerAddress[];
   orderRefs: CustomerOrderRef[];
@@ -219,6 +220,7 @@ function publicAccount(account: CustomerAccount): PublicCustomerAccount {
     id: account.id,
     email: account.email,
     displayName: account.displayName,
+    phone: account.phone || "",
     savedProductIds: account.savedProductIds || [],
     savedAddresses: safeAddresses(account.savedAddresses || []),
     orderRefs: safeOrderRefs(account.orderRefs || []),
@@ -477,6 +479,7 @@ export async function customerEmailPreferencesForEmail(email: string) {
 
 export async function updateCurrentCustomerAccount(input: {
   displayName?: string;
+  phone?: string;
   savedProductIds?: unknown;
   wishlistChange?: { productId: string; saved: boolean };
   emailPreferences?: Partial<CustomerEmailPreferences>;
@@ -494,6 +497,11 @@ export async function updateCurrentCustomerAccount(input: {
       .trim()
       .replace(/\s+/g, " ")
       .slice(0, 80);
+  }
+  if (typeof input.phone === "string") {
+    const phone = input.phone.trim().replace(/[\s-]/g, "");
+    if (!/^\+?\d{10,15}$/.test(phone)) throw new Error("INVALID_PHONE");
+    stored.phone = phone;
   }
   if (input.savedProductIds !== undefined) {
     stored.savedProductIds = safeIds(input.savedProductIds);
