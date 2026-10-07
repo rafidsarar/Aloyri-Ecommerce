@@ -36,6 +36,7 @@ export function Footer({ description }: { description: string }) {
               Customer care
             </p>
             <div className="mt-5 flex flex-col gap-3 text-sm text-[#321f1c]/70">
+              <Link href="/account">My account</Link>
               <Link href="/track-order">Track order</Link>
               <Link href="/shipping-delivery">Shipping & delivery</Link>
               <Link href="/returns-refunds">Returns & refunds</Link>

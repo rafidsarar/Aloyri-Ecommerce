@@ -1,3 +1,5 @@
+
+import { volatileStorage } from "@/lib/volatile-storage";
 export type StorefrontEventName =
   | "page_view"
   | "product_view"
@@ -84,7 +86,7 @@ function analyticsAllowed() {
   if (window.location.pathname.startsWith("/admin")) return false;
   if (navigator.doNotTrack === "1") return false;
   try {
-    return localStorage.getItem(DISABLED_KEY) !== "1";
+    return volatileStorage.getItem(DISABLED_KEY) !== "1";
   } catch {
     return true;
   }
@@ -152,10 +154,10 @@ function externalReferrerDomain() {
 function ensureVisitorId() {
   if (!analyticsAllowed()) return undefined;
   try {
-    let id = localStorage.getItem(VISITOR_KEY) || "";
+    let id = volatileStorage.getItem(VISITOR_KEY) || "";
     if (!/^[A-Za-z0-9_-]{16,80}$/.test(id)) {
       id = randomId();
-      localStorage.setItem(VISITOR_KEY, id);
+      volatileStorage.setItem(VISITOR_KEY, id);
     }
     return id;
   } catch {
@@ -167,7 +169,7 @@ function ensureSessionId() {
   if (!analyticsAllowed()) return undefined;
   const now = Date.now();
   try {
-    const raw = sessionStorage.getItem(SESSION_KEY);
+    const raw = volatileStorage.getItem(SESSION_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as { id?: unknown; touchedAt?: unknown };
       if (
@@ -176,7 +178,7 @@ function ensureSessionId() {
         typeof parsed.touchedAt === "number" &&
         now - parsed.touchedAt < SESSION_TTL_MS
       ) {
-        sessionStorage.setItem(
+        volatileStorage.setItem(
           SESSION_KEY,
           JSON.stringify({ id: parsed.id, touchedAt: now }),
         );
@@ -185,7 +187,7 @@ function ensureSessionId() {
     }
 
     const id = randomId();
-    sessionStorage.setItem(
+    volatileStorage.setItem(
       SESSION_KEY,
       JSON.stringify({ id, touchedAt: now }),
     );
@@ -260,7 +262,7 @@ function attributionFromLocation() {
 function readAttribution() {
   if (typeof window === "undefined") return attributionFromLocation();
   try {
-    const raw = sessionStorage.getItem(ATTRIBUTION_KEY);
+    const raw = volatileStorage.getItem(ATTRIBUTION_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as Record<string, unknown>;
       return {
@@ -288,7 +290,7 @@ function readAttribution() {
 
   const attribution = attributionFromLocation();
   try {
-    sessionStorage.setItem(ATTRIBUTION_KEY, JSON.stringify(attribution));
+    volatileStorage.setItem(ATTRIBUTION_KEY, JSON.stringify(attribution));
   } catch {
     // Analytics still works without persistent attribution.
   }
@@ -298,7 +300,7 @@ function readAttribution() {
 function readMerchandisingContext() {
   if (typeof window === "undefined") return {};
   try {
-    const raw = sessionStorage.getItem(CONTEXT_KEY);
+    const raw = volatileStorage.getItem(CONTEXT_KEY);
     if (!raw) return {};
     const parsed = JSON.parse(raw) as Record<string, unknown>;
     return {
@@ -355,7 +357,7 @@ export function rememberAnalyticsContext(
         ? { searchTerm: safeSearchTerm(context.searchTerm) }
         : {}),
     };
-    sessionStorage.setItem(CONTEXT_KEY, JSON.stringify(next));
+    volatileStorage.setItem(CONTEXT_KEY, JSON.stringify(next));
   } catch {
     // Context is optional.
   }

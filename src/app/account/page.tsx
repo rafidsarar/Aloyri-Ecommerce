@@ -4,7 +4,7 @@ import { CustomerAccountHub } from "@/components/customer-account-hub";
 
 export const metadata: Metadata = {
   title: "Customer account",
-  description: "Your Aloyri customer hub for wishlist, cart and order tools.",
+  description: "Sign in to manage your Aloyri orders, addresses and account.",
   robots: { index: false, follow: true },
 };
 
@@ -21,8 +21,8 @@ export default async function CustomerAccountPage({
       ? params.order.toUpperCase()
       : "";
 
-  const session = completed && order ? await currentCustomerSession() : null;
-  const verified = Boolean(session?.account.orderRefs.some(ref => ref.orderNumber === order));
+  const session = await currentCustomerSession();
+  const verified = completed && Boolean(session?.account.orderRefs.some(ref => ref.orderNumber === order));
   return (
     <>
       {verified ? (
@@ -37,7 +37,7 @@ export default async function CustomerAccountPage({
           </div>
         </div>
       ) : null}
-      <CustomerAccountHub />
+      <CustomerAccountHub authenticated={Boolean(session)} displayName={session?.account.displayName || ""} />
     </>
   );
 }

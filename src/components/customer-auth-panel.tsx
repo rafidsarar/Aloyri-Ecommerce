@@ -1,8 +1,9 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { volatileStorage } from "@/lib/volatile-storage";
 import { FormEvent, useEffect, useState } from "react";
 import {
-  readSavedProductIds,
   writeSavedProductIds,
 } from "@/lib/product-preferences";
 
@@ -29,6 +30,7 @@ type Status = {
 };
 
 export function CustomerAuthPanel() {
+  const router = useRouter();
   const [status, setStatus] = useState<Status | null>(null);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
@@ -48,31 +50,14 @@ export function CustomerAuthPanel() {
         if (!body || controller.signal.aborted) return;
         setStatus(body);
         if (body.authenticated && body.account) {
-          const local = readSavedProductIds();
-          const merged = [
-            ...new Set([...body.account.savedProductIds, ...local]),
-          ].slice(0, 100);
-          if (JSON.stringify(merged) !== JSON.stringify(local)) {
-            writeSavedProductIds(merged);
-          }
-          if (
-            JSON.stringify(merged) !==
-            JSON.stringify(body.account.savedProductIds)
-          ) {
-            void fetch("/api/customer/account", {
-              method: "PUT",
-              headers: { "content-type": "application/json" },
-              credentials: "same-origin",
-              body: JSON.stringify({ savedProductIds: merged }),
-            });
-          }
+          writeSavedProductIds(body.account.savedProductIds);
         }
       })
-      .catch(() => undefined);
+      .catch(() => setError("Unable to load sign-in. Refresh this page to try again."));
     return () => controller.abort();
   }, []);
 
-  if (!status?.enabled) return null;
+  if (!status) return <p className="py-8 text-sm text-[#321f1c]/60" role={error?"alert":"status"}>{error||"Loading sign-in…"}</p>;
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -88,7 +73,6 @@ export function CustomerAuthPanel() {
         credentials: "same-origin",
         body: JSON.stringify({
           displayName: form.get("displayName"),
-          savedProductIds: readSavedProductIds(),
           emailPreferences: {
             postDelivery: form.get("postDelivery") === "on",
             reviewRequest: form.get("reviewRequest") === "on",
@@ -116,22 +100,22 @@ export function CustomerAuthPanel() {
   }
 
   async function signOut() {
-    await fetch("/api/customer-auth/logout", {
-      method: "POST",
-      credentials: "same-origin",
-    }).catch(() => undefined);
-    setStatus({
-      enabled: true,
-      authenticated: false,
-      authMethods: { google: true, emailLink: false },
-    });
-    setNotice("Signed out.");
+    try {
+      const response = await fetch("/api/customer-auth/logout", { method: "POST", credentials: "same-origin" });
+      if (!response.ok) throw new Error();
+      volatileStorage.clear();
+      writeSavedProductIds([]);
+      window.dispatchEvent(new Event("aloyri:customer-signed-out"));
+      window.dispatchEvent(new Event("aloyri-cart-updated"));
+      router.replace("/account");
+      router.refresh();
+    } catch { setError("Unable to sign out. Please try again."); }
   }
 
   return (
     <section className="mt-6 rounded-[1.5rem] border border-[#713a35]/10 bg-[#fffaf7] p-5 sm:p-7">
       <p className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#713a35]/45">
-        Google customer account
+        Customer account
       </p>
 
       {status.authenticated && status.account ? (
@@ -142,7 +126,7 @@ export function CustomerAuthPanel() {
                 Signed in as {status.account.email}
               </p>
               <p className="mt-1 text-xs text-[#321f1c]/45">
-                Google-verified identity · secure HttpOnly Aloyri session
+                Your details are saved securely in your Aloyri account.
               </p>
             </div>
             <button
@@ -165,7 +149,7 @@ export function CustomerAuthPanel() {
           </label>
 
           <div className="grid gap-3 rounded-xl bg-[#f5e8e2] p-4 text-xs leading-5">
-            <p className="font-semibold">Lifecycle email preferences</p>
+            <p className="font-semibold">Email preferences</p>
             <label className="flex gap-3">
               <input
                 type="checkbox"

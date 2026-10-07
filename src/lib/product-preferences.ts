@@ -1,3 +1,5 @@
+
+import { volatileStorage } from "@/lib/volatile-storage";
 export const SAVED_PRODUCTS_KEY = "aloyri_saved_products";
 export const COMPARE_PRODUCTS_KEY = "aloyri_compare_products";
 export const RECENT_PRODUCTS_KEY = "aloyri_recent_products";
@@ -16,7 +18,7 @@ function cleanIds(value: unknown, max: number) {
 function read(key: string, max: number) {
   if (typeof window === "undefined") return [] as string[];
   try {
-    return cleanIds(JSON.parse(localStorage.getItem(key) || "[]"), max);
+    return cleanIds(JSON.parse(volatileStorage.getItem(key) || "[]"), max);
   } catch {
     return [] as string[];
   }
@@ -25,10 +27,10 @@ function read(key: string, max: number) {
 function write(key: string, ids: string[], max: number) {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(key, JSON.stringify(cleanIds(ids, max)));
+    volatileStorage.setItem(key, JSON.stringify(cleanIds(ids, max)));
     window.dispatchEvent(new Event(PRODUCT_PREFERENCES_EVENT));
   } catch {
-    // Product preferences are optional and remain device-local.
+    // Comparison and recent-product choices are temporary for this visit.
   }
 }
 
@@ -61,9 +63,9 @@ export function productPreferencesSnapshot() {
   if (typeof window === "undefined") return "";
   try {
     return [
-      localStorage.getItem(SAVED_PRODUCTS_KEY) || "[]",
-      localStorage.getItem(COMPARE_PRODUCTS_KEY) || "[]",
-      localStorage.getItem(RECENT_PRODUCTS_KEY) || "[]",
+      volatileStorage.getItem(SAVED_PRODUCTS_KEY) || "[]",
+      volatileStorage.getItem(COMPARE_PRODUCTS_KEY) || "[]",
+      volatileStorage.getItem(RECENT_PRODUCTS_KEY) || "[]",
     ].join("|");
   } catch {
     return "";

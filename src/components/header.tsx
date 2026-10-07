@@ -13,7 +13,6 @@ const links = [
   ["Moisturizers", "/category/moisturizers"],
   ["Sunscreen", "/category/sunscreen"],
   ["Track order", "/track-order"],
-  ["Wishlist", "/wishlist"],
   ["Account", "/account"],
 ];
 
@@ -80,7 +79,7 @@ export function Header({ announcement }: { announcement: string }) {
 
       <header className="sticky top-0 z-40 border-b border-[#713a35]/10 bg-[#fffaf7]/92 backdrop-blur-xl">
         <div className="shell grid h-[76px] grid-cols-[1fr_auto_1fr] items-center sm:h-[82px]">
-          <nav className="hidden items-center gap-6 xl:flex" aria-label="Primary navigation">
+          <nav className="hidden items-center gap-4 xl:flex" aria-label="Primary navigation">
             {links.map(([label, href]) => (
               <Link
                 key={label}
@@ -127,7 +126,7 @@ export function Header({ announcement }: { announcement: string }) {
           role="dialog"
           aria-modal="true"
           aria-label="Navigation menu"
-          className="fixed inset-0 z-50 bg-[#fffaf7] p-6 xl:hidden"
+          className="fixed inset-0 z-50 overflow-y-auto bg-[#fffaf7] p-6 xl:hidden"
         >
           <div className="flex items-center justify-between">
             <BrandMark />
@@ -142,21 +141,21 @@ export function Header({ announcement }: { announcement: string }) {
             </button>
           </div>
 
-          <nav className="mt-14 flex flex-col" aria-label="Mobile navigation">
+          <nav className="mt-8 flex flex-col" aria-label="Mobile navigation">
             {links.map(([label, href]) => (
               <Link
                 key={label}
                 href={href}
                 aria-current={current(href) ? "page" : undefined}
                 onClick={() => setOpen(false)}
-                className="display border-b border-[#713a35]/10 py-5 text-4xl text-[#321f1c] aria-[current=page]:text-[#713a35]"
+                className="display border-b border-[#713a35]/10 py-4 text-3xl text-[#321f1c] aria-[current=page]:text-[#713a35]"
               >
                 {label}
               </Link>
             ))}
           </nav>
 
-          <div className="absolute bottom-8 left-6 right-6 rounded-3xl bg-[#f6e9e3] p-5">
+          <div className="mt-8 rounded-3xl bg-[#f6e9e3] p-5">
             <p className="text-xs uppercase tracking-[0.18em] text-[#8d5f56]">Aloyri edit</p>
             <p className="mt-2 text-sm leading-6 text-[#321f1c]/62">
               Cleansers, moisturizers and daily SPF selected for simple routines.

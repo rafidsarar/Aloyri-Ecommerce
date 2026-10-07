@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+import { currentCustomerSession } from "@/lib/customer-auth";
 import type { Metadata } from "next";
 import { ReturnRequestClient } from "@/components/return-request-client";
 
@@ -14,6 +16,7 @@ export default async function ReturnRequestPage({
 }: {
   searchParams: Promise<{ order?: string }>;
 }) {
+  if(!await currentCustomerSession())redirect("/account?section=support");
   const { order } = await searchParams;
   return <ReturnRequestClient initialOrder={order?.slice(0, 100) || ""} />;
 }

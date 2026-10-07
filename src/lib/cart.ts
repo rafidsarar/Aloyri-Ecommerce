@@ -1,3 +1,5 @@
+
+import { volatileStorage } from "@/lib/volatile-storage";
 export const CART_KEY = "aloyri_cart";
 export const CART_UPDATED_EVENT = "aloyri-cart-updated";
 
@@ -9,7 +11,7 @@ export type CartItem = {
 export function readCart(): CartItem[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = JSON.parse(localStorage.getItem(CART_KEY) ?? "[]") as CartItem[];
+    const raw = JSON.parse(volatileStorage.getItem(CART_KEY) ?? "[]") as CartItem[];
     return Array.isArray(raw)
       ? raw.filter((item) => item && typeof item.productId === "string" && Number.isFinite(item.qty) && item.qty > 0)
       : [];
@@ -19,7 +21,7 @@ export function readCart(): CartItem[] {
 }
 
 export function writeCart(items: CartItem[]) {
-  localStorage.setItem(CART_KEY, JSON.stringify(items));
+  volatileStorage.setItem(CART_KEY, JSON.stringify(items));
   window.dispatchEvent(new Event(CART_UPDATED_EVENT));
 }
 

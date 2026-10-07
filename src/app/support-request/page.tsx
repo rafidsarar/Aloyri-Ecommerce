@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+import { currentCustomerSession } from "@/lib/customer-auth";
 import type { Metadata } from "next";
 import { SupportRequestClient } from "@/components/support-request-client";
 
@@ -8,7 +10,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function SupportRequestPage() {
+export default async function SupportRequestPage() {
+  if(!await currentCustomerSession())redirect("/account?section=support");
   return (
     <main className="shell py-12 md:py-18">
       <div className="mx-auto max-w-3xl">

@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useSyncExternalStore } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useCatalog } from "@/components/catalog-provider";
 import { ProductCard } from "@/components/product-card";
 import type { Product } from "@/lib/catalog";
 import { trackStorefrontEvent } from "@/lib/analytics";
-import { syncSignedInWishlist } from "@/lib/customer-account-sync";
+import { changeSignedInWishlist } from "@/lib/customer-account-sync";
 import {
   readCompareProductIds,
   readRecentProductIds,
@@ -16,7 +17,6 @@ import {
   subscribeProductPreferences,
   writeCompareProductIds,
   writeRecentProductIds,
-  writeSavedProductIds,
 } from "@/lib/product-preferences";
 
 function usePreferenceCounts() {
@@ -33,19 +33,23 @@ function usePreferenceCounts() {
 
 export function ProductPreferenceButtons({ productId }: { productId: string }) {
   const { saved, compare } = usePreferenceCounts();
+  const router=useRouter();
+  const [saving,setSaving]=useState(false);
+  const [error,setError]=useState("");
   const isSaved = saved.includes(productId);
   const isCompared = compare.includes(productId);
   const compareFull = compare.length >= 3 && !isCompared;
 
-  function toggleSaved() {
-    const next = isSaved
-      ? saved.filter((id) => id !== productId)
-      : [productId, ...saved];
-    writeSavedProductIds(next);
-    void syncSignedInWishlist(next);
-    trackStorefrontEvent(isSaved ? "wishlist_remove" : "wishlist_add", {
-      productId,
-    });
+  async function toggleSaved() {
+    if(saving)return;
+    setSaving(true);setError("");
+    try {
+      await changeSignedInWishlist(productId,!isSaved);
+      trackStorefrontEvent(isSaved?"wishlist_remove":"wishlist_add",{productId});
+    } catch(reason) {
+      if(reason instanceof Error&&reason.message==="SIGN_IN_REQUIRED")router.push("/account?section=wishlist");
+      else setError("Unable to save. Please try again.");
+    } finally {setSaving(false);}
   }
 
   function toggleCompare() {
@@ -61,11 +65,12 @@ export function ProductPreferenceButtons({ productId }: { productId: string }) {
     <div className="mt-3 grid gap-2 sm:grid-cols-2">
       <button
         type="button"
-        onClick={toggleSaved}
+        onClick={()=>void toggleSaved()}
+        disabled={saving}
         aria-pressed={isSaved}
         className="rounded-full border border-[#713a35]/16 bg-white/70 px-4 py-3 text-xs font-semibold text-[#713a35] transition hover:bg-white"
       >
-        {isSaved ? "Saved for later" : "Save for later"}
+        {saving ? "Saving…" : isSaved ? "Saved to account" : "Save to wishlist"}
       </button>
       <button
         type="button"
@@ -80,10 +85,11 @@ export function ProductPreferenceButtons({ productId }: { productId: string }) {
             ? "Compare list full"
             : "Compare product"}
       </button>
+      {error?<p className="col-span-full text-xs text-red-700" role="alert">{error}</p>:null}
       {(saved.length > 0 || compare.length > 0) ? (
         <div className="col-span-full flex flex-wrap justify-center gap-x-5 gap-y-2 pt-1 text-[11px] font-medium text-[#713a35]">
           {saved.length > 0 ? (
-            <Link href="/wishlist">Wishlist · {saved.length}</Link>
+            <Link href="/account?section=wishlist">Wishlist · {saved.length}</Link>
           ) : null}
           {compare.length > 0 ? (
             <Link href="/compare">Compare · {compare.length}/3</Link>
@@ -134,7 +140,7 @@ export function RecentlyViewedProducts({
           </p>
           <h2 className="display mt-2 text-4xl">Pick up where you left off.</h2>
         </div>
-        <Link href="/wishlist" className="text-sm font-semibold text-[#713a35]">
+        <Link href="/account?section=wishlist" className="text-sm font-semibold text-[#713a35]">
           Wishlist
         </Link>
       </div>
