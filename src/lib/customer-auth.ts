@@ -187,14 +187,16 @@ async function ensureAccount(email: string) {
     lastLoginAt: now,
   };
 
-  await Promise.all([
-    writePrivateJson(ACCOUNT_PREFIX + account.id + ".json", account),
-    writePrivateJson(EMAIL_PREFIX + hashed + ".json", {
-      version: 1,
-      accountId: account.id,
-    } satisfies EmailIndex),
-  ]);
-  return account;
+  await writePrivateJson(ACCOUNT_PREFIX + account.id + ".json", account);
+  const claimed = await createPrivateJsonOnce(EMAIL_PREFIX + hashed + ".json", {
+    version: 1,
+    accountId: account.id,
+  } satisfies EmailIndex);
+  if (claimed) return account;
+
+  const winner = await accountByEmail(normalized);
+  if (!winner) throw new Error("ACCOUNT_CREATE_CONFLICT");
+  return winner;
 }
 
 export async function requestCustomerMagicLink(

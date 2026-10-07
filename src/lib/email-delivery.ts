@@ -102,7 +102,12 @@ export function brandedEmailShell(input: {
     : siteConfig.url + (input.ctaHref.startsWith("/") ? input.ctaHref : "/" + input.ctaHref);
 
   return `<!doctype html>
-<html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>${input.title}</title>
+  </head>
   <body style="margin:0;background:#fffaf7;color:#321f1c;font-family:Arial,sans-serif">
     <div style="max-width:600px;margin:0 auto;padding:32px 20px">
       <div style="background:#ffffff;border:1px solid #eadbd6;border-radius:22px;padding:30px">
