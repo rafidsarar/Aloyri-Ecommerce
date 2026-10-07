@@ -16,7 +16,16 @@ export async function GET() {
       domainReady: readiness.domainReady,
       senderReady: readiness.senderReady,
       switchEnabled: readiness.switchEnabled,
+      authMethods: {
+        google: readiness.googleEnabled,
+        emailLink: readiness.emailLinkEnabled,
+      },
+      googleConfigured: readiness.googleConfigured,
+      googleSwitchEnabled: readiness.googleSwitchEnabled,
       authenticated: Boolean(session),
+      ...(session
+        ? { authMethod: session.session.method || "email-link" }
+        : {}),
       ...(session ? { account: session.account } : {}),
     },
     {

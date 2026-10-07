@@ -58,6 +58,10 @@ type CustomerAccount = {
   savedAddresses?: CustomerAddress[];
   orderRefs?: CustomerOrderRef[];
   emailPreferences?: CustomerEmailPreferences;
+  googleIdentity?: {
+    supabaseUserId: string;
+    linkedAt: string;
+  };
   createdAt: string;
   updatedAt: string;
   lastLoginAt?: string;
@@ -84,6 +88,7 @@ type CustomerSessionRecord = {
   createdAt: string;
   expiresAt: string;
   revokedAt?: string;
+  method?: "email-link" | "google";
 };
 
 export type PublicCustomerAccount = Pick<
@@ -249,11 +254,23 @@ async function emailHash(email: string) {
 export function customerAuthReadiness() {
   const email = transactionalEmailReadiness();
   const switchEnabled = process.env.ALOYRI_CUSTOMER_AUTH_ENABLED === "1";
+  const emailLinkEnabled = email.ready && switchEnabled;
+  const googleConfigured = Boolean(
+    process.env.SUPABASE_AUTH_URL &&
+      process.env.SUPABASE_AUTH_PUBLISHABLE_KEY,
+  );
+  const googleSwitchEnabled =
+    process.env.ALOYRI_GOOGLE_AUTH_ENABLED === "1";
+  const googleEnabled = googleConfigured && googleSwitchEnabled;
   return {
-    enabled: email.ready && switchEnabled,
+    enabled: emailLinkEnabled || googleEnabled,
     switchEnabled,
     domainReady: email.domainReady,
     senderReady: email.senderReady,
+    emailLinkEnabled,
+    googleConfigured,
+    googleSwitchEnabled,
+    googleEnabled,
   };
 }
 
@@ -312,7 +329,7 @@ export async function requestCustomerMagicLink(
   email: string,
   nextPath?: string,
 ) {
-  if (!customerAuthReadiness().enabled) {
+  if (!customerAuthReadiness().emailLinkEnabled) {
     throw new Error("AUTH_NOT_READY");
   }
 
@@ -391,6 +408,7 @@ export async function consumeCustomerMagicLink(token: string) {
     accountId: account.id,
     createdAt: now,
     expiresAt: new Date(Date.now() + SESSION_TTL_MS).toISOString(),
+    method: "email-link",
   };
 
   account.lastLoginAt = now;
@@ -582,4 +600,64 @@ export async function revokeOtherCustomerSessions() {
     revoked += 1;
   }
   return { revoked };
+}
+
+
+export async function createCustomerSessionFromGoogleIdentity(input: {
+  supabaseUserId: string;
+  email: string;
+  displayName?: string;
+}) {
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      input.supabaseUserId,
+    )
+  ) {
+    throw new Error("INVALID_GOOGLE_IDENTITY");
+  }
+
+  const email = normalizeEmail(input.email);
+  if (!email) throw new Error("INVALID_EMAIL");
+
+  const account = await ensureAccount(email);
+  if (
+    account.googleIdentity?.supabaseUserId &&
+    account.googleIdentity.supabaseUserId !== input.supabaseUserId
+  ) {
+    throw new Error("GOOGLE_IDENTITY_CONFLICT");
+  }
+
+  const now = new Date().toISOString();
+  const cleanName =
+    typeof input.displayName === "string"
+      ? input.displayName.trim().replace(/\s+/g, " ").slice(0, 80)
+      : "";
+
+  account.googleIdentity = {
+    supabaseUserId: input.supabaseUserId,
+    linkedAt: account.googleIdentity?.linkedAt || now,
+  };
+  if (!account.displayName && cleanName) account.displayName = cleanName;
+  account.lastLoginAt = now;
+  account.updatedAt = now;
+
+  const sessionToken = randomToken();
+  const sessionHash = await hash(sessionToken);
+  const session: CustomerSessionRecord = {
+    version: 1,
+    accountId: account.id,
+    createdAt: now,
+    expiresAt: new Date(Date.now() + SESSION_TTL_MS).toISOString(),
+    method: "google",
+  };
+
+  await Promise.all([
+    writePrivateJson(ACCOUNT_PREFIX + account.id + ".json", account),
+    writePrivateJson(SESSION_PREFIX + sessionHash + ".json", session),
+  ]);
+
+  return {
+    sessionToken,
+    account: publicAccount(account),
+  };
 }
