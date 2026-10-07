@@ -1,5 +1,2 @@
 import { redirect } from "next/navigation";
-
-export default function SavedProductsLegacyPage() {
-  redirect("/wishlist");
-}
+export default function Page() { redirect("/account?section=wishlist"); }

@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { CatalogProvider } from "@/components/catalog-provider";
 import { StorefrontAnalyticsTracker } from "@/components/storefront-analytics-tracker";
 import { PerformanceReporter } from "@/components/performance-reporter";
+import { CustomerDataCleanup } from "@/components/customer-data-cleanup";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 
@@ -26,6 +27,7 @@ export function SiteChrome({
 
   return (
     <CatalogProvider>
+      <CustomerDataCleanup />
       {!preview ? <StorefrontAnalyticsTracker /> : null}
       {!preview ? <PerformanceReporter /> : null}
       {preview ? (

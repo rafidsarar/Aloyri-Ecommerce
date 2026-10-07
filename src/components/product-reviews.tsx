@@ -1,5 +1,7 @@
 "use client";
 
+import { volatileStorage } from "@/lib/volatile-storage";
+
 import { useEffect, useState } from "react";
 import type {
   PublicReviewData,
@@ -15,10 +17,10 @@ function stars(value: number) {
 
 function reviewClientId() {
   try {
-    let id = localStorage.getItem(REVIEW_CLIENT_KEY) || "";
+    let id = volatileStorage.getItem(REVIEW_CLIENT_KEY) || "";
     if (!/^[A-Za-z0-9_-]{16,80}$/.test(id)) {
       id = crypto.randomUUID().replace(/-/g, "");
-      localStorage.setItem(REVIEW_CLIENT_KEY, id);
+      volatileStorage.setItem(REVIEW_CLIENT_KEY, id);
     }
     return id;
   } catch {

@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { useCatalog } from "@/components/catalog-provider";
 import { ProductCard } from "@/components/product-card";
 import { readCart, writeCart } from "@/lib/cart";
 import { formatPrice, type Product } from "@/lib/catalog";
 import { trackStorefrontEvent } from "@/lib/analytics";
 import { salePriceFor } from "@/lib/promotions";
-import { syncSignedInWishlist } from "@/lib/customer-account-sync";
+import { changeSignedInWishlist, syncSignedInWishlist } from "@/lib/customer-account-sync";
 import {
   readSavedProductIds,
   productPreferencesServerSnapshot,
@@ -16,10 +16,15 @@ import {
   subscribeProductPreferences,
   readCompareProductIds,
   writeCompareProductIds,
-  writeSavedProductIds,
 } from "@/lib/product-preferences";
 
 export function SavedProductsClient() {
+  const [notice,setNotice]=useState("");
+  const [busy,setBusy]=useState(false);
+  async function change(productId?:string){
+    setBusy(true);setNotice("");
+    try{if(productId)await changeSignedInWishlist(productId,false);else await syncSignedInWishlist([]);}catch{setNotice("Unable to update wishlist. Please try again.");}finally{setBusy(false);}
+  }
   const { products, synced, error, refresh } = useCatalog();
   useSyncExternalStore(
     subscribeProductPreferences,
@@ -38,8 +43,8 @@ export function SavedProductsClient() {
 
   if (!synced) {
     return (
-      <main className="shell min-h-[60vh] py-16 text-center">
-        <h1 className="display text-5xl">Wishlist.</h1>
+      <section className=" min-h-[60vh] py-16 text-center">
+        <h2 className="display text-5xl">Wishlist.</h2>
         <p className="mt-4 text-sm text-[#321f1c]/50">
           {error
             ? "Live product information is temporarily unavailable."
@@ -54,18 +59,18 @@ export function SavedProductsClient() {
             Try again
           </button>
         ) : null}
-      </main>
+      </section>
     );
   }
 
   return (
-    <main className="shell py-12 md:py-16">
+    <section className=" py-12 md:py-16">
       <div className="flex flex-wrap items-end justify-between gap-5 border-b border-[#713a35]/10 pb-9">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#713a35]/48">
-            Saved on this device
+            Saved to your account
           </p>
-          <h1 className="display mt-2 text-5xl sm:text-6xl">Wishlist.</h1>
+          <h2 className="display mt-2 text-5xl sm:text-6xl">Wishlist.</h2>
           <p className="mt-4 max-w-xl text-sm leading-6 text-[#321f1c]/52">
             Keep a shortlist, move in-stock products straight to cart, or compare up to three. Live price and stock are always rechecked.
           </p>
@@ -73,7 +78,7 @@ export function SavedProductsClient() {
         {ids.length ? (
           <button
             type="button"
-            onClick={() => { writeSavedProductIds([]); void syncSignedInWishlist([]); }}
+            onClick={() => void change()} disabled={busy}
             className="rounded-full border border-[#713a35]/16 px-4 py-2.5 text-xs font-semibold text-[#713a35]"
           >
             Clear saved
@@ -81,6 +86,7 @@ export function SavedProductsClient() {
         ) : null}
       </div>
 
+      {notice?<p className="mt-4 text-sm text-red-700" role="alert">{notice}</p>:null}
       {saved.length ? (
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {saved.map((product) => {
@@ -97,12 +103,7 @@ export function SavedProductsClient() {
                   </span>
                   <button
                     type="button"
-                    onClick={() => {
-                      const next = ids.filter((id) => id !== product.id);
-                      writeSavedProductIds(next);
-                      void syncSignedInWishlist(next);
-                      trackStorefrontEvent("wishlist_remove", { productId: product.id });
-                    }}
+                    onClick={() => void change(product.id)} disabled={busy}
                     className="font-semibold text-[#713a35]"
                   >
                     Remove
@@ -166,6 +167,6 @@ export function SavedProductsClient() {
           </Link>
         </div>
       )}
-    </main>
+    </section>
   );
 }

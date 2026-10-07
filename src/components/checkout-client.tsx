@@ -1,5 +1,7 @@
 "use client";
 
+import { volatileStorage } from "@/lib/volatile-storage";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -36,11 +38,7 @@ import {
 import { formatPrice, getProductById } from "@/lib/catalog";
 import { getAnalyticsContext, trackStorefrontEvent } from "@/lib/analytics";
 import { salePriceFor, type PromotionQuote } from "@/lib/promotions";
-import {
-  readCustomerProfile,
-  writeCustomerProfile,
-} from "@/lib/customer-profile";
-import { rememberCustomerOrder } from "@/lib/customer-orders";
+
 
 type FieldErrors = Partial<Record<keyof CheckoutDraft, string>>;
 type DeliveryRates = Record<DeliveryZone, number>;
@@ -249,10 +247,9 @@ export function CheckoutClient() {
 
     const initialize = window.setTimeout(() => {
       setCartItems(readCart());
-      let restoredCheckout = false;
 
       try {
-        const saved = sessionStorage.getItem(CHECKOUT_DRAFT_KEY);
+        const saved = volatileStorage.getItem(CHECKOUT_DRAFT_KEY);
         if (saved) {
           const parsed = JSON.parse(saved) as {
             savedAt?: unknown;
@@ -263,8 +260,8 @@ export function CheckoutClient() {
             typeof parsed.savedAt === "number" &&
             Date.now() - parsed.savedAt > CHECKOUT_DRAFT_TTL_MS
           ) {
-            sessionStorage.removeItem(CHECKOUT_DRAFT_KEY);
-            sessionStorage.removeItem(CHECKOUT_ATTEMPT_KEY);
+            volatileStorage.removeItem(CHECKOUT_DRAFT_KEY);
+            volatileStorage.removeItem(CHECKOUT_ATTEMPT_KEY);
             setDraftNotice(
               "Your previous checkout details expired for privacy and accuracy. Please enter them again.",
             );
@@ -272,28 +269,14 @@ export function CheckoutClient() {
             const restored = safeDraft(parsed.draft ?? parsed);
             if (restored) {
               setDraft(restored);
-              restoredCheckout = true;
             }
           }
         }
       } catch {
         try {
-          sessionStorage.removeItem(CHECKOUT_DRAFT_KEY);
+          volatileStorage.removeItem(CHECKOUT_DRAFT_KEY);
         } catch {
           // Checkout still works without browser storage.
-        }
-      }
-
-      if (!restoredCheckout) {
-        const profile = readCustomerProfile();
-        if (profile.fullName || profile.email || profile.phone || profile.district) {
-          setDraft((current) => ({
-            ...current,
-            fullName: profile.fullName,
-            phone: profile.phone,
-            email: profile.email,
-            district: profile.district,
-          }));
         }
       }
 
@@ -375,7 +358,7 @@ export function CheckoutClient() {
   useEffect(() => {
     if (!hydrated) return;
     try {
-      sessionStorage.setItem(
+      volatileStorage.setItem(
         CHECKOUT_DRAFT_KEY,
         JSON.stringify({ savedAt: Date.now(), draft }),
       );
@@ -544,7 +527,7 @@ export function CheckoutClient() {
 
   function clearAttemptReference() {
     try {
-      sessionStorage.removeItem(CHECKOUT_ATTEMPT_KEY);
+      volatileStorage.removeItem(CHECKOUT_ATTEMPT_KEY);
     } catch {
       // A fresh checkout reference can still be created in memory.
     }
@@ -779,10 +762,10 @@ export function CheckoutClient() {
 
     let externalOrderId = "";
     try {
-      externalOrderId = sessionStorage.getItem(CHECKOUT_ATTEMPT_KEY) || "";
+      externalOrderId = volatileStorage.getItem(CHECKOUT_ATTEMPT_KEY) || "";
       if (!externalOrderId) {
         externalOrderId = crypto.randomUUID();
-        sessionStorage.setItem(CHECKOUT_ATTEMPT_KEY, externalOrderId);
+        volatileStorage.setItem(CHECKOUT_ATTEMPT_KEY, externalOrderId);
       }
     } catch {
       externalOrderId = crypto.randomUUID();
@@ -850,11 +833,6 @@ export function CheckoutClient() {
         return;
       }
 
-      const finalDeliveryCharge =
-        typeof result.deliveryCharge === "number" &&
-        Number.isFinite(result.deliveryCharge)
-          ? result.deliveryCharge
-          : quotedDelivery;
       const finalTotal =
         typeof result.total === "number" && Number.isFinite(result.total)
           ? result.total
@@ -867,44 +845,10 @@ export function CheckoutClient() {
         totalBdt: finalTotal,
       });
 
-      rememberCustomerOrder({
-        orderNumber: result.orderNumber,
-        phone: normalizeBangladeshPhone(draft.phone),
-        createdAt: new Date().toISOString(),
-        items: rows.map((row) => ({
-          productId: row.liveProduct!.id,
-          qty: row.qty,
-        })),
-        total: finalTotal,
-      });
-
       writeCart([]);
       setCartItems([]);
-      writeCustomerProfile({
-        fullName: draft.fullName,
-        phone: normalizeBangladeshPhone(draft.phone),
-        email: draft.email,
-        district: draft.district,
-      });
-
-      try {
-        sessionStorage.setItem(
-          "aloyri_last_order_confirmation",
-          JSON.stringify({
-            savedAt: Date.now(),
-            orderNumber: result.orderNumber,
-            itemCount,
-            deliveryZone: draft.deliveryZone,
-            deliveryCharge: finalDeliveryCharge,
-            total: finalTotal,
-            paymentMethod: "COD",
-          }),
-        );
-        sessionStorage.removeItem(CHECKOUT_DRAFT_KEY);
-        sessionStorage.removeItem(CHECKOUT_ATTEMPT_KEY);
-      } catch {
-        // Confirmation can continue without browser storage.
-      }
+      volatileStorage.removeItem(CHECKOUT_DRAFT_KEY);
+      volatileStorage.removeItem(CHECKOUT_ATTEMPT_KEY);
 
       if (customerAccount) {
         try {
@@ -917,7 +861,7 @@ export function CheckoutClient() {
         );
       } else {
         router.push(
-          `/order-confirmation?order=${encodeURIComponent(result.orderNumber)}`,
+          `/track-order?order=${encodeURIComponent(result.orderNumber)}`,
         );
       }
     } catch {

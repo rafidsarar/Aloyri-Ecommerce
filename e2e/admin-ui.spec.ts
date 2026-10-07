@@ -48,4 +48,24 @@ test.describe("minimal admin interface", () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await page.screenshot({ path: testInfo.outputPath("admin-mobile.png"), fullPage: true });
   });
+  test("account sections keep orders, addresses and support in one responsive area",async({page},testInfo)=>{
+    const account={email:"customer@example.test",displayName:"Preview customer",savedAddresses:[],savedProductIds:[],emailPreferences:{postDelivery:false,reviewRequest:false,reorderReminder:false}};
+    await page.route("**/api/customer/post-purchase*",route=>route.fulfill({json:{account,orders:[{ok:true,phone:"01700000000",canRequestCancellation:false,canReportDeliveryIssue:false,canRequestReturn:false,order:{orderNumber:"WEB-PREVIEW-12345678",created:"2026-10-08",status:"Confirmed",total:829,items:[{name:"Cleanser",brand:"Simple",size:"150ml",qty:1,unitPrice:749}]}}],pagination:{page:1,pages:1,total:1},supportCases:[],productAlerts:[]}}));
+    await page.route("**/api/customer/security",route=>route.fulfill({json:{activeSessions:1,currentSessionCreatedAt:"2026-10-08",currentSessionExpiresAt:"2026-10-09"}}));
+    await page.route("**/api/customer-auth/status",route=>route.fulfill({json:{enabled:true,authenticated:true,account}}));
+    await page.setViewportSize({width:1440,height:960});
+    await page.goto(`${base}/account`);
+    await expect(page.getByRole("heading",{name:"Your orders"})).toBeVisible();
+    await expect(page.getByText("WEB-PREVIEW-12345678")).toBeVisible();
+    await page.screenshot({path:testInfo.outputPath("account-desktop.png"),fullPage:true});
+    await page.getByRole("button",{name:"Addresses",exact:true}).click();
+    await expect(page.getByLabel("Recipient name")).toBeVisible();
+    await expect(page.getByText("WEB-PREVIEW-12345678")).toHaveCount(0);
+    await page.getByRole("button",{name:"Support",exact:true}).click();
+    await expect(page.getByRole("heading",{name:"Support & returns"})).toBeVisible();
+    await page.setViewportSize({width:390,height:844});
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+    await page.screenshot({path:testInfo.outputPath("account-mobile.png"),fullPage:true});
+  });
+
 });

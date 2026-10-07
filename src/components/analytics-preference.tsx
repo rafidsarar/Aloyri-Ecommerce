@@ -1,5 +1,7 @@
 "use client";
 
+import { volatileStorage } from "@/lib/volatile-storage";
+
 import { useEffect, useState } from "react";
 
 const KEY = "aloyri_analytics_disabled";
@@ -13,7 +15,7 @@ export function AnalyticsPreference() {
     const initialize = window.setTimeout(() => {
       setDnt(navigator.doNotTrack === "1");
       try {
-        setDisabled(localStorage.getItem(KEY) === "1");
+        setDisabled(volatileStorage.getItem(KEY) === "1");
       } catch {
         setDisabled(false);
       }
@@ -26,8 +28,8 @@ export function AnalyticsPreference() {
   function update(nextDisabled: boolean) {
     setDisabled(nextDisabled);
     try {
-      if (nextDisabled) localStorage.setItem(KEY, "1");
-      else localStorage.removeItem(KEY);
+      if (nextDisabled) volatileStorage.setItem(KEY, "1");
+      else volatileStorage.removeItem(KEY);
     } catch {
       // Preference still applies for this page even if storage is unavailable.
     }

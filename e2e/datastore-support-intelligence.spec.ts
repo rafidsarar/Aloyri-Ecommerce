@@ -53,7 +53,7 @@ test("invalid support requests fail without creating customer data", async ({
       note: "",
     },
   });
-  expect(response.status()).toBe(400);
+  expect(response.status()).toBe(401);
 });
 
 test("invalid return requests remain fail-closed", async ({ request }) => {
@@ -68,7 +68,7 @@ test("invalid return requests remain fail-closed", async ({ request }) => {
       items: [{ line: 0, qty: 1 }],
     },
   });
-  expect(response.status()).toBe(400);
+  expect(response.status()).toBe(401);
 });
 
 test("customer service admin remains authenticated", async ({ request }) => {

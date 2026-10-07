@@ -366,7 +366,7 @@ export default function CartPage() {
             )}
 
             <p className="mt-4 text-center text-[11px] leading-5 text-[#321f1c]/42">
-              Prices and available quantities are synchronized from Aloyri CRM.
+              Your cart is temporary for this visit. Saved products are kept in your signed-in account.
             </p>
           </aside>
         </div>

@@ -478,6 +478,7 @@ export async function customerEmailPreferencesForEmail(email: string) {
 export async function updateCurrentCustomerAccount(input: {
   displayName?: string;
   savedProductIds?: unknown;
+  wishlistChange?: { productId: string; saved: boolean };
   emailPreferences?: Partial<CustomerEmailPreferences>;
   savedAddresses?: unknown;
 }) {
@@ -496,6 +497,11 @@ export async function updateCurrentCustomerAccount(input: {
   }
   if (input.savedProductIds !== undefined) {
     stored.savedProductIds = safeIds(input.savedProductIds);
+  }
+  if (input.wishlistChange) {
+    const {productId,saved}=input.wishlistChange;
+    const ids=safeIds(stored.savedProductIds).filter(id=>id!==productId);
+    stored.savedProductIds=safeIds(saved?[productId,...ids]:ids);
   }
   if (input.savedAddresses !== undefined) {
     stored.savedAddresses = safeAddresses(input.savedAddresses);

@@ -1,9 +1,7 @@
 import { ownsSupportCase } from "@/lib/support-ownership";
 import {
-  claimCurrentCustomerOrder,
   currentCustomerSession,
 } from "@/lib/customer-auth";
-import { isValidBangladeshPhone, normalizeBangladeshPhone } from "@/lib/checkout";
 import { fetchCrmOrderTracking } from "@/lib/crm-tracking-integration";
 import { listProductAlerts } from "@/lib/product-alerts";
 import { listSupportCases } from "@/lib/support-cases";
@@ -110,46 +108,8 @@ export async function GET(request: Request) {
   return data ? reply(data) : reply({ error: "Sign in required." }, 401);
 }
 
-export async function POST(request: Request) {
-  const session = await currentCustomerSession();
-  if (!session) return reply({ error: "Sign in required." }, 401);
-  if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
-    return reply({ error: "Invalid request." }, 415);
-  }
-  const raw = await request.text();
-  if (raw.length > 12_000) return reply({ error: "Request too large." }, 413);
-  let body: { orders?: unknown };
-  try {
-    body = JSON.parse(raw) as { orders?: unknown };
-  } catch {
-    return reply({ error: "Invalid request." }, 400);
-  }
-  if (!Array.isArray(body.orders) || body.orders.length > 12) {
-    return reply({ error: "Invalid order list." }, 400);
-  }
-
-  let claimed = 0;
-  for (const rawOrder of body.orders) {
-    if (!rawOrder || typeof rawOrder !== "object") continue;
-    const input = rawOrder as Record<string, unknown>;
-    if (
-      typeof input.orderNumber !== "string" ||
-      !/^WEB-[A-Z0-9-]{8,90}$/i.test(input.orderNumber.trim()) ||
-      typeof input.phone !== "string" ||
-      !isValidBangladeshPhone(input.phone)
-    ) continue;
-    const orderNumber = input.orderNumber.trim().toUpperCase();
-    const phone = normalizeBangladeshPhone(input.phone);
-    const tracking = await fetchCrmOrderTracking({ orderNumber, phone });
-    if (!tracking.ok) continue;
-    await claimCurrentCustomerOrder({
-      orderNumber,
-      phone,
-      createdAt: tracking.body.created || new Date().toISOString(),
-      total: tracking.body.total,
-    });
-    claimed += 1;
-  }
-
-  return reply({ claimed });
+export async function POST() {
+  const session=await currentCustomerSession();
+  if(!session)return reply({error:"Sign in required."},401);
+  return reply({error:"Browser order imports are no longer supported. Orders placed while signed in are linked automatically."},410);
 }

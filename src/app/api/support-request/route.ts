@@ -40,6 +40,8 @@ function ip(request: Request) {
 
 
 export async function POST(request: Request) {
+  const session=await currentCustomerSession();
+  if(!session)return reply({error:"Sign in required.",code:"SIGN_IN_REQUIRED"},401);
   if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
     return reply({ error: "Content-Type must be application/json.", code: "INVALID_CONTENT_TYPE" }, 415);
   }
@@ -79,7 +81,7 @@ export async function POST(request: Request) {
     return reply({ error: "Check your contact and support-request details.", code: "INVALID_REQUEST" }, 400);
   }
 
-  const session = await currentCustomerSession();
+  if(orderNumber&&!session.account.orderRefs.some(ref=>ref.orderNumber===orderNumber.toUpperCase()))return reply({error:"Order not found in your account.",code:"ORDER_NOT_OWNED"},404);
   const row = await createCustomerSupportCase({
     ...(session ? { accountId: session.account.id } : {}),
     customerName,

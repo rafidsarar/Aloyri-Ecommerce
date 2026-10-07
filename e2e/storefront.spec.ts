@@ -66,12 +66,12 @@ test("catalog search and mobile navigation", async ({ page }) => {
   await expect(page.getByRole("dialog", { name: "Navigation menu" })).toBeVisible();
 });
 
-test("COD checkout confirms the CRM-authoritative final total", async ({ page }) => {
+test("guest COD checkout returns to independent tracking without browser-saved data", async ({ page }) => {
   await mockCommerce(page);
-  await page.addInitScript(() => {
-    localStorage.setItem("aloyri_cart", JSON.stringify([{ productId: "simple-wash", qty: 1 }]));
-  });
-  await page.goto("/checkout");
+  await page.goto("/shop");
+  await page.getByRole("button",{name:"Add to cart",exact:true}).first().click();
+  await page.getByRole("link",{name:/Cart/}).first().click();
+  await page.getByRole("link",{name:/Checkout|Continue to checkout/}).click();
   await page.getByLabel("Full name").fill("Aloyri E2E Customer");
   await page.getByLabel("Mobile number").fill("01700000000");
   await page.getByRole("button", { name: /Inside Dhaka/ }).click();
@@ -81,12 +81,13 @@ test("COD checkout confirms the CRM-authoritative final total", async ({ page })
   await page.getByRole("button", { name: "Continue to review" }).click();
   await page.getByRole("button", { name: /Place COD order/ }).click();
 
-  await expect(page).toHaveURL(/order-confirmation/);
-  await expect(page.getByText(delivered.orderNumber)).toBeVisible();
-  await expect(page.getByText(/777/)).toBeVisible();
+  await expect(page).toHaveURL(/track-order/);
+  await expect(page.getByLabel("Order number")).toHaveValue(delivered.orderNumber);
+  expect(await page.evaluate(()=>Object.keys(localStorage).filter(key=>key.startsWith("aloyri_")))).toEqual([]);
+  expect(await page.evaluate(()=>Object.keys(sessionStorage).filter(key=>key.startsWith("aloyri_")))).toEqual([]);
 });
 
-test("tracking can continue into a return request", async ({ page }) => {
+test("guest tracking directs return requests to Google sign-in", async ({ page }) => {
   await mockCommerce(page);
   await page.goto("/track-order");
   await page.getByLabel("Order number").fill(delivered.orderNumber);
@@ -94,13 +95,8 @@ test("tracking can continue into a return request", async ({ page }) => {
   await page.getByRole("button", { name: "Track order" }).click();
   await expect(page.getByRole("heading", { name: "Delivered" })).toBeVisible();
   await page.getByRole("link", { name: "Request return / refund review" }).click();
-  await expect(page).toHaveURL(/\/return-request\?order=/);
-  await page.getByLabel("Mobile number").fill("01700000000");
-  await expect(page.getByLabel("Mobile number")).toHaveValue("01700000000");
-  await page.getByRole("button", { name: "Verify order" }).click();
-  await page.getByLabel("Return quantity for Refreshing Facial Wash").selectOption("1");
-  await page.getByRole("button", { name: "Submit return request" }).click();
-  await expect(page.getByText("RET-E2E-0001")).toBeVisible();
+  await expect(page).toHaveURL(/account\?section=support/);
+  await expect(page.getByRole("link",{name:"Continue with Google"})).toBeVisible();
 });
 
 test("security headers, noindex and API content-type boundary", async ({ page, request }) => {

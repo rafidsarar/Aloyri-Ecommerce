@@ -50,6 +50,8 @@ function requestIp(request: Request) {
 
 
 export async function POST(request: Request) {
+  const session=await currentCustomerSession();
+  if(!session)return response({error:"Sign in required.",code:"SIGN_IN_REQUIRED"},401);
   if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
     return response({ error: "Content-Type must be application/json.", code: "INVALID_CONTENT_TYPE" }, 415);
   }
@@ -124,7 +126,7 @@ export async function POST(request: Request) {
     items: input.items,
   } satisfies ReturnRequestInput;
 
-  const session = await currentCustomerSession();
+  if(!session.account.orderRefs.some(ref=>ref.orderNumber===returnRequest.orderNumber.toUpperCase()))return response({error:"Order not found in your account.",code:"ORDER_NOT_OWNED"},404);
   const result = await submitCrmReturnRequest(returnRequest);
 
   /* CRM remains authoritative for return acceptance. Website support context is
