@@ -1,9 +1,8 @@
 import "server-only";
 
-import { get, list } from "@vercel/blob";
 import {
+  listPrivateJsonRecords,
   readPrivateJson,
-  storefrontStoragePath,
   writePrivateJson,
 } from "@/lib/storefront-admin-store";
 import { siteConfig } from "@/lib/site";
@@ -79,40 +78,15 @@ function safeToken() {
   );
 }
 
-async function readBlobJson<T>(pathname: string): Promise<T | null> {
-  try {
-    const result = await get(pathname, { access: "private", useCache: false });
-    if (!result) return null;
-    return JSON.parse(await new Response(result.stream).text()) as T;
-  } catch {
-    return null;
-  }
-}
-
 export async function listCartRecoveries(limit = MAX_RECORDS) {
-  const output: CartRecoveryRecord[] = [];
-  let cursor: string | undefined;
-
-  do {
-    const page = await list({
-      prefix: storefrontStoragePath(ITEM_PREFIX),
-      limit: Math.min(1000, Math.max(1, limit - output.length)),
-      ...(cursor ? { cursor } : {}),
-    });
-    const rows = await Promise.all(
-      page.blobs.map((blob) =>
-        readBlobJson<CartRecoveryRecord>(blob.pathname),
-      ),
-    );
-    output.push(
-      ...rows.filter(
-        (row): row is CartRecoveryRecord => Boolean(row),
-      ),
-    );
-    cursor = page.hasMore ? page.cursor : undefined;
-  } while (cursor && output.length < limit);
-
-  return output.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), MAX_RECORDS);
+  const rows = await listPrivateJsonRecords<CartRecoveryRecord>(
+    ITEM_PREFIX,
+    safeLimit,
+  );
+  return rows
+    .map((row) => row.value)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export async function createCartRecovery(input: {
