@@ -1,9 +1,7 @@
 import "server-only";
 
-import { list } from "@vercel/blob";
 import {
-  readPrivateJson,
-  storefrontStoragePath,
+  listPrivateJsonRecords,
   writePrivateJson,
 } from "@/lib/storefront-admin-store";
 
@@ -20,12 +18,7 @@ export type RuntimeErrorRecord = {
 
 const PREFIX = "admin/runtime-errors/";
 
-function logicalPath(pathname: string) {
-  const prefix = process.env.VERCEL_ENV === "production" ? "" : "preview/";
-  return prefix && pathname.startsWith(prefix)
-    ? pathname.slice(prefix.length)
-    : pathname;
-}
+function safeMessage
 
 function safeMessage(error: unknown) {
   if (error instanceof Error) {
@@ -74,17 +67,12 @@ export async function recordRuntimeError(source: string, error: unknown) {
 
 export async function listRuntimeErrors(limit = 30) {
   try {
-    const result = await list({
-      prefix: storefrontStoragePath(PREFIX),
-      limit: Math.min(Math.max(limit, 1), 100),
-    });
-    const records = await Promise.all(
-      result.blobs.map((blob) =>
-        readPrivateJson<RuntimeErrorRecord>(logicalPath(blob.pathname)),
-      ),
+    const rows = await listPrivateJsonRecords<RuntimeErrorRecord>(
+      PREFIX,
+      Math.min(Math.max(limit, 1), 100),
     );
-    return records
-      .filter((record): record is RuntimeErrorRecord => Boolean(record))
+    return rows
+      .map((row) => row.value)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
       .slice(0, limit);
   } catch {
