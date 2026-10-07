@@ -65,6 +65,7 @@ type CheckoutAccount = {
   id: string;
   email: string;
   displayName: string;
+  phone?: string;
   savedAddresses: CheckoutSavedAddress[];
 };
 
@@ -336,7 +337,7 @@ export function CheckoutClient() {
             first?.recipientName ||
             account.displayName ||
             "",
-          phone: current.phone || first?.phone || "",
+          phone: current.phone || account.phone || first?.phone || "",
           district: current.district || first?.district || "",
           area: current.area || first?.area || "",
           address: current.address || first?.address || "",
