@@ -254,7 +254,7 @@ async function emailHash(email: string) {
 export function customerAuthReadiness() {
   const email = transactionalEmailReadiness();
   const switchEnabled = process.env.ALOYRI_CUSTOMER_AUTH_ENABLED === "1";
-  const emailLinkEnabled = email.ready && switchEnabled;
+  const emailLinkEnabled = false;
   const googleConfigured = Boolean(
     process.env.SUPABASE_AUTH_URL &&
       process.env.SUPABASE_AUTH_PUBLISHABLE_KEY,
@@ -263,7 +263,7 @@ export function customerAuthReadiness() {
     process.env.ALOYRI_GOOGLE_AUTH_ENABLED === "1";
   const googleEnabled = googleConfigured && googleSwitchEnabled;
   return {
-    enabled: emailLinkEnabled || googleEnabled,
+    enabled: googleEnabled,
     switchEnabled,
     domainReady: email.domainReady,
     senderReady: email.senderReady,
