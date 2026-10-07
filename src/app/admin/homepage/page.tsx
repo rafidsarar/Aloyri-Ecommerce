@@ -50,6 +50,20 @@ export default async function AdminHomepagePage({
       </div>
       <form action={saveHomepage} className="grid gap-5">
         <AdminCard>
+          <h2 className="mb-4 text-sm font-semibold">Homepage layout</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showHero" defaultChecked={home.showHero} /> Show main banner</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showCategories" defaultChecked={home.showCategories} /> Show category shortcuts</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showBrandStory" defaultChecked={home.showBrandStory} /> Show brand story</label>
+            <label className="grid gap-1 text-sm font-medium">Banner layout
+              <select name="heroLayout" defaultValue={home.heroLayout} className="rounded-xl border border-black/10 px-4 py-3">
+                <option value="split">Split — text beside product</option>
+                <option value="stacked">Stacked — text above product</option>
+              </select>
+            </label>
+          </div>
+        </AdminCard>
+        <AdminCard>
           <h2 className="mb-4 text-sm font-semibold">Main banner</h2>
           <div className="grid gap-4">
             <label className="grid gap-1.5 text-sm font-medium">
