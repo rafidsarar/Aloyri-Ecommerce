@@ -22,6 +22,7 @@ export async function submitDurableOrder(payload: WebsiteOrderPayload, accountId
   return processOrderIntent(payload.externalOrderId);
 }
 export async function processOrderIntent(id: string) {
+  if (process.env.ALOYRI_MAINTENANCE_ENABLED === "1") return {ok:false as const,status:503,body:{error:"Ordering is temporarily paused for maintenance. Retry this same checkout later.",code:"MAINTENANCE_MODE"}};
   const token=await acquireRecordLease(path(id));
   if (!token) return {ok:false as const,status:503,body:{error:"Your order is being checked. Retry this same checkout shortly.",code:"ORDER_SYNC_BUSY"}};
   try {

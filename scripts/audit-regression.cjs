@@ -98,6 +98,7 @@ async function check(name,fn){await fn();passed++;console.log('PASS '+name);}
   await assert.rejects(store.restoreOperationalSnapshot(snapshot),/MAINTENANCE/);
   process.env.ALOYRI_MAINTENANCE_ENABLED='1';await assert.rejects(store.restoreOperationalSnapshot(snapshot),/NAMESPACE/);
   await assert.rejects(store.writeStructuredJson('test/write',{}),/MAINTENANCE/);
+  const before=crmCalls; assert.equal((await sync.processOrderIntent("checkout-fixture-123")).status,503); assert.equal(crmCalls,before);
   delete process.env.VERCEL_ENV;delete process.env.ALOYRI_MAINTENANCE_ENABLED;
  });
  console.log(passed+' audit regression checks passed against disposable PostgreSQL.');
