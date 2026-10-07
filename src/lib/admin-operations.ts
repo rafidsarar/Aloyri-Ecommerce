@@ -1,6 +1,5 @@
 import "server-only";
 
-import { list } from "@vercel/blob";
 import { buildAnalyticsReport } from "@/lib/analytics-store";
 import {
   listAdminAccounts,
@@ -11,10 +10,10 @@ import { listRuntimeErrors } from "@/lib/runtime-error-store";
 import {
   getPublishingStatus,
   listAdminAuditEvents,
+  listPrivateJsonRecords,
   readPrivateJson,
   readPublishedStorefrontConfig,
   saveDraftStorefrontConfig,
-  storefrontStoragePath,
   writeAdminAuditEvent,
   writePrivateJson,
   type StorefrontConfig,
@@ -59,12 +58,7 @@ function safeId() {
   return crypto.randomUUID().replace(/-/g, "");
 }
 
-function logicalPath(pathname: string) {
-  const prefix = process.env.VERCEL_ENV === "production" ? "" : "preview/";
-  return prefix && pathname.startsWith(prefix)
-    ? pathname.slice(prefix.length)
-    : pathname;
-}
+function deliveryRate
 
 function deliveryRate(value: string | undefined) {
   const parsed = Number(value);
@@ -286,17 +280,12 @@ export async function runOperationalHealth(
 }
 
 export async function listOperationalHealthSnapshots(limit = 20) {
-  const result = await list({
-    prefix: storefrontStoragePath(HEALTH_PREFIX),
-    limit: Math.min(Math.max(limit, 1), 100),
-  });
-  const rows = await Promise.all(
-    result.blobs.map((blob) =>
-      readPrivateJson<OperationalHealthSnapshot>(logicalPath(blob.pathname)),
-    ),
+  const rows = await listPrivateJsonRecords<OperationalHealthSnapshot>(
+    HEALTH_PREFIX,
+    Math.min(Math.max(limit, 1), 100),
   );
   return rows
-    .filter((row): row is OperationalHealthSnapshot => Boolean(row))
+    .map((row) => row.value)
     .sort((a, b) => b.checkedAt.localeCompare(a.checkedAt))
     .slice(0, limit);
 }
@@ -335,17 +324,12 @@ export async function createAdminBackup(actor: string, note: string) {
 }
 
 export async function listAdminBackups(limit = 30) {
-  const result = await list({
-    prefix: storefrontStoragePath(BACKUP_PREFIX),
-    limit: Math.min(Math.max(limit, 1), 100),
-  });
-  const rows = await Promise.all(
-    result.blobs.map((blob) =>
-      readPrivateJson<AdminBackupRecord>(logicalPath(blob.pathname)),
-    ),
+  const rows = await listPrivateJsonRecords<AdminBackupRecord>(
+    BACKUP_PREFIX,
+    Math.min(Math.max(limit, 1), 100),
   );
   return rows
-    .filter((row): row is AdminBackupRecord => Boolean(row))
+    .map((row) => row.value)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice(0, limit);
 }
