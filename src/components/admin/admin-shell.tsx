@@ -20,6 +20,7 @@ const nav: Array<{
   { label: "Merchandising", href: "/admin/merchandising", permission: "merchandising.view" },
   { label: "Analytics", href: "/admin/analytics", permission: "analytics.view" },
   { label: "Payments", href: "/admin/payments", permission: "analytics.view" },
+  { label: "Delivery", href: "/admin/delivery", permission: "analytics.view" },
   { label: "SEO", href: "/admin/seo", permission: "seo.view" },
   { label: "Publishing", href: "/admin/publishing", permission: "publishing.view" },
   { label: "Team", href: "/admin/staff", permission: "staff.view" },

@@ -50,6 +50,18 @@ function paymentLabel(payment: PublicTrackedOrder["paymentMethod"]) {
   return payment === "COD" ? "Cash on Delivery" : payment;
 }
 
+function dateTimeLabel(value: string) {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleString("en-BD", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
 export function OrderTrackingClient({
   initialOrder = "",
 }: {
@@ -276,7 +288,38 @@ export function OrderTrackingClient({
                 </div>
               )}
 
-              {result.trackingReference ? (
+              {result.shipment ? (
+                <div className="mt-7 rounded-[1rem] bg-[#f5e8e2] p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#713a35]/48">
+                        Courier update
+                      </p>
+                      <p className="mt-2 text-sm font-semibold">{result.shipment.statusLabel}</p>
+                      <p className="mt-1 text-xs leading-5 text-[#321f1c]/50">{result.shipment.latestMessage}</p>
+                    </div>
+                    <span className="w-fit rounded-full bg-white px-3 py-1.5 text-[10px] font-semibold text-[#713a35]">
+                      {result.shipment.provider}
+                    </span>
+                  </div>
+                  {result.shipment.exceptionMessage ? (
+                    <p className="mt-3 rounded-[.8rem] border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800">
+                      {result.shipment.exceptionMessage}
+                    </p>
+                  ) : null}
+                  {result.shipment.reattemptAt ? (
+                    <p className="mt-3 text-xs text-[#321f1c]/50">
+                      Reattempt: {dateTimeLabel(result.shipment.reattemptAt)}
+                    </p>
+                  ) : null}
+                  {(result.shipment.trackingReference || result.trackingReference) ? (
+                    <div className="mt-3 border-t border-[#713a35]/10 pt-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#713a35]/45">Tracking reference</p>
+                      <p className="mt-1 break-all text-sm font-semibold">{result.shipment.trackingReference || result.trackingReference}</p>
+                    </div>
+                  ) : null}
+                </div>
+              ) : result.trackingReference ? (
                 <div className="mt-7 rounded-[1rem] bg-[#f5e8e2] p-4">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#713a35]/48">
                     Courier tracking reference
