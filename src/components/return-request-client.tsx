@@ -191,7 +191,10 @@ export function ReturnRequestClient({
             the order as returned.
           </p>
           <div className="mt-7 rounded-[1rem] bg-[#f5e8e2] p-4 text-left">
-            <p className="text-xs font-semibold text-[#713a35]">What happens next</p>
+            <p className="text-xs font-semibold text-[#713a35]">
+              Return request ID: <span className="font-mono">{success.requestId}</span>
+            </p>
+            <p className="mt-3 text-xs font-semibold text-[#713a35]">What happens next</p>
             <p className="mt-2 text-xs leading-6 text-[#321f1c]/55">
               Aloyri reviews the request and confirms the next step. If a physical
               return is accepted, wait for return instructions before sending the
