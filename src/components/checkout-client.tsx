@@ -168,6 +168,7 @@ export function CheckoutClient() {
   const [hydrated, setHydrated] = useState(false);
   const [orderingEnabled, setOrderingEnabled] = useState(false);
   const [deliveryRates, setDeliveryRates] = useState<DeliveryRates | null>(null);
+  const [availablePaymentMethods, setAvailablePaymentMethods] = useState<PaymentMethod[]>(["COD"]);
   const [orderingStatusLoaded, setOrderingStatusLoaded] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitFailure, setSubmitFailure] = useState<OrderFailure | null>(null);
@@ -190,18 +191,28 @@ export function CheckoutClient() {
       const status = (await response.json()) as {
         orderingEnabled?: boolean;
         deliveryRates?: DeliveryRates | null;
+        paymentMethods?: PaymentMethod[];
       };
       if (!response.ok) throw new Error("Store status unavailable.");
       const rates = status.deliveryRates ?? null;
+      const methods = Array.isArray(status.paymentMethods)
+        ? status.paymentMethods.filter(
+            (method): method is PaymentMethod =>
+              method === "COD" || method === "bKash" || method === "Nagad",
+          )
+        : ["COD" as PaymentMethod];
+      const supported = methods.length ? methods : ["COD" as PaymentMethod];
       setDeliveryRates(rates);
+      setAvailablePaymentMethods(supported);
       setOrderingEnabled(status.orderingEnabled === true && Boolean(rates));
       setDraft((current) =>
-        current.paymentMethod === "COD"
+        supported.includes(current.paymentMethod)
           ? current
           : { ...current, paymentMethod: "COD" },
       );
     } catch {
       setDeliveryRates(null);
+      setAvailablePaymentMethods(["COD"]);
       setOrderingEnabled(false);
       setStoreStatusError(true);
     } finally {
@@ -1164,7 +1175,7 @@ export function CheckoutClient() {
               <div className="grid gap-3 sm:grid-cols-3">
                 {(["COD", "bKash", "Nagad"] as PaymentMethod[]).map((value) => {
                   const active = draft.paymentMethod === value;
-                  const enabled = value === "COD";
+                  const enabled = availablePaymentMethods.includes(value);
                   return (
                     <button
                       key={value}
@@ -1185,14 +1196,16 @@ export function CheckoutClient() {
                       <span className="mt-1 block text-xs leading-5 text-[#321f1c]/45">
                         {value === "COD"
                           ? "Pay the courier when the parcel arrives."
-                          : "Coming later"}
+                          : enabled
+                            ? "Secure online checkout available."
+                            : "Merchant setup pending"}
                       </span>
                     </button>
                   );
                 })}
               </div>
               <p className="mt-4 rounded-[.9rem] bg-[#f5e8e2] p-3 text-xs leading-6 text-[#321f1c]/52">
-                No card, bKash or Nagad payment is collected on this website yet.
+                Cash on Delivery is live. bKash and Nagad remain disabled until merchant credentials and provider activation are fully certified.
               </p>
             </section>
           </div>
