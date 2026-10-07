@@ -1,6 +1,9 @@
-import { get } from "@vercel/blob";
 import { NextRequest, NextResponse } from "next/server";
 import type { StorefrontConfig } from "@/lib/storefront-admin-store";
+import {
+  readStructuredJson,
+  structuredDatastoreConfigured,
+} from "@/lib/structured-record-store";
 
 type RedirectRow = StorefrontConfig["seo"]["redirects"][number];
 
@@ -30,14 +33,8 @@ function safeInternalPath(value: string) {
   );
 }
 
-function storagePath(pathname: string) {
-  return process.env.VERCEL_ENV === "production"
-    ? pathname
-    : "preview/" + pathname;
-}
-
 async function publishedRedirects() {
-  if (!process.env.BLOB_READ_WRITE_TOKEN && !process.env.VERCEL_OIDC_TOKEN) {
+  if (!structuredDatastoreConfigured()) {
     return [];
   }
 
@@ -46,14 +43,11 @@ async function publishedRedirects() {
   }
 
   try {
-    const result = await get(storagePath("admin/storefront-config.json"), {
-      access: "private",
-      useCache: true,
-    });
-    if (!result) return [];
+    const parsed = await readStructuredJson<Partial<StorefrontConfig>>(
+      "admin/storefront-config.json",
+    );
+    if (!parsed) return [];
 
-    const raw = await new Response(result.stream).text();
-    const parsed = JSON.parse(raw) as Partial<StorefrontConfig>;
     const redirects = Array.isArray(parsed.seo?.redirects)
       ? parsed.seo.redirects.filter(
           (row): row is RedirectRow =>
