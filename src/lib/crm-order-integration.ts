@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "next/navigation";
 import { recordRuntimeError } from "@/lib/runtime-error-store";
 
 const enc = new TextEncoder();
@@ -149,6 +150,7 @@ export async function createCrmWebsiteOrder(payload: WebsiteOrderPayload) {
           body: { error?: string; code?: string };
         };
   } catch (error) {
+    unstable_rethrow(error);
     console.error("CRM website order request failed", error);
     await recordRuntimeError("crm.order", error);
     return {

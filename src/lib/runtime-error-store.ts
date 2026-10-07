@@ -1,4 +1,5 @@
 import "server-only";
+import { isHistoricalRenderSignal } from "@/lib/runtime-error-utils";
 
 import {
   listPrivateJsonRecords,
@@ -65,14 +66,16 @@ export async function recordRuntimeError(source: string, error: unknown) {
 
 export async function listRuntimeErrors(limit = 30) {
   try {
-    const rows = await listPrivateJsonRecords<RuntimeErrorRecord>(
-      PREFIX,
-      Math.min(Math.max(limit, 1), 100),
-    );
-    return rows
-      .map((row) => row.value)
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-      .slice(0, limit);
+    const wanted = Math.min(Math.max(limit, 1), 100);
+    const incidents: RuntimeErrorRecord[] = [];
+    let offset = 0;
+    while (incidents.length < wanted) {
+      const rows = await listPrivateJsonRecords<RuntimeErrorRecord>(PREFIX, 100, offset);
+      incidents.push(...rows.map(row => row.value).filter(row => !isHistoricalRenderSignal(row)));
+      if (rows.length < 100) break;
+      offset += rows.length;
+    }
+    return incidents.sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, wanted);
   } catch {
     return [] as RuntimeErrorRecord[];
   }

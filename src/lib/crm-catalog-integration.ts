@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "next/navigation";
 import type { LiveCatalogProduct } from "@/lib/catalog";
 import { recordRuntimeError } from "@/lib/runtime-error-store";
 
@@ -146,6 +147,7 @@ export async function fetchCrmCatalog() {
       },
     };
   } catch (error) {
+    unstable_rethrow(error);
     console.error("CRM catalog request failed", error);
     await recordRuntimeError("crm.catalog", error);
     return {
