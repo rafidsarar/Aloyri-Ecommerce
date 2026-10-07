@@ -1148,7 +1148,7 @@ export function CheckoutClient() {
                   <span id="email-help" className="mt-2 block text-xs font-normal leading-5 text-[#321f1c]/40">
                     {customerAccount
                       ? "This Google-verified email owns the order in your Aloyri account."
-                      : "Guest checkout is available, but Google sign-in is recommended for account history."}
+                      : "Sign in and complete your account to place an order."}
                   </span>
                 )}
               </label>
