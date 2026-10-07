@@ -647,7 +647,7 @@ export type AdminAuditEvent = {
 };
 
 export function blobConfigured() {
-  return structuredDatastoreConfigured() || legacyBlobConfigured();
+  return structuredDatastoreConfigured();
 }
 
 export async function readPrivateJson<T>(pathname: string): Promise<T | null> {
