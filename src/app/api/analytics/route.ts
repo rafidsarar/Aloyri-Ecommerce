@@ -1,5 +1,6 @@
 import {
   hashAnalyticsIdentifier,
+  rawBlobAnalyticsEnabled,
   recordAnalyticsEvent,
   type AnalyticsDevice,
   type AnalyticsEventName,
@@ -303,6 +304,17 @@ async function safeContext(value: unknown) {
 }
 
 export async function POST(request: Request) {
+  if (!rawBlobAnalyticsEnabled()) {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff",
+        "X-Aloyri-Analytics-Mode": "quota-safe",
+      },
+    });
+  }
+
   if (
     !request.headers
       .get("content-type")

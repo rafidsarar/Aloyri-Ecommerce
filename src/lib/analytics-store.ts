@@ -214,6 +214,10 @@ function blobConfigured() {
   );
 }
 
+export function rawBlobAnalyticsEnabled() {
+  return process.env.ALOYRI_BLOB_ANALYTICS_ENABLED === "1";
+}
+
 function safeId() {
   return crypto.randomUUID().replace(/-/g, "");
 }
@@ -239,8 +243,10 @@ export async function recordAnalyticsEvent(
   input: Omit<AnalyticsEventRecord, "version" | "id" | "timestamp"> & {
     timestamp?: string;
   },
+  options: { operational?: boolean } = {},
 ) {
   if (!blobConfigured()) return null;
+  if (!options.operational && !rawBlobAnalyticsEnabled()) return null;
 
   const timestamp =
     input.timestamp && !Number.isNaN(Date.parse(input.timestamp))
@@ -341,7 +347,7 @@ export async function recordConfirmedOrderAnalytics(input: {
     confirmed: true,
     orderHash,
     ...(customerHash ? { customerHash } : {}),
-  });
+  }, { operational: true });
 
   if (event) {
     await put(
@@ -404,7 +410,9 @@ export async function readAnalyticsEvents(
   to = new Date(),
   limit = MAX_EVENTS,
 ) {
-  if (!blobConfigured()) return [] as AnalyticsEventRecord[];
+  if (!blobConfigured() || !rawBlobAnalyticsEnabled()) {
+    return [] as AnalyticsEventRecord[];
+  }
 
   const records: AnalyticsEventRecord[] = [];
   const days = utcDayKeys(from, to);
