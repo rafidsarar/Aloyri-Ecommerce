@@ -2,6 +2,7 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import {
+  createPrivateJsonOnce,
   readPrivateJson,
   writePrivateJson,
 } from "@/lib/storefront-admin-store";
@@ -74,6 +75,7 @@ export type PublicCustomerAccount = Pick<
 const ACCOUNT_PREFIX = "customer-auth/accounts/";
 const EMAIL_PREFIX = "customer-auth/email/";
 const MAGIC_PREFIX = "customer-auth/magic/";
+const MAGIC_CLAIM_PREFIX = "customer-auth/magic-claims/";
 const SESSION_PREFIX = "customer-auth/sessions/";
 
 function normalizeEmail(value: string) {
@@ -259,6 +261,15 @@ export async function consumeCustomerMagicLink(token: string) {
   ) {
     throw new Error("INVALID_TOKEN");
   }
+
+  const claimed = await createPrivateJsonOnce(
+    MAGIC_CLAIM_PREFIX + tokenHash + ".json",
+    {
+      version: 1,
+      claimedAt: new Date().toISOString(),
+    },
+  );
+  if (!claimed) throw new Error("INVALID_TOKEN");
 
   const account = await ensureAccount(record.email);
   const now = new Date().toISOString();

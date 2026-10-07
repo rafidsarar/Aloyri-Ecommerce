@@ -678,6 +678,29 @@ export async function writePrivateJson(pathname: string, value: unknown) {
   });
 }
 
+export async function createPrivateJsonOnce(
+  pathname: string,
+  value: unknown,
+) {
+  if (!blobConfigured()) {
+    throw new Error("Website datastore is not configured.");
+  }
+
+  try {
+    await put(storefrontStoragePath(pathname), JSON.stringify(value, null, 2), {
+      access: "private",
+      addRandomSuffix: false,
+      allowOverwrite: false,
+      contentType: "application/json",
+    });
+    return true;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (/already exists|overwrite|conflict|409/i.test(message)) return false;
+    throw error;
+  }
+}
+
 function normalizeConfig(value: Partial<StorefrontConfig> | null): StorefrontConfig {
   if (!value) return structuredClone(defaultStorefrontConfig);
 
