@@ -285,6 +285,12 @@ export async function POST(request: Request) {
   }
 
   const customerSession = await currentCustomerSession();
+  if (!customerSession || customerSession.session.method !== "google") {
+    return response({ error: "Sign in with Google to place an order.", code: "AUTH_REQUIRED" }, 401);
+  }
+  if (!customerSession.account.displayName.trim() || !customerSession.account.phone) {
+    return response({ error: "Complete your name and mobile number in your account before checkout.", code: "PROFILE_REQUIRED" }, 403);
+  }
   if (customerSession) {
     payload = {
       ...payload,
