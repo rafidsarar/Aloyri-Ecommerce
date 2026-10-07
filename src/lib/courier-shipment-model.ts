@@ -33,11 +33,11 @@ export type CourierCodState =
   | "attention";
 
 const transitions: Record<ShipmentState, ShipmentState[]> = {
-  awaiting_fulfillment: ["ready_for_courier", "cancelled"],
-  ready_for_courier: ["booked", "picked_up", "in_transit", "cancelled"],
-  booked: ["picked_up", "in_transit", "cancelled"],
-  picked_up: ["in_transit", "delivery_failed", "return_to_origin"],
-  in_transit: ["out_for_delivery", "delivery_failed", "return_to_origin"],
+  awaiting_fulfillment: ["ready_for_courier", "booked", "picked_up", "in_transit", "out_for_delivery", "delivered", "cancelled"],
+  ready_for_courier: ["booked", "picked_up", "in_transit", "out_for_delivery", "delivered", "cancelled"],
+  booked: ["picked_up", "in_transit", "out_for_delivery", "delivered", "cancelled"],
+  picked_up: ["in_transit", "out_for_delivery", "delivered", "delivery_failed", "return_to_origin"],
+  in_transit: ["out_for_delivery", "delivered", "delivery_failed", "return_to_origin"],
   out_for_delivery: ["delivered", "delivery_failed", "return_to_origin"],
   delivered: [],
   delivery_failed: ["reattempt_scheduled", "out_for_delivery", "return_to_origin"],

@@ -1,3 +1,5 @@
+import type { PublicShipmentTracking } from "@/lib/courier-shipment";
+
 const enc = new TextEncoder();
 
 const hex = (bytes: Uint8Array) =>
@@ -54,6 +56,7 @@ export type PublicTrackedOrder = {
   trackingReference: string;
   deliveredDate: string;
   returnedDate: string;
+  shipment?: PublicShipmentTracking | null;
 };
 
 function safeTrackedOrder(value: unknown): PublicTrackedOrder | null {

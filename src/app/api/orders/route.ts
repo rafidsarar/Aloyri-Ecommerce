@@ -11,6 +11,7 @@ import { rateAllowed, requestIp } from "@/lib/request-rate-limit";
 import { recordConfirmedOrderAnalytics, type AnalyticsDevice } from "@/lib/analytics-store";
 import { cancelPendingCartRecoveries } from "@/lib/cart-recovery";
 import { recordOrderSettlement } from "@/lib/payment-settlement";
+import { recordShipmentIntent } from "@/lib/courier-shipment";
 
 export const dynamic = "force-dynamic";
 
@@ -295,6 +296,18 @@ export async function POST(request: Request) {
       });
     } catch (error) {
       console.error("Payment settlement recording failed", error);
+    }
+
+    try {
+      await recordShipmentIntent({
+        externalOrderId: payload.externalOrderId,
+        crmOrderId: result.body.orderId,
+        orderNumber: result.body.orderNumber,
+        paymentMethod: payload.paymentMethod,
+        orderTotal: result.body.total,
+      });
+    } catch (error) {
+      console.error("Shipment intelligence initialization failed", error);
     }
 
     try {

@@ -176,7 +176,16 @@ export async function reconcileShipmentFromTracking(input: {
   orderStatus: string;
   trackingReference: string;
 }) {
-  const record = await getCourierShipment(input.orderNumber);
+  let record = await getCourierShipment(input.orderNumber);
+  if (!record) {
+    record = await recordShipmentIntent({
+      externalOrderId: "legacy:" + input.orderNumber,
+      crmOrderId: "",
+      orderNumber: input.orderNumber,
+      orderTotal: input.orderTotal,
+      paymentMethod: input.paymentMethod,
+    });
+  }
   if (!record) return null;
 
   const issues: string[] = [];

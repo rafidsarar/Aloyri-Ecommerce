@@ -4,6 +4,10 @@ import {
   normalizeBangladeshPhone,
 } from "@/lib/checkout";
 import { reconcileSettlementFromTracking } from "@/lib/payment-settlement";
+import {
+  publicShipmentTracking,
+  reconcileShipmentFromTracking,
+} from "@/lib/courier-shipment";
 
 export const dynamic = "force-dynamic";
 
@@ -138,6 +142,27 @@ export async function POST(request: Request) {
     } catch (error) {
       console.error("Payment reconciliation failed", error);
     }
+
+    let shipment = null;
+    try {
+      shipment = await reconcileShipmentFromTracking({
+        orderNumber: result.body.orderNumber,
+        orderTotal: result.body.total,
+        paymentMethod: result.body.paymentMethod,
+        orderStatus: result.body.status,
+        trackingReference: result.body.trackingReference,
+      });
+    } catch (error) {
+      console.error("Shipment reconciliation failed", error);
+    }
+
+    return response(
+      {
+        ...result.body,
+        shipment: publicShipmentTracking(shipment),
+      },
+      result.status,
+    );
   }
 
   return response(result.body, result.status);
