@@ -52,6 +52,7 @@ export async function PUT(request: Request) {
       displayName?: unknown;
       savedProductIds?: unknown;
       emailPreferences?: unknown;
+      savedAddresses?: unknown;
     };
     const account = await updateCurrentCustomerAccount({
       ...(typeof body.displayName === "string"
@@ -59,6 +60,9 @@ export async function PUT(request: Request) {
         : {}),
       ...(body.savedProductIds !== undefined
         ? { savedProductIds: body.savedProductIds }
+        : {}),
+      ...(body.savedAddresses !== undefined
+        ? { savedAddresses: body.savedAddresses }
         : {}),
       ...(body.emailPreferences && typeof body.emailPreferences === "object"
         ? { emailPreferences: body.emailPreferences as {

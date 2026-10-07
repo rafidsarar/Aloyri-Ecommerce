@@ -5,6 +5,7 @@ import { FormEvent, useState, useSyncExternalStore } from "react";
 import { AnalyticsViewTracker } from "@/components/storefront-analytics-tracker";
 import { PostPurchaseOrders } from "@/components/post-purchase-orders";
 import { CustomerAuthPanel } from "@/components/customer-auth-panel";
+import { CustomerPostPurchaseCenter } from "@/components/customer-post-purchase-center";
 import {
   clearCustomerProfile,
   customerProfileServerSnapshot,
@@ -110,6 +111,7 @@ export function CustomerAccountHub() {
         ))}
       </div>
 
+      <CustomerPostPurchaseCenter />
       <PostPurchaseOrders />
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_.9fr]">
