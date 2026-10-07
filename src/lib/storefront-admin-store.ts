@@ -638,7 +638,7 @@ export type AdminAuditEvent = {
   changes?: AdminAuditChange[];
 };
 
-function blobConfigured() {
+export function blobConfigured() {
   return Boolean(
     process.env.BLOB_READ_WRITE_TOKEN ||
       process.env.VERCEL_OIDC_TOKEN ||
