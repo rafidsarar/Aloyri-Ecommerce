@@ -69,6 +69,7 @@ test("catalog search and mobile navigation", async ({ page }) => {
 test("guest COD checkout returns to independent tracking without browser-saved data", async ({ page }) => {
   await mockCommerce(page);
   await page.goto("/shop");
+  await page.getByRole("link", { name: /Refreshing Facial Wash/i }).click();
   await page.getByRole("button",{name:"Add to cart",exact:true}).first().click();
   await page.getByRole("link",{name:/Cart/}).first().click();
   await page.getByRole("link",{name:/Checkout|Continue to checkout/}).click();

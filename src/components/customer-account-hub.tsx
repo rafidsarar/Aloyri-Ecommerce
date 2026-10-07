@@ -19,7 +19,7 @@ export function CustomerAccountHub({ authenticated, displayName }: { authenticat
      <Link href="/track-order" className="text-sm font-semibold text-[#713a35] underline underline-offset-4">Track an order without signing in</Link>
    </div>
    {!signedIn ? <CustomerAuthPanel /> : <>
-     <nav aria-label="Account sections" className="mb-6 flex gap-2 overflow-x-auto border-b border-[#713a35]/10 pb-4">
+     <nav aria-label="Account sections" className="mb-6 flex flex-wrap gap-2 border-b border-[#713a35]/10 pb-4">
        {sections.map(([id,label])=><button key={id} type="button" aria-current={section===id?"page":undefined} onClick={()=>router.replace("/account?section="+id,{scroll:false})} className={"min-h-11 whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-semibold "+(section===id?"bg-[#713a35] text-white":"bg-[#f5e8e2] text-[#713a35]")}>{label}</button>)}
      </nav>
      {section==="wishlist" ? <SavedProductsClient /> : null}
