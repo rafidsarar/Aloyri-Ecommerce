@@ -21,6 +21,7 @@ const nav: Array<{
   { label: "Analytics", href: "/admin/analytics", permission: "analytics.view" },
   { label: "Payments", href: "/admin/payments", permission: "analytics.view" },
   { label: "Delivery", href: "/admin/delivery", permission: "analytics.view" },
+  { label: "Customer Service", href: "/admin/customer-service", permission: "support.view" },
   { label: "SEO", href: "/admin/seo", permission: "seo.view" },
   { label: "Publishing", href: "/admin/publishing", permission: "publishing.view" },
   { label: "Team", href: "/admin/staff", permission: "staff.view" },
