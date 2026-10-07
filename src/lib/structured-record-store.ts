@@ -252,7 +252,7 @@ async function readLegacyBlobJson<T>(pathname: string): Promise<T | null> {
       await insertDatabaseJsonOnce(pathname, value, {
         source: "legacy-read",
         importedFromBlob: true,
-        sourceSize: result.blob.size,
+        sourceSize: result.blob.size ?? undefined,
       });
     }
     return value;
