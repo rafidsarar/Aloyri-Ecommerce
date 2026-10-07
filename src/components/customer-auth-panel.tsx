@@ -201,8 +201,9 @@ export function CustomerAuthPanel() {
             >
               G
             </span>
-            Continue with Google
+            Sign in with Google
           </a>
+          <p className="mt-4 text-sm text-[#321f1c]/65">New to Aloyri? <a href="/account/setup" className="font-semibold text-[#713a35] underline underline-offset-4">Create your account</a></p>
         </div>
       )}
 
