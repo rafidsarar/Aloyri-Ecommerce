@@ -1,6 +1,14 @@
 import "server-only";
 
 import { neon } from "@neondatabase/serverless";
+import { getMediaObject, putMediaObject } from "@/lib/media-storage";
+import {
+  classifyLegacyRecoveryObject,
+  collectReferencedMedia,
+  emptyRecoveryClassification,
+  logicalRecoveryPath,
+  type RecoveryClassificationSummary,
+} from "@/lib/legacy-recovery-classifier";
 
 const RECOVERY_BASELINE_COUNT = 849;
 const RECOVERY_BASELINE_BYTES = 427831;
@@ -27,6 +35,7 @@ export type DatastoreMigrationStatus = {
   skippedObjects: number;
   failedObjects: number;
   detail: string;
+  classification: RecoveryClassificationSummary;
 };
 
 export type DatastoreHealth = {
@@ -120,8 +129,13 @@ async function ensureSchema() {
           existing_objects INTEGER NOT NULL,
           skipped_objects INTEGER NOT NULL,
           failed_objects INTEGER NOT NULL,
-          detail TEXT NOT NULL
+          detail TEXT NOT NULL,
+          classification JSONB NOT NULL DEFAULT '{}'::jsonb
         )
+      `;
+      await sql`
+        ALTER TABLE ecommerce_migration_runs
+        ADD COLUMN IF NOT EXISTS classification JSONB NOT NULL DEFAULT '{}'::jsonb
       `;
     })().catch((error) => {
       schemaPromise = null;
@@ -341,7 +355,8 @@ async function writeMigrationStatus(status: DatastoreMigrationStatus) {
       existing_objects,
       skipped_objects,
       failed_objects,
-      detail
+      detail,
+      classification
     )
     VALUES (
       ${status.id},
@@ -356,7 +371,8 @@ async function writeMigrationStatus(status: DatastoreMigrationStatus) {
       ${status.existingObjects},
       ${status.skippedObjects},
       ${status.failedObjects},
-      ${status.detail}
+      ${status.detail},
+      ${JSON.stringify(status.classification)}::jsonb
     )
     ON CONFLICT (id)
     DO UPDATE SET
@@ -369,7 +385,8 @@ async function writeMigrationStatus(status: DatastoreMigrationStatus) {
       existing_objects = EXCLUDED.existing_objects,
       skipped_objects = EXCLUDED.skipped_objects,
       failed_objects = EXCLUDED.failed_objects,
-      detail = EXCLUDED.detail
+      detail = EXCLUDED.detail,
+      classification = EXCLUDED.classification
   `;
 }
 
@@ -391,9 +408,11 @@ export async function getLegacyMigrationStatus() {
       existing_objects,
       skipped_objects,
       failed_objects,
-      detail
+      detail,
+      classification
     FROM ecommerce_migration_runs
-    WHERE id = 'blob-recovery-v1'
+    WHERE id IN ('selective-recovery-v2', 'blob-recovery-v1')
+    ORDER BY checked_at DESC
     LIMIT 1
   `;
   if (!rows.length) return null;
@@ -412,6 +431,10 @@ export async function getLegacyMigrationStatus() {
     skippedObjects: Number(row.skipped_objects),
     failedObjects: Number(row.failed_objects),
     detail: String(row.detail),
+    classification:
+      row.classification && typeof row.classification === "object"
+        ? (row.classification as RecoveryClassificationSummary)
+        : emptyRecoveryClassification(),
   } satisfies DatastoreMigrationStatus;
 }
 
@@ -451,7 +474,7 @@ export async function structuredDatastoreHealth(): Promise<DatastoreHealth> {
 export async function migrateLegacyBlobRecords() {
   const checkedAt = new Date().toISOString();
   const base = {
-    id: "blob-recovery-v1",
+    id: "selective-recovery-v2",
     checkedAt,
     expectedObjects: RECOVERY_BASELINE_COUNT,
     expectedBytes: RECOVERY_BASELINE_BYTES,
@@ -462,6 +485,7 @@ export async function migrateLegacyBlobRecords() {
     existingObjects: 0,
     skippedObjects: 0,
     failedObjects: 0,
+    classification: emptyRecoveryClassification(),
   };
 
   if (!structuredDatastoreConfigured()) {
@@ -481,6 +505,13 @@ export async function migrateLegacyBlobRecords() {
     await writeMigrationStatus(status);
     return status;
   }
+
+  const [publishedConfig, draftConfig] = await Promise.all([
+    readDatabaseJson<unknown>("admin/storefront-config.json", "production"),
+    readDatabaseJson<unknown>("admin/storefront-draft.json", "production"),
+  ]);
+  const publishedMedia = collectReferencedMedia(publishedConfig);
+  const draftMedia = collectReferencedMedia(draftConfig);
 
   const blobs: Array<{
     pathname: string;
@@ -512,20 +543,52 @@ export async function migrateLegacyBlobRecords() {
       ...base,
       state: "blocked",
       detail:
-        "Legacy Blob listing is still unavailable: " +
+        "Legacy Blob listing is unavailable: " +
         (error instanceof Error ? error.message.slice(0, 220) : "unknown error"),
     };
     await writeMigrationStatus(status);
     return status;
   }
 
-  const jsonBlobs = blobs.filter((blob) => blob.pathname.endsWith(".json"));
-  let importedObjects = 0;
-  let existingObjects = 0;
-  let failedObjects = 0;
+  const listedBytes = blobs.reduce((sum, blob) => sum + blob.size, 0);
+  const baselineMatches =
+    blobs.length === RECOVERY_BASELINE_COUNT &&
+    listedBytes === RECOVERY_BASELINE_BYTES;
 
-  for (let index = 0; index < jsonBlobs.length; index += 20) {
-    const batch = jsonBlobs.slice(index, index + 20);
+  const classified = blobs.map((blob) => ({
+    ...blob,
+    recoveryClass: classifyLegacyRecoveryObject(
+      blob.pathname,
+      publishedMedia,
+      draftMedia,
+    ),
+  }));
+
+  const classification = emptyRecoveryClassification();
+  classification.baselineMatches = baselineMatches;
+  classification.authoritative.listed = classified.filter(
+    (blob) => blob.recoveryClass === "authoritative",
+  ).length;
+  classification.usefulHistory.listed = classified.filter(
+    (blob) => blob.recoveryClass === "useful-history",
+  ).length;
+  classification.disposable.listed = classified.filter(
+    (blob) => blob.recoveryClass === "disposable",
+  ).length;
+  classification.review.listed = classified.filter(
+    (blob) => blob.recoveryClass === "review",
+  ).length;
+  classification.referencedMedia.required = publishedMedia.size;
+
+  const recoverableJson = classified.filter(
+    (blob) =>
+      blob.pathname.endsWith(".json") &&
+      (blob.recoveryClass === "authoritative" ||
+        blob.recoveryClass === "useful-history"),
+  );
+
+  for (let index = 0; index < recoverableJson.length; index += 20) {
+    const batch = recoverableJson.slice(index, index + 20);
     const results = await Promise.all(
       batch.map(async (blob) => {
         try {
@@ -533,56 +596,158 @@ export async function migrateLegacyBlobRecords() {
             access: "private",
             useCache: false,
           });
-          if (!result) return "failed" as const;
+          if (!result) return { blob, result: "failed" as const };
           const value = JSON.parse(await new Response(result.stream).text());
-          const logical = logicalBlobPath(blob.pathname);
+          const logical = logicalRecoveryPath(blob.pathname);
           const inserted = await insertDatabaseJsonOnce(
             logical.pathname,
             value,
             {
               namespace: logical.namespace,
-              source: "blob-recovery-v1",
+              source: "selective-recovery-v2",
               importedFromBlob: true,
               sourceSize: blob.size,
             },
           );
-          return inserted ? ("imported" as const) : ("existing" as const);
+          return {
+            blob,
+            result: inserted ? ("imported" as const) : ("existing" as const),
+          };
         } catch {
-          return "failed" as const;
+          return { blob, result: "failed" as const };
         }
       }),
     );
-    importedObjects += results.filter((result) => result === "imported").length;
-    existingObjects += results.filter((result) => result === "existing").length;
-    failedObjects += results.filter((result) => result === "failed").length;
+
+    for (const outcome of results) {
+      const target =
+        outcome.blob.recoveryClass === "authoritative"
+          ? classification.authoritative
+          : classification.usefulHistory;
+      if (outcome.result === "imported") target.imported += 1;
+      if (outcome.result === "existing") target.existing += 1;
+      if (outcome.result === "failed") target.failed += 1;
+    }
   }
 
-  const listedBytes = blobs.reduce((sum, blob) => sum + blob.size, 0);
-  const skippedObjects = blobs.length - jsonBlobs.length;
-  const baselineMatches =
-    blobs.length === RECOVERY_BASELINE_COUNT &&
-    listedBytes === RECOVERY_BASELINE_BYTES;
-  const allJsonAccountedFor =
-    importedObjects + existingObjects === jsonBlobs.length &&
-    failedObjects === 0;
+  const productionBlobByLogicalPath = new Map(
+    classified
+      .map((blob) => ({
+        blob,
+        logical: logicalRecoveryPath(blob.pathname),
+      }))
+      .filter((item) => item.logical.namespace === "production")
+      .map((item) => [item.logical.pathname, item.blob] as const),
+  );
+
+  function mediaType(pathname: string) {
+    const lower = pathname.toLowerCase();
+    if (lower.endsWith(".png")) return "image/png";
+    if (lower.endsWith(".webp")) return "image/webp";
+    if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
+    return "";
+  }
+
+  for (const pathname of publishedMedia) {
+    try {
+      const existing = await getMediaObject(pathname);
+      if (existing) {
+        try {
+          await existing.stream?.cancel();
+        } catch {
+          // The existence check is sufficient even if the response stream cannot be cancelled.
+        }
+        classification.referencedMedia.existing += 1;
+        continue;
+      }
+
+      const blob = productionBlobByLogicalPath.get(pathname);
+      if (!blob) {
+        classification.referencedMedia.failed += 1;
+        continue;
+      }
+
+      const result = await legacyGet(blob.pathname, {
+        access: "private",
+        useCache: false,
+      });
+      if (!result) {
+        classification.referencedMedia.failed += 1;
+        continue;
+      }
+
+      const contentType = result.blob.contentType || mediaType(pathname);
+      if (!["image/jpeg", "image/png", "image/webp"].includes(contentType)) {
+        classification.referencedMedia.failed += 1;
+        continue;
+      }
+
+      const bytes = await new Response(result.stream).arrayBuffer();
+      const filename = pathname.split("/").pop() || "recovered-media";
+      await putMediaObject(
+        pathname,
+        new File([bytes], filename, { type: contentType }),
+      );
+      classification.referencedMedia.copied += 1;
+    } catch {
+      classification.referencedMedia.failed += 1;
+    }
+  }
+
+  const authoritativeAccounted =
+    classification.authoritative.imported +
+      classification.authoritative.existing ===
+      classification.authoritative.listed &&
+    classification.authoritative.failed === 0;
+  const referencedMediaAccounted =
+    classification.referencedMedia.existing +
+      classification.referencedMedia.copied ===
+      classification.referencedMedia.required &&
+    classification.referencedMedia.failed === 0;
+
   const state: MigrationState =
-    baselineMatches && allJsonAccountedFor ? "verified" : "partial";
+    authoritativeAccounted && referencedMediaAccounted
+      ? "verified"
+      : "partial";
+
+  const importedObjects =
+    classification.authoritative.imported +
+    classification.usefulHistory.imported;
+  const existingObjects =
+    classification.authoritative.existing +
+    classification.usefulHistory.existing;
+  const failedObjects =
+    classification.authoritative.failed +
+    classification.usefulHistory.failed +
+    classification.referencedMedia.failed;
+  const jsonObjects = classified.filter((blob) =>
+    blob.pathname.endsWith(".json"),
+  ).length;
+  const referencedBlobCount = classified.filter(
+    (blob) => blob.recoveryClass === "referenced-media",
+  ).length;
+  const skippedObjects = Math.max(
+    0,
+    blobs.length - recoverableJson.length - referencedBlobCount,
+  );
 
   const status: DatastoreMigrationStatus = {
     ...base,
     state,
     listedObjects: blobs.length,
     listedBytes,
-    jsonObjects: jsonBlobs.length,
+    jsonObjects,
     importedObjects,
     existingObjects,
     skippedObjects,
     failedObjects,
+    classification,
     detail:
       state === "verified"
-        ? "All 849 recovery-baseline Blob objects were enumerated without deletion; every JSON record is present in Neon and non-JSON objects remain preserved in Blob."
-        : "Migration completed partially. No Blob objects were deleted or overwritten; review counts before certification.",
+        ? "Selective recovery verified: every listed authoritative record is present in Neon and every media asset referenced by the live storefront is present in independent object storage. The 849-object snapshot is informational only."
+        : "Selective recovery is incomplete: at least one authoritative record or live-referenced media asset still requires recovery. Useful history and disposable artifacts do not block operation.",
   };
+
   await writeMigrationStatus(status);
   return status;
 }
