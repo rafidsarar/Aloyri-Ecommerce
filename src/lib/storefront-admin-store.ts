@@ -1,15 +1,14 @@
 import "server-only";
 
-import { list, put } from "@vercel/blob";
 import {
   createStructuredJsonOnce,
-  legacyBlobConfigured,
   listStructuredJson,
   readStructuredJson,
   structuredDatastoreConfigured,
   writeStructuredJson,
 } from "@/lib/structured-record-store";
 import { draftMode } from "next/headers";
+import { listMediaObjects, mediaStorageConfigured, putMediaObject } from "@/lib/media-storage";
 import type { LiveCatalogProduct } from "@/lib/catalog";
 import {
   defaultRecommendationConfig,
@@ -1224,7 +1223,7 @@ export async function restoreStorefrontVersionToDraft(
 }
 
 export async function uploadStorefrontMedia(file: File) {
-  if (!legacyBlobConfigured()) throw new Error("Media storage is not configured.");
+  if (!mediaStorageConfigured()) throw new Error("Media storage is not configured.");
   if (!file || file.size <= 0) throw new Error("Choose an image to upload.");
   if (file.size > 5 * 1024 * 1024) throw new Error("Images must be 5 MB or smaller.");
   if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
@@ -1241,25 +1240,17 @@ export async function uploadStorefrontMedia(file: File) {
     .slice(0, 60) || "image";
   const pathname = `media/${Date.now()}-${base}.${extension}`;
 
-  await put(storefrontStoragePath(pathname), file, {
-    access: "private",
-    addRandomSuffix: false,
-    contentType: file.type,
-  });
-
+  await putMediaObject(storefrontStoragePath(pathname), file);
   return pathname;
 }
 
 export async function listStorefrontMedia() {
-  if (!legacyBlobConfigured()) return [];
+  if (!mediaStorageConfigured()) return [];
   try {
-    const result = await list({
-      prefix: storefrontStoragePath("media/"),
-      limit: 100,
-    });
-    return result.blobs.map((blob) => ({
-      ...blob,
-      pathname: logicalStorefrontPath(blob.pathname),
+    const objects = await listMediaObjects(storefrontStoragePath("media/"));
+    return objects.map((object) => ({
+      ...object,
+      pathname: logicalStorefrontPath(object.pathname),
     }));
   } catch (error) {
     console.error("Media list failed", error);

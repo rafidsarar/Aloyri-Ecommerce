@@ -1,4 +1,4 @@
-import { get } from "@vercel/blob";
+import { getMediaObject } from "@/lib/media-storage";
 import { storefrontStoragePath } from "@/lib/storefront-admin-store";
 
 export const dynamic = "force-dynamic";
@@ -22,16 +22,13 @@ export async function GET(
 
   const pathname = "media/" + safeSegments.join("/");
   try {
-    const result = await get(storefrontStoragePath(pathname), {
-      access: "private",
-      useCache: true,
-    });
+    const result = await getMediaObject(storefrontStoragePath(pathname));
     if (!result) return new Response("Not found", { status: 404 });
 
     return new Response(result.stream, {
       status: 200,
       headers: {
-        "Content-Type": result.blob.contentType || "application/octet-stream",
+        "Content-Type": result.contentType || "application/octet-stream",
         "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
         "X-Content-Type-Options": "nosniff",
       },
