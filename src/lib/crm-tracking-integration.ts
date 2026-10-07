@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "next/navigation";
 import type { PublicShipmentTracking } from "@/lib/courier-shipment";
 
 const enc = new TextEncoder();
@@ -234,6 +235,7 @@ export async function fetchCrmOrderTracking(input: {
       body: safe,
     };
   } catch (error) {
+    unstable_rethrow(error);
     console.error("CRM order tracking request failed", error);
     return {
       ok: false as const,

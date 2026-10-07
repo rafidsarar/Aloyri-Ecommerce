@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "next/navigation";
 import type {
   PromotionQuote,
   PromotionQuoteRequest,
@@ -105,6 +106,7 @@ export async function quoteCrmPromotion(payload: PromotionQuoteRequest) {
           body: { error?: string; code?: string };
         };
   } catch (error) {
+    unstable_rethrow(error);
     console.error("CRM promotion quote request failed", error);
     return {
       ok: false as const,

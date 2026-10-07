@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "next/navigation";
 const enc = new TextEncoder();
 
 const hex = (bytes: Uint8Array) =>
@@ -110,6 +111,7 @@ export async function submitCrmReturnRequest(input: ReturnRequestInput) {
       },
     } as const;
   } catch (error) {
+    unstable_rethrow(error);
     console.error("CRM return request failed", error);
     return {
       ok: false as const,

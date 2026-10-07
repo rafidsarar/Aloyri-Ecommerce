@@ -97,3 +97,13 @@ test("store status exposes datastore readiness without secrets", async ({
   expect(JSON.stringify(body)).not.toContain("DATABASE_URL");
   expect(JSON.stringify(body)).not.toContain("POSTGRES_PASSWORD");
 });
+
+
+test("framework rendering signals do not hide real CRM incidents", async () => {
+  const { isHistoricalRenderSignal } = await import("../src/lib/runtime-error-utils");
+  const message = "Dynamic server usage: Route /product/[slug] couldn't be rendered statically because it used no-store fetch [url] /product/[slug].";
+  expect(isHistoricalRenderSignal({source:"crm.catalog",message})).toBe(true);
+  expect(isHistoricalRenderSignal({source:"crm.catalog",message:message.replace("no-store", "revalidate: 0")})).toBe(true);
+  expect(isHistoricalRenderSignal({source:"crm.catalog",message:"CRM request timed out"})).toBe(false);
+  expect(isHistoricalRenderSignal({source:"analytics",message})).toBe(false);
+});

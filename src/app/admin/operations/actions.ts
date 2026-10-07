@@ -75,8 +75,9 @@ export async function recoverLegacyAction() {
   const token = await acquireRecordLease("legacy-recovery", 300);
   if (!token) redirect("/admin/operations?error=Recovery%20already%20running");
   let detail = "";
-  try { const result = await migrateLegacyBlobRecords(); detail = result.detail; }
+  let verified = false;
+  try { const result = await migrateLegacyBlobRecords(); detail = result.detail; verified = result.state === "verified"; }
   catch (error) { detail = errorMessage(error); }
   finally { await releaseRecordLease("legacy-recovery", token); }
-  redirect("/admin/operations?error=" + encodeURIComponent(detail));
+  redirect("/admin/operations?" + (verified ? "recoveryVerified=" : "error=") + encodeURIComponent(detail));
 }
