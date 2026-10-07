@@ -166,3 +166,11 @@ a {
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
 }
+
+/* Published appearance themes apply only to customer-facing pages. */
+body[data-storefront-theme="sage"] { --background: #f7faf5; --foreground: #253b32; --rose-deep: #456a56; --rose: #73947c; }
+body[data-storefront-theme="sand"] { --background: #fcf9f2; --foreground: #42372d; --rose-deep: #81644c; --rose: #ad8d68; }
+body[data-storefront-theme="sage"] header, body[data-storefront-theme="sand"] header { background: var(--background); }
+body[data-storefront-theme="sage"] .rose-metal, body[data-storefront-theme="sand"] .rose-metal { background: linear-gradient(120deg,var(--rose-deep),var(--rose)); }
+body[data-storefront-theme="sage"] .rose-text, body[data-storefront-theme="sand"] .rose-text { background: linear-gradient(110deg,var(--rose-deep),var(--rose)); background-clip: text; -webkit-background-clip: text; }
+body[data-storefront-theme="sage"] #main-content a:focus-visible, body[data-storefront-theme="sand"] #main-content a:focus-visible { outline-color: var(--rose-deep); }
