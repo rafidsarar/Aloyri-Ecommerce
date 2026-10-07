@@ -107,7 +107,7 @@ export default async function Home() {
         context={{ placementId: "homepage-hero", placementKind: "hero" }}
       />
       {home.showHero && <section className="shell pt-5 md:pt-8">
-        <div className={`grid min-h-[440px] overflow-hidden rounded-[2rem] border border-[#713a35]/10 bg-[#f5e8e2] ${home.heroLayout === "stacked" ? "grid-cols-1" : "lg:grid-cols-[1.03fr_.97fr]"}`}>
+        <div className={`store-hero grid min-h-[440px] overflow-hidden rounded-[2rem] border ${home.heroLayout === "stacked" ? "grid-cols-1" : "lg:grid-cols-[1.03fr_.97fr]"}`}>
           <div className="flex flex-col justify-between p-7 sm:p-10 lg:p-14">
             <div className="flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/55">
               <span className="h-px w-8 bg-[#b9725f]/55" />
@@ -115,23 +115,23 @@ export default async function Home() {
             </div>
 
             <div className="max-w-2xl py-8 lg:py-10">
-              <h1 className="display text-[clamp(2.75rem,5.5vw,5.5rem)] leading-[1.02] text-[#321f1c]">
+              <h1 className="store-hero-heading display text-[clamp(2.75rem,5.5vw,5.5rem)] leading-[1.02]">
                 {home.headline}
               </h1>
-              <p className="mt-7 max-w-xl text-base leading-7 text-[#321f1c]/60 sm:text-lg">
+              <p className="store-hero-muted mt-7 max-w-xl text-base leading-7 sm:text-lg">
                 {home.intro}
               </p>
 
               <div className="mt-9 flex flex-wrap gap-3">
                 <Link
                   href={home.primaryHref}
-                  className="inline-flex items-center gap-3 rounded-full bg-[#713a35] px-6 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#60312d]"
+                  className="store-hero-primary inline-flex items-center gap-3 rounded-full px-6 py-3.5 text-sm font-semibold transition hover:-translate-y-0.5"
                 >
                   {home.primaryLabel} <ArrowIcon />
                 </Link>
                 <Link
                   href={home.secondaryHref}
-                  className="rounded-full border border-[#713a35]/18 bg-white/60 px-6 py-3.5 text-sm font-medium text-[#713a35] transition hover:bg-white"
+                  className="store-hero-secondary rounded-full border px-6 py-3.5 text-sm font-medium transition hover:brightness-95"
                 >
                   {home.secondaryLabel}
                 </Link>
@@ -194,7 +194,7 @@ export default async function Home() {
           <Link href="/shop" className="text-sm font-semibold text-[#713a35] underline underline-offset-4">View all skincare</Link>
         </div>
         <div className="grid gap-3 sm:grid-cols-3">
-          {routine.map(item => <Link key={item.step} href={item.href} className="group flex items-center justify-between gap-4 rounded-2xl border border-[#713a35]/12 bg-white p-5 transition hover:border-[#713a35]/35">
+          {routine.map(item => <Link key={item.step} href={item.href} className="store-category-card group flex items-center justify-between gap-4 rounded-2xl border p-5 transition">
             <div><p className="text-xs text-[#796762]">Step {item.step}</p><h3 className="mt-1 text-lg font-semibold">{item.title === "Cleanse" ? "Cleansers" : item.title === "Moisturize" ? "Moisturizers" : "Sunscreen"}</h3></div><ArrowIcon className="h-4 w-4 text-[#713a35]" />
           </Link>)}
         </div>
@@ -466,7 +466,7 @@ export default async function Home() {
       </section>
 
       {home.showBrandStory && <section className="shell py-12 md:py-16">
-        <div className="overflow-hidden rounded-[2rem] bg-[#713a35] text-[#fff8f5]">
+        <div className="store-brand-panel overflow-hidden rounded-[2rem]">
           <div className="grid lg:grid-cols-[1.18fr_.82fr]">
             <div className="p-8 sm:p-10 lg:p-14">
               <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/55">
