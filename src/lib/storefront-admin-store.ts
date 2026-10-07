@@ -8,6 +8,7 @@ import {
   writeStructuredJson,
 } from "@/lib/structured-record-store";
 import { draftMode } from "next/headers";
+import { connection } from "next/server";
 import { listMediaObjects, mediaStorageConfigured, putMediaObject } from "@/lib/media-storage";
 import type { LiveCatalogProduct } from "@/lib/catalog";
 import {
@@ -918,13 +919,12 @@ export async function readDraftStorefrontConfig(): Promise<StorefrontConfig> {
 }
 
 export async function readStorefrontConfig(): Promise<StorefrontConfig> {
-  try {
-    const preview = await draftMode();
-    if (preview.isEnabled) return readDraftStorefrontConfig();
-  } catch {
-    // Static rendering and non-request contexts always use published content.
-  }
-  return readPublishedStorefrontConfig();
+  // Published edits live in the datastore, so never freeze them at build time.
+  await connection();
+  const preview = await draftMode();
+  return preview.isEnabled
+    ? readDraftStorefrontConfig()
+    : readPublishedStorefrontConfig();
 }
 
 export async function saveStorefrontConfig(config: StorefrontConfig) {
