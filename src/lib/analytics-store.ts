@@ -346,8 +346,6 @@ export async function recordConfirmedOrderAnalytics(input: {
   return event;
 }
 
-function utcDayKeys
-
 function utcDayKeys(from: Date, to: Date) {
   const keys: string[] = [];
   const cursor = new Date(
