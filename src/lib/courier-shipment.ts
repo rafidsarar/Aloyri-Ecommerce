@@ -1,10 +1,9 @@
 import "server-only";
 
-import { list } from "@vercel/blob";
 import {
   blobConfigured,
+  listPrivateJsonRecords,
   readPrivateJson,
-  storefrontStoragePath,
   writeAdminAuditEvent,
   writePrivateJson,
 } from "@/lib/storefront-admin-store";
@@ -391,19 +390,12 @@ export function publicShipmentTracking(
 }
 
 export async function listCourierShipments(limit = 250) {
-  if (!blobConfigured()) return [] as CourierShipmentRecord[];
   const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 1000);
-  const storedPrefix = storefrontStoragePath(PREFIX);
-  const result = await list({ prefix: storedPrefix, limit: safeLimit });
-  const records = await Promise.all(
-    result.blobs.map((blob) => {
-      const logical = blob.pathname.startsWith(storedPrefix)
-        ? PREFIX + blob.pathname.slice(storedPrefix.length)
-        : blob.pathname;
-      return readPrivateJson<CourierShipmentRecord>(logical);
-    }),
+  const rows = await listPrivateJsonRecords<CourierShipmentRecord>(
+    PREFIX,
+    safeLimit,
   );
-  return records
-    .filter((row): row is CourierShipmentRecord => Boolean(row))
+  return rows
+    .map((row) => row.value)
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
