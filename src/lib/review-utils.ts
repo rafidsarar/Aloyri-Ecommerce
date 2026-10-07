@@ -71,6 +71,10 @@ function comparable(value: string) {
     .replace(/\s+/g, " ");
 }
 
+function comparableMeasure(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
 export function matchesTrackedItem(
   product: { name: string; brand: string; size: string },
   item: { name: string; brand: string; size: string },
@@ -88,6 +92,6 @@ export function matchesTrackedItem(
   const sameSize =
     !product.size ||
     !item.size ||
-    comparable(product.size) === comparable(item.size);
+    comparableMeasure(product.size) === comparableMeasure(item.size);
   return sameName && sameBrand && sameSize;
 }
