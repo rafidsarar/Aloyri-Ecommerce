@@ -52,6 +52,24 @@ type OrderFailure = {
   uncertain: boolean;
 };
 
+type CheckoutSavedAddress = {
+  id: string;
+  label: string;
+  recipientName: string;
+  phone: string;
+  district: string;
+  area: string;
+  address: string;
+  landmark?: string;
+};
+
+type CheckoutAccount = {
+  id: string;
+  email: string;
+  displayName: string;
+  savedAddresses: CheckoutSavedAddress[];
+};
+
 const inputClass =
   "mt-2 h-12 w-full rounded-[.9rem] border border-[#713a35]/14 bg-white px-4 text-sm text-[#321f1c] outline-none transition placeholder:text-[#321f1c]/30 focus:border-[#b9725f]/60 focus:ring-2 focus:ring-[#b9725f]/10";
 
@@ -182,6 +200,10 @@ export function CheckoutClient() {
   const [recoveryAvailable, setRecoveryAvailable] = useState(false);
   const [recoveryConsent, setRecoveryConsent] = useState(false);
   const [recoverySaved, setRecoverySaved] = useState(false);
+  const [customerAccount, setCustomerAccount] =
+    useState<CheckoutAccount | null>(null);
+  const [selectedAddressId, setSelectedAddressId] = useState("");
+  const [saveAddressToAccount, setSaveAddressToAccount] = useState(true);
   const checkoutTracked = useRef(false);
 
   const loadStoreStatus = useCallback(async () => {
@@ -292,6 +314,63 @@ export function CheckoutClient() {
       window.removeEventListener("storage", syncCart);
     };
   }, [loadStoreStatus]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    const controller = new AbortController();
+
+    void fetch("/api/customer-auth/status", {
+      cache: "no-store",
+      credentials: "same-origin",
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return (await response.json()) as {
+          authenticated?: boolean;
+          authMethod?: string;
+          account?: CheckoutAccount;
+        };
+      })
+      .then((status) => {
+        if (
+          !status?.authenticated ||
+          status.authMethod !== "google" ||
+          !status.account ||
+          controller.signal.aborted
+        ) {
+          return;
+        }
+
+        const account = status.account;
+        setCustomerAccount(account);
+        const first = account.savedAddresses?.[0];
+        setDraft((current) => ({
+          ...current,
+          email: account.email,
+          fullName:
+            current.fullName ||
+            first?.recipientName ||
+            account.displayName ||
+            "",
+          phone: current.phone || first?.phone || "",
+          district: current.district || first?.district || "",
+          area: current.area || first?.area || "",
+          address: current.address || first?.address || "",
+          landmark: current.landmark || first?.landmark || "",
+          deliveryZone:
+            current.deliveryZone ||
+            (first
+              ? first.district.trim().toLowerCase() === "dhaka"
+                ? "inside-dhaka"
+                : "outside-dhaka"
+              : ""),
+        }));
+      })
+      .catch(() => undefined);
+
+    return () => controller.abort();
+  }, [hydrated]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -479,6 +558,86 @@ export function CheckoutClient() {
     setErrors((current) => ({ ...current, [field]: undefined }));
     setSubmitFailure(null);
     setDraftNotice("");
+  }
+
+  function applySavedAddress(addressId: string) {
+    setSelectedAddressId(addressId);
+    if (!customerAccount || !addressId) return;
+    const address = customerAccount.savedAddresses.find(
+      (row) => row.id === addressId,
+    );
+    if (!address) return;
+    setDraft((current) => ({
+      ...current,
+      fullName: address.recipientName,
+      phone: address.phone,
+      email: customerAccount.email,
+      district: address.district,
+      area: address.area,
+      address: address.address,
+      landmark: address.landmark || "",
+      deliveryZone:
+        address.district.trim().toLowerCase() === "dhaka"
+          ? "inside-dhaka"
+          : "outside-dhaka",
+    }));
+    setErrors({});
+    setSubmitFailure(null);
+  }
+
+  async function saveCheckoutAddress() {
+    if (!customerAccount || !saveAddressToAccount) return;
+
+    const phone = normalizeBangladeshPhone(draft.phone);
+    const candidate = {
+      recipientName: draft.fullName.trim(),
+      phone,
+      district: draft.district,
+      area: draft.area.trim(),
+      address: draft.address.trim(),
+      landmark: draft.landmark.trim(),
+    };
+    const duplicate = customerAccount.savedAddresses.some(
+      (row) =>
+        row.recipientName === candidate.recipientName &&
+        row.phone === candidate.phone &&
+        row.district === candidate.district &&
+        row.area === candidate.area &&
+        row.address === candidate.address &&
+        (row.landmark || "") === candidate.landmark,
+    );
+    if (duplicate) return;
+
+    const savedAddress: CheckoutSavedAddress = {
+      id: crypto.randomUUID().replace(/-/g, ""),
+      label:
+        customerAccount.savedAddresses.length === 0
+          ? "Primary delivery"
+          : "Saved from checkout",
+      recipientName: candidate.recipientName,
+      phone: candidate.phone,
+      district: candidate.district,
+      area: candidate.area,
+      address: candidate.address,
+      ...(candidate.landmark ? { landmark: candidate.landmark } : {}),
+    };
+
+    const nextAddresses = [
+      ...customerAccount.savedAddresses,
+      savedAddress,
+    ].slice(-5);
+
+    const response = await fetch("/api/customer/account", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ savedAddresses: nextAddresses }),
+    });
+    if (!response.ok) return;
+    const body = (await response.json()) as {
+      account?: CheckoutAccount;
+    };
+    if (body.account) setCustomerAccount(body.account);
   }
 
   function validate() {
@@ -747,9 +906,20 @@ export function CheckoutClient() {
         // Confirmation can continue without browser storage.
       }
 
-      router.push(
-        `/order-confirmation?order=${encodeURIComponent(result.orderNumber)}`,
-      );
+      if (customerAccount) {
+        try {
+          await saveCheckoutAddress();
+        } catch {
+          // The order is already confirmed; address saving is optional.
+        }
+        router.push(
+          `/account?checkout=complete&order=${encodeURIComponent(result.orderNumber)}`,
+        );
+      } else {
+        router.push(
+          `/order-confirmation?order=${encodeURIComponent(result.orderNumber)}`,
+        );
+      }
     } catch {
       const failure = failureFor(
         503,
@@ -932,6 +1102,29 @@ export function CheckoutClient() {
                 <h2 className="display mt-2 text-3xl">Who should receive the order?</h2>
               </div>
 
+              {customerAccount ? (
+                <div className="mb-5 rounded-[1rem] border border-emerald-700/10 bg-emerald-50 p-4 text-xs leading-5 text-emerald-800">
+                  <strong>Google account connected</strong>
+                  <span className="mt-1 block">
+                    {customerAccount.email} · this order will be added
+                    automatically to your Aloyri account history.
+                  </span>
+                </div>
+              ) : (
+                <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-[1rem] border border-[#713a35]/10 bg-[#f5e8e2] p-4 text-xs leading-5 text-[#321f1c]/55">
+                  <span>
+                    Sign in with Google to prefill checkout and keep this order
+                    in your Aloyri account.
+                  </span>
+                  <a
+                    href="/api/customer-auth/google/start?next=/checkout"
+                    className="rounded-full bg-[#713a35] px-4 py-2 font-semibold text-white"
+                  >
+                    Continue with Google
+                  </a>
+                </div>
+              )}
+
               <div className="grid gap-5 sm:grid-cols-2">
                 <label className="text-sm font-medium">
                   Full name
@@ -978,11 +1171,24 @@ export function CheckoutClient() {
               </div>
 
               <label className="mt-5 block text-sm font-medium">
-                Email <span className="font-normal text-[#321f1c]/38">(optional)</span>
+                Email
+                {customerAccount ? (
+                  <span className="font-normal text-[#321f1c]/38">
+                    {" "}· verified by Google
+                  </span>
+                ) : (
+                  <span className="font-normal text-[#321f1c]/38">
+                    {" "}(optional)
+                  </span>
+                )}
                 <input
                   data-checkout-field="email"
                   value={draft.email}
-                  onChange={(event) => setField("email", event.target.value)}
+                  onChange={(event) =>
+                    !customerAccount &&
+                    setField("email", event.target.value)
+                  }
+                  readOnly={Boolean(customerAccount)}
                   className={inputClass}
                   placeholder="name@example.com"
                   inputMode="email"
@@ -996,7 +1202,9 @@ export function CheckoutClient() {
                   </span>
                 ) : (
                   <span id="email-help" className="mt-2 block text-xs font-normal leading-5 text-[#321f1c]/40">
-                    Used only for email features you explicitly choose.
+                    {customerAccount
+                      ? "This Google-verified email owns the order in your Aloyri account."
+                      : "Guest checkout is available, but Google sign-in is recommended for account history."}
                   </span>
                 )}
               </label>
@@ -1033,6 +1241,27 @@ export function CheckoutClient() {
                 </p>
                 <h2 className="display mt-2 text-3xl">Where should it go?</h2>
               </div>
+
+              {customerAccount?.savedAddresses.length ? (
+                <label className="mb-5 block text-sm font-medium">
+                  Saved address
+                  <select
+                    value={selectedAddressId}
+                    onChange={(event) => applySavedAddress(event.target.value)}
+                    className={inputClass}
+                  >
+                    <option value="">Use current checkout details</option>
+                    {customerAccount.savedAddresses.map((address) => (
+                      <option key={address.id} value={address.id}>
+                        {address.label} · {address.recipientName} · {address.area}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="mt-2 block text-xs font-normal text-[#321f1c]/40">
+                    Choosing a saved address also sets the delivery zone from its district.
+                  </span>
+                </label>
+              ) : null}
 
               <fieldset>
                 <legend className="text-sm font-medium">Delivery zone</legend>
@@ -1162,6 +1391,23 @@ export function CheckoutClient() {
                   />
                 </label>
               </div>
+
+              {customerAccount ? (
+                <label className="mt-5 flex items-start gap-3 rounded-[1rem] border border-[#713a35]/10 bg-[#fffaf7] p-4 text-xs leading-5 text-[#321f1c]/55">
+                  <input
+                    type="checkbox"
+                    checked={saveAddressToAccount}
+                    onChange={(event) =>
+                      setSaveAddressToAccount(event.target.checked)
+                    }
+                    className="mt-0.5"
+                  />
+                  <span>
+                    Save these delivery details to my Google-based Aloyri account
+                    for faster checkout next time.
+                  </span>
+                </label>
+              ) : null}
             </section>
 
             <section className="rounded-[1.5rem] border border-[#713a35]/10 bg-white/60 p-5 sm:p-7">

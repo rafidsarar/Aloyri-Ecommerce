@@ -12,7 +12,10 @@ import { recordConfirmedOrderAnalytics, type AnalyticsDevice } from "@/lib/analy
 import { cancelPendingCartRecoveries } from "@/lib/cart-recovery";
 import { recordOrderSettlement } from "@/lib/payment-settlement";
 import { recordShipmentIntent } from "@/lib/courier-shipment";
-import { recordCurrentCustomerOrder } from "@/lib/customer-auth";
+import {
+  currentCustomerSession,
+  recordCurrentCustomerOrder,
+} from "@/lib/customer-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -272,7 +275,7 @@ export async function POST(request: Request) {
     return response({ error: "Invalid order request.", code: "INVALID_REQUEST" }, 400);
   }
 
-  const payload = parsePayload(body);
+  let payload = parsePayload(body);
   const analytics =
     body && typeof body === "object"
       ? analyticsContext((body as Record<string, unknown>).analytics)
@@ -282,6 +285,17 @@ export async function POST(request: Request) {
       { error: "Check the checkout details and try again.", code: "INVALID_REQUEST" },
       400,
     );
+  }
+
+  const customerSession = await currentCustomerSession();
+  if (customerSession) {
+    payload = {
+      ...payload,
+      customer: {
+        ...payload.customer,
+        email: customerSession.account.email,
+      },
+    };
   }
 
   const result = await createCrmWebsiteOrder(payload);

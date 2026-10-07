@@ -24,10 +24,7 @@ type Status = {
   enabled: boolean;
   authenticated: boolean;
   authMethod?: "google" | "email-link";
-  authMethods?: {
-    google?: boolean;
-    emailLink?: boolean;
-  };
+  authMethods?: { google?: boolean; emailLink?: boolean };
   account?: Account;
 };
 
@@ -77,40 +74,6 @@ export function CustomerAuthPanel() {
 
   if (!status?.enabled) return null;
 
-  async function requestLink(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError("");
-    setNotice("");
-    setSaving(true);
-    const form = new FormData(event.currentTarget);
-    try {
-      const response = await fetch("/api/customer-auth/request", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({
-          email: form.get("email"),
-          nextPath: "/account",
-        }),
-      });
-      const body = (await response.json()) as {
-        error?: string;
-        message?: string;
-      };
-      if (!response.ok) {
-        setError(body.error || "Unable to send sign-in link.");
-        return;
-      }
-      setNotice(
-        body.message || "Check your email for a secure sign-in link.",
-      );
-    } catch {
-      setError("Unable to send sign-in link.");
-    } finally {
-      setSaving(false);
-    }
-  }
-
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!status?.account) return;
@@ -141,8 +104,10 @@ export function CustomerAuthPanel() {
         setError(body.error || "Unable to update account.");
         return;
       }
-      setStatus({ ...status, account: body.account });
-      setNotice("Secure account preferences saved.");
+      setStatus((current) =>
+        current && body.account ? { ...current, account: body.account } : current,
+      );
+      setNotice("Account preferences saved.");
     } catch {
       setError("Unable to update account.");
     } finally {
@@ -158,7 +123,7 @@ export function CustomerAuthPanel() {
     setStatus({
       enabled: true,
       authenticated: false,
-      authMethods: status?.authMethods,
+      authMethods: { google: true, emailLink: false },
     });
     setNotice("Signed out.");
   }
@@ -166,7 +131,7 @@ export function CustomerAuthPanel() {
   return (
     <section className="mt-6 rounded-[1.5rem] border border-[#713a35]/10 bg-[#fffaf7] p-5 sm:p-7">
       <p className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#713a35]/45">
-        Secure cloud account
+        Google customer account
       </p>
 
       {status.authenticated && status.account ? (
@@ -177,9 +142,7 @@ export function CustomerAuthPanel() {
                 Signed in as {status.account.email}
               </p>
               <p className="mt-1 text-xs text-[#321f1c]/45">
-                {status.authMethod === "google"
-                  ? "Signed in securely with Google · HttpOnly Aloyri session"
-                  : "Passwordless one-time email sign-in · HttpOnly secure session"}
+                Google-verified identity · secure HttpOnly Aloyri session
               </p>
             </div>
             <button
@@ -207,9 +170,7 @@ export function CustomerAuthPanel() {
               <input
                 type="checkbox"
                 name="postDelivery"
-                defaultChecked={
-                  status.account.emailPreferences.postDelivery
-                }
+                defaultChecked={status.account.emailPreferences.postDelivery}
               />
               Post-delivery follow-up
             </label>
@@ -217,9 +178,7 @@ export function CustomerAuthPanel() {
               <input
                 type="checkbox"
                 name="reviewRequest"
-                defaultChecked={
-                  status.account.emailPreferences.reviewRequest
-                }
+                defaultChecked={status.account.emailPreferences.reviewRequest}
               />
               Verified-review reminder
             </label>
@@ -227,9 +186,7 @@ export function CustomerAuthPanel() {
               <input
                 type="checkbox"
                 name="reorderReminder"
-                defaultChecked={
-                  status.account.emailPreferences.reorderReminder
-                }
+                defaultChecked={status.account.emailPreferences.reorderReminder}
               />
               Replenishment reminder
             </label>
@@ -244,60 +201,24 @@ export function CustomerAuthPanel() {
         </form>
       ) : (
         <div className="mt-4 max-w-xl">
-          <h2 className="display text-3xl">Sign in to your Aloyri account.</h2>
+          <h2 className="display text-3xl">Continue with Google.</h2>
           <p className="mt-2 text-xs leading-6 text-[#321f1c]/48">
-            Your account keeps order history, wishlist, saved addresses,
-            support cases and post-purchase details together.
+            Aloyri customer accounts use Google sign-in. Your verified Gmail
+            identity keeps orders, wishlist, addresses, support cases and
+            post-purchase history together without a separate Aloyri password.
           </p>
-
-          {status.authMethods?.google ? (
-            <a
-              href="/api/customer-auth/google/start?next=/account"
-              className="mt-5 flex h-12 w-full items-center justify-center gap-3 rounded-full border border-[#713a35]/15 bg-white px-5 text-sm font-semibold text-[#321f1c] shadow-sm transition hover:border-[#713a35]/30"
+          <a
+            href="/api/customer-auth/google/start?next=/account"
+            className="mt-5 flex h-12 w-full items-center justify-center gap-3 rounded-full border border-[#713a35]/15 bg-white px-5 text-sm font-semibold text-[#321f1c] shadow-sm transition hover:border-[#713a35]/30"
+          >
+            <span
+              aria-hidden="true"
+              className="grid h-6 w-6 place-items-center rounded-full border border-black/10 text-sm font-bold"
             >
-              <span
-                aria-hidden="true"
-                className="grid h-6 w-6 place-items-center rounded-full border border-black/10 text-sm font-bold"
-              >
-                G
-              </span>
-              Continue with Google
-            </a>
-          ) : null}
-
-          {status.authMethods?.emailLink ? (
-            <>
-              {status.authMethods?.google ? (
-                <div className="my-5 flex items-center gap-3 text-[10px] uppercase tracking-[.14em] text-[#321f1c]/30">
-                  <span className="h-px flex-1 bg-[#713a35]/10" />
-                  or
-                  <span className="h-px flex-1 bg-[#713a35]/10" />
-                </div>
-              ) : null}
-              <form onSubmit={requestLink}>
-                <p className="text-xs leading-6 text-[#321f1c]/48">
-                  You can also use a single-use email link when Aloyri email
-                  sign-in is enabled.
-                </p>
-                <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-                  <input
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    placeholder="you@example.com"
-                    className="h-11 min-w-0 flex-1 rounded-xl border border-[#713a35]/12 bg-white px-3 text-sm"
-                  />
-                  <button
-                    disabled={saving}
-                    className="rounded-full bg-[#713a35] px-5 py-3 text-xs font-semibold text-white disabled:opacity-50"
-                  >
-                    {saving ? "Sending…" : "Email secure sign-in link"}
-                  </button>
-                </div>
-              </form>
-            </>
-          ) : null}
+              G
+            </span>
+            Continue with Google
+          </a>
         </div>
       )}
 

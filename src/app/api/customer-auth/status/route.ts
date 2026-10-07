@@ -18,7 +18,7 @@ export async function GET() {
       switchEnabled: readiness.switchEnabled,
       authMethods: {
         google: readiness.googleEnabled,
-        emailLink: readiness.emailLinkEnabled,
+        emailLink: false,
       },
       googleConfigured: readiness.googleConfigured,
       googleSwitchEnabled: readiness.googleSwitchEnabled,
