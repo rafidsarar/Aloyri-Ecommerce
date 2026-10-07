@@ -1,6 +1,6 @@
 import "server-only";
 
-import { get, list, put } from "@vercel/blob";
+import { get, list } from "@vercel/blob";
 import { neon } from "@neondatabase/serverless";
 
 const RECOVERY_BASELINE_COUNT = 849;
@@ -268,44 +268,20 @@ export async function readStructuredJson<T>(pathname: string): Promise<T | null>
 }
 
 export async function writeStructuredJson(pathname: string, value: unknown) {
-  if (structuredDatastoreConfigured()) {
-    await writeDatabaseJson(pathname, value);
-    return;
+  if (!structuredDatastoreConfigured()) {
+    throw new Error("Ecommerce structured datastore is not configured.");
   }
-  if (!legacyBlobConfigured()) {
-    throw new Error("Website datastore is not configured.");
-  }
-  await put(blobNamespacePath(pathname), JSON.stringify(value, null, 2), {
-    access: "private",
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    contentType: "application/json",
-  });
+  await writeDatabaseJson(pathname, value);
 }
 
 export async function createStructuredJsonOnce(
   pathname: string,
   value: unknown,
 ) {
-  if (structuredDatastoreConfigured()) {
-    return insertDatabaseJsonOnce(pathname, value);
+  if (!structuredDatastoreConfigured()) {
+    throw new Error("Ecommerce structured datastore is not configured.");
   }
-  if (!legacyBlobConfigured()) {
-    throw new Error("Website datastore is not configured.");
-  }
-  try {
-    await put(blobNamespacePath(pathname), JSON.stringify(value, null, 2), {
-      access: "private",
-      addRandomSuffix: false,
-      allowOverwrite: false,
-      contentType: "application/json",
-    });
-    return true;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (/already exists|overwrite|conflict|409/i.test(message)) return false;
-    throw error;
-  }
+  return insertDatabaseJsonOnce(pathname, value);
 }
 
 export async function listStructuredJson<T>(
