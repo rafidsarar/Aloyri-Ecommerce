@@ -76,7 +76,7 @@ export function CustomerAuthPanel() {
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!status.account) return;
+    if (!status?.account) return;
     setSaving(true);
     setError("");
     setNotice("");
@@ -104,7 +104,9 @@ export function CustomerAuthPanel() {
         setError(body.error || "Unable to update account.");
         return;
       }
-      setStatus({ ...status, account: body.account });
+      setStatus((current) =>
+        current && body.account ? { ...current, account: body.account } : current,
+      );
       setNotice("Account preferences saved.");
     } catch {
       setError("Unable to update account.");
