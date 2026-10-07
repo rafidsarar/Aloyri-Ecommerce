@@ -58,7 +58,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body>
+      <body data-storefront-theme={config.site.appearance}>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: safeJsonLd(organizationSchema) }}
