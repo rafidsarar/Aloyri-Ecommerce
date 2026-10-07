@@ -58,8 +58,6 @@ function safeId() {
   return crypto.randomUUID().replace(/-/g, "");
 }
 
-function deliveryRate
-
 function deliveryRate(value: string | undefined) {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
