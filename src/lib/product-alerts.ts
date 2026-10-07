@@ -335,6 +335,11 @@ export async function sendDueProductAlerts(limit = 100) {
     const result = await sendTransactionalEmail({
       to: row.email,
       ...email,
+      idempotencyKey:
+        "product-alert:" +
+        row.id +
+        ":" +
+        [...triggered].sort().join("+"),
     });
     if (!result.ok) {
       failed += 1;

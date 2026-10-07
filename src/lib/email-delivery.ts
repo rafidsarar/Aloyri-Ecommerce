@@ -32,6 +32,7 @@ export async function sendTransactionalEmail(input: {
   subject: string;
   html: string;
   text?: string;
+  idempotencyKey?: string;
 }) {
   const readiness = transactionalEmailReadiness();
   if (!readiness.ready || !readiness.fromEmail) {
@@ -57,6 +58,9 @@ export async function sendTransactionalEmail(input: {
       headers: {
         authorization: "Bearer " + (process.env.RESEND_API_KEY || ""),
         "content-type": "application/json",
+        ...(input.idempotencyKey
+          ? { "Idempotency-Key": input.idempotencyKey.slice(0, 200) }
+          : {}),
       },
       body: JSON.stringify({
         from: readiness.fromEmail,
@@ -89,6 +93,15 @@ export async function sendTransactionalEmail(input: {
   }
 }
 
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 export function brandedEmailShell(input: {
   eyebrow: string;
   title: string;
@@ -100,22 +113,28 @@ export function brandedEmailShell(input: {
   const href = input.ctaHref.startsWith("http")
     ? input.ctaHref
     : siteConfig.url + (input.ctaHref.startsWith("/") ? input.ctaHref : "/" + input.ctaHref);
+  const eyebrow = escapeHtml(input.eyebrow);
+  const title = escapeHtml(input.title);
+  const copy = escapeHtml(input.copy);
+  const ctaLabel = escapeHtml(input.ctaLabel);
+  const safeHref = escapeHtml(href);
+  const footer = escapeHtml(input.footer || "Aloyri · Let Your Skin Glow.");
 
   return `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>${input.title}</title>
+    <title>${title}</title>
   </head>
   <body style="margin:0;background:#fffaf7;color:#321f1c;font-family:Arial,sans-serif">
     <div style="max-width:600px;margin:0 auto;padding:32px 20px">
       <div style="background:#ffffff;border:1px solid #eadbd6;border-radius:22px;padding:30px">
-        <p style="margin:0;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#713a35">${input.eyebrow}</p>
-        <h1 style="font-size:30px;line-height:1.15;margin:14px 0 0">${input.title}</h1>
-        <p style="font-size:15px;line-height:1.75;color:#66504c;margin:18px 0 0">${input.copy}</p>
-        <a href="${href}" style="display:inline-block;margin-top:22px;background:#713a35;color:#fff;text-decoration:none;padding:13px 21px;border-radius:999px;font-weight:700;font-size:14px">${input.ctaLabel}</a>
-        <p style="font-size:11px;line-height:1.6;color:#8a7773;margin:26px 0 0">${input.footer || "Aloyri · Let Your Skin Glow."}</p>
+        <p style="margin:0;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#713a35">${eyebrow}</p>
+        <h1 style="font-size:30px;line-height:1.15;margin:14px 0 0">${title}</h1>
+        <p style="font-size:15px;line-height:1.75;color:#66504c;margin:18px 0 0">${copy}</p>
+        <a href="${safeHref}" style="display:inline-block;margin-top:22px;background:#713a35;color:#fff;text-decoration:none;padding:13px 21px;border-radius:999px;font-weight:700;font-size:14px">${ctaLabel}</a>
+        <p style="font-size:11px;line-height:1.6;color:#8a7773;margin:26px 0 0">${footer}</p>
       </div>
     </div>
   </body>

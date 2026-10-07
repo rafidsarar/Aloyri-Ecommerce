@@ -157,6 +157,7 @@ export async function sendDueLifecycleEmails(limit = 100) {
     const message = messageFor(row.trigger);
     const result = await sendTransactionalEmail({
       to: row.email,
+      idempotencyKey: "lifecycle:" + row.id,
       subject: message.subject,
       html: brandedEmailShell({
         eyebrow: message.eyebrow,
