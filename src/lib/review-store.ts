@@ -1,10 +1,9 @@
 import "server-only";
 
-import { get, list } from "@vercel/blob";
 import {
   blobConfigured,
+  listPrivateJsonRecords,
   readPrivateJson,
-  storefrontStoragePath,
   writePrivateJson,
 } from "@/lib/storefront-admin-store";
 import type {
@@ -37,38 +36,16 @@ function safeId(value: string) {
   return /^[A-Za-z0-9_-]{8,80}$/.test(value);
 }
 
-async function readBlobJson<T>(pathname: string): Promise<T | null> {
-  try {
-    const result = await get(pathname, { access: "private", useCache: false });
-    if (!result) return null;
-    return JSON.parse(await new Response(result.stream).text()) as T;
-  } catch {
-    return null;
-  }
-}
-
 export async function listProductReviews(limit = MAX_REVIEWS) {
   if (!blobConfigured()) return [] as ProductReview[];
-
-  const output: ProductReview[] = [];
-  let cursor: string | undefined;
-
-  do {
-    const page = await list({
-      prefix: storefrontStoragePath(ITEM_PREFIX),
-      limit: Math.min(1000, Math.max(1, limit - output.length)),
-      ...(cursor ? { cursor } : {}),
-    });
-    const records = await Promise.all(
-      page.blobs.map((blob) => readBlobJson<ProductReview>(blob.pathname)),
-    );
-    output.push(
-      ...records.filter((record): record is ProductReview => Boolean(record)),
-    );
-    cursor = page.hasMore ? page.cursor : undefined;
-  } while (cursor && output.length < limit);
-
-  return output.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), MAX_REVIEWS);
+  const rows = await listPrivateJsonRecords<ProductReview>(
+    ITEM_PREFIX,
+    safeLimit,
+  );
+  return rows
+    .map((row) => row.value)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export async function getReview(id: string) {
@@ -232,20 +209,16 @@ export async function recordReviewMetric(
 
 export async function readReviewMetrics(days = 30) {
   if (!blobConfigured()) return [] as ReviewMetricDay[];
-
-  const result: ReviewMetricDay[] = [];
-  const page = await list({
-    prefix: storefrontStoragePath(METRIC_PREFIX),
-    limit: 400,
-  });
-  const rows = await Promise.all(
-    page.blobs.map((blob) => readBlobJson<ReviewMetricDay>(blob.pathname)),
+  const rows = await listPrivateJsonRecords<ReviewMetricDay>(
+    METRIC_PREFIX,
+    400,
   );
   const from = Date.now() - Math.max(1, days) * 24 * 60 * 60 * 1000;
-  for (const row of rows) {
-    if (!row) continue;
-    const time = Date.parse(row.date + "T00:00:00.000Z");
-    if (Number.isFinite(time) && time >= from) result.push(row);
-  }
-  return result.sort((a, b) => a.date.localeCompare(b.date));
+  return rows
+    .map((row) => row.value)
+    .filter((row) => {
+      const time = Date.parse(row.date + "T00:00:00.000Z");
+      return Number.isFinite(time) && time >= from;
+    })
+    .sort((a, b) => a.date.localeCompare(b.date));
 }
