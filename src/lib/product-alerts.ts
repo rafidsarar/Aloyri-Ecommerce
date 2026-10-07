@@ -86,8 +86,6 @@ function randomToken() {
   return Buffer.from(bytes).toString("base64url");
 }
 
-export function productAlertsReadiness
-
 export function productAlertsReadiness() {
   const email = transactionalEmailReadiness();
   const switchEnabled = process.env.ALOYRI_PRODUCT_ALERTS_ENABLED === "1";
