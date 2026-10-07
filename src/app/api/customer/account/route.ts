@@ -50,6 +50,7 @@ export async function PUT(request: Request) {
   try {
     const body = JSON.parse(raw) as {
       displayName?: unknown;
+      phone?: unknown;
       savedProductIds?: unknown;
       wishlistChange?: {productId?:unknown;saved?:unknown};
       emailPreferences?: unknown;
@@ -58,6 +59,7 @@ export async function PUT(request: Request) {
     if (body.wishlistChange && (typeof body.wishlistChange.productId !== "string" || !/^[A-Za-z0-9][A-Za-z0-9_-]{0,119}$/.test(body.wishlistChange.productId) || typeof body.wishlistChange.saved !== "boolean")) return Response.json({error:"Invalid wishlist change."},{status:400});
     const account = await updateCurrentCustomerAccount({
       ...(body.wishlistChange ? {wishlistChange:body.wishlistChange as {productId:string;saved:boolean}} : {}),
+      ...(typeof body.phone === "string" ? { phone: body.phone } : {}),
       ...(typeof body.displayName === "string"
         ? { displayName: body.displayName }
         : {}),
