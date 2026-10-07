@@ -1,6 +1,14 @@
 import "server-only";
 
-import { get, list, put } from "@vercel/blob";
+import { list, put } from "@vercel/blob";
+import {
+  createStructuredJsonOnce,
+  legacyBlobConfigured,
+  listStructuredJson,
+  readStructuredJson,
+  structuredDatastoreConfigured,
+  writeStructuredJson,
+} from "@/lib/structured-record-store";
 import { draftMode } from "next/headers";
 import type { LiveCatalogProduct } from "@/lib/catalog";
 import {
@@ -639,66 +647,30 @@ export type AdminAuditEvent = {
 };
 
 export function blobConfigured() {
-  return Boolean(
-    process.env.BLOB_READ_WRITE_TOKEN ||
-      process.env.VERCEL_OIDC_TOKEN ||
-      process.env.VERCEL,
-  );
+  return structuredDatastoreConfigured();
 }
 
 export async function readPrivateJson<T>(pathname: string): Promise<T | null> {
-  if (!blobConfigured()) return null;
-
-  try {
-    const result = await get(storefrontStoragePath(pathname), {
-      access: "private",
-      useCache: false,
-    });
-    if (!result) return null;
-    const text = await new Response(result.stream).text();
-    return JSON.parse(text) as T;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (/not found|404/i.test(message)) return null;
-    console.error("Private Blob read failed", pathname, error);
-    return null;
-  }
+  return readStructuredJson<T>(pathname);
 }
 
 export async function writePrivateJson(pathname: string, value: unknown) {
-  if (!blobConfigured()) {
-    throw new Error("Website datastore is not configured.");
-  }
-
-  await put(storefrontStoragePath(pathname), JSON.stringify(value, null, 2), {
-    access: "private",
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    contentType: "application/json",
-  });
+  return writeStructuredJson(pathname, value);
 }
 
 export async function createPrivateJsonOnce(
   pathname: string,
   value: unknown,
 ) {
-  if (!blobConfigured()) {
-    throw new Error("Website datastore is not configured.");
-  }
+  return createStructuredJsonOnce(pathname, value);
+}
 
-  try {
-    await put(storefrontStoragePath(pathname), JSON.stringify(value, null, 2), {
-      access: "private",
-      addRandomSuffix: false,
-      allowOverwrite: false,
-      contentType: "application/json",
-    });
-    return true;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (/already exists|overwrite|conflict|409/i.test(message)) return false;
-    throw error;
-  }
+export async function listPrivateJsonRecords<T>(
+  prefix: string,
+  limit = 1000,
+  offset = 0,
+) {
+  return listStructuredJson<T>(prefix, limit, offset);
 }
 
 function normalizeConfig(value: Partial<StorefrontConfig> | null): StorefrontConfig {
@@ -1087,13 +1059,12 @@ export async function getPublishingStatus() {
 }
 
 async function historyRecords(limit = 50) {
-  if (!blobConfigured()) return [] as StorefrontVersionRecord[];
-  const result = await list({ prefix: storefrontStoragePath(HISTORY_PREFIX), limit: Math.min(limit, 100) });
-  const records = await Promise.all(
-    result.blobs.map((blob) => readPrivateJson<StorefrontVersionRecord>(logicalStorefrontPath(blob.pathname))),
+  const records = await listPrivateJsonRecords<StorefrontVersionRecord>(
+    HISTORY_PREFIX,
+    Math.min(limit, 100),
   );
   return records
-    .filter((record): record is StorefrontVersionRecord => Boolean(record))
+    .map((record) => record.value)
     .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
 }
 
@@ -1135,39 +1106,16 @@ export async function writeAdminAuditEvent(
   return event;
 }
 
-async function auditBlobPaths(maxPaths = 10_000) {
-  if (!blobConfigured()) return [] as string[];
-  const paths: string[] = [];
-  let cursor: string | undefined;
-
-  do {
-    const result = await list({
-      prefix: storefrontStoragePath(AUDIT_PREFIX),
-      limit: Math.min(1000, maxPaths - paths.length),
-      ...(cursor ? { cursor } : {}),
-    });
-    paths.push(...result.blobs.map((blob) => blob.pathname));
-    cursor = result.hasMore ? result.cursor : undefined;
-  } while (cursor && paths.length < maxPaths);
-
-  return paths.sort((a, b) => b.localeCompare(a));
-}
-
 export async function listAdminAuditEvents(limit = 20, offset = 0) {
-  if (!blobConfigured()) return [] as AdminAuditEvent[];
   const safeLimit = Math.min(Math.max(limit, 1), 5000);
   const safeOffset = Math.max(0, Math.trunc(offset));
-  const paths = await auditBlobPaths(
-    Math.min(10_000, safeOffset + safeLimit + 1000),
+  const records = await listPrivateJsonRecords<AdminAuditEvent>(
+    AUDIT_PREFIX,
+    safeLimit,
+    safeOffset,
   );
-  const selected = paths.slice(safeOffset, safeOffset + safeLimit);
-  const events = await Promise.all(
-    selected.map((pathname) =>
-      readPrivateJson<AdminAuditEvent>(logicalStorefrontPath(pathname)),
-    ),
-  );
-  return events
-    .filter((event): event is AdminAuditEvent => Boolean(event))
+  return records
+    .map((record) => record.value)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
@@ -1276,7 +1224,7 @@ export async function restoreStorefrontVersionToDraft(
 }
 
 export async function uploadStorefrontMedia(file: File) {
-  if (!blobConfigured()) throw new Error("Website datastore is not configured.");
+  if (!legacyBlobConfigured()) throw new Error("Media storage is not configured.");
   if (!file || file.size <= 0) throw new Error("Choose an image to upload.");
   if (file.size > 5 * 1024 * 1024) throw new Error("Images must be 5 MB or smaller.");
   if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
@@ -1303,7 +1251,7 @@ export async function uploadStorefrontMedia(file: File) {
 }
 
 export async function listStorefrontMedia() {
-  if (!blobConfigured()) return [];
+  if (!legacyBlobConfigured()) return [];
   try {
     const result = await list({
       prefix: storefrontStoragePath("media/"),

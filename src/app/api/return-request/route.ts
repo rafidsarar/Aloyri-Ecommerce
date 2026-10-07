@@ -4,6 +4,7 @@ import {
   normalizeBangladeshPhone,
 } from "@/lib/checkout";
 import { noteReturnRequest } from "@/lib/payment-settlement";
+import { createReturnSupportCase } from "@/lib/support-cases";
 
 export const dynamic = "force-dynamic";
 
@@ -126,27 +127,45 @@ export async function POST(request: Request) {
     return response({ error: "Each returned order line can only be selected once.", code: "INVALID_RETURN_REQUEST" }, 400);
   }
 
-  const result = await submitCrmReturnRequest({
+  const normalizedPhone = normalizeBangladeshPhone(input.phone);
+  const returnRequest = {
     orderNumber: input.orderNumber.trim(),
-    phone: normalizeBangladeshPhone(input.phone),
+    phone: normalizedPhone,
     reason: input.reason as ReturnRequestInput["reason"],
     condition: input.condition as ReturnRequestInput["condition"],
     preferredResolution: input.preferredResolution as ReturnRequestInput["preferredResolution"],
     note: input.note.trim(),
     items: input.items,
-  });
+  } satisfies ReturnRequestInput;
 
+  const result = await submitCrmReturnRequest(returnRequest);
+
+  /* CRM remains authoritative for return acceptance. Website support context is
+     only created after CRM accepted the request. */
   if (result.ok && result.body.requestId) {
-    try {
-      await noteReturnRequest({
+    const tasks = [
+      noteReturnRequest({
         orderNumber: input.orderNumber.trim(),
         requestId: result.body.requestId,
         preferredResolution: input.preferredResolution as string,
-      });
-    } catch (error) {
-      console.error("Return settlement note failed", error);
+      }),
+      createReturnSupportCase({
+        requestId: result.body.requestId,
+        crmStatus: result.body.status,
+        phone: normalizedPhone,
+        request: returnRequest,
+      }),
+    ];
+
+    const outcomes = await Promise.allSettled(tasks);
+    if (outcomes[0].status === "rejected") {
+      console.error("Return settlement note failed", outcomes[0].reason);
+    }
+    if (outcomes[1].status === "rejected") {
+      console.error("Return support case creation failed", outcomes[1].reason);
     }
   }
 
   return response(result.body, result.status);
 }
+

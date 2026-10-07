@@ -31,7 +31,12 @@ const cards = [
     href: "/faq",
   },
   {
-    title: "Contact Aloyri",
+    title: "Contact customer service",
+    copy: "Open a support case for an order, delivery, payment or product question.",
+    href: "/support-request",
+  },
+  {
+    title: "Contact information",
     copy: "See what information to prepare when you need help with a website order.",
     href: "/contact",
   },

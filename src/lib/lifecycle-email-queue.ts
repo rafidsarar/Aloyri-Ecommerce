@@ -1,12 +1,11 @@
 import "server-only";
 
-import { get, list } from "@vercel/blob";
 import { customerEmailPreferencesForEmail } from "@/lib/customer-auth";
 import { brandedEmailShell, sendTransactionalEmail } from "@/lib/email-delivery";
 import { lifecycleReadiness } from "@/lib/lifecycle-orchestration";
 import { lifecyclePlanForDelivery, type LifecycleTrigger } from "@/lib/lifecycle-policy";
 import { replenishmentDays } from "@/lib/retention-utils";
-import { readPrivateJson, storefrontStoragePath, writePrivateJson } from "@/lib/storefront-admin-store";
+import { listPrivateJsonRecords, readPrivateJson, writePrivateJson } from "@/lib/storefront-admin-store";
 
 export type LifecycleQueueStatus = "pending" | "sent" | "cancelled";
 export type LifecycleQueueRecord = {
@@ -34,30 +33,15 @@ async function sha256(value: string) {
   return Buffer.from(new Uint8Array(digest)).toString("base64url");
 }
 
-async function readBlobJson<T>(pathname: string): Promise<T | null> {
-  try {
-    const result = await get(pathname, { access: "private", useCache: false });
-    if (!result) return null;
-    return JSON.parse(await new Response(result.stream).text()) as T;
-  } catch {
-    return null;
-  }
-}
-
 export async function listLifecycleQueue(limit = 5000) {
-  const output: LifecycleQueueRecord[] = [];
-  let cursor: string | undefined;
-  do {
-    const page = await list({
-      prefix: storefrontStoragePath(ITEM_PREFIX),
-      limit: Math.min(1000, Math.max(1, limit - output.length)),
-      ...(cursor ? { cursor } : {}),
-    });
-    const rows = await Promise.all(page.blobs.map((blob) => readBlobJson<LifecycleQueueRecord>(blob.pathname)));
-    output.push(...rows.filter((row): row is LifecycleQueueRecord => Boolean(row)));
-    cursor = page.hasMore ? page.cursor : undefined;
-  } while (cursor && output.length < limit);
-  return output.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 5000);
+  const rows = await listPrivateJsonRecords<LifecycleQueueRecord>(
+    ITEM_PREFIX,
+    safeLimit,
+  );
+  return rows
+    .map((row) => row.value)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export async function enqueueDeliveredLifecycleEvent(input: {
