@@ -71,7 +71,9 @@ export function supportCaseIntelligence(input: {
   if (
     input.preferredResolution === "Refund" &&
     input.paymentState === "paid" &&
-    !["refunded", "partially_refunded"].includes(input.paymentState || "")
+    !["refunded", "partially_refunded", "rejected"].includes(
+      input.refundState || "",
+    )
   ) {
     signals.push({
       key: "refund-awaiting-settlement",
