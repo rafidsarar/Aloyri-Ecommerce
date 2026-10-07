@@ -343,6 +343,10 @@ export async function saveHomepage(formData: FormData) {
       ideaEyebrow: text(formData, "ideaEyebrow", 120),
       ideaHeadline: text(formData, "ideaHeadline", 180),
       ideaCopy: text(formData, "ideaCopy", 600),
+      showHero: formData.get("showHero") === "on",
+      showCategories: formData.get("showCategories") === "on",
+      showBrandStory: formData.get("showBrandStory") === "on",
+      heroLayout: formData.get("heroLayout") === "stacked" ? "stacked" : "split",
     };
     return config;
   }, {
@@ -364,6 +368,9 @@ export async function saveSiteSettings(formData: FormData) {
       supportEmail: text(formData, "supportEmail", 200),
       supportPhone: text(formData, "supportPhone", 80),
       supportHours: text(formData, "supportHours", 200),
+      appearance: ["rose", "sage", "sand"].includes(text(formData, "appearance", 10))
+        ? text(formData, "appearance", 10) as "rose" | "sage" | "sand"
+        : config.site.appearance,
     };
     return config;
   }, {
