@@ -106,8 +106,8 @@ export default async function Home() {
         properties={{ placementId: "homepage-hero", placementKind: "hero" }}
         context={{ placementId: "homepage-hero", placementKind: "hero" }}
       />
-      <section className="shell pt-5 md:pt-8">
-        <div className="grid min-h-[440px] overflow-hidden rounded-[2rem] border border-[#713a35]/10 bg-[#f5e8e2] lg:grid-cols-[1.03fr_.97fr]">
+      {home.showHero && <section className="shell pt-5 md:pt-8">
+        <div className="grid min-h-[440px] overflow-hidden rounded-[2rem] border border-[#713a35]/10 bg-[#f5e8e2] ${home.heroLayout === "stacked" ? "grid-cols-1" : "lg:grid-cols-[1.03fr_.97fr]"}">
           <div className="flex flex-col justify-between p-7 sm:p-10 lg:p-14">
             <div className="flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/55">
               <span className="h-px w-8 bg-[#b9725f]/55" />
@@ -188,7 +188,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="shell py-8 md:py-10" aria-labelledby="shop-by-category">
+      {home.showCategories && <section className="shell py-8 md:py-10" aria-labelledby="shop-by-category">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <h2 id="shop-by-category" className="display text-3xl">Shop by category</h2>
           <Link href="/shop" className="text-sm font-semibold text-[#713a35] underline underline-offset-4">View all skincare</Link>
@@ -198,7 +198,7 @@ export default async function Home() {
             <div><p className="text-xs text-[#796762]">Step {item.step}</p><h3 className="mt-1 text-lg font-semibold">{item.title === "Cleanse" ? "Cleansers" : item.title === "Moisturize" ? "Moisturizers" : "Sunscreen"}</h3></div><ArrowIcon className="h-4 w-4 text-[#713a35]" />
           </Link>)}
         </div>
-      </section>
+      </section>}
 
       {homepageSections.map((section) => {
         if (section.kind === "campaign") {
@@ -465,7 +465,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="shell py-12 md:py-16">
+      {home.showBrandStory && <section className="shell py-12 md:py-16">
         <div className="overflow-hidden rounded-[2rem] bg-[#713a35] text-[#fff8f5]">
           <div className="grid lg:grid-cols-[1.18fr_.82fr]">
             <div className="p-8 sm:p-10 lg:p-14">
@@ -498,7 +498,7 @@ export default async function Home() {
             </div>
           </div>
         </div>
-      </section>
+      </section>}
     </main>
   );
 }
