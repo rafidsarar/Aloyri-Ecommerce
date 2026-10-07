@@ -107,7 +107,7 @@ export default async function Home() {
         context={{ placementId: "homepage-hero", placementKind: "hero" }}
       />
       {home.showHero && <section className="shell pt-5 md:pt-8">
-        <div className="grid min-h-[440px] overflow-hidden rounded-[2rem] border border-[#713a35]/10 bg-[#f5e8e2] ${home.heroLayout === "stacked" ? "grid-cols-1" : "lg:grid-cols-[1.03fr_.97fr]"}">
+        <div className={`grid min-h-[440px] overflow-hidden rounded-[2rem] border border-[#713a35]/10 bg-[#f5e8e2] ${home.heroLayout === "stacked" ? "grid-cols-1" : "lg:grid-cols-[1.03fr_.97fr]"}`}>
           <div className="flex flex-col justify-between p-7 sm:p-10 lg:p-14">
             <div className="flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/55">
               <span className="h-px w-8 bg-[#b9725f]/55" />
@@ -186,7 +186,7 @@ export default async function Home() {
             </div>
           </div>
         </div>
-      </section>
+      </section>}
 
       {home.showCategories && <section className="shell py-8 md:py-10" aria-labelledby="shop-by-category">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
