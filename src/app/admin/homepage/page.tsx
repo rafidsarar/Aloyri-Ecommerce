@@ -34,6 +34,20 @@ export default async function AdminHomepagePage({
       subtitle="Edit your homepage, save a draft, then preview and publish when ready."
     >
       {saved ? <AdminNotice>Draft saved. <Link href="/admin/publishing" className="font-semibold underline">Preview and publish →</Link></AdminNotice> : null}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Link href="/admin/merchandising" className="rounded-xl border border-black/10 bg-white p-4 text-sm font-semibold hover:border-[#713a35]/40 focus-visible:outline-2 focus-visible:outline-offset-2">
+          Arrange homepage sections <span aria-hidden="true">→</span>
+          <span className="mt-1 block text-xs font-normal text-black/60">Show, hide and reorder product collections and campaigns.</span>
+        </Link>
+        <Link href="/admin/settings" className="rounded-xl border border-black/10 bg-white p-4 text-sm font-semibold hover:border-[#713a35]/40 focus-visible:outline-2 focus-visible:outline-offset-2">
+          Website appearance & settings <span aria-hidden="true">→</span>
+          <span className="mt-1 block text-xs font-normal text-black/60">Manage site-wide branding and storefront information.</span>
+        </Link>
+        <Link href="/admin/publishing" className="rounded-xl border border-black/10 bg-white p-4 text-sm font-semibold hover:border-[#713a35]/40 focus-visible:outline-2 focus-visible:outline-offset-2">
+          Preview & publish <span aria-hidden="true">→</span>
+          <span className="mt-1 block text-xs font-normal text-black/60">Review drafts before they become visible to customers.</span>
+        </Link>
+      </div>
       <form action={saveHomepage} className="grid gap-5">
         <AdminCard>
           <h2 className="mb-4 text-sm font-semibold">Main banner</h2>
