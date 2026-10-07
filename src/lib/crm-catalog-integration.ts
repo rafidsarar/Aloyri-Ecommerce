@@ -1,5 +1,9 @@
 import type { LiveCatalogProduct } from "@/lib/catalog";
 import { recordRuntimeError } from "@/lib/runtime-error-store";
+import {
+  recordCrmSyncEvent,
+  saveCrmCatalogSnapshot,
+} from "@/lib/crm-sync-hardening";
 
 const enc = new TextEncoder();
 
@@ -136,18 +140,50 @@ export async function fetchCrmCatalog() {
       ? json.products.map(safeProduct).filter((item): item is LiveCatalogProduct => Boolean(item))
       : [];
 
+    const generatedAt =
+      typeof json.generatedAt === "string" ? json.generatedAt : new Date().toISOString();
+    const fingerprint = await sha256Hex(
+      JSON.stringify(
+        safeProducts
+          .map((product) => ({
+            id: product.id,
+            price: product.price,
+            salePrice: product.salePrice ?? null,
+            availableStock: product.availableStock,
+            active: product.active,
+          }))
+          .sort((a, b) => a.id.localeCompare(b.id)),
+      ),
+    );
+    await saveCrmCatalogSnapshot({
+      checkedAt: new Date().toISOString(),
+      productCount: safeProducts.length,
+      fingerprint,
+      generatedAt,
+    }).catch(() => undefined);
+    await recordCrmSyncEvent({
+      kind: "catalog",
+      state: "healthy",
+      operation: "price-stock-reconciliation",
+      status: 200,
+      detail: safeProducts.length + " CRM products reconciled into the customer-safe catalog.",
+    }).catch(() => undefined);
+
     return {
       ok: true as const,
       status: 200,
-      body: {
-        products: safeProducts,
-        generatedAt:
-          typeof json.generatedAt === "string" ? json.generatedAt : new Date().toISOString(),
-      },
+      body: { products: safeProducts, generatedAt },
     };
   } catch (error) {
     console.error("CRM catalog request failed", error);
     await recordRuntimeError("crm.catalog", error);
+    await recordCrmSyncEvent({
+      kind: "catalog",
+      state: "failed",
+      operation: "price-stock-reconciliation",
+      code: "CATALOG_UNAVAILABLE",
+      detail: "CRM catalog reconciliation request failed.",
+    }).catch(() => undefined);
     return {
       ok: false as const,
       status: 503,
