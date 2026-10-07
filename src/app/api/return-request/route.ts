@@ -3,6 +3,7 @@ import {
   isValidBangladeshPhone,
   normalizeBangladeshPhone,
 } from "@/lib/checkout";
+import { noteReturnRequest } from "@/lib/payment-settlement";
 
 export const dynamic = "force-dynamic";
 
@@ -134,6 +135,18 @@ export async function POST(request: Request) {
     note: input.note.trim(),
     items: input.items,
   });
+
+  if (result.ok && result.body.requestId) {
+    try {
+      await noteReturnRequest({
+        orderNumber: input.orderNumber.trim(),
+        requestId: result.body.requestId,
+        preferredResolution: input.preferredResolution as string,
+      });
+    } catch (error) {
+      console.error("Return settlement note failed", error);
+    }
+  }
 
   return response(result.body, result.status);
 }

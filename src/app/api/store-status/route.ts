@@ -1,3 +1,5 @@
+import { paymentProviderReadiness } from "@/lib/payment-provider-readiness";
+
 export const dynamic = "force-dynamic";
 
 function deliveryRate(value: string | undefined) {
@@ -11,12 +13,14 @@ export async function GET() {
     process.env.ALOYRI_DELIVERY_OUTSIDE_DHAKA_BDT,
   );
   const ratesReady = insideDhaka !== null && outsideDhaka !== null;
+  const payments = paymentProviderReadiness();
 
   return Response.json(
     {
       orderingEnabled:
         process.env.ALOYRI_ORDERING_ENABLED === "1" && ratesReady,
-      paymentMethods: ["COD"],
+      paymentMethods: payments.paymentMethods,
+      paymentReadiness: payments.providers,
       deliveryRates: ratesReady
         ? {
             "inside-dhaka": insideDhaka,
@@ -27,6 +31,7 @@ export async function GET() {
     {
       headers: {
         "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff",
       },
     },
   );

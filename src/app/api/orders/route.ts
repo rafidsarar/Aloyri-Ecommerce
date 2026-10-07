@@ -10,6 +10,7 @@ import {
 import { rateAllowed, requestIp } from "@/lib/request-rate-limit";
 import { recordConfirmedOrderAnalytics, type AnalyticsDevice } from "@/lib/analytics-store";
 import { cancelPendingCartRecoveries } from "@/lib/cart-recovery";
+import { recordOrderSettlement } from "@/lib/payment-settlement";
 
 export const dynamic = "force-dynamic";
 
@@ -284,6 +285,18 @@ export async function POST(request: Request) {
   const result = await createCrmWebsiteOrder(payload);
 
   if (result.ok) {
+    try {
+      await recordOrderSettlement({
+        externalOrderId: payload.externalOrderId,
+        crmOrderId: result.body.orderId,
+        orderNumber: result.body.orderNumber,
+        method: payload.paymentMethod,
+        orderTotal: result.body.total,
+      });
+    } catch (error) {
+      console.error("Payment settlement recording failed", error);
+    }
+
     try {
       await recordConfirmedOrderAnalytics({
         orderNumber: result.body.orderNumber,
