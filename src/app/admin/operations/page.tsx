@@ -2,6 +2,7 @@ import {
   createBackupAction,
   restoreBackupAction,
   runHealthCheckAction,
+  reconcileCrmAction,
 } from "@/app/admin/operations/actions";
 import {
   AdminCard,
@@ -41,6 +42,7 @@ export default async function OperationsPage({
     healthRun?: string;
     backupCreated?: string;
     backupRestored?: string;
+    crmReconciled?: string;
     error?: string;
   }>;
 }) {
@@ -74,6 +76,9 @@ export default async function OperationsPage({
     >
       {query.healthRun ? <AdminNotice>Health snapshot saved.</AdminNotice> : null}
       {query.backupCreated ? <AdminNotice>Private Ecommerce Admin backup created.</AdminNotice> : null}
+      {query.crmReconciled ? (
+        <AdminNotice>CRM price and stock reconciliation completed and recorded.</AdminNotice>
+      ) : null}
       {query.backupRestored ? (
         <AdminNotice>
           Backup restored to Draft only. Review it in Publishing before anything goes live.
@@ -125,11 +130,18 @@ export default async function OperationsPage({
             </p>
           </div>
           {canRun ? (
-            <form action={runHealthCheckAction}>
-              <button className="rounded-xl bg-[#713a35] px-5 py-3 text-sm font-semibold text-white">
-                Run & save health check
-              </button>
-            </form>
+            <div className="flex flex-wrap gap-2">
+              <form action={reconcileCrmAction}>
+                <button className="rounded-xl border border-[#713a35]/20 px-5 py-3 text-sm font-semibold text-[#713a35]">
+                  Reconcile CRM now
+                </button>
+              </form>
+              <form action={runHealthCheckAction}>
+                <button className="rounded-xl bg-[#713a35] px-5 py-3 text-sm font-semibold text-white">
+                  Run & save health check
+                </button>
+              </form>
+            </div>
           ) : null}
         </div>
         <div className="mt-5 divide-y divide-black/7">
