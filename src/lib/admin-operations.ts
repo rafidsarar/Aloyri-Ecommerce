@@ -7,6 +7,7 @@ import {
 } from "@/lib/admin-auth";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
 import { listRuntimeErrors } from "@/lib/runtime-error-store";
+import { structuredDatastoreHealth } from "@/lib/structured-record-store";
 import {
   getPublishingStatus,
   listAdminAuditEvents,
@@ -76,6 +77,7 @@ export async function runOperationalHealth(
     analyticsResult,
     auditResult,
     runtimeErrorsResult,
+    datastoreResult,
   ] = await Promise.allSettled([
     fetchCrmCatalog(),
     listAdminAccounts(),
@@ -83,6 +85,7 @@ export async function runOperationalHealth(
     buildAnalyticsReport(1),
     listAdminAuditEvents(50),
     listRuntimeErrors(30),
+    structuredDatastoreHealth(),
   ]);
 
   if (catalog.status === "fulfilled" && catalog.value.ok) {
@@ -134,6 +137,32 @@ export async function runOperationalHealth(
         " BDT."
       : "Ordering integration or delivery-rate configuration is incomplete.",
   });
+
+  if (
+    datastoreResult.status === "fulfilled" &&
+    datastoreResult.value.databaseReachable
+  ) {
+    const migration = datastoreResult.value.migration;
+    checks.push({
+      id: "structured-datastore",
+      label: "Ecommerce structured datastore",
+      state: migration?.state === "partial" ? "warning" : "healthy",
+      detail:
+        datastoreResult.value.recordCount +
+        " Neon record(s) · namespace " +
+        datastoreResult.value.namespace +
+        " · legacy migration " +
+        (migration?.state || "not-started") +
+        ".",
+    });
+  } else {
+    checks.push({
+      id: "structured-datastore",
+      label: "Ecommerce structured datastore",
+      state: "error",
+      detail: "Dedicated Neon datastore is not reachable.",
+    });
+  }
 
   if (publishingResult.status === "fulfilled") {
     checks.push({
