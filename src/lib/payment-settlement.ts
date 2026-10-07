@@ -1,10 +1,9 @@
 import "server-only";
 
-import { list } from "@vercel/blob";
 import {
   blobConfigured,
+  listPrivateJsonRecords,
   readPrivateJson,
-  storefrontStoragePath,
   writeAdminAuditEvent,
   writePrivateJson,
 } from "@/lib/storefront-admin-store";
@@ -338,19 +337,12 @@ export async function applyCrmSettlementEvent(input: {
 }
 
 export async function listPaymentSettlements(limit = 250) {
-  if (!blobConfigured()) return [] as PaymentSettlementRecord[];
   const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 1000);
-  const storedPrefix = storefrontStoragePath(PREFIX);
-  const result = await list({ prefix: storedPrefix, limit: safeLimit });
-  const records = await Promise.all(
-    result.blobs.map((blob) => {
-      const logical = blob.pathname.startsWith(storedPrefix)
-        ? PREFIX + blob.pathname.slice(storedPrefix.length)
-        : blob.pathname;
-      return readPrivateJson<PaymentSettlementRecord>(logical);
-    }),
+  const rows = await listPrivateJsonRecords<PaymentSettlementRecord>(
+    PREFIX,
+    safeLimit,
   );
-  return records
-    .filter((row): row is PaymentSettlementRecord => Boolean(row))
+  return rows
+    .map((row) => row.value)
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
