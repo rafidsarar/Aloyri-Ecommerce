@@ -221,3 +221,20 @@ export async function updateSupportCase(
   );
   return next;
 }
+
+
+export async function appendCustomerSupportReply(id: string, note: string) {
+  const current = await getSupportCase(id);
+  if (!current) throw new Error("Support case not found.");
+  const clean = note.trim().replace(/\s+/g, " ").slice(0, 1200);
+  if (clean.length < 2) throw new Error("Reply is too short.");
+  const now = new Date().toISOString();
+  const next: SupportCase = {
+    ...current,
+    status: current.status === "waiting-customer" ? "reviewing" : current.status,
+    events: [...current.events, event("customer", "customer.reply", clean)].slice(-80),
+    updatedAt: now,
+  };
+  await writePrivateJson(casePath(id), next);
+  return next;
+}

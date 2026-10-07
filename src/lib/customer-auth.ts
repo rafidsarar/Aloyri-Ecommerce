@@ -3,6 +3,7 @@ import "server-only";
 import { cookies } from "next/headers";
 import {
   createPrivateJsonOnce,
+  listPrivateJsonRecords,
   readPrivateJson,
   writePrivateJson,
 } from "@/lib/storefront-admin-store";
@@ -29,6 +30,24 @@ const defaultEmailPreferences: CustomerEmailPreferences = {
   reorderReminder: false,
 };
 
+export type CustomerAddress = {
+  id: string;
+  label: string;
+  recipientName: string;
+  phone: string;
+  district: string;
+  area: string;
+  address: string;
+  landmark?: string;
+};
+
+export type CustomerOrderRef = {
+  orderNumber: string;
+  phone: string;
+  createdAt: string;
+  total?: number;
+};
+
 type CustomerAccount = {
   version: 1;
   id: string;
@@ -36,6 +55,8 @@ type CustomerAccount = {
   emailHash: string;
   displayName: string;
   savedProductIds: string[];
+  savedAddresses?: CustomerAddress[];
+  orderRefs?: CustomerOrderRef[];
   emailPreferences?: CustomerEmailPreferences;
   createdAt: string;
   updatedAt: string;
@@ -69,6 +90,8 @@ export type PublicCustomerAccount = Pick<
   CustomerAccount,
   "id" | "email" | "displayName" | "savedProductIds" | "createdAt" | "updatedAt" | "lastLoginAt"
 > & {
+  savedAddresses: CustomerAddress[];
+  orderRefs: CustomerOrderRef[];
   emailPreferences: CustomerEmailPreferences;
 };
 
@@ -102,12 +125,98 @@ function safeIds(values: unknown) {
   )].slice(0, 100);
 }
 
+function cleanAddressText(value: unknown, max: number) {
+  return typeof value === "string"
+    ? value.trim().replace(/\s+/g, " ").slice(0, max)
+    : "";
+}
+
+function safeAddresses(value: unknown) {
+  if (!Array.isArray(value)) return [] as CustomerAddress[];
+  const output: CustomerAddress[] = [];
+  for (const raw of value.slice(0, 5)) {
+    if (!raw || typeof raw !== "object") continue;
+    const input = raw as Record<string, unknown>;
+    const id =
+      typeof input.id === "string" &&
+      /^[A-Za-z0-9_-]{8,80}$/.test(input.id)
+        ? input.id
+        : crypto.randomUUID().replace(/-/g, "");
+    const recipientName = cleanAddressText(input.recipientName, 120);
+    const phone = cleanAddressText(input.phone, 30).replace(/[\s-]/g, "");
+    const district = cleanAddressText(input.district, 80);
+    const area = cleanAddressText(input.area, 160);
+    const address = cleanAddressText(input.address, 500);
+    if (
+      recipientName.length < 2 ||
+      !/^\+?\d{10,15}$/.test(phone) ||
+      district.length < 2 ||
+      area.length < 2 ||
+      address.length < 8
+    ) {
+      continue;
+    }
+    output.push({
+      id,
+      label: cleanAddressText(input.label, 40) || "Delivery address",
+      recipientName,
+      phone,
+      district,
+      area,
+      address,
+      ...(cleanAddressText(input.landmark, 200)
+        ? { landmark: cleanAddressText(input.landmark, 200) }
+        : {}),
+    });
+  }
+  return output;
+}
+
+function safeOrderRefs(value: unknown) {
+  if (!Array.isArray(value)) return [] as CustomerOrderRef[];
+  const seen = new Set<string>();
+  return value
+    .filter((raw): raw is Record<string, unknown> => Boolean(raw) && typeof raw === "object")
+    .map((raw) => {
+      const orderNumber =
+        typeof raw.orderNumber === "string"
+          ? raw.orderNumber.trim().toUpperCase()
+          : "";
+      const phone =
+        typeof raw.phone === "string"
+          ? raw.phone.trim().replace(/[\s-]/g, "")
+          : "";
+      const createdAt =
+        typeof raw.createdAt === "string" && !Number.isNaN(Date.parse(raw.createdAt))
+          ? new Date(raw.createdAt).toISOString()
+          : new Date().toISOString();
+      const total =
+        typeof raw.total === "number" && Number.isFinite(raw.total) && raw.total >= 0
+          ? Math.round(raw.total * 100) / 100
+          : undefined;
+      if (
+        !/^WEB-[A-Z0-9-]{8,90}$/.test(orderNumber) ||
+        !/^\+?\d{10,15}$/.test(phone) ||
+        seen.has(orderNumber)
+      ) {
+        return null;
+      }
+      seen.add(orderNumber);
+      return { orderNumber, phone, createdAt, ...(total !== undefined ? { total } : {}) };
+    })
+    .filter((row): row is CustomerOrderRef => Boolean(row))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, 20);
+}
+
 function publicAccount(account: CustomerAccount): PublicCustomerAccount {
   return {
     id: account.id,
     email: account.email,
     displayName: account.displayName,
     savedProductIds: account.savedProductIds || [],
+    savedAddresses: safeAddresses(account.savedAddresses || []),
+    orderRefs: safeOrderRefs(account.orderRefs || []),
     emailPreferences: {
       ...defaultEmailPreferences,
       ...(account.emailPreferences || {}),
@@ -351,6 +460,7 @@ export async function updateCurrentCustomerAccount(input: {
   displayName?: string;
   savedProductIds?: unknown;
   emailPreferences?: Partial<CustomerEmailPreferences>;
+  savedAddresses?: unknown;
 }) {
   const current = await currentCustomerSession();
   if (!current) throw new Error("UNAUTHENTICATED");
@@ -365,6 +475,9 @@ export async function updateCurrentCustomerAccount(input: {
   }
   if (input.savedProductIds !== undefined) {
     stored.savedProductIds = safeIds(input.savedProductIds);
+  }
+  if (input.savedAddresses !== undefined) {
+    stored.savedAddresses = safeAddresses(input.savedAddresses);
   }
   if (input.emailPreferences) {
     stored.emailPreferences = {
@@ -384,4 +497,89 @@ export async function updateCurrentCustomerAccount(input: {
   stored.updatedAt = new Date().toISOString();
   await writePrivateJson(ACCOUNT_PREFIX + stored.id + ".json", stored);
   return publicAccount(stored);
+}
+
+
+export async function recordCurrentCustomerOrder(input: {
+  email?: string;
+  orderNumber: string;
+  phone: string;
+  createdAt?: string;
+  total?: number;
+}) {
+  const current = await currentCustomerSession();
+  if (!current || !input.email) return false;
+  const email = normalizeEmail(input.email);
+  if (!email || email !== current.account.email) return false;
+  return claimCurrentCustomerOrder(input);
+}
+
+export async function claimCurrentCustomerOrder(input: {
+  orderNumber: string;
+  phone: string;
+  createdAt?: string;
+  total?: number;
+}) {
+  const current = await currentCustomerSession();
+  if (!current) throw new Error("UNAUTHENTICATED");
+  const stored = await accountById(current.account.id);
+  if (!stored) throw new Error("UNAUTHENTICATED");
+  stored.orderRefs = safeOrderRefs([
+    {
+      orderNumber: input.orderNumber,
+      phone: input.phone,
+      createdAt: input.createdAt || new Date().toISOString(),
+      ...(typeof input.total === "number" ? { total: input.total } : {}),
+    },
+    ...(stored.orderRefs || []),
+  ]);
+  stored.updatedAt = new Date().toISOString();
+  await writePrivateJson(ACCOUNT_PREFIX + stored.id + ".json", stored);
+  return publicAccount(stored);
+}
+
+export async function customerSecuritySummary() {
+  const current = await currentCustomerSession();
+  if (!current) throw new Error("UNAUTHENTICATED");
+  const rows = await listPrivateJsonRecords<CustomerSessionRecord>(
+    SESSION_PREFIX,
+    250,
+  );
+  const now = Date.now();
+  const active = rows
+    .filter(
+      (row) =>
+        row.value.accountId === current.account.id &&
+        !row.value.revokedAt &&
+        Date.parse(row.value.expiresAt) > now,
+    )
+    .sort((a, b) => b.value.createdAt.localeCompare(a.value.createdAt));
+  return {
+    activeSessions: active.length,
+    currentSessionCreatedAt: current.session.createdAt,
+    currentSessionExpiresAt: current.session.expiresAt,
+  };
+}
+
+export async function revokeOtherCustomerSessions() {
+  const current = await currentCustomerSession();
+  if (!current) throw new Error("UNAUTHENTICATED");
+  const rows = await listPrivateJsonRecords<CustomerSessionRecord>(
+    SESSION_PREFIX,
+    250,
+  );
+  const now = new Date().toISOString();
+  let revoked = 0;
+  for (const row of rows) {
+    if (
+      row.value.accountId !== current.account.id ||
+      row.value.revokedAt ||
+      row.pathname === SESSION_PREFIX + current.sessionHash + ".json"
+    ) {
+      continue;
+    }
+    await writePrivateJson(row.pathname, { ...row.value, revokedAt: now });
+    revoked += 1;
+  }
+  return { revoked };
 }

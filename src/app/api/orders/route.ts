@@ -12,6 +12,7 @@ import { recordConfirmedOrderAnalytics, type AnalyticsDevice } from "@/lib/analy
 import { cancelPendingCartRecoveries } from "@/lib/cart-recovery";
 import { recordOrderSettlement } from "@/lib/payment-settlement";
 import { recordShipmentIntent } from "@/lib/courier-shipment";
+import { recordCurrentCustomerOrder } from "@/lib/customer-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -330,6 +331,18 @@ export async function POST(request: Request) {
       } catch (error) {
         console.error("Cart recovery cancellation failed", error);
       }
+    }
+
+    try {
+      await recordCurrentCustomerOrder({
+        email: payload.customer.email,
+        orderNumber: result.body.orderNumber,
+        phone: payload.customer.phone,
+        createdAt: new Date().toISOString(),
+        total: result.body.total,
+      });
+    } catch (error) {
+      console.error("Customer account order linking failed", error);
     }
   }
 
