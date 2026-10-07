@@ -348,6 +348,7 @@ export default function CartPage() {
               </p>
             ) : null}
 
+            <p className="mt-5 text-xs leading-5 text-[#321f1c]/65">You can shop without signing in. A free Aloyri account is required before placing your order.</p>
             {canCheckout ? (
               <Link
                 href="/checkout"
