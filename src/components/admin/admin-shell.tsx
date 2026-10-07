@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdminNavigation } from "@/components/admin/admin-navigation";
 import { logoutAdmin } from "@/app/admin/actions";
 import {
   currentAdmin,
@@ -10,25 +11,26 @@ const nav: Array<{
   label: string;
   href: string;
   permission: AdminPermission;
+  group: string;
 }> = [
-  { label: "Overview", href: "/admin", permission: "dashboard.view" },
-  { label: "Homepage", href: "/admin/homepage", permission: "homepage.view" },
-  { label: "Products", href: "/admin/products", permission: "products.view" },
-  { label: "Reviews", href: "/admin/reviews", permission: "products.view" },
-  { label: "Pages & FAQ", href: "/admin/pages", permission: "pages.view" },
-  { label: "Media", href: "/admin/media", permission: "media.view" },
-  { label: "Merchandising", href: "/admin/merchandising", permission: "merchandising.view" },
-  { label: "Analytics", href: "/admin/analytics", permission: "analytics.view" },
-  { label: "Payments", href: "/admin/payments", permission: "analytics.view" },
-  { label: "Delivery", href: "/admin/delivery", permission: "analytics.view" },
-  { label: "Customer Service", href: "/admin/customer-service", permission: "support.view" },
-  { label: "SEO", href: "/admin/seo", permission: "seo.view" },
-  { label: "Publishing", href: "/admin/publishing", permission: "publishing.view" },
-  { label: "Team", href: "/admin/staff", permission: "staff.view" },
-  { label: "Audit", href: "/admin/audit", permission: "audit.view" },
-  { label: "Operations", href: "/admin/operations", permission: "health.view" },
-  { label: "Security", href: "/admin/security", permission: "security.self" },
-  { label: "Settings", href: "/admin/settings", permission: "settings.view" },
+  { group: "Workspace", label: "Overview", href: "/admin", permission: "dashboard.view" },
+  { group: "Storefront", label: "Homepage", href: "/admin/homepage", permission: "homepage.view" },
+  { group: "Storefront", label: "Products", href: "/admin/products", permission: "products.view" },
+  { group: "Orders & service", label: "Reviews", href: "/admin/reviews", permission: "products.view" },
+  { group: "Storefront", label: "Pages & FAQ", href: "/admin/pages", permission: "pages.view" },
+  { group: "Storefront", label: "Media", href: "/admin/media", permission: "media.view" },
+  { group: "Growth", label: "Merchandising", href: "/admin/merchandising", permission: "merchandising.view" },
+  { group: "Growth", label: "Analytics", href: "/admin/analytics", permission: "analytics.view" },
+  { group: "Orders & service", label: "Payments", href: "/admin/payments", permission: "analytics.view" },
+  { group: "Orders & service", label: "Delivery", href: "/admin/delivery", permission: "analytics.view" },
+  { group: "Orders & service", label: "Customer Service", href: "/admin/customer-service", permission: "support.view" },
+  { group: "Growth", label: "SEO", href: "/admin/seo", permission: "seo.view" },
+  { group: "Storefront", label: "Publishing", href: "/admin/publishing", permission: "publishing.view" },
+  { group: "Administration", label: "Team", href: "/admin/staff", permission: "staff.view" },
+  { group: "Administration", label: "Audit", href: "/admin/audit", permission: "audit.view" },
+  { group: "Administration", label: "Operations", href: "/admin/operations", permission: "health.view" },
+  { group: "Administration", label: "Security", href: "/admin/security", permission: "security.self" },
+  { group: "Administration", label: "Settings", href: "/admin/settings", permission: "settings.view" },
 ];
 
 export async function AdminShell({
@@ -48,66 +50,20 @@ export async function AdminShell({
     : [];
 
   return (
-    <div className="min-h-screen bg-[#f7f4f2] text-[#2f211f]">
-      <div className="border-b border-black/8 bg-[#2f211f] text-white">
-        <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-5 px-5 py-4 lg:px-8">
-          <div>
-            <Link href="/admin" className="text-lg font-semibold tracking-tight">
-              Aloyri Ecommerce Admin
-            </Link>
-            <p className="mt-0.5 text-xs text-white/55">
-              Storefront operations · CRM remains commerce authority
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="hidden rounded-full border border-white/12 px-3 py-1.5 text-xs text-white/65 sm:inline">
-              {session?.displayName || username}
-              {session?.role ? " · " + session.role : ""}
-            </span>
-            <form action={logoutAdmin}>
-              <button
-                type="submit"
-                className="rounded-full bg-white px-4 py-2 text-xs font-semibold text-[#2f211f]"
-              >
-                Sign out
-              </button>
-            </form>
-          </div>
+    <div className="admin-workspace min-h-screen text-[#2f211f]">
+      <a href="#admin-content" className="skip-link">Skip to admin content</a>
+      <header className="admin-header">
+        <Link href="/admin" className="font-semibold tracking-tight">Aloyri <span className="ml-2 text-xs font-normal text-black/55">Ecommerce Admin</span></Link>
+        <div className="flex flex-wrap items-center gap-3 text-sm">
+          <Link href="/" target="_blank" rel="noopener noreferrer" className="admin-store-link">View store ↗</Link>
+          <span className="hidden text-xs text-black/60 sm:inline">{session?.displayName || username}</span>
+          <form action={logoutAdmin}><button type="submit" className="admin-signout">Sign out</button></form>
         </div>
-      </div>
-
-      <div className="mx-auto grid max-w-[1500px] lg:grid-cols-[235px_1fr]">
-        <aside className="border-b border-black/8 bg-white px-4 py-4 lg:min-h-[calc(100vh-73px)] lg:border-b-0 lg:border-r lg:px-5 lg:py-7">
-          <nav className="flex gap-2 overflow-x-auto lg:flex-col" aria-label="Admin navigation">
-            {visibleNav.map(({ label, href }) => (
-              <Link
-                key={href}
-                href={href}
-                className="whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-medium text-[#2f211f]/68 transition hover:bg-[#f2e8e4] hover:text-[#713a35]"
-              >
-                {label}
-              </Link>
-            ))}
-          </nav>
-
-          <div className="mt-7 hidden rounded-2xl border border-[#713a35]/10 bg-[#fff8f5] p-4 lg:block">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#713a35]/55">
-              CRM boundary
-            </p>
-            <p className="mt-2 text-xs leading-5 text-[#2f211f]/58">
-              Price, stock and order workflow remain locked to Aloyri CRM.
-              Website content and presentation are managed here.
-            </p>
-          </div>
-        </aside>
-
-        <main className="min-w-0 px-5 py-7 lg:px-8 lg:py-9">
-          <div className="mb-7">
-            <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-[#2f211f]/55">
-              {subtitle}
-            </p>
-          </div>
+      </header>
+      <div className="admin-frame">
+        <aside className="admin-sidebar"><AdminNavigation items={visibleNav} /></aside>
+        <main id="admin-content" tabIndex={-1} className="admin-main min-w-0">
+          <div className="admin-page-heading"><h1>{title}</h1><p>{subtitle}</p></div>
           {children}
         </main>
       </div>
@@ -129,7 +85,7 @@ export function AdminNotice({
         ? "border-amber-200 bg-amber-50 text-amber-800"
         : "border-black/10 bg-white text-[#2f211f]/65";
   return (
-    <div className={`mb-5 rounded-xl border px-4 py-3 text-sm ${classes}`}>
+    <div role="status" className={`mb-5 rounded-xl border px-4 py-3 text-sm ${classes}`}>
       {children}
     </div>
   );
@@ -144,7 +100,7 @@ export function AdminCard({
 }) {
   return (
     <section
-      className={`rounded-2xl border border-black/8 bg-white p-5 shadow-[0_12px_40px_rgba(50,31,28,0.04)] ${className}`}
+      className={`admin-card rounded-xl border border-black/10 bg-white p-5 ${className}`}
     >
       {children}
     </section>

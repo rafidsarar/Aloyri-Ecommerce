@@ -1,3 +1,4 @@
+import { AdminSubmitButton } from "@/components/admin/admin-submit-button";
 import {
   discardDraft,
   enableDraftPreview,
@@ -54,8 +55,8 @@ export default async function AdminPublishingPage({
   return (
     <AdminShell
       username={admin.username}
-      title="Draft, preview & publish"
-      subtitle="Website editors now work in a private draft. Nothing reaches customers until you explicitly publish it."
+      title="Publishing"
+      subtitle="Preview your saved changes, then publish them to your live website."
     >
       {query.published ? (
         <AdminNotice>Draft published successfully and saved to version history.</AdminNotice>
@@ -72,7 +73,7 @@ export default async function AdminPublishingPage({
         <AdminNotice tone="warning">{query.error}</AdminNotice>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <AdminCard>
           <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-black/40">
             Draft status
@@ -100,15 +101,7 @@ export default async function AdminPublishingPage({
           <p className="mt-3 text-3xl font-semibold">{versions.length}</p>
           <p className="mt-1 text-xs text-black/42">Stored publish snapshots</p>
         </AdminCard>
-        <AdminCard>
-          <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-black/40">
-            CRM fields
-          </p>
-          <p className="mt-3 text-lg font-semibold">Unaffected</p>
-          <p className="mt-1 text-xs text-black/42">
-            Price, stock and orders stay in CRM
-          </p>
-        </AdminCard>
+
       </div>
 
       <div className="mt-5 grid gap-5 xl:grid-cols-[1.15fr_.85fr]">
@@ -129,21 +122,21 @@ export default async function AdminPublishingPage({
               </form>
             ) : null}
             {canDiscard ? (
-              <form action={discardDraft}>
+              <details className="w-full border-t border-black/10 pt-4"><summary className="cursor-pointer text-xs text-black/60">Reset draft changes</summary><p className="my-3 text-xs text-black/60">This replaces your saved draft with the current live website.</p><form action={discardDraft}>
                 <button
                   disabled={!status.hasDraftChanges}
                   className="rounded-xl border border-black/10 px-5 py-3 text-sm font-semibold text-black/60 disabled:opacity-40"
                 >
                   Discard draft changes
                 </button>
-              </form>
+              </form></details>
             ) : null}
           </div>
 
           {canPublish ? (
             <form action={publishDraft} className="mt-5 grid gap-3 border-t border-black/7 pt-5">
               <label className="grid gap-1.5 text-sm font-medium">
-                Publish note
+                Publish note (optional)
                 <input
                   name="note"
                   maxLength={300}
@@ -151,12 +144,8 @@ export default async function AdminPublishingPage({
                   className="rounded-xl border border-black/10 px-4 py-3"
                 />
               </label>
-              <button
-                disabled={!status.hasDraftChanges}
-                className="w-fit rounded-xl bg-[#713a35] px-6 py-3.5 text-sm font-semibold text-white disabled:opacity-40"
-              >
-                Publish draft to live website
-              </button>
+              <AdminSubmitButton disabled={!status.hasDraftChanges} pendingLabel="Publishing…">Publish draft to live website</AdminSubmitButton>
+              {!status.hasDraftChanges ? <p className="text-xs text-black/60">Your draft matches the live website. Save an edit first to publish new changes.</p> : null}
             </form>
           ) : (
             <p className="mt-5 border-t border-black/7 pt-5 text-xs text-black/45">
@@ -226,8 +215,8 @@ export default async function AdminPublishingPage({
         )}
       </AdminCard>
 
-      <AdminCard className="mt-5">
-        <p className="text-sm font-semibold">Recent admin activity</p>
+      <details className="mt-5 rounded-xl border border-black/10 bg-white p-5">
+        <summary className="cursor-pointer text-sm font-semibold">Recent admin activity</summary>
         <div className="mt-4 divide-y divide-black/7">
           {audit.length ? (
             audit.map((event) => (
@@ -248,7 +237,7 @@ export default async function AdminPublishingPage({
             <p className="py-3 text-sm text-black/45">No audit events yet.</p>
           )}
         </div>
-      </AdminCard>
+      </details>
     </AdminShell>
   );
 }
