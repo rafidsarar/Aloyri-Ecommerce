@@ -50,3 +50,11 @@ jobs:
           name: admin-ui-previews
           path: test-results/admin-ui-*/**/*.png
           if-no-files-found: ignore
+
+      - name: Save storefront UI previews
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: storefront-ui-previews
+          path: test-results/storefront-*/**/*.png
+          if-no-files-found: ignore

@@ -12,8 +12,7 @@ const links = [
   ["Cleansers", "/category/cleansers"],
   ["Moisturizers", "/category/moisturizers"],
   ["Sunscreen", "/category/sunscreen"],
-  ["Track order", "/track-order"],
-  ["Account", "/account"],
+  ["Customer care", "/customer-care"],
 ];
 
 export function Header({ announcement }: { announcement: string }) {
@@ -78,8 +77,9 @@ export function Header({ announcement }: { announcement: string }) {
       </div>
 
       <header className="sticky top-0 z-40 border-b border-[#713a35]/10 bg-[#fffaf7]/92 backdrop-blur-xl">
-        <div className="shell grid h-[76px] grid-cols-[1fr_auto_1fr] items-center sm:h-[82px]">
-          <nav className="hidden items-center gap-4 xl:flex" aria-label="Primary navigation">
+        <div className="shell grid min-h-[72px] grid-cols-[auto_1fr_auto] items-center gap-3 py-3 lg:grid-cols-[auto_1fr_auto]">
+          <div className="hidden lg:block"><BrandMark /></div>
+          <nav className="hidden items-center justify-center gap-5 lg:flex" aria-label="Primary navigation">
             {links.map(([label, href]) => (
               <Link
                 key={label}
@@ -96,7 +96,7 @@ export function Header({ announcement }: { announcement: string }) {
             ref={menuButtonRef}
             type="button"
             onClick={() => setOpen(true)}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#713a35]/15 bg-white/55 xl:hidden"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#713a35]/15 bg-white/55 lg:hidden"
             aria-label="Open menu"
             aria-expanded={open}
             aria-controls="mobile-navigation"
@@ -104,12 +104,14 @@ export function Header({ announcement }: { announcement: string }) {
             <MenuIcon />
           </button>
 
-          <BrandMark />
+          <div className="justify-self-center lg:hidden"><BrandMark compact /></div>
 
           <div className="flex items-center justify-end gap-2">
+            <Link href="/track-order" className="hidden rounded-full px-3 py-2 text-xs font-medium text-[#713a35] xl:block">Track order</Link>
+            <Link href="/account" aria-current={current("/account") ? "page" : undefined} className="hidden rounded-full px-3 py-2 text-sm font-semibold text-[#713a35] sm:block">Account</Link>
             <Link
               href="/shop"
-              className="hidden h-11 w-11 items-center justify-center rounded-full border border-[#713a35]/15 bg-white/70 transition hover:bg-white sm:inline-flex"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#713a35]/15 bg-white/70 transition hover:bg-white"
               aria-label="Search products"
             >
               <SearchIcon />
@@ -126,7 +128,7 @@ export function Header({ announcement }: { announcement: string }) {
           role="dialog"
           aria-modal="true"
           aria-label="Navigation menu"
-          className="fixed inset-0 z-50 overflow-y-auto bg-[#fffaf7] p-6 xl:hidden"
+          className="fixed inset-0 z-50 overflow-y-auto bg-[#fffaf7] p-6 lg:hidden"
         >
           <div className="flex items-center justify-between">
             <BrandMark />
@@ -153,6 +155,11 @@ export function Header({ announcement }: { announcement: string }) {
                 {label}
               </Link>
             ))}
+          </nav>
+
+          <nav aria-label="Customer tools" className="mt-6 grid grid-cols-2 gap-3">
+            <Link href="/account" onClick={() => setOpen(false)} className="rounded-2xl bg-[#f5e8e2] p-4 text-sm font-semibold">My account</Link>
+            <Link href="/track-order" onClick={() => setOpen(false)} className="rounded-2xl bg-[#f5e8e2] p-4 text-sm font-semibold">Track order</Link>
           </nav>
 
           <div className="mt-8 rounded-3xl bg-[#f6e9e3] p-5">

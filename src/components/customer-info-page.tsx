@@ -40,9 +40,13 @@ export function CustomerInfoPage({
             </p>
           </div>
 
+          {sections.length > 1 ? <nav aria-label="On this page" className="mt-6 rounded-2xl border border-[#713a35]/12 bg-white p-5">
+            <p className="text-sm font-semibold">On this page</p>
+            <div className="mt-3 flex flex-wrap gap-3">{sections.map((section,index)=><a key={section.title} href={`#care-section-${index}`} className="text-sm text-[#713a35] underline underline-offset-4">{section.title}</a>)}</div>
+          </nav> : null}
           <div className="divide-y divide-[#713a35]/10">
-            {sections.map((section) => (
-              <section key={section.title} className="py-8 first:pt-10">
+            {sections.map((section,index) => (
+              <section id={`care-section-${index}`} key={section.title} className="py-8 first:pt-10">
                 <h2 className="display text-3xl">{section.title}</h2>
                 {section.paragraphs?.map((paragraph) => (
                   <p

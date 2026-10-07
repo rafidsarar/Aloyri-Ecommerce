@@ -161,3 +161,9 @@ a {
   .admin-sections { display: block; }
   .admin-main { padding: 2rem; }
 }
+
+/* Keep section links clear of the sticky storefront header. */
+#main-content [id] { scroll-margin-top: 6rem; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}

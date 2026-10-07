@@ -37,19 +37,18 @@ export default async function ShopPage({
 
   return (
     <main className="shell py-12 md:py-16">
-      <div className="grid gap-8 border-b border-[#713a35]/10 pb-10 lg:grid-cols-[1fr_.7fr] lg:items-end">
+      <div className="grid gap-4 border-b border-[#713a35]/10 pb-6 lg:grid-cols-[1fr_.7fr] lg:items-end">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/48">
-            The Aloyri edit
+            Skincare essentials
           </p>
-          <h1 className="display mt-3 text-6xl leading-[0.92] sm:text-7xl">
+          <h1 className="display mt-3 text-4xl leading-tight sm:text-5xl">
             Shop skincare.
           </h1>
         </div>
         <p className="max-w-xl text-sm leading-7 text-[#321f1c]/52 lg:justify-self-end">
-          Cleanse, moisturize and protect with a focused collection priced in
-          BDT. Search by product, brand, routine or texture, then refine by
-          category, stock and price.
+          Find your next cleanser, moisturizer or sunscreen. Search below,
+          choose a category, or filter by brand, price and availability.
         </p>
       </div>
 

@@ -112,3 +112,46 @@ test("security headers, noindex and API content-type boundary", async ({ page, r
   await page.goto("/cart");
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/i);
 });
+
+
+test("storefront structure keeps shopping and customer tools accessible on mobile", async ({ page }, testInfo) => {
+  await mockCommerce(page);
+  await page.goto("/shop");
+  const filters = page.locator("details").filter({has:page.getByText("Filter by brand, availability & price",{exact:true})});
+  await expect(filters).not.toHaveAttribute("open", "");
+  await filters.locator("summary").click();
+  await page.getByLabel("Brand",{exact:true}).selectOption("Simple");
+  await expect(page.getByText("Refreshing Facial Wash",{exact:true})).toBeVisible();
+  await expect(page.getByRole("link",{name:/Skin Aqua Super Moisture UV Gel/i})).toHaveCount(0);
+  await page.getByRole("button",{name:/Clear .* filters/}).click();
+  await expect(page.getByRole("link",{name:/Skin Aqua Super Moisture UV Gel/i})).toBeVisible();
+  await page.screenshot({path:testInfo.outputPath("shop-desktop.png"),fullPage:true});
+  await page.setViewportSize({width:390,height:844});
+  await expect(page.getByRole("link",{name:"Search products"})).toBeVisible();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({path:testInfo.outputPath("shop-mobile.png"),fullPage:true});
+  await page.getByRole("button",{name:"Open menu"}).click();
+  const menu=page.getByRole("dialog",{name:"Navigation menu"});
+  await expect(menu.getByRole("navigation",{name:"Customer tools"})).toBeVisible();
+  await menu.getByRole("link",{name:"My account",exact:true}).click();
+  await expect(page).toHaveURL(/account/);
+  await expect(page.getByRole("dialog",{name:"Navigation menu"})).toHaveCount(0);
+});
+
+
+test("homepage leads into categories and product details on desktop and mobile", async ({ page },testInfo) => {
+  await mockCommerce(page);
+  await page.goto("/");
+  await expect(page.getByRole("heading",{name:"Shop by category"})).toBeVisible();
+  await page.screenshot({path:testInfo.outputPath("home-desktop.png"),fullPage:true});
+  await page.setViewportSize({width:390,height:844});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({path:testInfo.outputPath("home-mobile.png"),fullPage:true});
+  await page.getByRole("link",{name:/Cleansers/}).first().click();
+  await expect(page).toHaveURL(/category\/cleansers/);
+  await page.getByRole("link",{name:/Refreshing Facial Wash/i}).click();
+  await expect(page.getByRole("navigation",{name:"Product information"})).toBeVisible();
+  await page.getByRole("link",{name:"Customer reviews",exact:true}).click();
+  await expect(page).toHaveURL(/#reviews$/);
+  await page.screenshot({path:testInfo.outputPath("product-mobile.png"),fullPage:true});
+});
