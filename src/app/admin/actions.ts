@@ -343,6 +343,8 @@ export async function saveHomepage(formData: FormData) {
       ideaEyebrow: text(formData, "ideaEyebrow", 120),
       ideaHeadline: text(formData, "ideaHeadline", 180),
       ideaCopy: text(formData, "ideaCopy", 600),
+      heroStyle: (["blush", "cream", "minimal"].includes(String(formData.get("heroStyle"))) ? String(formData.get("heroStyle")) : "blush") as "blush" | "cream" | "minimal",
+      showCategories: formData.get("showCategories") === "on",
     };
     return config;
   }, {
