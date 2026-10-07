@@ -1,6 +1,6 @@
 import "server-only";
 
-import { get, list, put } from "@vercel/blob";
+import { list, put } from "@vercel/blob";
 import {
   createStructuredJsonOnce,
   legacyBlobConfigured,
