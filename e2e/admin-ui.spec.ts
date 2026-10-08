@@ -143,7 +143,7 @@ test.describe("minimal admin interface", () => {
       console.log("ISOLATED CHECKOUT DIAGNOSTIC:", visiblePage.slice(0, 2500));
       throw error;
     }
-    await expect(page.getByLabel("Saved address")).toHaveValue("");
+    await expect(page.getByRole("combobox", { name: /^Saved address/ })).toHaveValue("");
     await expect(page.getByLabel("District")).toHaveValue("");
 
     const preview = page.getByText("View order summary");
@@ -151,7 +151,7 @@ test.describe("minimal admin interface", () => {
     await page.locator(".checkout-mobile-summary summary").click();
     await expect(page.locator(".checkout-mobile-summary")).toContainText("699");
 
-    await page.getByLabel("Saved address").selectOption("saved-home");
+    await page.getByRole("combobox", { name: /^Saved address/ }).selectOption("saved-home");
     await expect(page.getByLabel("District")).toHaveValue("Dhaka");
     await expect(page.getByRole("button", { name: /Inside Dhaka/ })).toHaveAttribute("aria-pressed", "true");
     await expect(page.getByRole("checkbox", { name: /Save this address to my account/ })).not.toBeChecked();
