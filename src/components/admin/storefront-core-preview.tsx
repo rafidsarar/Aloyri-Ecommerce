@@ -2,6 +2,7 @@ import Image from "next/image";
 import type { HomepageBlockId } from "@/lib/homepage-builder";
 import type { HomepageMerchandisingSection, StorefrontConfig } from "@/lib/storefront-admin-store";
 import { safeHomepageImagePath } from "@/lib/homepage-builder";
+import { getVerifiedProductContent } from "@/lib/product-verification";
 
 /** Public catalog fields only. No CRM, customer, payment or admin credentials reach the client. */
 export type BuilderPreviewProduct = {
@@ -40,8 +41,8 @@ function mediaSrc(path: string | undefined): string | null {
   return "/api/storefront-media/" + path.slice("media/".length);
 }
 
-function PreviewMedia({ path, alt, className = "" }: { path?: string; alt: string; className?: string }) {
-  const src = mediaSrc(path);
+function PreviewMedia({ path, alt, className = "", productId }: { path?: string; alt: string; className?: string; productId?: string }) {
+  const src = mediaSrc(path) || (productId ? getVerifiedProductContent(productId)?.photo?.src : null);
   if (!src) return null;
   return <div className={`relative overflow-hidden ${className}`}>
     <Image unoptimized src={src} alt={alt} fill sizes="(max-width: 768px) 70vw, 400px" className="object-cover" />
@@ -61,8 +62,8 @@ function ProductTiles({ products }: { products: BuilderPreviewProduct[] }) {
   return <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
     {products.slice(0, 6).map(product => <div key={product.id} className="min-w-0 overflow-hidden rounded-xl border border-[#eadbd4] bg-white">
       <div className="relative flex aspect-square items-center justify-center bg-[#f7ede8]">
-        {mediaSrc(product.mediaPath)
-          ? <PreviewMedia path={product.mediaPath} alt={product.name} className="absolute inset-0" />
+        {mediaSrc(product.mediaPath) || getVerifiedProductContent(product.id)?.photo?.src
+          ? <PreviewMedia path={product.mediaPath} productId={product.id} alt={product.name} className="absolute inset-0" />
           : <span className="px-2 text-center text-xs font-bold tracking-wide text-[#805951]">{product.brand}</span>}
       </div>
       <div className="p-3">
@@ -128,8 +129,8 @@ export function StorefrontCorePreview({ section, data }: { section: HomepageBloc
           </div>
           {!!home.featureChips.length && <div className="mt-6 flex flex-wrap gap-2">{home.featureChips.map((chip, i) => <span key={i} className="rounded-full border border-current/15 px-2 py-1 text-[10px]">{chip}</span>)}</div>}
         </div>
-        {mediaSrc(home.heroImagePath)
-          ? <PreviewMedia path={home.heroImagePath} alt={home.headline} className="min-h-48" />
+        {mediaSrc(home.heroImagePath) || products.some(p => p.id === home.heroProductId && (mediaSrc(p.mediaPath) || getVerifiedProductContent(p.id)?.photo?.src))
+          ? <PreviewMedia path={home.heroImagePath || products.find(p => p.id === home.heroProductId)?.mediaPath} productId={home.heroProductId} alt={home.headline} className="min-h-48" />
           : <div className="grid min-h-48 place-items-center bg-[#e2c0b5] text-xl font-semibold text-[#713a35]">ALOYRI</div>}
       </div>
     </div>;
@@ -146,7 +147,7 @@ export function StorefrontCorePreview({ section, data }: { section: HomepageBloc
         const product = products.find(p => p.category.toLowerCase() === category.toLowerCase() && p.availableStock > 0);
         return <div key={category} className="min-w-0 rounded-xl bg-[#f2e6df] p-2">
           <div className="relative mb-2 grid aspect-square place-items-center rounded-lg bg-[#e5cec4]">
-            {product && mediaSrc(product.mediaPath) ? <PreviewMedia path={product.mediaPath} alt={product.name} className="absolute inset-0" /> : <span className="text-xl text-[#713a35]">0{index + 1}</span>}
+            {product && (mediaSrc(product.mediaPath) || getVerifiedProductContent(product.id)?.photo?.src) ? <PreviewMedia path={product.mediaPath} productId={product.id} alt={product.name} className="absolute inset-0" /> : <span className="text-xl text-[#713a35]">0{index + 1}</span>}
           </div>
           <p className="text-xs font-semibold text-[#713a35]">{category === "Cleanser" ? "Cleansers" : category === "Moisturizer" ? "Moisturizers" : "Sunscreen"}</p>
         </div>;
