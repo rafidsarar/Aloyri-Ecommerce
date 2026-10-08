@@ -56,7 +56,7 @@ test.describe("customer storefront usability", () => {
     await page.goto("/checkout");
     await expect(page).toHaveURL(/\/account\/setup\?/);
     expect(new URL(page.url()).searchParams.get("next")).toBe("/checkout");
-    await expect(page.getByRole("link", { name: /continue with google/i }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /sign in with google/i }).first()).toBeVisible();
     await expect(page.getByRole("button", { name: /place cod order/i })).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   });
