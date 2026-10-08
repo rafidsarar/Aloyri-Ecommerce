@@ -127,7 +127,7 @@ export function RoutineFinder() {
               <div aria-hidden="true" className="mb-8 grid grid-cols-3 gap-2">
                 {[0, 1, 2].map((value) => <div key={value} className={"h-1.5 rounded-full " + (value <= question ? "store-discovery-progress-active" : "store-discovery-progress")} />)}
               </div>
-              <h2 className="display text-3xl sm:text-4xl">{question === 0 ? "How does your skin usually feel?" : question === 1 ? "What matters most in your routine?" : "Where would you like to start?"}</h2>
+              <h2 aria-live="polite" className="display text-3xl sm:text-4xl">{question === 0 ? "How does your skin usually feel?" : question === 1 ? "What matters most in your routine?" : "Where would you like to start?"}</h2>
               <p className="store-discovery-muted mt-3 text-sm leading-6">Choose the option that feels closest. You can change it later.</p>
               <div className="mt-7 grid gap-3">
                 {options.map((item) => (
@@ -154,7 +154,7 @@ export function RoutineFinder() {
           ) : (
             <>
               <p className="store-discovery-muted text-xs font-semibold uppercase tracking-[.2em]">Your skincare edit</p>
-              <h2 className="display mt-3 text-4xl">A simple place to begin.</h2>
+              <h2 aria-live="polite" className="display mt-3 text-4xl">A simple place to begin.</h2>
               <p className="store-discovery-muted mt-4 text-sm leading-7">
                 These are shopping suggestions based on Aloyri&apos;s published product descriptions and current stock.
                 They are not skin diagnoses or claims of suitability, and availability can change before checkout.
