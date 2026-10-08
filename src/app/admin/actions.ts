@@ -436,6 +436,28 @@ export async function saveVisualBuilder(formData: FormData) {
   await updateDraftStorefrontConfig(config => {
     if (selected === "home") {
       const layout = normalizeVisualLayout(requested, config.homepage.sectionOrder);
+      // Apply only the approved editable fields; never accept operational or commerce settings.
+      const rawCore = text(formData, "coreContent", 12000);
+      if (rawCore) {
+        let edited: Record<string, unknown>;
+        try { edited = JSON.parse(rawCore) as Record<string, unknown>; } catch { redirect("/admin/builder?error=invalid"); }
+        if (!edited || typeof edited !== "object" || Array.isArray(edited)) redirect("/admin/builder?error=invalid");
+        const stringFields = { eyebrow: 100, headline: 180, intro: 1200, primaryLabel: 70, secondaryLabel: 70, browseEyebrow: 90, browseTitle: 140, browseIntro: 600, browsePlaceholder: 100, categoriesEyebrow: 90, categoriesTitle: 140, categoriesIntro: 600, routineFinderHeadline: 180, routineFinderIntro: 1200, ideaEyebrow: 90, ideaHeadline: 180, ideaCopy: 1200 } as const;
+        for (const [key, limit] of Object.entries(stringFields)) {
+          if (typeof edited[key] !== "string" || edited[key].length > limit) redirect("/admin/builder?error=invalid");
+          (config.homepage as unknown as Record<string, unknown>)[key] = edited[key];
+        }
+        for (const key of ["primaryHref", "secondaryHref"] as const) {
+          if (typeof edited[key] !== "string" || !safeHref(edited[key], "")) redirect("/admin/builder?error=invalid");
+          config.homepage[key] = edited[key];
+        }
+        if (typeof edited.heroImagePath !== "string" || (edited.heroImagePath !== "" && !safeHomepageImagePath(edited.heroImagePath))) redirect("/admin/builder?error=invalid");
+        config.homepage.heroImagePath = edited.heroImagePath;
+        if (!["soft", "minimal", "contrast"].includes(String(edited.heroStyle)) || !["split", "stacked"].includes(String(edited.heroLayout)) || !["left", "center"].includes(String(edited.heroAlignment))) redirect("/admin/builder?error=invalid");
+        config.homepage.heroStyle = edited.heroStyle as typeof config.homepage.heroStyle;
+        config.homepage.heroLayout = edited.heroLayout as typeof config.homepage.heroLayout;
+        config.homepage.heroAlignment = edited.heroAlignment as typeof config.homepage.heroAlignment;
+      }
       config.homepage.visualLayout = layout;
       config.homepage.showHero = !layout.hiddenCore.includes("hero");
       config.homepage.showBrowse = !layout.hiddenCore.includes("browse");
