@@ -233,6 +233,10 @@ function parsePayload(value: unknown): WebsiteOrderPayload | null {
 }
 
 export async function POST(request: Request) {
+  const origin = request.headers.get("origin");
+  if (origin && origin !== new URL(request.url).origin) {
+    return response({ error: "Invalid request origin.", code: "INVALID_ORIGIN" }, 403);
+  }
   if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
     return response(
       { error: "Content-Type must be application/json.", code: "INVALID_CONTENT_TYPE" },
@@ -288,7 +292,11 @@ export async function POST(request: Request) {
   if (!customerSession || customerSession.session.method !== "google") {
     return response({ error: "Sign in with Google to place an order.", code: "AUTH_REQUIRED" }, 401);
   }
-  if (!customerSession.account.displayName.trim() || !customerSession.account.phone) {
+  if (
+    customerSession.account.displayName.trim().length < 2 ||
+    customerSession.account.displayName.trim().length > 80 ||
+    !isValidBangladeshPhone(customerSession.account.phone || "")
+  ) {
     return response({ error: "Complete your name and mobile number in your account before checkout.", code: "PROFILE_REQUIRED" }, 403);
   }
   if (customerSession) {
