@@ -93,3 +93,26 @@ test.describe("checkout and cart mobile usability", () => {
     });
   }
 });
+
+test("mobile customer cart cannot bypass required Google registration", async ({ page }) => {
+  await mockLiveCatalog(page);
+  await page.setViewportSize({ width: 375, height: 812 });
+  await addProductAndOpenCart(page);
+  await page.getByRole("link", { name: /Checkout/i }).last().click();
+  await expect(page).toHaveURL(/\\/account\\/setup\\?next=/);
+  await expect(page.getByRole("link", { name: "Sign in with Google" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+test("promotion quote rejects malformed cart quantities without CRM order side effects", async ({ request }) => {
+  const response = await request.post("/api/promotions/quote", {
+    data: {
+      items: [{ productId: "simple-wash", qty: -3 }],
+      deliveryZone: "inside-dhaka",
+      code: "TEST",
+    },
+  });
+  expect(response.status()).toBe(400);
+  const body = await response.json();
+  expect(body.code).toBe("INVALID_REQUEST");
+});
