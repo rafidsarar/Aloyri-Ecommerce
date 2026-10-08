@@ -204,12 +204,12 @@ export function LiveProductPage({
           <p className="mt-7 text-xs font-semibold uppercase tracking-[0.2em] text-[#713a35]/48">
             {product.brand}
           </p>
-          <h1 className="display mt-3 text-5xl leading-[0.94] sm:text-6xl">
+          <h1 className="display mt-3 break-words text-3xl leading-tight sm:text-5xl lg:text-6xl">
             {product.name}
           </h1>
           <ProductRatingSummary data={reviewData} />
 
-          <div className="mt-6 flex items-end justify-between gap-5 border-b border-[#713a35]/10 pb-7">
+          <div className="mt-6 flex flex-wrap items-end justify-between gap-3 border-b border-[#713a35]/10 pb-7">
             <div>
               <div className="flex items-baseline gap-2">
                 <p className="text-xl font-semibold">{formatPrice(salePrice)}</p>
@@ -242,6 +242,11 @@ export function LiveProductPage({
             </p>
           </div>
 
+          <div className="mt-5 rounded-2xl border border-[#713a35]/10 bg-white/70 p-4 text-xs leading-6 text-[#321f1c]/70">
+            <p className="font-semibold text-[#321f1c]">Delivery across Bangladesh</p>
+            <p>Inside Dhaka ৳80 · Outside Dhaka ৳150. Your final delivery charge is shown at checkout.</p>
+            <Link href="/shipping-delivery" className="inline-flex min-h-10 items-center font-semibold text-[#713a35] underline underline-offset-4">Delivery information</Link>
+          </div>
           <div className="mt-7">
             <AddToCart productId={product.id} />
             <ProductPreferenceButtons productId={product.id} />
@@ -539,7 +544,7 @@ export function LiveProductPage({
 
       <div className="h-24 lg:hidden" aria-hidden="true" />
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#713a35]/10 bg-[#fffaf7]/95 px-3 pt-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] shadow-[0_-14px_40px_rgba(50,31,28,.09)] backdrop-blur lg:hidden">
-        <div className="mx-auto grid max-w-xl grid-cols-[1fr_160px] items-center gap-3">
+        <div className="mx-auto grid max-w-xl grid-cols-[minmax(0,1fr)_minmax(132px,160px)] items-center gap-3">
           <div className="min-w-0">
             <p className="truncate text-xs font-semibold">{product.name}</p>
             <p className="mt-0.5 text-xs text-[#713a35]">
