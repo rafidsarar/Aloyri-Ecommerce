@@ -125,10 +125,10 @@ export function CustomerAccountHub({
         </div>
       ) : null}
 
-      <div className="grid items-start gap-6 lg:grid-cols-[245px_minmax(0,1fr)] lg:gap-9">
-        <aside className="account-panel rounded-[1.4rem] border p-3 lg:sticky lg:top-28 lg:p-4">
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[245px_minmax(0,1fr)] lg:gap-9">
+        <aside className="account-panel min-w-0 w-full overflow-hidden rounded-[1.4rem] border p-3 lg:sticky lg:top-28 lg:p-4">
           <p className="account-overline px-3 pb-2 pt-2">Account menu</p>
-          <nav aria-label="Account sections" className="account-section-navigation flex gap-1 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible">
+          <nav aria-label="Account sections" className="account-section-navigation flex w-full min-w-0 max-w-full gap-1 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible">
             {sections.map((item) => (
               <button
                 key={item.id}
