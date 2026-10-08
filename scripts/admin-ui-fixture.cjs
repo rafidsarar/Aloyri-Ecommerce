@@ -10,7 +10,7 @@ fs.mkdirSync(path.join(temp, 'components/admin'), { recursive: true });
 fs.symlinkSync(path.join(root, 'node_modules'), path.join(temp, 'node_modules'), 'dir');
 fs.writeFileSync(path.join(temp, 'package.json'), JSON.stringify({ private: true, dependencies: { next: '16.3.8', react: '19.3.0', 'react-dom': '19.3.0' } }));
 fs.writeFileSync(path.join(temp, 'tsconfig.json'), JSON.stringify({ compilerOptions: { jsx: 'react-jsx', moduleResolution: 'bundler', paths: { '@/*': ['./*'] } } }));
-fs.writeFileSync(path.join(temp, 'next.config.js'), `module.exports = { turbopack: { root: ${JSON.stringify(temp)} }, allowedDevOrigins: ['127.0.0.1'] };`);
+fs.writeFileSync(path.join(temp, 'next.config.js'), `module.exports = { turbopack: { root: ${JSON.stringify(temp)} }, allowedDevOrigins: ['127.0.0.1'], images: { unoptimized: true } };`);
 fs.copyFileSync(path.join(root, 'postcss.config.mjs'), path.join(temp, 'postcss.config.mjs'));
 fs.copyFileSync(path.join(root, 'src/app/globals.css'), path.join(temp, 'app/globals.css'));
 for (const file of ['admin-navigation.tsx', 'admin-submit-button.tsx']) fs.copyFileSync(path.join(root, 'src/components/admin', file), path.join(temp, 'components/admin', file));
@@ -29,8 +29,8 @@ fs.mkdirSync(path.join(temp, 'app/admin/products/item'), { recursive: true });
 fs.writeFileSync(path.join(temp, 'app/admin/products/item/page.tsx'), fixturePage);
 // Account UI preview uses the real hub and aftercare components with fixture API data.
 fs.mkdirSync(path.join(temp, 'lib'), {recursive:true});
-for(const file of ['customer-account-hub.tsx','customer-auth-panel.tsx','customer-auth-landing.tsx','customer-post-purchase-center.tsx'])fs.copyFileSync(path.join(root,'src/components',file),path.join(temp,'components',file));
-for(const file of ['catalog.ts','product-preferences.ts','volatile-storage.ts'])fs.copyFileSync(path.join(root,'src/lib',file),path.join(temp,'lib',file));
+for(const file of ['customer-account-hub.tsx','customer-auth-panel.tsx','customer-auth-landing.tsx','customer-post-purchase-center.tsx','checkout-client.tsx','catalog-provider.tsx','icons.tsx','product-media.tsx','product-artwork.tsx'])fs.copyFileSync(path.join(root,'src/components',file),path.join(temp,'components',file));
+for(const file of ['catalog.ts','product-preferences.ts','volatile-storage.ts','checkout.ts','cart.ts','promotions.ts','analytics.ts','product-verification.ts'])fs.copyFileSync(path.join(root,'src/lib',file),path.join(temp,'lib',file));
 fs.writeFileSync(path.join(temp,'components/saved-products-client.tsx'),'export function SavedProductsClient(){return <section><h2>Your account wishlist</h2></section>}');
 fs.mkdirSync(path.join(temp,'app/account'),{recursive:true});
 fs.writeFileSync(path.join(temp,'app/account/page.tsx'),'import {CustomerAccountHub} from "@/components/customer-account-hub"; export default function Page(){return <CustomerAccountHub authenticated={true} displayName="Preview customer" profileComplete={true}/>}');
@@ -39,6 +39,14 @@ fs.copyFileSync(path.join(root,'src/components/admin/storefront-layout-fields.ts
 fs.copyFileSync(path.join(root,'src/lib/storefront-presentation.ts'),path.join(temp,'lib/storefront-presentation.ts'));
 fs.mkdirSync(path.join(temp,'app/admin/settings'),{recursive:true});
 fs.writeFileSync(path.join(temp,'app/admin/settings/page.tsx'),`import {AdminShell} from "@/components/admin/admin-shell"; import {StorefrontLayoutFields} from "@/components/admin/storefront-layout-fields"; import {defaultPresentation} from "@/lib/storefront-presentation"; export default function Page(){return <AdminShell username="preview" title="Store settings" subtitle="Customize the storefront"><form><StorefrontLayoutFields value={defaultPresentation}/></form></AdminShell>}`);
+// Isolated checkout renderer: uses the real client component but a disposable
+// Next.js app and mocked HTTP endpoints. Never bypasses production authentication.
+fs.mkdirSync(path.join(temp, 'app/test-cart'), {recursive:true});
+fs.writeFileSync(path.join(temp,'app/test-cart/page.tsx'),
+  '"use client"; import {useRouter} from "next/navigation"; import {writeCart} from "@/lib/cart"; export default function Page(){const router=useRouter();return <main className="shell py-12"><h1 className="text-3xl">Checkout fixture cart</h1><button onClick={()=>{writeCart([{productId:"simple-wash",qty:1}]);router.push("/checkout");}} className="mt-8 rounded-full bg-[#713a35] px-5 py-3 text-white">Start fixture checkout</button></main>}');
+fs.mkdirSync(path.join(temp, 'app/checkout'), {recursive:true});
+fs.writeFileSync(path.join(temp,'app/checkout/page.tsx'),
+  '"use client"; import {useEffect,useState} from "react"; import {CatalogProvider} from "@/components/catalog-provider"; import {CheckoutClient} from "@/components/checkout-client"; import {writeCart} from "@/lib/cart"; export default function Page(){const [ready,setReady]=useState(false);useEffect(()=>{writeCart([{productId:"simple-wash",qty:1}]);setReady(true);},[]);return ready?<CatalogProvider><CheckoutClient/></CatalogProvider>:<main className="shell py-12"><p role="status">Preparing isolated checkout…</p></main>;}');
 const child = spawn(process.execPath, [path.join(root, 'node_modules/next/dist/bin/next'), 'dev', '--webpack', '--hostname', '127.0.0.1', '--port', process.argv[2] || '3100'], { cwd: temp, stdio: 'inherit' });
 function stop(){ child.kill('SIGTERM'); }
 process.on('SIGTERM', stop); process.on('SIGINT', stop);

@@ -202,7 +202,8 @@ export function CheckoutClient() {
   const [customerAccount, setCustomerAccount] =
     useState<CheckoutAccount | null>(null);
   const [selectedAddressId, setSelectedAddressId] = useState("");
-  const [saveAddressToAccount, setSaveAddressToAccount] = useState(true);
+  const [saveAddressToAccount, setSaveAddressToAccount] = useState(false);
+  const [showOptionalDelivery, setShowOptionalDelivery] = useState(false);
   const checkoutTracked = useRef(false);
 
   const loadStoreStatus = useCallback(async () => {
@@ -270,6 +271,7 @@ export function CheckoutClient() {
             const restored = safeDraft(parsed.draft ?? parsed);
             if (restored) {
               setDraft(restored);
+              if (restored.landmark || restored.notes) setShowOptionalDelivery(true);
             }
           }
         }
@@ -338,17 +340,12 @@ export function CheckoutClient() {
             account.displayName ||
             "",
           phone: current.phone || account.phone || first?.phone || "",
-          district: current.district || first?.district || "",
-          area: current.area || first?.area || "",
-          address: current.address || first?.address || "",
-          landmark: current.landmark || first?.landmark || "",
-          deliveryZone:
-            current.deliveryZone ||
-            (first
-              ? first.district.trim().toLowerCase() === "dhaka"
-                ? "inside-dhaka"
-                : "outside-dhaka"
-              : ""),
+          // Delivery stays customer-selected. Do not silently use the first saved address.
+          district: current.district,
+          area: current.area,
+          address: current.address,
+          landmark: current.landmark,
+          deliveryZone: current.deliveryZone,
         }));
       })
       .catch(() => undefined);
@@ -546,11 +543,20 @@ export function CheckoutClient() {
 
   function applySavedAddress(addressId: string) {
     setSelectedAddressId(addressId);
-    if (!customerAccount || !addressId) return;
+    if (!customerAccount) return;
+    if (!addressId) {
+      setDraft((current) => ({
+        ...current, district: "", area: "", address: "", landmark: "", deliveryZone: "",
+      }));
+      setErrors({});
+      setSubmitFailure(null);
+      return;
+    }
     const address = customerAccount.savedAddresses.find(
       (row) => row.id === addressId,
     );
     if (!address) return;
+    if (address.landmark) setShowOptionalDelivery(true);
     setDraft((current) => ({
       ...current,
       fullName: address.recipientName,
@@ -570,7 +576,7 @@ export function CheckoutClient() {
   }
 
   async function saveCheckoutAddress() {
-    if (!customerAccount || !saveAddressToAccount) return;
+    if (!customerAccount || !saveAddressToAccount || customerAccount.savedAddresses.length >= 5) return;
 
     const phone = normalizeBangladeshPhone(draft.phone);
     const candidate = {
@@ -606,10 +612,7 @@ export function CheckoutClient() {
       ...(candidate.landmark ? { landmark: candidate.landmark } : {}),
     };
 
-    const nextAddresses = [
-      ...customerAccount.savedAddresses,
-      savedAddress,
-    ].slice(-5);
+    const nextAddresses = [...customerAccount.savedAddresses, savedAddress];
 
     const response = await fetch("/api/customer/account", {
       method: "PUT",
@@ -663,7 +666,9 @@ export function CheckoutClient() {
     const field = Object.keys(next)[0] as keyof CheckoutDraft | undefined;
     if (!field) return;
     window.requestAnimationFrame(() => {
-      document.querySelector<HTMLElement>(`[data-checkout-field="${field}"]`)?.focus();
+      const control = document.querySelector<HTMLElement>(`[data-checkout-field="${field}"]`);
+      control?.scrollIntoView({ block: "center", behavior: "smooth" });
+      control?.focus({ preventScroll: true });
     });
   }
 
@@ -704,6 +709,14 @@ export function CheckoutClient() {
         checkoutStep: "details",
         errorCode: failure.code,
         totalBdt: quotedTotal,
+      });
+      return;
+    }
+
+    if (promotionLoading || Boolean(appliedCode && promotionError)) {
+      setSubmitFailure({
+        message: "Please finish checking the promotion code or remove it before reviewing.",
+        code: "PROMOTION_NOT_READY", recoverable: true, cartAction: false, uncertain: false,
       });
       return;
     }
@@ -969,9 +982,9 @@ export function CheckoutClient() {
     : "Not selected";
 
   return (
-    <main className="shell min-w-0 pb-36 pt-6 sm:pt-8 md:pb-16 md:pt-12">
-      <nav aria-label="Checkout progress" className="mb-8">
-        <ol className="grid grid-cols-3 gap-2 rounded-[1.2rem] border border-[#713a35]/10 bg-white/55 p-2 text-center text-[10px] font-semibold uppercase tracking-[0.12em] sm:max-w-xl">
+    <main className="shell min-w-0 pb-36 pt-6 sm:pt-8 lg:pb-16 lg:pt-12">
+      <nav aria-label="Checkout progress" className="mb-6 sm:mb-8">
+        <ol className="grid grid-cols-3 gap-1.5 rounded-[1.2rem] border border-[#713a35]/10 bg-white/55 p-1.5 text-center text-[10px] font-semibold uppercase tracking-[0.08em] sm:max-w-xl sm:gap-2 sm:p-2 sm:tracking-[0.12em]">
           <li>
             <Link
               href="/cart"
@@ -1024,7 +1037,7 @@ export function CheckoutClient() {
           </p>
         </div>
         <div className="rounded-full bg-[#f5e8e2] px-4 py-2 text-xs font-semibold text-[#713a35]">
-          {itemCount} {itemCount === 1 ? "item" : "items"} · {formatPrice(payableTotal)}
+          {itemCount} {itemCount === 1 ? "item" : "items"} · {promotionLoading ? "Updating total…" : formatPrice(quotedTotal)}
         </div>
       </div>
 
@@ -1037,27 +1050,56 @@ export function CheckoutClient() {
         </p>
       ) : null}
 
-      {step === "details" && Object.keys(errors).length > 0 ? (
-        <div role="alert" aria-live="assertive" className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-          <p className="font-semibold">Please check your delivery details</p>
-          <p className="mt-1">Correct the highlighted fields before reviewing your order.</p>
-        </div>
+      {step === "details" ? (
+        <details className="checkout-mobile-summary mb-6 overflow-hidden rounded-[1.3rem] border border-[#713a35]/15 bg-[#f5e8e2] lg:hidden">
+          <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 p-4 text-sm font-semibold">
+            <span>View order summary · {itemCount} {itemCount === 1 ? "item" : "items"}</span>
+            <span className="whitespace-nowrap">{promotionLoading ? "Updating…" : formatPrice(quotedTotal)} <span aria-hidden="true">⌄</span></span>
+          </summary>
+          <div className="border-t border-[#713a35]/10 px-4 pb-4 pt-3 text-sm">
+            {rows.map((row) => (
+              <div key={row.productId} className="flex items-start justify-between gap-3 py-2 text-xs">
+                <span className="min-w-0 flex-1 break-words">{row.product?.name || "Product"} × {row.qty}</span>
+                <span className="shrink-0 font-semibold">{formatPrice(row.liveProduct ? salePriceFor(row.liveProduct) * row.qty : 0)}</span>
+              </div>
+            ))}
+            <div className="mt-2 flex justify-between border-t border-[#713a35]/10 pt-3">
+              <span>Products</span><span>{formatPrice(quotedSubtotal)}</span>
+            </div>
+            {quotedDiscount > 0 ? (
+              <div className="mt-2 flex justify-between text-[#713a35]"><span>Discount</span><span>−{formatPrice(quotedDiscount)}</span></div>
+            ) : null}
+            <div className="mt-2 flex justify-between">
+              <span>Delivery</span><span>{draft.deliveryZone ? formatPrice(quotedDelivery) : "Choose your zone"}</span>
+            </div>
+            <Link href="/cart" className="mt-4 inline-flex min-h-11 items-center font-semibold text-[#713a35] underline underline-offset-4">
+              Edit items in cart →
+            </Link>
+          </div>
+        </details>
       ) : null}
 
       {step === "details" ? (
         <form
           id="checkout-details-form"
           onSubmit={reviewOrder}
-          className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,390px)] lg:gap-12"
+          className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_390px] lg:gap-12"
           noValidate
         >
           <div className="min-w-0 space-y-6">
-            <section className="rounded-[1.5rem] border border-[#713a35]/10 bg-white/60 p-5 sm:p-7">
+            {Object.keys(errors).length ? (
+              <div role="alert" className="rounded-[1.2rem] border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+                <p className="font-semibold">Please check your delivery details.</p>
+                <p className="mt-1 text-xs leading-6">We highlighted {Object.keys(errors).length} {Object.keys(errors).length === 1 ? "field" : "fields"} below. Your cart and details are still here.</p>
+              </div>
+            ) : null}
+            <section className="rounded-[1.5rem] border border-[#713a35]/10 bg-white/60 p-4 sm:p-7">
               <div className="mb-6">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#713a35]/48">
                   Contact
                 </p>
-                <h2 className="display mt-2 text-3xl">Who should receive the order?</h2>
+                <h2 className="display mt-2 text-2xl sm:text-3xl">Who should receive the order?</h2>
+                <p className="mt-2 text-xs leading-6 text-[#321f1c]/55">Your Google account helps keep order history private. Delivery contact details can be different.</p>
               </div>
 
               {customerAccount ? (
@@ -1085,7 +1127,7 @@ export function CheckoutClient() {
 
               <div className="grid gap-5 sm:grid-cols-2">
                 <label className="text-sm font-medium">
-                  Full name
+                  Full name <span aria-hidden="true">*</span>
                   <input
                     data-checkout-field="fullName"
                     value={draft.fullName}
@@ -1093,6 +1135,7 @@ export function CheckoutClient() {
                     className={inputClass}
                     placeholder="Customer name"
                     autoComplete="name"
+                    maxLength={120}
                     aria-invalid={Boolean(errors.fullName)}
                     aria-describedby={errors.fullName ? "fullName-error" : undefined}
                   />
@@ -1104,11 +1147,13 @@ export function CheckoutClient() {
                 </label>
 
                 <label className="text-sm font-medium">
-                  Mobile number
+                  Mobile number <span aria-hidden="true">*</span>
                   <input
                     data-checkout-field="phone"
                     value={draft.phone}
                     onChange={(event) => setField("phone", event.target.value)}
+                    type="tel"
+                    maxLength={30}
                     className={inputClass}
                     placeholder="01XXXXXXXXX"
                     inputMode="tel"
@@ -1197,7 +1242,8 @@ export function CheckoutClient() {
                 <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#713a35]/48">
                   Delivery
                 </p>
-                <h2 className="display mt-2 text-3xl">Where should it go?</h2>
+                <h2 className="display mt-2 text-2xl sm:text-3xl">Where should it go?</h2>
+                <p className="mt-2 text-xs leading-6 text-[#321f1c]/55">Choose a saved address or enter the delivery location. Delivery cost updates when you select the zone.</p>
               </div>
 
               {customerAccount?.savedAddresses.length ? (
@@ -1208,7 +1254,7 @@ export function CheckoutClient() {
                     onChange={(event) => applySavedAddress(event.target.value)}
                     className={inputClass}
                   >
-                    <option value="">Use current checkout details</option>
+                    <option value="">Enter a different delivery address</option>
                     {customerAccount.savedAddresses.map((address) => (
                       <option key={address.id} value={address.id}>
                         {address.label} · {address.recipientName} · {address.area}
@@ -1222,7 +1268,7 @@ export function CheckoutClient() {
               ) : null}
 
               <fieldset>
-                <legend className="text-sm font-medium">Delivery zone</legend>
+                <legend className="text-sm font-medium">Delivery zone <span aria-hidden="true">*</span></legend>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   {(
                     [
@@ -1239,7 +1285,7 @@ export function CheckoutClient() {
                           value === "inside-dhaka" ? "deliveryZone" : undefined
                         }
                         aria-pressed={active}
-                        onClick={() => setField("deliveryZone", value)}
+                        onClick={() => { setSelectedAddressId(""); setField("deliveryZone", value); }}
                         className={`min-h-20 rounded-[1rem] border p-4 text-left transition ${
                           active
                             ? "border-[#713a35] bg-[#f7ebe6]"
@@ -1265,11 +1311,18 @@ export function CheckoutClient() {
 
               <div className="mt-5 grid gap-5 sm:grid-cols-2">
                 <label className="text-sm font-medium">
-                  District
+                  District <span aria-hidden="true">*</span>
                   <select
                     data-checkout-field="district"
                     value={draft.district}
-                    onChange={(event) => setField("district", event.target.value)}
+                    onChange={(event) => {
+                      const district = event.target.value;
+                      setSelectedAddressId("");
+                      setField("district", district);
+                      if (!draft.deliveryZone && district) {
+                        setField("deliveryZone", district === "Dhaka" ? "inside-dhaka" : "outside-dhaka");
+                      }
+                    }}
                     className={inputClass}
                     autoComplete="address-level1"
                     aria-invalid={Boolean(errors.district)}
@@ -1290,14 +1343,15 @@ export function CheckoutClient() {
                 </label>
 
                 <label className="text-sm font-medium">
-                  Area / thana / upazila
+                  Area / thana / upazila <span aria-hidden="true">*</span>
                   <input
                     data-checkout-field="area"
                     value={draft.area}
-                    onChange={(event) => setField("area", event.target.value)}
+                    onChange={(event) => { setSelectedAddressId(""); setField("area", event.target.value); }}
                     className={inputClass}
                     placeholder="Area or thana"
                     autoComplete="address-level2"
+                    maxLength={160}
                     aria-invalid={Boolean(errors.area)}
                     aria-describedby={errors.area ? "area-error" : undefined}
                   />
@@ -1310,14 +1364,15 @@ export function CheckoutClient() {
               </div>
 
               <label className="mt-5 block text-sm font-medium">
-                Full delivery address
+                Full delivery address <span aria-hidden="true">*</span>
                 <textarea
                   data-checkout-field="address"
                   value={draft.address}
-                  onChange={(event) => setField("address", event.target.value)}
+                  onChange={(event) => { setSelectedAddressId(""); setField("address", event.target.value); }}
                   className={textareaClass}
                   placeholder="House / road / building / village and delivery details"
                   autoComplete="street-address"
+                  maxLength={500}
                   aria-invalid={Boolean(errors.address)}
                   aria-describedby={errors.address ? "address-error" : undefined}
                 />
@@ -1328,12 +1383,19 @@ export function CheckoutClient() {
                 ) : null}
               </label>
 
-              <div className="mt-5 grid gap-5 sm:grid-cols-2">
+              <button type="button" aria-expanded={showOptionalDelivery}
+                onClick={() => setShowOptionalDelivery((value) => !value)}
+                className="mt-6 flex min-h-11 w-full items-center justify-between border-t border-[#713a35]/10 pt-4 text-left text-sm font-semibold text-[#713a35]">
+                Add a landmark or delivery instruction (optional)
+                <span aria-hidden="true">{showOptionalDelivery ? "−" : "+"}</span>
+              </button>
+              {showOptionalDelivery ? <div className="mt-3 grid gap-5 sm:grid-cols-2">
                 <label className="text-sm font-medium">
                   Landmark <span className="font-normal text-[#321f1c]/38">(optional)</span>
                   <input
                     value={draft.landmark}
-                    onChange={(event) => setField("landmark", event.target.value)}
+                    onChange={(event) => { setSelectedAddressId(""); setField("landmark", event.target.value); }}
+                    maxLength={200}
                     className={inputClass}
                     placeholder="Nearby landmark"
                   />
@@ -1344,25 +1406,26 @@ export function CheckoutClient() {
                   <input
                     value={draft.notes}
                     onChange={(event) => setField("notes", event.target.value)}
+                    maxLength={1000}
                     className={inputClass}
                     placeholder="Useful delivery instruction"
                   />
                 </label>
-              </div>
+              </div> : null}
 
               {customerAccount ? (
                 <label className="mt-5 flex items-start gap-3 rounded-[1rem] border border-[#713a35]/10 bg-[#fffaf7] p-4 text-xs leading-5 text-[#321f1c]/55">
                   <input
                     type="checkbox"
                     checked={saveAddressToAccount}
-                    onChange={(event) =>
-                      setSaveAddressToAccount(event.target.checked)
-                    }
+                    disabled={customerAccount.savedAddresses.length >= 5}
+                    onChange={(event) => setSaveAddressToAccount(event.target.checked)}
                     className="mt-0.5"
                   />
                   <span>
-                    Save these delivery details to my Google-based Aloyri account
-                    for faster checkout next time.
+                    {customerAccount.savedAddresses.length >= 5
+                      ? "You already have five saved addresses. Manage them in your account to save a different one."
+                      : "Save this address to my account for my next checkout (optional). Existing saved addresses are never replaced."}
                   </span>
                 </label>
               ) : null}
@@ -1373,7 +1436,7 @@ export function CheckoutClient() {
                 <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#713a35]/48">
                   Payment
                 </p>
-                <h2 className="display mt-2 text-3xl">How will you pay?</h2>
+                <h2 className="display mt-2 text-2xl sm:text-3xl">How will you pay?</h2>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-3">
@@ -1443,6 +1506,11 @@ export function CheckoutClient() {
               ))}
             </div>
 
+            <p className="mt-5 rounded-[.9rem] border border-[#713a35]/10 bg-white/60 p-3 text-xs leading-6 text-[#321f1c]/65">
+              {draft.deliveryZone
+                ? `Delivery estimate: ${formatPrice(quotedDelivery)} for ${zoneLabel}. The final shipping amount is confirmed before you place the order.`
+                : "Choose your delivery zone above to see the shipping charge before you review."}
+            </p>
             <div className="mt-6 rounded-[1rem] border border-[#713a35]/10 bg-white/65 p-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
@@ -1532,8 +1600,8 @@ export function CheckoutClient() {
 
             <button
               type="submit"
-              disabled={!orderingStatusLoaded || !orderingEnabled}
-              className="mt-6 hidden w-full items-center justify-center gap-3 rounded-full bg-[#713a35] px-6 py-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:bg-[#713a35]/30 lg:inline-flex"
+              disabled={!orderingStatusLoaded || !orderingEnabled || promotionLoading || Boolean(appliedCode && promotionError)}
+              className="mt-6 hidden min-h-12 w-full items-center justify-center gap-3 rounded-full bg-[#713a35] px-6 py-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:bg-[#713a35]/30 lg:inline-flex"
             >
               Continue to review <ArrowIcon />
             </button>
@@ -1543,7 +1611,7 @@ export function CheckoutClient() {
             </p>
           </aside>
 
-          <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#713a35]/10 bg-[#fffaf7]/96 p-3 backdrop-blur lg:hidden">
+          <div className="checkout-mobile-bar fixed inset-x-0 bottom-0 z-30 border-t border-[#713a35]/10 bg-[#fffaf7]/96 p-3 backdrop-blur lg:hidden">
             <div className="mx-auto flex max-w-xl items-center gap-3">
               <div className="min-w-0 flex-1 pl-1">
                 <p className="text-[10px] uppercase tracking-[0.12em] text-[#321f1c]/40">Estimated total</p>
@@ -1560,8 +1628,8 @@ export function CheckoutClient() {
           </div>
         </form>
       ) : (
-        <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,390px)] lg:gap-12">
-          <div className="min-w-0 space-y-5">
+        <div className="grid gap-8 lg:grid-cols-[1fr_390px] lg:gap-12">
+          <div className="space-y-5">
             <section className="rounded-[1.5rem] border border-[#713a35]/10 bg-white/65 p-5 sm:p-7">
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -1658,7 +1726,7 @@ export function CheckoutClient() {
                       </p>
                     </div>
                     <p className="text-xs font-semibold">
-                      {formatPrice((row.liveProduct?.price || 0) * row.qty)}
+                      {formatPrice(row.liveProduct ? salePriceFor(row.liveProduct) * row.qty : 0)}
                     </p>
                   </div>
                 ))}
@@ -1792,21 +1860,6 @@ export function CheckoutClient() {
           </div>
         </div>
       )}
-      {step === "details" ? (
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#713a35]/10 bg-[#fffaf7]/95 px-4 py-3 shadow-[0_-6px_24px_rgba(50,31,28,0.06)] backdrop-blur lg:hidden">
-          <div className="mx-auto flex max-w-xl items-center gap-3">
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-medium text-[#321f1c]/60">Estimated total</p>
-              <p className="truncate text-sm font-bold text-[#321f1c]">{formatPrice(quotedTotal)}</p>
-            </div>
-            <button type="submit" form="checkout-details-form"
-              disabled={!orderingStatusLoaded || !orderingEnabled}
-              className="min-h-12 rounded-full bg-[#713a35] px-6 text-sm font-semibold text-white disabled:bg-[#713a35]/30">
-              Review order <span aria-hidden="true">→</span>
-            </button>
-          </div>
-        </div>
-      ) : null}
     </main>
   );
 }

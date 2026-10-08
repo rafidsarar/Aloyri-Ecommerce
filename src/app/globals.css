@@ -397,3 +397,17 @@ body[data-storefront-theme="sand"] {
   [data-storefront-columns="3"] .storefront-product-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
   [data-storefront-columns="4"] .storefront-product-grid { grid-template-columns: repeat(4,minmax(0,1fr)); }
 }
+/* Checkout and cart: comfortable safe-area actions and narrow-device layouts. */
+.checkout-mobile-bar {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -9px 26px rgba(113, 58, 53, 0.07);
+}
+.checkout-mobile-bar a,
+.checkout-mobile-bar button { -webkit-tap-highlight-color: transparent; }
+.checkout-mobile-bar :disabled { cursor: not-allowed; }
+.checkout-mobile-summary summary::-webkit-details-marker { display: none; }
+.checkout-mobile-summary summary:focus-visible { outline: 3px solid var(--store-accent); outline-offset: -3px; }
+@media (max-width: 639px) {
+  .checkout-mobile-bar { font-size: 14px; }
+  .checkout-mobile-bar button, .checkout-mobile-bar a { flex-shrink: 0; }
+}
