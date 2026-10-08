@@ -21,6 +21,7 @@ import {
 import { rateAllowed } from "@/lib/request-rate-limit";
 import {
   restoreStorefrontVersionToDraft,
+  readDraftStorefrontConfig,
   updateDraftStorefrontConfig,
   uploadStorefrontMedia,
   type InfoPageContent,
