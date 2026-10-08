@@ -64,7 +64,11 @@ export function ShopDiscoveryMenu() {
   }, [open]);
 
   return (
-    <div ref={wrapper} className="relative">
+    <div ref={wrapper} className="relative"
+      onBlur={(event) => {
+        const next = event.relatedTarget;
+        if (!(next instanceof Node) || !event.currentTarget.contains(next)) setOpen(false);
+      }}>
       <button
         type="button"
         className="store-nav-link inline-flex min-h-11 items-center gap-1.5 text-[13px] transition"
