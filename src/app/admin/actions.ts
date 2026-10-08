@@ -349,6 +349,22 @@ export async function saveHomepage(formData: FormData) {
       routineFinderHeadline: text(formData, "routineFinderHeadline", 140),
       routineFinderIntro: text(formData, "routineFinderIntro", 420),
       heroLayout: formData.get("heroLayout") === "stacked" ? "stacked" : "split",
+      showCategories: formData.get("showCategories") === "on",
+      showBrandStory: formData.get("showBrandStory") === "on",
+      promoPlacement: formData.get("promoPlacement") === "after-products" ? "after-products" : "before-products",
+      promoBanners: Array.from({ length: 2 }, (_, index) => {
+        const prefix = `promo${index}`;
+        return {
+          enabled: formData.get(`${prefix}Enabled`) === "on",
+          eyebrow: text(formData, `${prefix}Eyebrow`, 80),
+          title: text(formData, `${prefix}Title`, 160),
+          copy: text(formData, `${prefix}Copy`, 360),
+          ctaLabel: text(formData, `${prefix}CtaLabel`, 60),
+          ctaHref: safeHref(text(formData, `${prefix}CtaHref`, 160), ""),
+          layout: formData.get(`${prefix}Layout`) === "centered" ? "centered" as const : "split" as const,
+        };
+      }).filter((banner) => banner.title || banner.copy),
+
     };
     return config;
   }, {
