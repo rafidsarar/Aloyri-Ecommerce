@@ -128,3 +128,24 @@ export function normalizeVisualPageLayout(value: unknown): VisualLayout {
   const base = normalizeVisualLayout(value, []);
   return { order: base.order.filter(id => id.startsWith("custom:")), blocks: base.blocks, hiddenCore: [] };
 }
+
+/** Keep custom blocks anchored to their nearest preceding core section when legacy
+ * homepage settings reorder built-in sections. This prevents a saved banner edit
+ * from silently discarding the visual builder's custom placement. */
+export function reorderVisualCoreSections(layout: VisualLayout, newCoreOrder: HomepageBlockId[]): VisualLayout {
+  const sections = new Map<string, string[]>();
+  let anchor = "";
+  for (const id of layout.order) {
+    if (allowedCore.has(id)) {
+      anchor = id;
+    } else if (id.startsWith("custom:") && layout.blocks.some(block => customBlockId(block.id) === id)) {
+      sections.set(anchor, [...(sections.get(anchor) || []), id]);
+    }
+  }
+  const ordered = [...(sections.get("") || [])];
+  for (const core of newCoreOrder) {
+    const id = coreBlockId(core);
+    ordered.push(id, ...(sections.get(id) || []));
+  }
+  return normalizeVisualLayout({ ...layout, order: ordered }, newCoreOrder);
+}
