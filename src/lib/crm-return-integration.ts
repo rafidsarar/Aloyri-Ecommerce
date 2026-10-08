@@ -20,6 +20,7 @@ async function hmacSha256Hex(secret: string, value: string) {
 }
 
 export type ReturnRequestInput = {
+  requestType?: "return" | "cancellation";
   orderNumber: string;
   phone: string;
   reason:
@@ -63,7 +64,7 @@ export async function submitCrmReturnRequest(input: ReturnRequestInput) {
   const nonce = crypto.randomUUID();
   const bodyHash = await sha256Hex(body);
   const idempotencyKey =
-    "return:" + input.orderNumber + ":" + bodyHash.slice(0, 40);
+    (input.requestType || "return") + ":" + input.orderNumber + ":" + bodyHash.slice(0, 40);
   const canonical = [
     "POST",
     path,
