@@ -32,7 +32,7 @@ export default async function AdminContentPage({
         title="Frequently asked questions"
         subtitle="Edit public FAQ content without touching CRM."
       >
-        {query.saved ? <AdminNotice>FAQ draft saved.</AdminNotice> : null}
+        {query.saved ? <AdminNotice>FAQ saved live.</AdminNotice> : null}
         <form action={saveFaq} className="grid gap-5">
           <AdminCard>
             <div className="grid gap-4">
@@ -106,7 +106,7 @@ export default async function AdminContentPage({
       title={content.title}
       subtitle="Edit the public page structure and customer-facing wording."
     >
-      {query.saved ? <AdminNotice>Page draft saved.</AdminNotice> : null}
+      {query.saved ? <AdminNotice>Page saved live.</AdminNotice> : null}
 
       <form action={saveInfoPage} className="grid gap-5">
         <input type="hidden" name="pageKey" value={page} />
