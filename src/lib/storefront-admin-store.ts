@@ -205,6 +205,8 @@ export type StorefrontConfig = {
     routineFinderIntro: string;
     showBrandStory: boolean;
     heroLayout: "split" | "stacked";
+    promoBanners: Array<{ enabled: boolean; eyebrow: string; title: string; copy: string; ctaLabel: string; ctaHref: string; layout: "split" | "centered" }>;
+    promoPlacement: "before-products" | "after-products";
   };
   pages: {
     about: InfoPageContent;
@@ -417,6 +419,8 @@ export const defaultStorefrontConfig: StorefrontConfig = {
     routineFinderIntro: "Just three questions. Explore cleansers, moisturizers and SPF from the Aloyri edit using your preferences and current availability. No account needed to explore.",
     showBrandStory: true,
     heroLayout: "split",
+    promoPlacement: "before-products",
+    promoBanners: [],
   },
   pages: {
     about: {
@@ -693,6 +697,15 @@ export async function listPrivateJsonRecords<T>(
   return listStructuredJson<T>(prefix, limit, offset);
 }
 
+function safePromoHref(value: unknown): string | null {
+  if (typeof value !== "string" || value.length > 160) return null;
+  if (/^\/(?:shop|routine-finder|about|customer-care|faq|shipping-delivery|returns-refunds)$/.test(value)) return value;
+  if (value === "/shop?sort=bestseller") return value;
+  if (/^\/category\/(?:cleansers|moisturizers|sunscreen)$/.test(value)) return value;
+  if (/^\/collections\/[a-z0-9][a-z0-9-]{0,79}$/.test(value)) return value;
+  return null;
+}
+
 function normalizeConfig(value: Partial<StorefrontConfig> | null): StorefrontConfig {
   if (!value) return structuredClone(defaultStorefrontConfig);
 
@@ -708,6 +721,23 @@ function normalizeConfig(value: Partial<StorefrontConfig> | null): StorefrontCon
     homepage: {
       ...defaultStorefrontConfig.homepage,
       ...(value.homepage || {}),
+      promoPlacement: value.homepage?.promoPlacement === "after-products" ? "after-products" : "before-products",
+      promoBanners: Array.isArray(value.homepage?.promoBanners)
+        ? value.homepage.promoBanners.slice(0, 2).flatMap((item) => {
+            if (!item || typeof item !== "object") return [];
+            const clean = (v: unknown, limit: number) => typeof v === "string" ? v.trim().slice(0, limit) : "";
+            const href = safePromoHref(item.ctaHref);
+            return [{
+              enabled: item.enabled === true,
+              eyebrow: clean(item.eyebrow, 80),
+              title: clean(item.title, 160),
+              copy: clean(item.copy, 360),
+              ctaLabel: href ? clean(item.ctaLabel, 60) : "",
+              ctaHref: href || "",
+              layout: item.layout === "centered" ? "centered" as const : "split" as const,
+            }];
+          })
+        : [],
       featureChips:
         Array.isArray(value.homepage?.featureChips) &&
         value.homepage.featureChips.length
