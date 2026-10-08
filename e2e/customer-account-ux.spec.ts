@@ -75,3 +75,11 @@ test("mobile shoppers can find account login directly in the header", async ({ p
   await expect(page.getByRole("heading", { name: "Create an account" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
+
+test("multiple signup return values fall back to account safely", async ({ page }) => {
+  await page.goto("/account/setup?next=%2Fcheckout&next=%2F%2Fevil.example");
+  await expect(page.getByRole("heading", { name: "Welcome to your account." })).toBeVisible();
+  const register = page.getByRole("link", { name: "Create account with Google" });
+  const next = new URL(await register.getAttribute("href") || "", page.url()).searchParams.get("next");
+  expect(next).toBe("/account/setup?next=%2Faccount");
+});
