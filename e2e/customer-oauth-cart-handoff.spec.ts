@@ -117,7 +117,7 @@ test("OAuth handoff fails closed without abandoning guest cart when datastore is
 
   await page.goto("/shop");
   await page.getByRole("button", { name: "Add Refreshing Facial Wash to cart" }).click();
-  await page.goto("/account");
+  await page.getByRole("link", { name: "Account", exact: true }).click();
   await page.getByRole("link", { name: "Sign in with Google" }).click();
   await expect(page.locator(".account-entry [role=alert]")).toContainText("your cart is still here");
   await expect(page).toHaveURL(/\/account$/);
