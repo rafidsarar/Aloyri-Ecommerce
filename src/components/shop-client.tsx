@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ProductCard } from "@/components/product-card";
 import { useCatalog } from "@/components/catalog-provider";
@@ -56,6 +57,7 @@ export function ShopClient({
   merchandisingSortMode?: "priority" | "featured";
 }) {
   const { products, synced, refreshing, error, refresh } = useCatalog();
+  const router = useRouter();
   const [query, setQuery] = useState(initialQuery || "");
   const [category, setCategory] = useState(initialCategory || "All");
   const [brand, setBrand] = useState(initialBrand || "All");
@@ -64,6 +66,7 @@ export function ShopClient({
   const [priceBand, setPriceBand] = useState<PriceFilter>(initialPriceBand);
   const [sort, setSort] = useState<SortKey>(initialSort);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [activeSuggestion, setActiveSuggestion] = useState(-1);
   const lastTrackedSearch = useRef("");
 
   const categories = useMemo(() => {
@@ -310,16 +313,38 @@ export function ShopClient({
             aria-autocomplete="list"
             aria-expanded={searchFocused && suggestions.length > 0}
             aria-controls="storefront-search-suggestions"
+            aria-activedescendant={searchFocused && activeSuggestion >= 0 && activeSuggestion < suggestions.length ? `storefront-search-option-${activeSuggestion}` : undefined}
             value={query}
             onFocus={() => setSearchFocused(true)}
             onBlur={() =>
               window.setTimeout(() => setSearchFocused(false), 120)
             }
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => { setQuery(event.target.value); setActiveSuggestion(-1); }}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") { setSearchFocused(false); setActiveSuggestion(-1); return; }
+              if (!suggestions.length) return;
+              if (event.key === "ArrowDown") {
+                event.preventDefault();
+                setSearchFocused(true);
+                setActiveSuggestion((current) => (current + 1) % suggestions.length);
+              } else if (event.key === "ArrowUp") {
+                event.preventDefault();
+                setSearchFocused(true);
+                setActiveSuggestion((current) => (current <= 0 ? suggestions.length - 1 : current - 1));
+              } else if (event.key === "Enter" && searchFocused && activeSuggestion >= 0 && activeSuggestion < suggestions.length) {
+                event.preventDefault();
+                router.push(`/product/${suggestions[activeSuggestion].slug}`);
+                setSearchFocused(false);
+                setActiveSuggestion(-1);
+              }
+            }}
             placeholder="Search products, brands, routines or textures"
             className="h-12 w-full rounded-full border border-[#713a35]/14 bg-white px-5 pr-12 text-sm outline-none transition placeholder:text-[#321f1c]/35 focus:border-[#b9725f]/60"
           />
 
+          {query ? (
+            <button type="button" aria-label="Clear search" onClick={() => { setQuery(""); setActiveSuggestion(-1); }} className="absolute right-1 top-1 flex h-10 w-10 items-center justify-center rounded-full text-lg text-[#713a35] focus-visible:outline-2 focus-visible:outline-offset-2">×</button>
+          ) : null}
           {searchFocused && suggestions.length > 0 ? (
             <div
               id="storefront-search-suggestions"
@@ -330,13 +355,15 @@ export function ShopClient({
               <p className="px-3 pb-2 pt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#713a35]/42">
                 Suggested products
               </p>
-              {suggestions.map((product) => (
+              {suggestions.map((product, index) => (
                 <Link
                   key={product.id}
+                  id={`storefront-search-option-${index}`}
                   href={`/product/${product.slug}`}
                   role="option"
-                  aria-selected="false"
-                  className="flex items-center justify-between gap-4 rounded-xl px-3 py-3 transition hover:bg-[#fff4ef] focus:bg-[#fff4ef] focus:outline-none"
+                  aria-selected={activeSuggestion === index}
+                  onMouseEnter={() => setActiveSuggestion(index)}
+                  className="flex items-center justify-between gap-4 rounded-xl px-3 py-3 transition hover:bg-[#fff4ef] focus:bg-[#fff4ef] focus:outline-none aria-selected:bg-[#fff4ef]"
                 >
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-semibold text-[#321f1c]">
