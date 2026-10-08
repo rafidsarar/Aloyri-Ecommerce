@@ -10,7 +10,8 @@ export const metadata = {
 
 const accountSections = new Set(["orders", "addresses", "wishlist", "support", "preferences"]);
 
-function accountDestination(value: string | undefined): string {
+function accountDestination(value: unknown): string {
+  if (typeof value !== "string") return "/account";
   if (value === "/checkout") return "/checkout";
   if (value?.startsWith("/account?section=")) {
     const section = value.slice("/account?section=".length);
