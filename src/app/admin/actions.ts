@@ -1,7 +1,7 @@
 "use server";
 
 import { normalizePresentation, safeNavigationHref } from "@/lib/storefront-presentation";
-import { cookies, draftMode, headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
@@ -20,9 +20,6 @@ import {
 } from "@/lib/admin-auth";
 import { rateAllowed } from "@/lib/request-rate-limit";
 import {
-  discardDraftStorefront,
-  publishDraftStorefront,
-  readDraftStorefrontConfig,
   restoreStorefrontVersionToDraft,
   updateDraftStorefrontConfig,
   uploadStorefrontMedia,
@@ -279,33 +276,6 @@ export async function recoverAdminAccount(formData: FormData) {
   redirect("/admin/security?recovered=1");
 }
 
-export async function enableDraftPreview(formData: FormData) {
-  await requireAdminPermission("publishing.preview");
-  const preview = await draftMode();
-  preview.enable();
-  redirect(safePreviewPath(text(formData, "path", 300) || "/"));
-}
-
-export async function publishDraft(formData: FormData) {
-  const admin = await requireAdminPermission("publishing.publish");
-  const note = text(formData, "note", 300);
-  try {
-    await publishDraftStorefront(admin.username, note);
-    revalidatePublishedStorefront();
-  } catch (error) {
-    redirect(
-      "/admin/publishing?error=" + encodeURIComponent(errorMessage(error)),
-    );
-  }
-  redirect("/admin/publishing?published=1");
-}
-
-export async function discardDraft() {
-  const admin = await requireAdminPermission("publishing.discard");
-  await discardDraftStorefront(admin.username);
-  redirect("/admin/publishing?discarded=1");
-}
-
 export async function restoreVersionToDraftAction(formData: FormData) {
   const admin = await requireAdminPermission("publishing.restore");
   if (admin.role !== "owner") redirect("/admin?forbidden=1");
@@ -314,10 +284,10 @@ export async function restoreVersionToDraftAction(formData: FormData) {
     await restoreStorefrontVersionToDraft(admin.username, versionId);
   } catch (error) {
     redirect(
-      "/admin/publishing?error=" + encodeURIComponent(errorMessage(error)),
+      "/admin/history?error=" + encodeURIComponent(errorMessage(error)),
     );
   }
-  redirect("/admin/publishing?restored=1");
+  redirect("/admin/history?restored=1");
 }
 
 export async function saveHomepage(formData: FormData) {
