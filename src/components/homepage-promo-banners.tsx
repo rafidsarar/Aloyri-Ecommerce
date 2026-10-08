@@ -11,35 +11,46 @@ function inSchedule(startAt: string, endAt: string, now: number) {
   return (start === null || now >= start) && (end === null || now < end);
 }
 
-function serverTimestamp() { return Date.now(); }
-
 export function HomepagePromoBanners({ banners }: {
   banners: StorefrontConfig["homepage"]["promoBanners"];
 }) {
-  const now = serverTimestamp();
-  const visible = banners.filter((banner) => banner.enabled && banner.title.trim() && inSchedule(banner.startAt, banner.endAt, now));
+  const now = Date.now();
+  const visible = banners.filter((banner) =>
+    banner.enabled && banner.title.trim() && inSchedule(banner.startAt, banner.endAt, now)
+  );
   if (!visible.length) return null;
 
   return (
-    <div className="shell grid gap-4 py-7 md:py-10" aria-label="Storefront promotions">
+    <div className="shell grid gap-5 py-8 md:py-12" aria-label="Storefront promotions">
       {visible.map((banner, index) => (
-        <section key={index} className={`min-w-0 overflow-hidden rounded-[1.75rem] border border-[#713a35]/10 bg-[#f5e8e2] px-6 py-8 sm:px-10 sm:py-10 ${banner.layout === "centered" ? "text-center" : ""}`}>
-          <div className={`flex min-w-0 flex-col gap-5 ${banner.layout === "centered" ? "items-center" : "items-start md:flex-row md:items-center md:justify-between"}`}>
-            <div className="min-w-0 max-w-2xl">
-              {banner.eyebrow ? <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-[#713a35]/70">{banner.eyebrow}</p> : null}
-              <h2 className="display mt-3 text-3xl leading-tight text-[#321f1c] sm:text-4xl">{banner.title}</h2>
-              {banner.copy ? <p className="mt-3 text-sm leading-6 text-[#321f1c]/70">{banner.copy}</p> : null}
-            </div>
-            {banner.imagePath ? (
-              <div className={`relative w-full overflow-hidden rounded-2xl ${banner.mobileLayout === "compact" ? "hidden sm:block" : ""} ${banner.layout === "centered" ? "max-w-2xl" : "md:max-w-[40%]"}`}>
-                <Image src={storefrontMediaUrl(banner.imagePath)} alt={banner.title} width={840} height={480} unoptimized className="h-auto w-full object-cover" />
-              </div>
-            ) : null}
+        <section key={index} className={"store-promo relative grid min-w-0 overflow-hidden rounded-[1.85rem] border " + (banner.layout === "centered" ? "store-promo-centered" : "store-promo-split")}>
+          <div className="store-promo-copy relative z-10 flex min-w-0 flex-col items-start justify-center p-7 sm:p-10 lg:p-14">
+            {banner.eyebrow ? <p className="store-home-overline">{banner.eyebrow}</p> : null}
+            <h2 className="display mt-3 max-w-2xl text-[clamp(2rem,4vw,3.7rem)] leading-[1.06]">{banner.title}</h2>
+            {banner.copy ? <p className="store-home-muted mt-5 max-w-xl text-sm leading-7 sm:text-base">{banner.copy}</p> : null}
             {banner.ctaHref && banner.ctaLabel ? (
-              <Link href={banner.ctaHref} className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-full bg-[#713a35] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#60312d]">
-                {banner.ctaLabel} <span className="ml-2" aria-hidden="true">→</span>
+              <Link href={banner.ctaHref} className="store-home-primary mt-7 inline-flex min-h-12 items-center justify-center gap-3 rounded-full px-7 py-3 text-sm font-semibold">
+                {banner.ctaLabel} <span aria-hidden="true">→</span>
               </Link>
             ) : null}
+          </div>
+          <div className={"store-promo-visual relative min-h-[220px] overflow-hidden sm:min-h-[280px] " + (banner.mobileLayout === "compact" ? "hidden sm:block" : "")}>
+            {banner.imagePath ? (
+              <Image
+                src={storefrontMediaUrl(banner.imagePath)}
+                alt={banner.title}
+                fill
+                sizes="(max-width: 640px) 100vw, (min-width: 1024px) 45vw, 80vw"
+                className="object-cover"
+              />
+            ) : (
+              <div className="store-promo-placeholder absolute inset-0 flex items-center justify-center" aria-hidden="true">
+                <div className="store-promo-orbit relative grid aspect-square w-[min(64%,260px)] place-items-center rounded-full">
+                  <span className="display text-4xl tracking-[-.06em] sm:text-5xl">Aloyri</span>
+                  <span className="absolute bottom-[23%] text-[9px] font-semibold uppercase tracking-[.2em]">Everyday skincare</span>
+                </div>
+              </div>
+            )}
           </div>
         </section>
       ))}
