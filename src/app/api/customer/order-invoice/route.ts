@@ -12,12 +12,12 @@ export async function GET(request: Request) {
   if (!ref) return new Response("Order not found.", { status: 404, headers });
   const invoice = await fetchCrmOrderInvoice({ orderNumber: ref.orderNumber, phone: ref.phone });
   if (!invoice.ok) return new Response("Invoice is temporarily unavailable. Please try again.", { status: 503, headers });
-  return new Response(invoice.body.html, {
+  return new Response(new Uint8Array(invoice.body.pdf), {
     headers: {
       ...headers,
-      "Content-Type": "text/html; charset=utf-8",
-      "Content-Disposition": 'attachment; filename="Aloyri-Invoice-' + ref.orderNumber.replace(/[^A-Za-z0-9-]/g, "") + '.html"',
-      "Content-Security-Policy": "sandbox; default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'",
+      "Content-Type": "application/pdf",
+      "Content-Disposition": 'attachment; filename="Aloyri-Invoice-' + ref.orderNumber.replace(/[^A-Za-z0-9-]/g, "") + '.pdf"',
+      "Content-Security-Policy": "sandbox; default-src 'none'",
     },
   });
 }

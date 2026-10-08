@@ -47,7 +47,7 @@ export async function fetchCrmOrderInvoice(input: {
   }
 
   const path = "/api/integrations/ecommerce/order-invoice";
-  const body = JSON.stringify(input);
+  const body = JSON.stringify({ ...input, format: "pdf" });
   const timestamp = String(Math.floor(Date.now() / 1000));
   const nonce = crypto.randomUUID();
   const idempotencyKey = "invoice:" + nonce;
@@ -104,7 +104,9 @@ export async function fetchCrmOrderInvoice(input: {
       };
     }
 
-    const safe = typeof json.html === "string" && json.html.startsWith("<!doctype html>") && json.html.length <= 1_000_000 && json.orderNumber === input.orderNumber ? { html: json.html, orderNumber: input.orderNumber } : null;
+    const encoded = json.pdfBase64;
+    const pdf = typeof encoded === "string" && encoded.length <= 12_000_000 && /^[A-Za-z0-9+/]+={0,2}$/.test(encoded) ? Buffer.from(encoded, "base64") : null;
+    const safe = pdf && pdf.subarray(0, 5).toString("ascii") === "%PDF-" && json.orderNumber === input.orderNumber ? { pdf, orderNumber: input.orderNumber } : null;
     if (!safe) {
       return {
         ok: false as const,
