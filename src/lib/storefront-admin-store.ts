@@ -1144,20 +1144,15 @@ export async function updateDraftStorefrontConfig(
 }
 
 export async function getPublishingStatus() {
-  const [published, draft] = await Promise.all([
-    readPublishedStorefrontConfig(),
-    readDraftStorefrontConfig(),
-  ]);
-  const [publishedHash, draftHash] = await Promise.all([
-    configHash(published),
-    configHash(draft),
-  ]);
+  // Legacy callers always see a clean live state in direct-save mode.
+  const published = await readPublishedStorefrontConfig();
+  const hash = await configHash(published);
   return {
     published,
-    draft,
-    publishedHash,
-    draftHash,
-    hasDraftChanges: publishedHash !== draftHash,
+    draft: published,
+    publishedHash: hash,
+    draftHash: hash,
+    hasDraftChanges: false,
   };
 }
 
