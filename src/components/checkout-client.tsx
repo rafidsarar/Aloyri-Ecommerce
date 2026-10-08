@@ -1506,7 +1506,7 @@ export function CheckoutClient() {
                   <div>
                     <p className="text-xs font-semibold text-[#713a35]">{activePromotion.badgeText || activePromotion.name}</p>
                     <p className="mt-1 text-[11px] leading-5 text-[#321f1c]/48">
-                      {currentPromotionQuote?.savings ? `${formatPrice(promotionQuote.savings)} saved on this order.` : "Promotion applied."}
+                      {currentPromotionQuote?.savings ? `${formatPrice(currentPromotionQuote.savings)} saved on this order.` : "Promotion applied."}
                     </p>
                   </div>
                   {appliedCode ? (
