@@ -64,6 +64,18 @@ export default async function AdminHomepagePage({
           </div>
         </AdminCard>
         <AdminCard>
+          <h2 className="mb-4 text-sm font-semibold">Guided shopping feature</h2>
+          <p className="mb-4 text-xs text-black/60">Edit the routine finder introduction on the homepage. The finder uses your live catalog and does not save quiz answers.</p>
+          <div className="grid gap-4">
+            <label className="grid gap-1.5 text-sm font-medium">Section headline
+              <input name="routineFinderHeadline" defaultValue={home.routineFinderHeadline} maxLength={140} className="rounded-xl border border-black/10 px-4 py-3" />
+            </label>
+            <label className="grid gap-1.5 text-sm font-medium">Section description
+              <textarea name="routineFinderIntro" defaultValue={home.routineFinderIntro} rows={3} maxLength={420} className="rounded-xl border border-black/10 px-4 py-3" />
+            </label>
+          </div>
+        </AdminCard>
+        <AdminCard>
           <h2 className="mb-4 text-sm font-semibold">Main banner</h2>
           <div className="grid gap-4">
             <label className="grid gap-1.5 text-sm font-medium">
