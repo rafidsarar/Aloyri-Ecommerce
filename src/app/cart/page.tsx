@@ -165,12 +165,12 @@ export default function CartPage() {
   }
 
   return (
-    <main className="shell py-12 md:py-16">
+    <main className="shell min-w-0 py-8 md:py-16">
       <div className="border-b border-[#713a35]/10 pb-8">
         <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/48">
           Your selection
         </p>
-        <h1 className="display mt-3 text-6xl sm:text-7xl">Cart.</h1>
+        <h1 className="display mt-3 text-5xl sm:text-7xl">Cart.</h1>
       </div>
 
       {items.length === 0 ? (
@@ -187,7 +187,7 @@ export default function CartPage() {
           </Link>
         </div>
       ) : (
-        <div className="grid gap-10 py-10 lg:grid-cols-[1fr_370px] lg:gap-14">
+        <div className="grid min-w-0 gap-7 py-8 lg:grid-cols-[minmax(0,1fr)_370px] lg:gap-14">
           <div>
             {rows.map(({ product, liveProduct, qty, productId }) => {
               const available = liveProduct?.availableStock ?? 0;
@@ -197,7 +197,7 @@ export default function CartPage() {
               return (
                 <div
                   key={productId}
-                  className="grid grid-cols-[92px_1fr_auto] gap-4 border-b border-[#713a35]/10 py-5 first:pt-0 sm:grid-cols-[120px_1fr_auto] sm:gap-6"
+                  className="grid min-w-0 grid-cols-[72px_minmax(0,1fr)_auto] gap-3 border-b border-[#713a35]/10 py-5 first:pt-0 sm:grid-cols-[120px_minmax(0,1fr)_auto] sm:gap-4] sm:gap-6"
                 >
                   {product ? (
                     <Link href={`/product/${product.slug}`}>
