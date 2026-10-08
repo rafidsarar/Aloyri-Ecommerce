@@ -23,6 +23,6 @@ export function StorefrontDevicePreview() {
       <iframe title={`Storefront draft at ${width} pixels`} src="/" width={width} height={780}
         className="mx-auto block max-w-none rounded-xl border border-black/10 bg-white shadow-lg" style={{ width, height: 780 }} />
     </div>
-    <p className="mt-3 text-xs text-black/60">The frame uses your private draft preview session. Customers still see the published storefront until you publish.</p>
+    <p className="mt-3 text-xs text-black/60">This preview shows the current live storefront. Saved Admin changes appear on the website immediately.</p>
   </div>;
 }
