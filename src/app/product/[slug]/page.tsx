@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { VisualPageSections } from "@/components/visual-page-sections";
 import { notFound } from "next/navigation";
 import { LiveProductPage } from "@/components/live-product-page";
 import {
@@ -232,6 +233,7 @@ export default async function ProductPage({
         recommendationConfig={config.merchandising.recommendations}
         reviewData={reviewData}
       />
+      <VisualPageSections layout={config.visualPages.product} />
     </>
   );
 }
