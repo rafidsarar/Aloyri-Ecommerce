@@ -201,6 +201,23 @@ export default async function Home() {
       </section>}
 
       {home.showCategories ? (
+        <nav aria-label="Shop by skincare focus" className="shell flex flex-wrap items-center gap-2 pb-6">
+          <span className="store-discovery-muted mr-2 text-xs font-semibold">Explore by focus</span>
+          {[
+            ["Hydration", "hydration"],
+            ["Light textures", "lightweight"],
+            ["Gentle daily care", "gentle"],
+            ["Daily SPF", "spf"],
+          ].map(([label, focus]) => (
+            <Link key={focus} href={`/shop?focus=${focus}`}
+              className="store-focus-chip inline-flex min-h-11 items-center rounded-full border px-4 text-xs font-semibold">
+              {label} →
+            </Link>
+          ))}
+        </nav>
+      ) : null}
+
+      {home.showCategories ? (
         <section className="shell pb-10 pt-2 md:pb-14" aria-labelledby="routine-finder-feature">
           <div className="store-discovery-feature grid overflow-hidden rounded-[2rem] border lg:grid-cols-[1.1fr_.9fr]">
             <div className="p-7 sm:p-10 lg:p-14">
