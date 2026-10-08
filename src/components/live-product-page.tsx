@@ -151,7 +151,7 @@ export function LiveProductPage({
               {verified.photo.exactVariant ? " · exact listed variant" : ""}
             </p>
           ) : null}
-          <div className="mt-4 grid grid-cols-3 gap-3">
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
             <div className="rounded-[1.1rem] bg-[#f5e8e2] p-4">
               <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[#713a35]/46">
                 Texture
@@ -168,7 +168,7 @@ export function LiveProductPage({
                 {product.routineStep}
               </p>
             </div>
-            <div className="rounded-[1.1rem] bg-[#f5e8e2] p-4">
+            <div className="col-span-2 rounded-[1.1rem] bg-[#f5e8e2] p-4 sm:col-span-1">
               <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[#713a35]/46">
                 Size
               </p>
@@ -204,7 +204,7 @@ export function LiveProductPage({
           <p className="mt-7 text-xs font-semibold uppercase tracking-[0.2em] text-[#713a35]/48">
             {product.brand}
           </p>
-          <h1 className="display mt-3 text-5xl leading-[0.94] sm:text-6xl">
+          <h1 className="display mt-3 break-words text-4xl leading-tight sm:text-6xl sm:leading-[0.94]">
             {product.name}
           </h1>
           <ProductRatingSummary data={reviewData} />
@@ -243,7 +243,11 @@ export function LiveProductPage({
           </div>
 
           <div className="mt-7">
-            <AddToCart productId={product.id} />
+            <div className="grid grid-cols-2 gap-3">
+              <AddToCart productId={product.id} showCartLink />
+              <AddToCart productId={product.id} checkoutOnAdd />
+            </div>
+            <p className="mt-3 text-center text-xs leading-5 text-[#321f1c]/60">Buy now continues to secure checkout. Sign-in may be required; no payment is taken online.</p>
             <ProductPreferenceButtons productId={product.id} />
             <ProductAlertSignup
               productId={product.id}
@@ -537,16 +541,17 @@ export function LiveProductPage({
 
       <RecentlyViewedProducts currentProductId={product.id} />
 
-      <div className="h-24 lg:hidden" aria-hidden="true" />
+      <div className="h-36 lg:hidden" aria-hidden="true" />
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#713a35]/10 bg-[#fffaf7]/95 px-3 pt-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] shadow-[0_-14px_40px_rgba(50,31,28,.09)] backdrop-blur lg:hidden">
-        <div className="mx-auto grid max-w-xl grid-cols-[1fr_160px] items-center gap-3">
-          <div className="min-w-0">
-            <p className="truncate text-xs font-semibold">{product.name}</p>
-            <p className="mt-0.5 text-xs text-[#713a35]">
-              {formatPrice(salePrice)}
-            </p>
+        <div className="mx-auto max-w-xl">
+          <div className="mb-2 flex min-w-0 items-center justify-between gap-3 px-1">
+            <p className="min-w-0 truncate text-xs font-semibold">{product.name}</p>
+            <p className="shrink-0 text-sm font-semibold text-[#713a35]">{formatPrice(salePrice)}</p>
           </div>
-          <AddToCart productId={product.id} compact />
+          <div className="grid grid-cols-2 gap-2">
+            <AddToCart productId={product.id} compact showCartLink />
+            <AddToCart productId={product.id} compact checkoutOnAdd />
+          </div>
         </div>
       </div>
     </main>
