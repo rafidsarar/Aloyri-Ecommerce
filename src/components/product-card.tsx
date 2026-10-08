@@ -102,6 +102,9 @@ export function ProductCard({
               <h3 className="mt-1 text-[15px] leading-6 font-medium text-[#321f1c]">
                 {product.name}
               </h3>
+              <p className="mt-1 line-clamp-2 min-h-10 text-xs leading-5 text-[#321f1c]/60">
+                {product.bestFor || product.texture || "Explore product details"}
+              </p>
               <p className="mt-1 text-xs text-[#321f1c]/45">
                 {product.size} · {stockLabel}
               </p>
