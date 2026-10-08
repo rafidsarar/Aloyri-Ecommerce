@@ -545,9 +545,7 @@ export function CheckoutClient() {
     setSelectedAddressId(addressId);
     if (!customerAccount) return;
     if (!addressId) {
-      setDraft((current) => ({
-        ...current, district: "", area: "", address: "", landmark: "", deliveryZone: "",
-      }));
+      // Preserve visible delivery details when switching to manual entry.
       setErrors({});
       setSubmitFailure(null);
       return;
@@ -1534,7 +1532,17 @@ export function CheckoutClient() {
                   Apply
                 </button>
               </div>
-              {promotionError ? <p role="alert" aria-live="polite" className="mt-2 text-xs leading-5 text-red-700">{promotionError}</p> : null}
+              {promotionError ? (
+                <div className="mt-2 flex flex-wrap items-center gap-3" role="alert">
+                  <p className="text-xs leading-5 text-red-700">{promotionError}</p>
+                  {appliedCode ? (
+                    <button type="button" onClick={removePromotionCode}
+                      className="min-h-11 text-xs font-semibold text-[#713a35] underline underline-offset-4">
+                      Remove code and continue
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
               {activePromotion ? (
                 <div className="mt-3 flex items-start justify-between gap-3 rounded-[.8rem] bg-[#f7ebe6] p-3">
                   <div>
