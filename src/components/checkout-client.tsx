@@ -196,6 +196,7 @@ export function CheckoutClient() {
   const [promotionQuote, setPromotionQuote] = useState<PromotionQuote | null>(null);
   const [promotionLoading, setPromotionLoading] = useState(false);
   const [promotionError, setPromotionError] = useState("");
+  const [promotionRetry, setPromotionRetry] = useState(0);
   const [recoveryAvailable, setRecoveryAvailable] = useState(false);
   const [recoveryConsent, setRecoveryConsent] = useState(false);
   const [recoverySaved, setRecoverySaved] = useState(false);
@@ -497,7 +498,7 @@ export function CheckoutClient() {
       window.clearTimeout(refreshQuote);
       controller.abort();
     };
-  }, [appliedCode, cartItems, catalogSynced, draft.deliveryZone, hasUnavailable]);
+  }, [appliedCode, cartItems, catalogSynced, draft.deliveryZone, hasUnavailable, promotionRetry]);
 
   function applyPromotionCode() {
     const normalized = promotionCode.trim().toUpperCase();
@@ -508,6 +509,11 @@ export function CheckoutClient() {
     setPromotionCode(normalized);
     setPromotionError("");
     setAppliedCode(normalized);
+  }
+
+  function retryPromotionQuote() {
+    setPromotionError("");
+    setPromotionRetry((current) => current + 1);
   }
 
   function removePromotionCode() {
@@ -536,14 +542,21 @@ export function CheckoutClient() {
     value: CheckoutDraft[K],
   ) {
     setDraft((current) => ({ ...current, [field]: value }));
+    if (["district", "area", "address", "landmark", "deliveryZone", "fullName", "phone"].includes(field)) {
+      setSelectedAddressId("");
+    }
     setErrors((current) => ({ ...current, [field]: undefined }));
     setSubmitFailure(null);
     setDraftNotice("");
   }
 
   function applySavedAddress(addressId: string) {
-    setSelectedAddressId(addressId);
     if (!customerAccount) return;
+    if (addressId && !customerAccount.savedAddresses.some((row) => row.id === addressId)) {
+      setSelectedAddressId("");
+      return;
+    }
+    setSelectedAddressId(addressId);
     if (!addressId) {
       setDraft((current) => ({
         ...current, district: "", area: "", address: "", landmark: "", deliveryZone: "",
@@ -1534,7 +1547,17 @@ export function CheckoutClient() {
                   Apply
                 </button>
               </div>
-              {promotionError ? <p role="alert" aria-live="polite" className="mt-2 text-xs leading-5 text-red-700">{promotionError}</p> : null}
+              {promotionError ? (
+                <div className="mt-2 space-y-2" role="alert" aria-live="polite">
+                  <p className="text-xs leading-5 text-red-700">{promotionError}</p>
+                  <div className="flex flex-wrap gap-3">
+                    <button type="button" onClick={retryPromotionQuote} disabled={promotionLoading}
+                      className="min-h-11 text-xs font-semibold text-[#713a35] underline underline-offset-4 disabled:opacity-50">Retry promotion</button>
+                    {appliedCode ? <button type="button" onClick={removePromotionCode}
+                      className="min-h-11 text-xs font-semibold text-[#713a35] underline underline-offset-4">Continue without code</button> : null}
+                  </div>
+                </div>
+              ) : null}
               {activePromotion ? (
                 <div className="mt-3 flex items-start justify-between gap-3 rounded-[.8rem] bg-[#f7ebe6] p-3">
                   <div>
