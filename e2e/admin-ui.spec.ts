@@ -68,4 +68,35 @@ test.describe("minimal admin interface", () => {
     await page.screenshot({path:testInfo.outputPath("account-mobile.png"),fullPage:true});
   });
 
+  test("failed account address save keeps the customer's entered form values", async ({ page }) => {
+    const account = {
+      email: "customer@example.test", displayName: "Preview customer",
+      savedAddresses: [], savedProductIds: [],
+      emailPreferences: { postDelivery: false, reviewRequest: false, reorderReminder: false },
+    };
+    await page.route("**/api/customer/post-purchase*", route => route.fulfill({
+      json: { account, orders: [], pagination: { page: 1, pages: 1, total: 0 },
+        supportCases: [], productAlerts: [] },
+    }));
+    await page.route("**/api/customer/security", route => route.fulfill({
+      json: { activeSessions: 1, currentSessionCreatedAt: "2026-10-08",
+        currentSessionExpiresAt: "2026-10-09" },
+    }));
+    await page.route("**/api/customer/account", route => route.fulfill({
+      status: 503,
+      json: { error: "Account storage temporarily unavailable." },
+    }));
+    await page.goto(`${base}/account`);
+    await page.getByRole("button", { name: "Addresses", exact: true }).click();
+    await page.getByLabel("Recipient name").fill("Preview Customer");
+    await page.getByLabel("Mobile number").fill("01712345678");
+    await page.getByLabel("District", { exact: true }).fill("Dhaka");
+    await page.getByLabel("Area / Thana / Upazila").fill("Dhanmondi");
+    await page.getByLabel("Full delivery address").fill("House 12, Road 3, Dhanmondi");
+    await page.getByRole("button", { name: "Save address" }).click();
+    await expect(page.getByText("Account storage temporarily unavailable.", { exact: true })).toBeVisible();
+    await expect(page.getByLabel("Recipient name")).toHaveValue("Preview Customer");
+    await expect(page.getByLabel("Full delivery address")).toHaveValue("House 12, Road 3, Dhanmondi");
+  });
+
 });

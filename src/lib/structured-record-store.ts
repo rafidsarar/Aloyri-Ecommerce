@@ -797,6 +797,9 @@ export async function cleanupOperationalMetadata() {
   await ensureSchema(); const sql=sqlClient()!;
   await sql`DELETE FROM ecommerce_rate_limits WHERE reset_at < NOW() - INTERVAL '1 day'`;
   await sql`DELETE FROM ecommerce_leases WHERE expires_at < NOW() - INTERVAL '1 day'`;
+  // Transient OAuth cart handoffs have no customer PII. Expire them separately;
+  // do not ever include them in business backups or durable customer records.
+  await sql`DELETE FROM ecommerce_records WHERE pathname LIKE 'customer-auth/cart-handoff/%' AND updated_at < NOW() - INTERVAL '1 day'`;
 }
 
 export type OperationalSnapshot = { version: 1; namespace: RecordNamespace; createdAt: string; records: Array<{ pathname: string; payload: unknown }>; sha256: string };
@@ -807,7 +810,7 @@ async function snapshotHash(records: OperationalSnapshot["records"]) {
 export async function createOperationalSnapshot(): Promise<OperationalSnapshot> {
   await ensureSchema(); const sql=sqlClient()!; const namespace=currentRecordNamespace();
   // One statement supplies a consistent database snapshot; archives are excluded to avoid recursive growth.
-  const rows=await sql`SELECT pathname,payload FROM ecommerce_records WHERE namespace=${namespace} AND pathname NOT LIKE 'admin/operational-backups/%' AND pathname NOT LIKE 'customer-auth/sessions/%' AND pathname NOT LIKE 'customer-auth/magic%' ORDER BY pathname`;
+  const rows=await sql`SELECT pathname,payload FROM ecommerce_records WHERE namespace=${namespace} AND pathname NOT LIKE 'admin/operational-backups/%' AND pathname NOT LIKE 'customer-auth/sessions/%' AND pathname NOT LIKE 'customer-auth/magic%' AND pathname NOT LIKE 'customer-auth/cart-handoff/%' ORDER BY pathname`;
   const records=rows.map(row=>({pathname:String(row.pathname),payload:row.payload}));
   return {version:1,namespace,createdAt:new Date().toISOString(),records,sha256:await snapshotHash(records)};
 }
