@@ -1,4 +1,5 @@
 import "server-only";
+import { defaultHomepageOrder, normalizeHomepageOrder, safeHomepageImagePath, type HomepageBlockId } from "@/lib/homepage-builder";
 import { cache } from "react";
 import { revalidatePath } from "next/cache";
 import { defaultPresentation, normalizePresentation, type StorefrontPresentation } from "@/lib/storefront-presentation";
@@ -194,6 +195,20 @@ export type StorefrontConfig = {
     secondaryLabel: string;
     secondaryHref: string;
     heroProductId: string;
+    heroImagePath: string;
+    heroStyle: "soft" | "minimal" | "contrast";
+    heroAlignment: "left" | "center";
+    showBrowse: boolean;
+    browseEyebrow: string;
+    browseTitle: string;
+    browseIntro: string;
+    browsePlaceholder: string;
+    showFocus: boolean;
+    showRoutineSteps: boolean;
+    categoriesEyebrow: string;
+    categoriesTitle: string;
+    categoriesIntro: string;
+    sectionOrder: HomepageBlockId[];
     featureChips: string[];
     ideaEyebrow: string;
     ideaHeadline: string;
@@ -404,6 +419,20 @@ export const defaultStorefrontConfig: StorefrontConfig = {
     secondaryLabel: "Explore sunscreen",
     secondaryHref: "/category/sunscreen",
     heroProductId: "skin-aqua",
+    heroImagePath: "",
+    heroStyle: "soft",
+    heroAlignment: "left",
+    showBrowse: true,
+    browseEyebrow: "Your skincare, your way",
+    browseTitle: "What are you looking for today?",
+    browseIntro: "Search our edit, or take a shortcut to what is available.",
+    browsePlaceholder: "Try sunscreen, cleanser, brand...",
+    showFocus: true,
+    showRoutineSteps: true,
+    categoriesEyebrow: "A simpler way to shop",
+    categoriesTitle: "Shop by category",
+    categoriesIntro: "Start with a step in your routine, then explore the products that fit.",
+    sectionOrder: [...defaultHomepageOrder],
     featureChips: [
       "Curated selection",
       "BDT pricing",
@@ -724,6 +753,20 @@ function normalizeConfig(value: Partial<StorefrontConfig> | null): StorefrontCon
       ...defaultStorefrontConfig.homepage,
       ...(value.homepage || {}),
       promoPlacement: value.homepage?.promoPlacement === "after-products" ? "after-products" : "before-products",
+      sectionOrder: normalizeHomepageOrder(value.homepage?.sectionOrder),
+      heroImagePath: safeHomepageImagePath(value.homepage?.heroImagePath),
+      heroStyle: value.homepage?.heroStyle === "contrast" || value.homepage?.heroStyle === "minimal" ? value.homepage.heroStyle : "soft",
+      heroAlignment: value.homepage?.heroAlignment === "center" ? "center" : "left",
+      showBrowse: value.homepage?.showBrowse !== false,
+      showFocus: value.homepage?.showFocus !== false,
+      showRoutineSteps: value.homepage?.showRoutineSteps !== false,
+      browseEyebrow: typeof value.homepage?.browseEyebrow === "string" ? value.homepage.browseEyebrow.slice(0, 90) : defaultStorefrontConfig.homepage.browseEyebrow,
+      browseTitle: typeof value.homepage?.browseTitle === "string" ? value.homepage.browseTitle.slice(0, 140) : defaultStorefrontConfig.homepage.browseTitle,
+      browseIntro: typeof value.homepage?.browseIntro === "string" ? value.homepage.browseIntro.slice(0, 300) : defaultStorefrontConfig.homepage.browseIntro,
+      browsePlaceholder: typeof value.homepage?.browsePlaceholder === "string" ? value.homepage.browsePlaceholder.slice(0, 100) : defaultStorefrontConfig.homepage.browsePlaceholder,
+      categoriesEyebrow: typeof value.homepage?.categoriesEyebrow === "string" ? value.homepage.categoriesEyebrow.slice(0, 90) : defaultStorefrontConfig.homepage.categoriesEyebrow,
+      categoriesTitle: typeof value.homepage?.categoriesTitle === "string" ? value.homepage.categoriesTitle.slice(0, 140) : defaultStorefrontConfig.homepage.categoriesTitle,
+      categoriesIntro: typeof value.homepage?.categoriesIntro === "string" ? value.homepage.categoriesIntro.slice(0, 300) : defaultStorefrontConfig.homepage.categoriesIntro,
       editorialSections: Array.isArray(value.homepage?.editorialSections)
         ? value.homepage.editorialSections.slice(0, 6).flatMap((item) => {
             if (!item || typeof item !== "object") return [];
@@ -743,7 +786,7 @@ function normalizeConfig(value: Partial<StorefrontConfig> | null): StorefrontCon
           })
         : [],
       promoBanners: Array.isArray(value.homepage?.promoBanners)
-        ? value.homepage.promoBanners.slice(0, 2).flatMap((item) => {
+        ? value.homepage.promoBanners.slice(0, 4).flatMap((item) => {
             if (!item || typeof item !== "object") return [];
             const clean = (v: unknown, limit: number) => typeof v === "string" ? v.trim().slice(0, limit) : "";
             const href = safePromoHref(item.ctaHref);

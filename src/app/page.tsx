@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { Fragment, type ReactNode } from "react";
+import type { HomepageBlockId } from "@/lib/homepage-builder";
 import Image from "next/image";
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
@@ -102,15 +104,11 @@ export default async function Home() {
     (section) => section.enabled,
   );
 
-  return (
-    <main>
-      <AnalyticsViewTracker
-        event="merchandising_impression"
-        properties={{ placementId: "homepage-hero", placementKind: "hero" }}
-        context={{ placementId: "homepage-hero", placementKind: "hero" }}
-      />
+  const blocks: Record<HomepageBlockId, ReactNode> = {
+    hero: (
+      <>
       {home.showHero && <section className="shell pt-5 md:pt-8">
-        <div className={`store-hero grid min-h-[490px] overflow-hidden rounded-[2rem] border ${home.heroLayout === "stacked" ? "grid-cols-1" : "lg:grid-cols-[1.03fr_.97fr]"}`}>
+        <div className={`store-hero store-hero-${home.heroStyle} store-hero-align-${home.heroAlignment} grid min-h-[490px] overflow-hidden rounded-[2rem] border ${home.heroLayout === "stacked" ? "grid-cols-1" : "lg:grid-cols-[1.03fr_.97fr]"}`}>
           <div className="store-hero-copy relative z-10 flex flex-col justify-between p-7 sm:p-10 lg:p-14">
             <div className="store-home-overline flex items-center gap-3">
               <span className="h-px w-8 bg-[#b9725f]/55" />
@@ -152,13 +150,19 @@ export default async function Home() {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_18%,rgba(255,255,255,.85),transparent_36%)]" />
             <div className="relative mx-auto flex h-full max-w-[580px] items-center">
               <div className="relative w-full">
+                {home.heroImagePath ? (
+                  <div className="relative aspect-square max-h-[440px] overflow-hidden rounded-[2rem] soft-shadow">
+                    <Image src={storefrontMediaUrl(home.heroImagePath)} alt={home.headline || "Aloyri homepage banner"} fill priority sizes="(max-width: 1024px) 90vw, 600px" className="object-cover" />
+                  </div>
+                ) : (
                 <ProductMedia
                   product={heroProduct}
                   priority
                   sizes="(max-width: 1024px) 90vw, 600px"
                   className="store-hero-product aspect-square max-h-[440px] rounded-[2rem] soft-shadow"
                 />
-                <div className="store-hero-product-caption absolute -bottom-5 left-5 right-5 rounded-[1.35rem] border border-white/70 bg-white/90 p-5 shadow-xl backdrop-blur-md sm:left-8 sm:right-8">
+                )}
+                {!home.heroImagePath && <div className="store-hero-product-caption absolute -bottom-5 left-5 right-5 rounded-[1.35rem] border border-white/70 bg-white/90 p-5 shadow-xl backdrop-blur-md sm:left-8 sm:right-8">
                   <div className="flex items-end justify-between gap-5">
                     <div>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#713a35]/50">
@@ -185,25 +189,28 @@ export default async function Home() {
                       <ArrowIcon />
                     </TrackedLink>
                   </div>
-                </div>
+                </div>}
               </div>
             </div>
           </div>
         </div>
       </section>}
-
-      <section className="shell pt-7 md:pt-9" aria-label="Find your skincare">
+      </>
+    ),
+    browse: (
+      <>
+      {home.showBrowse && <section className="shell pt-7 md:pt-9" aria-label="Find your skincare">
         <div className="store-home-browse grid gap-5 rounded-[1.5rem] border p-5 sm:p-6 lg:grid-cols-[.85fr_1.15fr] lg:items-center lg:gap-8 lg:px-8">
           <div>
-            <p className="store-home-overline">Your skincare, your way</p>
-            <h2 className="display mt-2 text-2xl leading-tight sm:text-3xl">What are you looking for today?</h2>
-            <p className="store-home-muted mt-2 text-xs leading-5 sm:text-sm">Search our edit, or take a shortcut to what is available.</p>
+            <p className="store-home-overline">{home.browseEyebrow}</p>
+            <h2 className="display mt-2 text-2xl leading-tight sm:text-3xl">{home.browseTitle}</h2>
+            <p className="store-home-muted mt-2 text-xs leading-5 sm:text-sm">{home.browseIntro}</p>
           </div>
           <div className="min-w-0">
             <form action="/shop" method="get" role="search" aria-label="Search skincare products" className="store-home-search flex min-w-0 items-center gap-2 rounded-full border p-1.5 pl-4 sm:pl-5">
               <label htmlFor="home-product-search" className="sr-only">Search products and brands</label>
               <svg width="19" height="19" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="10.8" cy="10.8" r="6.3" /><path d="m16 16 4.5 4.5" /></svg>
-              <input id="home-product-search" name="q" type="search" placeholder="Try sunscreen, cleanser, brand..." className="min-w-0 flex-1 bg-transparent py-2 text-sm outline-none" />
+              <input id="home-product-search" name="q" type="search" placeholder={home.browsePlaceholder} className="min-w-0 flex-1 bg-transparent py-2 text-sm outline-none" />
               <button type="submit" className="store-home-search-button min-h-11 shrink-0 rounded-full px-4 text-xs font-semibold sm:px-6 sm:text-sm">Search</button>
             </form>
             <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs">
@@ -213,11 +220,17 @@ export default async function Home() {
             </div>
           </div>
         </div>
-      </section>
-
-      {home.showCategories ? <HomepageCategoryShowcase products={catalogProducts} /> : null}
-
-      {home.showCategories ? (
+      </section>}
+      </>
+    ),
+    categories: (
+      <>
+      {home.showCategories ? <HomepageCategoryShowcase products={catalogProducts} eyebrow={home.categoriesEyebrow} title={home.categoriesTitle} intro={home.categoriesIntro} /> : null}
+      </>
+    ),
+    focus: (
+      <>
+      {home.showFocus ? (
         <nav aria-label="Shop by skincare focus" className="shell flex flex-wrap items-center gap-2 pb-6">
           <span className="store-discovery-muted mr-2 text-xs font-semibold">Explore by focus</span>
           {[
@@ -233,7 +246,10 @@ export default async function Home() {
           ))}
         </nav>
       ) : null}
-
+      </>
+    ),
+    routineFinder: (
+      <>
       {home.showRoutineFinder ? (
         <section className="shell pb-10 pt-2 md:pb-14" aria-labelledby="routine-finder-feature">
           <div className="store-discovery-feature grid overflow-hidden rounded-[2rem] border lg:grid-cols-[1.1fr_.9fr]">
@@ -267,10 +283,20 @@ export default async function Home() {
           </div>
         </section>
       ) : null}
-
+      </>
+    ),
+    editorialBeforeProducts: (
+      <>
       <HomepageEditorialSections sections={home.editorialSections} position="before-products" />
+      </>
+    ),
+    promoBeforeProducts: (
+      <>
       {home.promoPlacement === "before-products" ? <HomepagePromoBanners banners={home.promoBanners} /> : null}
-
+      </>
+    ),
+    products: (
+      <>
       {homepageSections.map((section) => {
         if (section.kind === "campaign") {
           const campaign = config.merchandising.campaigns.find(
@@ -501,11 +527,21 @@ export default async function Home() {
           </section>
         );
       })}
-
+      </>
+    ),
+    editorialAfterProducts: (
+      <>
       <HomepageEditorialSections sections={home.editorialSections} position="after-products" />
+      </>
+    ),
+    promoAfterProducts: (
+      <>
       {home.promoPlacement === "after-products" ? <HomepagePromoBanners banners={home.promoBanners} /> : null}
-
-      {config.presentation.showRoutine && <section className="border-y border-[#713a35]/10 bg-[#f5e8e2]">
+      </>
+    ),
+    routineSteps: (
+      <>
+      {home.showRoutineSteps && config.presentation.showRoutine && <section className="border-y border-[#713a35]/10 bg-[#f5e8e2]">
         <div className="shell py-16 md:py-20">
           <div className="grid gap-10 lg:grid-cols-[.75fr_1.25fr]">
             <div>
@@ -538,8 +574,15 @@ export default async function Home() {
           </div>
         </div>
       </section>}
-
+      </>
+    ),
+    editorialBeforeStory: (
+      <>
       <HomepageEditorialSections sections={home.editorialSections} position="before-story" />
+      </>
+    ),
+    brandStory: (
+      <>
       {home.showBrandStory && <section className="shell py-12 md:py-16">
         <div className="store-brand-panel overflow-hidden rounded-[2rem]">
           <div className="grid lg:grid-cols-[1.18fr_.82fr]">
@@ -574,6 +617,18 @@ export default async function Home() {
           </div>
         </div>
       </section>}
+      </>
+    ),
+  };
+
+  return (
+    <main>
+      <AnalyticsViewTracker
+        event="merchandising_impression"
+        properties={{ placementId: "homepage-hero", placementKind: "hero" }}
+        context={{ placementId: "homepage-hero", placementKind: "hero" }}
+      />
+      {home.sectionOrder.map((id) => <Fragment key={id}>{blocks[id]}</Fragment>)}
     </main>
   );
 }
