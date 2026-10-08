@@ -13,10 +13,10 @@ let available=true;
 const tracked={orderNumber,created:'2026-10-08',status:'New',paymentMethod:'COD',items:[{name:'Product',brand:'Brand',size:'50ml',qty:1,unitPrice:100}],productsSubtotal:100,discount:0,deliveryCharge:80,total:180,trackingReference:'',deliveredDate:'',returnedDate:''};
 const original=Module._load;
 Module._load=function(name,parent,isMain){
- if(name==='next/navigation')return {redirect:url=>{throw new Error('REDIRECT:'+url);}};
+ if(name==='next/navigation')return {unstable_rethrow:()=>{},redirect:url=>{throw new Error('REDIRECT:'+url);}};
  if(name==='@/lib/customer-auth')return {currentCustomerSession:async()=>session};
  if(name==='@/lib/order-tracking')return {fetchOrderTracking:async input=>{calls.push(input);return available?{ok:true,body:tracked}:{ok:false,body:{error:'Unavailable'}};}};
- if(name==='@/lib/crm-invoice-integration')return {fetchCrmOrderInvoice:async input=>{calls.push(input);return available?{ok:true,body:{html:'<!doctype html><h1>CRM Invoice</h1>'}}:{ok:false};}};
+ if(name==='@/lib/crm-invoice-integration')return {fetchCrmOrderInvoice:async input=>{calls.push(input);return available?{ok:true,body:{pdf:Buffer.from('%PDF-1.7\nCRM Invoice')}}:{ok:false};}};
  if(name==='@/components/order-tracking-client')return {OrderTrackingClient:props=>React.createElement('div',props)};
  if(name==='@/components/icons')return {ArrowIcon:()=>null};
  if(name==='@/lib/catalog')return {formatPrice:value=>'BDT '+value};
@@ -30,12 +30,21 @@ const Page=require(path.resolve(__dirname,'../src/app/track-order/page.tsx')).de
 const {OrderTrackingClient}=require(path.resolve(__dirname,'../src/components/order-tracking-client.tsx'));
 const request=order=>new Request('https://store.example.test/api/customer/order-invoice?order='+order);
 (async()=>{
- let response=await GET(request(orderNumber));assert.equal(response.status,200);assert.match(response.headers.get('content-disposition'),/Aloyri-Invoice-WEB-FIXTURE-12345678.html/);assert.match(response.headers.get('cache-control'),/no-store/);assert.match(await response.text(),/CRM Invoice/);assert.deepEqual(calls.at(-1),{orderNumber,phone:'01712345678'});
+ let response=await GET(request(orderNumber));assert.equal(response.status,200);assert.match(response.headers.get('content-disposition'),/Aloyri-Invoice-WEB-FIXTURE-12345678.pdf/);assert.match(response.headers.get('cache-control'),/no-store/);assert.equal(response.headers.get('content-type'),'application/pdf');assert.match(await response.text(),/^%PDF-/);assert.deepEqual(calls.at(-1),{orderNumber,phone:'01712345678'});
  let page=await Page({searchParams:Promise.resolve({order:orderNumber})});assert.equal(page.props.accountTracking,true);assert.deepEqual(page.props.initialResult,tracked);assert.deepEqual(calls.at(-1),{orderNumber,phone:'01712345678'});
  let before=calls.length;assert.equal((await GET(request('WEB-OTHER-12345678'))).status,404);await Page({searchParams:Promise.resolve({order:'WEB-OTHER-12345678'})});await assert.rejects(Page({searchParams:Promise.resolve({})}),/REDIRECT:\/account\?section=orders/);await assert.rejects(Page({searchParams:Promise.resolve({order:[orderNumber,"WEB-OTHER-12345678"]})}),/REDIRECT:\/account\?section=orders/);assert.equal(calls.length,before);
  available=false;assert.equal((await GET(request(orderNumber))).status,503);page=await Page({searchParams:Promise.resolve({order:orderNumber})});assert.equal(page.props.initialResult,null);assert.match(page.props.initialError,/temporarily unavailable/);
  session=null;before=calls.length;assert.equal((await GET(request(orderNumber))).status,401);page=await Page({searchParams:Promise.resolve({order:orderNumber})});assert.equal(page.props.initialOrder,orderNumber);assert.equal(page.props.accountTracking,undefined);assert.equal(calls.length,before);
  const accountHtml=renderToStaticMarkup(React.createElement(OrderTrackingClient,{initialOrder:orderNumber,initialResult:tracked,accountTracking:true}));assert.doesNotMatch(accountHtml,/<form|<input/);assert.match(accountHtml,/Back to my orders/);assert.match(accountHtml,/WEB-FIXTURE-12345678/);assert.doesNotMatch(accountHtml,/01712345678/);
  const guestHtml=renderToStaticMarkup(React.createElement(OrderTrackingClient,{initialOrder:orderNumber}));assert.match(guestHtml,/<form/);assert.match(guestHtml,/Mobile number/);
+ const {fetchCrmOrderInvoice}=require(path.resolve(__dirname,'../src/lib/crm-invoice-integration.ts'));
+ process.env.CRM_INTEGRATION_URL='https://crm.example.test';process.env.CRM_INTEGRATION_ID='fixture';process.env.CRM_INTEGRATION_SECRET='fixture-secret';
+ const savedFetch=global.fetch;let payload;
+ const pdf=Buffer.from('%PDF-1.7\nGenuine fixture bytes');
+ global.fetch=async(url,options)=>{payload=JSON.parse(options.body);return Response.json({orderNumber,pdfBase64:pdf.toString('base64')});};
+ const fetched=await fetchCrmOrderInvoice({orderNumber,phone:'01712345678'});assert.equal(fetched.ok,true);assert.deepEqual(fetched.body.pdf,pdf);assert.equal(payload.format,'pdf');
+ global.fetch=async()=>Response.json({orderNumber,html:'<!doctype html><h1>Summary</h1>'});assert.equal((await fetchCrmOrderInvoice({orderNumber,phone:'01712345678'})).ok,false);
+ global.fetch=async()=>Response.json({orderNumber:'WEB-OTHER-12345678',pdfBase64:pdf.toString('base64')});assert.equal((await fetchCrmOrderInvoice({orderNumber,phone:'01712345678'})).ok,false);
+ global.fetch=savedFetch;
  console.log('Customer invoice and automatic tracking checks passed: authenticated ownership, trusted phone, download, failures, private UI and guest form.');
 })().catch(error=>{console.error(error);process.exitCode=1;});
