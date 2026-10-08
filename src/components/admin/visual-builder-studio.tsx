@@ -5,6 +5,7 @@ import Link from "next/link";
 import { saveVisualBuilder } from "@/app/admin/actions";
 import { VisualBuilderBlock } from "@/components/visual-builder-block";
 import { homepageBlocks, type HomepageBlockId } from "@/lib/homepage-builder";
+import type { StorefrontConfig } from "@/lib/storefront-admin-store";
 import {
   coreBlockId,
   customBlockId,
@@ -19,6 +20,8 @@ import {
 type History = { past: VisualLayout[]; current: VisualLayout; future: VisualLayout[] };
 type HistoryAction = { type: "change"; next: VisualLayout } | { type: "undo" | "redo" | "reset" };
 const sections = new Map<string, string>(homepageBlocks.map(block => [coreBlockId(block.id), block.label]));
+
+type CoreContent = Pick<StorefrontConfig["homepage"], "eyebrow" | "headline" | "intro" | "primaryLabel" | "primaryHref" | "secondaryLabel" | "secondaryHref" | "heroImagePath" | "heroStyle" | "heroAlignment" | "heroLayout" | "browseEyebrow" | "browseTitle" | "browseIntro" | "browsePlaceholder" | "categoriesEyebrow" | "categoriesTitle" | "categoriesIntro" | "routineFinderHeadline" | "routineFinderIntro" | "ideaEyebrow" | "ideaHeadline" | "ideaCopy">;
 
 function historyReducer(state: History, action: HistoryAction): History {
   if (action.type === "reset") return { past: [], current: structuredClone(defaultVisualLayout), future: [] };
@@ -57,8 +60,20 @@ function freshBlock(kind: VisualBlockKind): VisualBlock {
   };
 }
 
-export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [] }: { initialLayout: VisualLayout; pageKey: "home" | VisualPageKey; mediaPaths?: string[] }) {
+export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], initialCoreContent }: { initialLayout: VisualLayout; pageKey: "home" | VisualPageKey; mediaPaths?: string[]; initialCoreContent?: CoreContent }) {
   const [{ past, current: layout, future }, dispatch] = useReducer(historyReducer, { past: [], current: initialLayout, future: [] });
+  const [coreContent, setCoreContent] = useState<CoreContent | undefined>(initialCoreContent);
+  const [initialCoreSnapshot] = useState(() => initialCoreContent ? JSON.stringify(initialCoreContent) : "");
+  const [corePast, setCorePast] = useState<CoreContent[]>([]);
+  const [coreFuture, setCoreFuture] = useState<CoreContent[]>([]);
+  function editCore<K extends keyof CoreContent>(key: K, value: CoreContent[K]) {
+    if (!coreContent) return;
+    setCorePast(p => [...p, coreContent].slice(-40));
+    setCoreFuture([]);
+    setCoreContent({ ...coreContent, [key]: value });
+  }
+  function undoCore() { if (!corePast.length || !coreContent) return; setCoreFuture(f => [coreContent, ...f]); setCoreContent(corePast[corePast.length - 1]); setCorePast(p => p.slice(0, -1)); }
+  function redoCore() { if (!coreFuture.length || !coreContent) return; setCorePast(p => [...p, coreContent]); setCoreContent(coreFuture[0]); setCoreFuture(f => f.slice(1)); }
   const [selectedId, setSelectedId] = useState(layout.order[0] || "");
   const [device, setDevice] = useState<"mobile" | "tablet" | "desktop">("desktop");
   const [filter, setFilter] = useState("");
@@ -140,6 +155,8 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [] }:
   return (
     <form action={saveVisualBuilder} className="space-y-4">
       <input type="hidden" name="layout" value={JSON.stringify(layout)} />
+      {isHomepage && coreContent && <input type="hidden" name="coreContent" value={JSON.stringify(coreContent)} />}
+      {isHomepage && <input type="hidden" name="coreBaseline" value={initialCoreSnapshot} />}
       <input type="hidden" name="pageKey" value={pageKey} />
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-black/10 bg-white p-4">
         <div>
@@ -147,8 +164,8 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [] }:
           <p className="mt-1 text-xs text-black/55">Drag to reorder. Use arrows for keyboard or touch. Changes stay in this editor until you save.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={() => dispatch({ type: "undo" })} disabled={!past.length} className={secondaryButton}>↶ Undo</button>
-          <button type="button" onClick={() => dispatch({ type: "redo" })} disabled={!future.length} className={secondaryButton}>↷ Redo</button>
+          <button type="button" onClick={() => { if (corePast.length) undoCore(); else dispatch({ type: "undo" }); }} disabled={!past.length && !corePast.length} className={secondaryButton}>↶ Undo</button>
+          <button type="button" onClick={() => { if (coreFuture.length) redoCore(); else dispatch({ type: "redo" }); }} disabled={!future.length && !coreFuture.length} className={secondaryButton}>↷ Redo</button>
           <Link href="/admin/history" className={secondaryButton}>Version history ↗</Link>
           <button type="submit" className="min-h-11 rounded-xl bg-[#713a35] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#5a2e2a]">Save website changes</button>
         </div>
@@ -204,7 +221,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [] }:
                 <div className="flex justify-between border-b border-black/10 bg-white px-5 py-3 text-xs font-semibold"><span>ALOYRI</span><span>Preview</span></div>
                 {layout.order.map(id => {
                   if (hidden(id)) return null;
-                  if (id.startsWith("core:")) return <div key={id} className="mx-3 my-2 rounded-lg border border-dashed border-[#a98075]/35 bg-[#f7efeb] px-4 py-6 text-center text-xs font-semibold text-[#87675d]">{name(id)}<span className="mt-1 block text-[10px] font-normal">Existing storefront section</span></div>;
+                  if (id.startsWith("core:")) return <div key={id} className="mx-3 my-2 rounded-lg border border-dashed border-[#a98075]/35 bg-[#f7efeb] px-4 py-6 text-center text-xs font-semibold text-[#87675d]">{selectedId === id && coreContent ? <span className="block text-left"><span className="font-semibold">{id === "core:hero" ? coreContent.headline : id === "core:browse" ? coreContent.browseTitle : id === "core:categories" ? coreContent.categoriesTitle : id === "core:routineFinder" ? coreContent.routineFinderHeadline : id === "core:brandStory" ? coreContent.ideaHeadline : name(id)}</span></span> : name(id)}<span className="mt-1 block text-[10px] font-normal">Existing storefront section · select to edit</span></div>;
                   const block = layout.blocks.find(item => customBlockId(item.id) === id);
                   return block ? <VisualBuilderBlock key={id} block={block} /> : null;
                 })}
@@ -217,9 +234,28 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [] }:
           <h2 className="text-sm font-semibold">Properties</h2>
           {selectedCore ? <>
             <p className="mt-3 font-semibold">{sections.get(selectedId)}</p>
-            <p className="mt-2 text-xs leading-5 text-black/60">This section uses live storefront functionality. Its detailed content settings are managed in the Homepage Control Center.</p>
+            {coreContent ? <><p className="mt-2 text-xs leading-5 text-black/60">Edit the existing section here. The storefront retains its working features and CRM data.</p>{selectedCore === "hero" && <div className="mt-4 space-y-3"><label className="block text-xs font-semibold">Small label<input aria-label="Small label" value={coreContent.eyebrow} maxLength={600} onChange={event => editCore("eyebrow", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Main heading<input aria-label="Main heading" value={coreContent.headline} maxLength={600} onChange={event => editCore("headline", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Description<input aria-label="Description" value={coreContent.intro} maxLength={600} onChange={event => editCore("intro", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Primary button<input aria-label="Primary button" value={coreContent.primaryLabel} maxLength={600} onChange={event => editCore("primaryLabel", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Primary destination<input aria-label="Primary destination" value={coreContent.primaryHref} maxLength={200} onChange={event => editCore("primaryHref", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Secondary button<input aria-label="Secondary button" value={coreContent.secondaryLabel} maxLength={600} onChange={event => editCore("secondaryLabel", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Secondary destination<input aria-label="Secondary destination" value={coreContent.secondaryHref} maxLength={200} onChange={event => editCore("secondaryHref", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Image path<input aria-label="Image path" value={coreContent.heroImagePath} maxLength={200} onChange={event => editCore("heroImagePath", event.target.value)} className={field + " mt-1"} /></label><label className="block text-xs font-semibold">Hero style<select value={coreContent.heroStyle} onChange={event => editCore("heroStyle", event.target.value as CoreContent["heroStyle"])} className={field + " mt-1"}><option value="soft">Soft</option><option value="minimal">Minimal</option><option value="contrast">Contrast</option></select></label><label className="block text-xs font-semibold">Layout<select value={coreContent.heroLayout} onChange={event => editCore("heroLayout", event.target.value as CoreContent["heroLayout"])} className={field + " mt-1"}><option value="split">Split</option><option value="stacked">Stacked</option></select></label></div>}
+{selectedCore === "browse" && <div className="mt-4 space-y-3"><label className="block text-xs font-semibold">Small label<input aria-label="Small label" value={coreContent.browseEyebrow} maxLength={600} onChange={event => editCore("browseEyebrow", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Heading<input aria-label="Heading" value={coreContent.browseTitle} maxLength={600} onChange={event => editCore("browseTitle", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Description<input aria-label="Description" value={coreContent.browseIntro} maxLength={600} onChange={event => editCore("browseIntro", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Search placeholder<input aria-label="Search placeholder" value={coreContent.browsePlaceholder} maxLength={600} onChange={event => editCore("browsePlaceholder", event.target.value)} className={field + " mt-1"} /></label></div>}
+{selectedCore === "categories" && <div className="mt-4 space-y-3"><label className="block text-xs font-semibold">Small label<input aria-label="Small label" value={coreContent.categoriesEyebrow} maxLength={600} onChange={event => editCore("categoriesEyebrow", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Heading<input aria-label="Heading" value={coreContent.categoriesTitle} maxLength={600} onChange={event => editCore("categoriesTitle", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Description<input aria-label="Description" value={coreContent.categoriesIntro} maxLength={600} onChange={event => editCore("categoriesIntro", event.target.value)} className={field + " mt-1"} /></label></div>}
+{selectedCore === "routineFinder" && <div className="mt-4 space-y-3"><label className="block text-xs font-semibold">Heading<input aria-label="Heading" value={coreContent.routineFinderHeadline} maxLength={600} onChange={event => editCore("routineFinderHeadline", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Description<input aria-label="Description" value={coreContent.routineFinderIntro} maxLength={600} onChange={event => editCore("routineFinderIntro", event.target.value)} className={field + " mt-1"} /></label></div>}
+{selectedCore === "brandStory" && <div className="mt-4 space-y-3"><label className="block text-xs font-semibold">Small label<input aria-label="Small label" value={coreContent.ideaEyebrow} maxLength={600} onChange={event => editCore("ideaEyebrow", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Heading<input aria-label="Heading" value={coreContent.ideaHeadline} maxLength={600} onChange={event => editCore("ideaHeadline", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Description<input aria-label="Description" value={coreContent.ideaCopy} maxLength={600} onChange={event => editCore("ideaCopy", event.target.value)} className={field + " mt-1"} /></label></div>}</> : <p className="mt-2 text-xs text-black/60">Use the linked management screen for this section.</p>}
             <label className="mt-4 flex items-center gap-2 text-sm"><input type="checkbox" checked={!layout.hiddenCore.includes(selectedCore)} onChange={() => toggleCore(selectedCore)} /> Show section</label>
-            <Link href="/admin/homepage" className="mt-4 inline-flex min-h-11 items-center rounded-xl border border-black/15 px-4 py-2 text-xs font-semibold">Edit built-in section →</Link>
+            <Link href={selectedCore === "products" ? "/admin/merchandising" : "/admin/homepage"} className="mt-4 inline-flex min-h-11 items-center rounded-xl border border-black/15 px-4 py-2 text-xs font-semibold">Advanced section settings →</Link>
           </> : selectedCustom ? <div className="mt-4 space-y-4">
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={duplicate} disabled={layout.blocks.length >= 32} className={secondaryButton}>Duplicate</button>
