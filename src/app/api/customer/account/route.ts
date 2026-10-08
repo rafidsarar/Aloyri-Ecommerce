@@ -87,6 +87,12 @@ export async function PUT(request: Request) {
       },
     );
   } catch (error) {
+    if (error instanceof Error && error.message === "INVALID_PHONE") {
+      return Response.json({ error: "Enter a valid Bangladesh mobile number." }, { status: 400 });
+    }
+    if (error instanceof Error && error.message === "INVALID_NAME") {
+      return Response.json({ error: "Full name must be between 2 and 80 characters." }, { status: 400 });
+    }
     if (error instanceof Error && error.message === "UNAUTHENTICATED") {
       return Response.json({ error: "Sign in required." }, { status: 401 });
     }

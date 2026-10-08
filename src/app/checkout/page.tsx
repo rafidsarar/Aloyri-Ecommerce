@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 export default async function CheckoutPage() {
   const session = await currentCustomerSession();
   if (!session || session.session.method !== "google" ||
-      session.account.displayName.trim().length < 2 || !session.account.phone) {
+      session.account.displayName.trim().length < 2 || !/^(?:\+?88)?01[3-9]\d{8}$/.test(session.account.phone || "")) {
     redirect("/account/setup?next=/checkout");
   }
   return <CheckoutClient />;
