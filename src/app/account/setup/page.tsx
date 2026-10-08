@@ -37,7 +37,7 @@ export default async function SetupPage({
     );
   }
 
-  if (session.account.displayName.trim().length >= 2 && session.account.phone) {
+  if (session.account.displayName.trim().length >= 2 && /^(?:\+?88)?01[3-9]\d{8}$/.test(session.account.phone || "")) {
     redirect(nextPath);
   }
 
