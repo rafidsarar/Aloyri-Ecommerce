@@ -117,7 +117,7 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
             </Link>
             <Link
               href="/shop"
-              className="store-icon-link hidden h-11 w-11 items-center justify-center rounded-full border transition min-[380px]:inline-flex"
+              className="store-icon-link inline-flex h-11 w-11 items-center justify-center rounded-full border transition"
               aria-label="Search products"
             >
               <SearchIcon />
