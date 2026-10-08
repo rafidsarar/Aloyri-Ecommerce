@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useCatalog } from "@/components/catalog-provider";
 import { ArrowIcon } from "@/components/icons";
+import { CartDeliveryEstimate } from "@/components/cart-delivery-estimate";
 import { ProductMedia } from "@/components/product-media";
 import { readCart, type CartItem, writeCart } from "@/lib/cart";
 import { formatPrice, getProductById } from "@/lib/catalog";
@@ -339,12 +340,7 @@ export default function CartPage() {
               <span className="font-semibold">{formatPrice(subtotal)}</span>
             </div>
 
-            <div className="flex justify-between border-b border-[#713a35]/10 py-5 text-sm">
-              <span className="text-[#321f1c]/58">Delivery</span>
-              <span className="text-right text-xs text-[#321f1c]/45">
-                Set during checkout
-              </span>
-            </div>
+            <CartDeliveryEstimate subtotal={subtotal} />
 
             {hasUnavailable ? (
               <p className="mt-5 rounded-[.9rem] border border-red-200 bg-red-50 p-3 text-xs leading-5 text-red-800">
