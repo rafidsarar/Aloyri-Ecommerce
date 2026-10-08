@@ -133,6 +133,7 @@ export function CustomerAccountHub({
               <button
                 key={item.id}
                 type="button"
+                aria-label={item.label}
                 aria-current={section === item.id ? "page" : undefined}
                 onClick={() => router.replace("/account?section=" + item.id, { scroll: false })}
                 className={
