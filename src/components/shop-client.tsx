@@ -507,7 +507,7 @@ export function ShopClient({
       </details>
 
       {filtered.length > 0 ? (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-8 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="storefront-product-grid grid grid-cols-2 gap-x-4 gap-y-8 lg:grid-cols-3 xl:grid-cols-4">
           {filtered.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

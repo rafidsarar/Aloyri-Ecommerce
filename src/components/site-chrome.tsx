@@ -1,5 +1,7 @@
 "use client";
 
+import type { CSSProperties } from "react";
+import { defaultPresentation, type StorefrontPresentation } from "@/lib/storefront-presentation";
 import { usePathname } from "next/navigation";
 import { CatalogProvider } from "@/components/catalog-provider";
 import { StorefrontAnalyticsTracker } from "@/components/storefront-analytics-tracker";
@@ -10,11 +12,13 @@ import { Header } from "@/components/header";
 
 export function SiteChrome({
   children,
+  presentation = defaultPresentation,
   announcement,
   footerDescription,
   preview,
 }: {
   children: React.ReactNode;
+  presentation?: StorefrontPresentation;
   announcement: string;
   footerDescription: string;
   preview: boolean;
@@ -27,6 +31,7 @@ export function SiteChrome({
 
   return (
     <CatalogProvider>
+      <div data-storefront-columns={presentation.desktopColumns} style={{"--storefront-width": presentation.contentWidth === "comfortable" ? "1200px" : "1440px"} as CSSProperties}>
       <CustomerDataCleanup />
       {!preview ? <StorefrontAnalyticsTracker /> : null}
       {!preview ? <PerformanceReporter /> : null}
@@ -44,11 +49,12 @@ export function SiteChrome({
       <a href="#main-content" className="skip-link">
         Skip to main content
       </a>
-      <Header announcement={announcement} />
+      <Header announcement={announcement} presentation={presentation} />
       <div id="main-content" tabIndex={-1}>
         {children}
       </div>
       <Footer description={footerDescription} />
+      </div>
     </CatalogProvider>
   );
 }

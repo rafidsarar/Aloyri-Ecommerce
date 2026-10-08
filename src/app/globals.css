@@ -82,7 +82,7 @@ a {
 }
 
 .shell {
-  width: min(100% - 2rem, 1440px);
+  width: min(100% - 2rem, var(--storefront-width, 1440px));
   margin-inline: auto;
 }
 
@@ -391,4 +391,9 @@ body[data-storefront-theme="sand"] {
 .account-section-navigation { scrollbar-width: thin; scrollbar-color: var(--store-border) transparent; }
 @media (prefers-reduced-motion: reduce) {
   .account-primary-button, .account-secondary-button, .account-outline-button { transition: none; }
+}
+
+@media (min-width: 1280px) {
+  [data-storefront-columns="3"] .storefront-product-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  [data-storefront-columns="4"] .storefront-product-grid { grid-template-columns: repeat(4,minmax(0,1fr)); }
 }

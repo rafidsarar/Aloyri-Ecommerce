@@ -8,14 +8,10 @@ import { CartLink } from "@/components/cart-link";
 import { ShopDiscoveryMenu } from "@/components/shop-discovery-menu";
 import { CloseIcon, MenuIcon, SearchIcon } from "@/components/icons";
 
-const links = [
-  ["Shop all", "/shop"],
-  ["Bestsellers", "/shop?sort=bestseller"],
-  ["Routine finder", "/routine-finder"],
-  ["Customer care", "/customer-care"],
-];
+import { defaultPresentation, type StorefrontPresentation } from "@/lib/storefront-presentation";
 
-export function Header({ announcement }: { announcement: string }) {
+export function Header({ announcement, presentation = defaultPresentation }: { announcement: string; presentation?: StorefrontPresentation }) {
+  const links = presentation.navigation.map(item=>[item.label,item.href]);
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -72,11 +68,11 @@ export function Header({ announcement }: { announcement: string }) {
 
   return (
     <>
-      {announcement ? <div className="store-announcement px-4 py-2.5 text-center text-[10px] font-medium uppercase tracking-[0.15em] sm:text-[11px]">
+      {presentation.showAnnouncement && announcement ? <div className="store-announcement px-4 py-2.5 text-center text-[10px] font-medium uppercase tracking-[0.15em] sm:text-[11px]">
         {announcement}
       </div> : null}
 
-      <header className="store-header sticky top-0 z-40 border-b backdrop-blur-xl">
+      <header className={`store-header top-0 z-40 border-b backdrop-blur-xl ${presentation.stickyHeader ? "sticky" : "relative"}`}>
         <div className="shell grid min-h-[72px] grid-cols-[auto_1fr_auto] items-center gap-3 py-3 xl:grid-cols-[auto_1fr_auto]">
           <div className="hidden xl:block"><BrandMark /></div>
           <nav className="hidden items-center justify-center gap-4 xl:flex xl:gap-5" aria-label="Primary navigation">

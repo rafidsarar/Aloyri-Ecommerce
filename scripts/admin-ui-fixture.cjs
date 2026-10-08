@@ -34,6 +34,11 @@ for(const file of ['catalog.ts','product-preferences.ts','volatile-storage.ts'])
 fs.writeFileSync(path.join(temp,'components/saved-products-client.tsx'),'export function SavedProductsClient(){return <section><h2>Your account wishlist</h2></section>}');
 fs.mkdirSync(path.join(temp,'app/account'),{recursive:true});
 fs.writeFileSync(path.join(temp,'app/account/page.tsx'),'import {CustomerAccountHub} from "@/components/customer-account-hub"; export default function Page(){return <CustomerAccountHub authenticated={true} displayName="Preview customer" profileComplete={true}/>}');
+// Render the actual customization fields with isolated configuration.
+fs.copyFileSync(path.join(root,'src/components/admin/storefront-layout-fields.tsx'),path.join(temp,'components/admin/storefront-layout-fields.tsx'));
+fs.copyFileSync(path.join(root,'src/lib/storefront-presentation.ts'),path.join(temp,'lib/storefront-presentation.ts'));
+fs.mkdirSync(path.join(temp,'app/admin/settings'),{recursive:true});
+fs.writeFileSync(path.join(temp,'app/admin/settings/page.tsx'),`import {AdminShell} from "@/components/admin/admin-shell"; import {StorefrontLayoutFields} from "@/components/admin/storefront-layout-fields"; import {defaultPresentation} from "@/lib/storefront-presentation"; export default function Page(){return <AdminShell username="preview" title="Store settings" subtitle="Customize the storefront"><form><StorefrontLayoutFields value={defaultPresentation}/></form></AdminShell>}`);
 const child = spawn(process.execPath, [path.join(root, 'node_modules/next/dist/bin/next'), 'dev', '--webpack', '--hostname', '127.0.0.1', '--port', process.argv[2] || '3100'], { cwd: temp, stdio: 'inherit' });
 function stop(){ child.kill('SIGTERM'); }
 process.on('SIGTERM', stop); process.on('SIGINT', stop);

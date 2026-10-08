@@ -145,13 +145,14 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="relative min-h-[280px] lg:min-h-[420px] p-6 sm:p-9 lg:p-12">
+          <div className={`relative min-h-[280px] lg:min-h-[420px] p-6 sm:p-9 lg:p-12 ${config.presentation.showHeroImageOnMobile ? "" : "hidden lg:block"}`}>
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_18%,rgba(255,255,255,.85),transparent_36%)]" />
             <div className="relative mx-auto flex h-full max-w-[580px] items-center">
               <div className="relative w-full">
                 <ProductMedia
                   product={heroProduct}
                   priority
+                  sizes="(max-width: 1024px) 90vw, 600px"
                   className="aspect-square max-h-[440px] rounded-[2rem] soft-shadow"
                 />
                 <div className="absolute -bottom-5 left-5 right-5 rounded-[1.35rem] border border-white/70 bg-white/82 p-5 backdrop-blur-md sm:left-8 sm:right-8">
@@ -482,7 +483,7 @@ export default async function Home() {
         );
       })}
 
-      <section className="border-y border-[#713a35]/10 bg-[#f5e8e2]">
+      {config.presentation.showRoutine && <section className="border-y border-[#713a35]/10 bg-[#f5e8e2]">
         <div className="shell py-16 md:py-20">
           <div className="grid gap-10 lg:grid-cols-[.75fr_1.25fr]">
             <div>
@@ -514,7 +515,7 @@ export default async function Home() {
             </div>
           </div>
         </div>
-      </section>
+      </section>}
 
       {home.showBrandStory && <section className="shell py-12 md:py-16">
         <div className="store-brand-panel overflow-hidden rounded-[2rem]">

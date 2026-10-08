@@ -52,6 +52,20 @@ async function check(name,fn){await fn();passed++;console.log('PASS '+name);}
   await publishing.publishDraftStorefront('fixture-owner','Acceptance fixture');
   assert.equal((await publishing.readStorefrontConfig()).homepage.headline,'New draft fixture');
  });
+ await check('presentation draft stays private until publication',async()=>{
+  const current=await publishing.readPublishedStorefrontConfig();
+  const draft=structuredClone(current);draft.presentation={...draft.presentation,contentWidth:'comfortable',desktopColumns:3,showAnnouncement:false,navigation:[{label:'Browse',href:'/shop'}]};
+  await publishing.saveDraftStorefrontConfig(draft);
+  assert.equal((await publishing.readPublishedStorefrontConfig()).presentation.desktopColumns,4);
+  draftPreview=true;assert.equal((await publishing.readStorefrontConfig()).presentation.desktopColumns,3);draftPreview=false;
+  await publishing.publishDraftStorefront('fixture-owner','Presentation fixture');
+  assert.equal((await publishing.readStorefrontConfig()).presentation.navigation[0].label,'Browse');
+ });
+ await check('presentation normalization rejects unsafe links and invalid layout values',async()=>{
+  const {normalizePresentation}=require('../src/lib/storefront-presentation.ts');
+  const safe=normalizePresentation({desktopColumns:100,contentWidth:'bad',showAnnouncement:'false',navigation:[{label:'Bad',href:'javascript:alert(1)'},{label:'Admin',href:'/admin'},{label:'Bad',href:'//evil.test'},{label:'Shop',href:'/shop'}]});
+  assert.equal(safe.desktopColumns,4);assert.equal(safe.contentWidth,'wide');assert.equal(safe.showAnnouncement,true);assert.deepEqual(safe.navigation,[{label:'Shop',href:'/shop'}]);
+ });
  await check('draft-mode rendering signals escape instead of freezing published content',async()=>{
   const {DynamicServerError}=require('next/dist/client/components/hooks-server-context');
   draftSignal=new DynamicServerError('draftMode');

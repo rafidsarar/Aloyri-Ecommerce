@@ -68,4 +68,17 @@ test.describe("minimal admin interface", () => {
     await page.screenshot({path:testInfo.outputPath("account-mobile.png"),fullPage:true});
   });
 
+  test("admin customization fields are labeled and fit a narrow screen",async({page},testInfo)=>{
+    await page.goto(`${base}/admin/settings`);
+    await page.getByLabel("Page width").selectOption("comfortable");
+    await page.getByLabel("Products per row on desktop").selectOption("3");
+    await page.getByLabel("Menu item 1 label").fill("Browse skincare");
+    await page.getByLabel("Show announcement bar").uncheck();
+    await expect(page.getByLabel("Menu item 1 label")).toHaveValue("Browse skincare");
+    await page.screenshot({path:testInfo.outputPath("customization-desktop.png"),fullPage:true});
+    await page.setViewportSize({width:390,height:844});
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.screenshot({path:testInfo.outputPath("customization-mobile.png"),fullPage:true});
+  });
+
 });

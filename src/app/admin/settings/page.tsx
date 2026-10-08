@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { StorefrontLayoutFields } from "@/components/admin/storefront-layout-fields";
+import { AdminSubmitButton } from "@/components/admin/admin-submit-button";
 import { saveSiteSettings } from "@/app/admin/actions";
 import { AdminCard, AdminNotice, AdminShell } from "@/components/admin/admin-shell";
 import { requireAdminPermission } from "@/lib/admin-auth";
@@ -6,10 +9,10 @@ import { readDraftStorefrontConfig } from "@/lib/storefront-admin-store";
 export default async function AdminSettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string }>;
+  searchParams: Promise<{ saved?: string; error?: string }>;
 }) {
   const admin = await requireAdminPermission("settings.view");
-  const [{ saved }, config] = await Promise.all([
+  const [{ saved, error }, config] = await Promise.all([
     searchParams,
     readDraftStorefrontConfig(),
   ]);
@@ -20,9 +23,11 @@ export default async function AdminSettingsPage({
       title="Store settings"
       subtitle="Customer-facing website settings live here. Commerce-critical price, stock and order controls remain in CRM."
     >
-      {saved ? <AdminNotice>Store settings draft saved.</AdminNotice> : null}
+      {saved ? <AdminNotice>Draft saved. <Link href="/admin/publishing" className="underline">Preview and publish →</Link></AdminNotice> : null}
+      {error ? <AdminNotice tone="neutral">{error}</AdminNotice> : null}
 
       <form action={saveSiteSettings} className="grid gap-5">
+        <StorefrontLayoutFields value={config.presentation} />
         <AdminCard>
           <h2 className="mb-3 text-sm font-semibold">Storefront appearance</h2>
           <p className="mb-4 text-xs text-black/60">Choose a color theme. Save as a draft, preview, then publish.</p>
@@ -72,11 +77,7 @@ export default async function AdminSettingsPage({
           Delivery pricing, ordering enable/disable state and payment method availability are still operational settings tied to the CRM/order bridge and are intentionally not editable here.
         </AdminNotice>
 
-        <div className="flex justify-end">
-          <button className="rounded-xl bg-[#713a35] px-6 py-3.5 text-sm font-semibold text-white">
-            Save settings
-          </button>
-        </div>
+        <div className="admin-save-bar"><p className="text-xs text-black/60">Save your draft, preview the storefront, then publish.</p><AdminSubmitButton pendingLabel="Saving…">Save draft</AdminSubmitButton></div>
       </form>
     </AdminShell>
   );

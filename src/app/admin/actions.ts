@@ -1,5 +1,6 @@
 "use server";
 
+import { normalizePresentation, safeNavigationHref } from "@/lib/storefront-presentation";
 import { cookies, draftMode, headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -344,11 +345,9 @@ export async function saveHomepage(formData: FormData) {
       ideaHeadline: text(formData, "ideaHeadline", 180),
       ideaCopy: text(formData, "ideaCopy", 600),
       showHero: formData.get("showHero") === "on",
-      showCategories: formData.get("showCategories") === "on",
       showRoutineFinder: formData.get("showRoutineFinder") === "on",
       routineFinderHeadline: text(formData, "routineFinderHeadline", 140),
       routineFinderIntro: text(formData, "routineFinderIntro", 420),
-      showBrandStory: formData.get("showBrandStory") === "on",
       heroLayout: formData.get("heroLayout") === "stacked" ? "stacked" : "split",
     };
     return config;
@@ -363,8 +362,21 @@ export async function saveHomepage(formData: FormData) {
 
 export async function saveSiteSettings(formData: FormData) {
   const admin = await requireAdminPermission("settings.edit");
+  for (let i=0;i<5;i++) {
+    const label=text(formData,`navLabel${i}`,30); const href=text(formData,`navHref${i}`,160);
+    if ((label || href) && (!label || !safeNavigationHref(href))) redirect("/admin/settings?error="+encodeURIComponent(`Menu item ${i+1} needs a label and a valid storefront destination.`));
+  }
 
   await updateDraftStorefrontConfig((config) => {
+    config.presentation = normalizePresentation({
+      contentWidth: text(formData,"contentWidth",20),
+      desktopColumns: Number(formData.get("desktopColumns")),
+      showAnnouncement: formData.get("showAnnouncement") === "on",
+      stickyHeader: formData.get("stickyHeader") === "on",
+      showRoutine: formData.get("showRoutine") === "on",
+      showHeroImageOnMobile: formData.get("showHeroImageOnMobile") === "on",
+      navigation: Array.from({length:5},(_,i)=>({label:text(formData,`navLabel${i}`,30),href:text(formData,`navHref${i}`,160)})),
+    });
     config.site = {
       announcement: text(formData, "announcement", 180),
       footerDescription: text(formData, "footerDescription", 600),
