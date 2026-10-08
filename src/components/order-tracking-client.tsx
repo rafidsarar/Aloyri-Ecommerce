@@ -145,7 +145,7 @@ export function OrderTrackingClient({
           </p>
         </div>
 
-        {accountTracking ? <div className="mt-6 flex gap-6 text-sm font-semibold"><Link href="/account" className="underline">Back to my orders</Link><a href={"/track-order?order=" + encodeURIComponent(initialOrder)} className="underline">Refresh tracking</a></div> : <form
+        {accountTracking ? <div className="mt-6 flex gap-6 text-sm font-semibold"><Link href="/account?section=orders" className="underline">Back to my orders</Link><a href={"/track-order?order=" + encodeURIComponent(initialOrder)} className="underline">Refresh tracking</a></div> : <form
           onSubmit={submit}
           className="mt-9 grid gap-4 rounded-[1.5rem] border border-[#713a35]/10 bg-[#f5e8e2] p-5 sm:grid-cols-[1fr_1fr_auto] sm:items-end sm:p-6"
         >

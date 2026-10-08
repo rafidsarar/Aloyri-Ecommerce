@@ -13,6 +13,7 @@ let available=true;
 const tracked={orderNumber,created:'2026-10-08',status:'New',paymentMethod:'COD',items:[{name:'Product',brand:'Brand',size:'50ml',qty:1,unitPrice:100}],productsSubtotal:100,discount:0,deliveryCharge:80,total:180,trackingReference:'',deliveredDate:'',returnedDate:''};
 const original=Module._load;
 Module._load=function(name,parent,isMain){
+ if(name==='next/navigation')return {redirect:url=>{throw new Error('REDIRECT:'+url);}};
  if(name==='@/lib/customer-auth')return {currentCustomerSession:async()=>session};
  if(name==='@/lib/order-tracking')return {fetchOrderTracking:async input=>{calls.push(input);return available?{ok:true,body:tracked}:{ok:false,body:{error:'Unavailable'}};}};
  if(name==='@/lib/crm-invoice-integration')return {fetchCrmOrderInvoice:async input=>{calls.push(input);return available?{ok:true,body:{html:'<!doctype html><h1>CRM Invoice</h1>'}}:{ok:false};}};
@@ -31,7 +32,7 @@ const request=order=>new Request('https://store.example.test/api/customer/order-
 (async()=>{
  let response=await GET(request(orderNumber));assert.equal(response.status,200);assert.match(response.headers.get('content-disposition'),/Aloyri-Invoice-WEB-FIXTURE-12345678.html/);assert.match(response.headers.get('cache-control'),/no-store/);assert.match(await response.text(),/CRM Invoice/);assert.deepEqual(calls.at(-1),{orderNumber,phone:'01712345678'});
  let page=await Page({searchParams:Promise.resolve({order:orderNumber})});assert.equal(page.props.accountTracking,true);assert.deepEqual(page.props.initialResult,tracked);assert.deepEqual(calls.at(-1),{orderNumber,phone:'01712345678'});
- let before=calls.length;assert.equal((await GET(request('WEB-OTHER-12345678'))).status,404);await Page({searchParams:Promise.resolve({order:'WEB-OTHER-12345678'})});await Page({searchParams:Promise.resolve({})});assert.equal(calls.length,before);
+ let before=calls.length;assert.equal((await GET(request('WEB-OTHER-12345678'))).status,404);await Page({searchParams:Promise.resolve({order:'WEB-OTHER-12345678'})});await assert.rejects(Page({searchParams:Promise.resolve({})}),/REDIRECT:\/account\?section=orders/);assert.equal(calls.length,before);
  available=false;assert.equal((await GET(request(orderNumber))).status,503);page=await Page({searchParams:Promise.resolve({order:orderNumber})});assert.equal(page.props.initialResult,null);assert.match(page.props.initialError,/temporarily unavailable/);
  session=null;before=calls.length;assert.equal((await GET(request(orderNumber))).status,401);page=await Page({searchParams:Promise.resolve({order:orderNumber})});assert.equal(page.props.initialOrder,orderNumber);assert.equal(page.props.accountTracking,undefined);assert.equal(calls.length,before);
  const accountHtml=renderToStaticMarkup(React.createElement(OrderTrackingClient,{initialOrder:orderNumber,initialResult:tracked,accountTracking:true}));assert.doesNotMatch(accountHtml,/<form|<input/);assert.match(accountHtml,/Back to my orders/);assert.match(accountHtml,/WEB-FIXTURE-12345678/);assert.doesNotMatch(accountHtml,/01712345678/);
