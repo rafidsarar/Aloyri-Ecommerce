@@ -17,7 +17,7 @@ function reply(data: unknown, status = 200) {
 
 async function payload(page = 1) {
   const session = await currentCustomerSession();
-  if (!session) return null;
+  if (!session || session.session.method !== "google" || session.account.displayName.trim().length < 2 || !/^(?:\+?88)?01[3-9]\d{8}$/.test(session.account.phone || "")) return null;
   const allRefs = session.account.orderRefs;
   const refs = allRefs.slice((page - 1) * 12, page * 12);
   const tracked = await Promise.all(
