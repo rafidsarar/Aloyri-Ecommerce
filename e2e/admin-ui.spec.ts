@@ -123,9 +123,15 @@ test.describe("minimal admin interface", () => {
     // Precompile checkout outside the browser so no empty-cart React route is cached.
     const warmed = await page.request.get(`${base}/checkout`, { timeout: 45_000 });
     expect(warmed.ok()).toBe(true);
-    await page.goto(`${base}/test-cart`);
-    await page.getByRole("button", { name: "Start fixture checkout" }).click();
-    await expect(page.getByRole("heading", { name: "Delivery details." })).toBeVisible({ timeout: 30_000 });
+    await page.goto(`${base}/checkout`);
+    const detailsHeading = page.getByRole("heading", { name: "Delivery details." });
+    try {
+      await expect(detailsHeading).toBeVisible({ timeout: 12_000 });
+    } catch (error) {
+      const visiblePage = await page.locator("body").innerText().catch(() => "(body inaccessible)");
+      console.log("ISOLATED CHECKOUT DIAGNOSTIC:", visiblePage.slice(0, 2500));
+      throw error;
+    }
     await expect(page.getByLabel("Saved address")).toHaveValue("");
     await expect(page.getByLabel("District")).toHaveValue("");
 
