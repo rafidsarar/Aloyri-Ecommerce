@@ -5,13 +5,13 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { BrandMark } from "@/components/brand-mark";
 import { CartLink } from "@/components/cart-link";
+import { ShopDiscoveryMenu } from "@/components/shop-discovery-menu";
 import { CloseIcon, MenuIcon, SearchIcon } from "@/components/icons";
 
 const links = [
   ["Shop all", "/shop"],
-  ["Cleansers", "/category/cleansers"],
-  ["Moisturizers", "/category/moisturizers"],
-  ["Sunscreen", "/category/sunscreen"],
+  ["Bestsellers", "/shop?sort=bestseller"],
+  ["Routine finder", "/routine-finder"],
   ["Customer care", "/customer-care"],
 ];
 
@@ -79,7 +79,8 @@ export function Header({ announcement }: { announcement: string }) {
       <header className="store-header sticky top-0 z-40 border-b backdrop-blur-xl">
         <div className="shell grid min-h-[72px] grid-cols-[auto_1fr_auto] items-center gap-3 py-3 lg:grid-cols-[auto_1fr_auto]">
           <div className="hidden lg:block"><BrandMark /></div>
-          <nav className="hidden items-center justify-center gap-5 lg:flex" aria-label="Primary navigation">
+          <nav className="hidden items-center justify-center gap-4 lg:flex xl:gap-5" aria-label="Primary navigation">
+            <ShopDiscoveryMenu />
             {links.map(([label, href]) => (
               <Link
                 key={label}
@@ -157,6 +158,15 @@ export function Header({ announcement }: { announcement: string }) {
             ))}
           </nav>
 
+          <div className="store-discovery-strip mt-6 rounded-2xl p-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[.18em]">Shop by routine</p>
+            <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+              <Link href="/category/cleansers" onClick={() => setOpen(false)}>Cleansers</Link>
+              <Link href="/category/moisturizers" onClick={() => setOpen(false)}>Moisturizers</Link>
+              <Link href="/category/sunscreen" onClick={() => setOpen(false)}>Sunscreen</Link>
+              <Link href="/shop?stock=in-stock" onClick={() => setOpen(false)}>Available now</Link>
+            </div>
+          </div>
           <nav aria-label="Customer tools" className="mt-6 grid grid-cols-2 gap-3">
             <Link href="/account" onClick={() => setOpen(false)} className="store-mobile-tool rounded-2xl p-4 text-sm font-semibold">My account</Link>
             <Link href="/track-order" onClick={() => setOpen(false)} className="rounded-2xl bg-[#f5e8e2] p-4 text-sm font-semibold">Track order</Link>
