@@ -99,7 +99,7 @@ test("mobile customer cart cannot bypass required Google registration", async ({
   await page.setViewportSize({ width: 375, height: 812 });
   await addProductAndOpenCart(page);
   await page.getByRole("link", { name: /Checkout/i }).last().click();
-  await expect(page).toHaveURL(/\\/account\\/setup\\?next=/);
+  await expect(page).toHaveURL(/\/account\/setup\?next=/);
   await expect(page.getByRole("link", { name: "Sign in with Google" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
