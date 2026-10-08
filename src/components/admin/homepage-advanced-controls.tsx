@@ -10,8 +10,8 @@ import type { StorefrontConfig } from "@/lib/storefront-admin-store";
  * Do not add a nested form or save button here: the unified action persists both
  * advanced homepage fields and visual canvas changes atomically.
  */
-export async function HomepageAdvancedControls({ config }: { config: StorefrontConfig }) {
-  const catalog = await fetchCrmCatalog();
+export async function HomepageAdvancedControls({ config, catalogResult }: { config: StorefrontConfig; catalogResult?: Awaited<ReturnType<typeof fetchCrmCatalog>> }) {
+  const catalog = catalogResult ?? await fetchCrmCatalog();
   const home = config.homepage;
   const products = catalog.ok ? catalog.body.products : [];
   const heroProductId = products.some(product => product.id === home.heroProductId)
