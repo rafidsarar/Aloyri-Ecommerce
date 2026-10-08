@@ -1,5 +1,5 @@
 import "server-only";
-import { defaultVisualLayout, normalizeVisualLayout, type VisualLayout } from "@/lib/visual-builder";
+import { defaultVisualLayout, normalizeVisualLayout, normalizeVisualPageLayout, visualPageKeys, type VisualLayout, type VisualPageKey } from "@/lib/visual-builder";
 import { defaultHomepageOrder, normalizeHomepageOrder, safeHomepageImagePath, type HomepageBlockId } from "@/lib/homepage-builder";
 import { cache } from "react";
 import { revalidatePath } from "next/cache";
@@ -226,6 +226,7 @@ export type StorefrontConfig = {
     editorialSections: Array<{ enabled: boolean; kind: "story" | "testimonial" | "faq" | "announcement"; title: string; eyebrow: string; copy: string; ctaLabel: string; ctaHref: string; position: "before-products" | "after-products" | "before-story"; layout: "split" | "centered" }>;
     promoPlacement: "before-products" | "after-products";
   };
+  visualPages: Record<VisualPageKey, VisualLayout>;
   pages: {
     about: InfoPageContent;
     shipping: InfoPageContent;
@@ -456,6 +457,7 @@ export const defaultStorefrontConfig: StorefrontConfig = {
     promoBanners: [],
     editorialSections: [],
   },
+  visualPages: Object.fromEntries(visualPageKeys.map(key => [key, { order: [], blocks: [], hiddenCore: [] }])) as Record<VisualPageKey, VisualLayout>,
   pages: {
     about: {
       eyebrow: "About Aloyri",
@@ -815,6 +817,7 @@ function normalizeConfig(value: Partial<StorefrontConfig> | null): StorefrontCon
           ? value.homepage.featureChips.slice(0, 6)
           : defaultStorefrontConfig.homepage.featureChips,
     },
+    visualPages: Object.fromEntries(visualPageKeys.map(key => [key, normalizeVisualPageLayout(value.visualPages?.[key])])) as Record<VisualPageKey, VisualLayout>,
     pages: {
       about: {
         ...defaultStorefrontConfig.pages.about,
