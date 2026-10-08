@@ -1522,7 +1522,7 @@ export function CheckoutClient() {
               <div className="mt-3 flex gap-2">
                 <input
                   value={promotionCode}
-                  onChange={(event) => { setPromotionCode(event.target.value.toUpperCase()); setPromotionError(""); }}
+                  onChange={(event) => { setPromotionCode(event.target.value.toUpperCase()); if (!appliedCode) setPromotionError(""); }}
                   onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); applyPromotionCode(); } }}
                   aria-label="Promotion code"
                   placeholder="Promotion code"
@@ -1535,6 +1535,11 @@ export function CheckoutClient() {
                 </button>
               </div>
               {promotionError ? <p role="alert" aria-live="polite" className="mt-2 text-xs leading-5 text-red-700">{promotionError}</p> : null}
+              {appliedCode && !activePromotion ? (
+                <button type="button" onClick={removePromotionCode} className="mt-3 min-h-11 text-xs font-semibold text-[#713a35] underline underline-offset-4">
+                  Remove code and continue without it
+                </button>
+              ) : null}
               {activePromotion ? (
                 <div className="mt-3 flex items-start justify-between gap-3 rounded-[.8rem] bg-[#f7ebe6] p-3">
                   <div>
@@ -1614,12 +1619,12 @@ export function CheckoutClient() {
           <div className="checkout-mobile-bar fixed inset-x-0 bottom-0 z-30 border-t border-[#713a35]/10 bg-[#fffaf7]/96 p-3 backdrop-blur lg:hidden">
             <div className="mx-auto flex max-w-xl items-center gap-3">
               <div className="min-w-0 flex-1 pl-1">
-                <p className="text-[10px] uppercase tracking-[0.12em] text-[#321f1c]/40">Estimated total</p>
+                <p className="text-[10px] uppercase tracking-[0.12em] text-[#321f1c]/60">{draft.deliveryZone ? "Estimated total" : "Before delivery"}</p>
                 <p className="font-semibold">{formatPrice(quotedTotal)}</p>
               </div>
               <button
                 type="submit"
-                disabled={!orderingStatusLoaded || !orderingEnabled}
+                disabled={!orderingStatusLoaded || !orderingEnabled || promotionLoading || Boolean(appliedCode && promotionError)}
                 className="min-h-12 rounded-full bg-[#713a35] px-6 text-sm font-semibold text-white disabled:bg-[#713a35]/30"
               >
                 Review order
