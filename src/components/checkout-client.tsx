@@ -38,6 +38,7 @@ import {
 import { formatPrice, getProductById } from "@/lib/catalog";
 import { getAnalyticsContext, trackStorefrontEvent } from "@/lib/analytics";
 import { salePriceFor, type PromotionQuote } from "@/lib/promotions";
+import { checkoutQuoteKey, chooseCheckoutAddress, prefillCheckoutAccount, promotionQuoteReady, type CheckoutAccount } from "@/lib/checkout-conversion";
 
 
 type FieldErrors = Partial<Record<keyof CheckoutDraft, string>>;
@@ -48,25 +49,6 @@ type OrderFailure = {
   recoverable: boolean;
   cartAction: boolean;
   uncertain: boolean;
-};
-
-type CheckoutSavedAddress = {
-  id: string;
-  label: string;
-  recipientName: string;
-  phone: string;
-  district: string;
-  area: string;
-  address: string;
-  landmark?: string;
-};
-
-type CheckoutAccount = {
-  id: string;
-  email: string;
-  displayName: string;
-  phone?: string;
-  savedAddresses: CheckoutSavedAddress[];
 };
 
 const inputClass =
@@ -194,6 +176,7 @@ export function CheckoutClient() {
   const [promotionCode, setPromotionCode] = useState("");
   const [appliedCode, setAppliedCode] = useState("");
   const [promotionQuote, setPromotionQuote] = useState<PromotionQuote | null>(null);
+  const [quotedRequestKey, setQuotedRequestKey] = useState("");
   const [promotionLoading, setPromotionLoading] = useState(false);
   const [promotionError, setPromotionError] = useState("");
   const [recoveryAvailable, setRecoveryAvailable] = useState(false);
@@ -330,23 +313,7 @@ export function CheckoutClient() {
 
         const account = status.account;
         setCustomerAccount(account);
-        const first = account.savedAddresses?.[0];
-        setDraft((current) => ({
-          ...current,
-          email: account.email,
-          fullName:
-            current.fullName ||
-            first?.recipientName ||
-            account.displayName ||
-            "",
-          phone: current.phone || account.phone || first?.phone || "",
-          // Delivery stays customer-selected. Do not silently use the first saved address.
-          district: current.district,
-          area: current.area,
-          address: current.address,
-          landmark: current.landmark,
-          deliveryZone: current.deliveryZone,
-        }));
+        setDraft((current) => prefillCheckoutAccount(current, account));
       })
       .catch(() => undefined);
 
@@ -396,15 +363,20 @@ export function CheckoutClient() {
       ? deliveryRates[draft.deliveryZone]
       : 0;
   const payableTotal = subtotal + deliveryCharge;
-  const quotedSubtotal = promotionQuote?.productsSubtotal ?? subtotal;
-  const quotedDiscount = promotionQuote?.discount ?? 0;
+  const requestQuoteKey = checkoutQuoteKey(cartItems, draft.deliveryZone, appliedCode);
+  const currentPromotionQuote = quotedRequestKey === requestQuoteKey ? promotionQuote : null;
+  const canUseQuote = promotionQuoteReady(
+    requestQuoteKey, quotedRequestKey, appliedCode, currentPromotionQuote, promotionError, promotionLoading,
+  );
+  const quotedSubtotal = currentPromotionQuote?.productsSubtotal ?? subtotal;
+  const quotedDiscount = currentPromotionQuote?.discount ?? 0;
   const quotedDelivery =
-    promotionQuote?.deliveryCharge ??
+    currentPromotionQuote?.deliveryCharge ??
     (draft.deliveryZone && deliveryRates ? deliveryCharge : 0);
   const quotedTotal =
-    promotionQuote?.total ??
+    currentPromotionQuote?.total ??
     (draft.deliveryZone && deliveryRates ? payableTotal : subtotal);
-  const activePromotion = promotionQuote?.promotion ?? null;
+  const activePromotion = currentPromotionQuote?.promotion ?? null;
 
   useEffect(() => {
     if (
@@ -478,12 +450,17 @@ export function CheckoutClient() {
           if (!response.ok) {
             throw new Error(result.error || "That promotion could not be applied.");
           }
+          if (appliedCode && (!result.codeApplied || result.requestedCode?.trim().toUpperCase() !== appliedCode)) {
+            throw new Error("This promotion cannot be redeemed for this order. Remove the code to continue.");
+          }
           setPromotionQuote(result);
+          setQuotedRequestKey(requestQuoteKey);
           setPromotionError("");
         })
         .catch((error: unknown) => {
           if (controller.signal.aborted) return;
           setPromotionQuote(null);
+          setQuotedRequestKey(requestQuoteKey);
           if (appliedCode) {
             setPromotionError(error instanceof Error ? error.message : "That promotion could not be applied.");
           }
@@ -497,7 +474,7 @@ export function CheckoutClient() {
       window.clearTimeout(refreshQuote);
       controller.abort();
     };
-  }, [appliedCode, cartItems, catalogSynced, draft.deliveryZone, hasUnavailable]);
+  }, [appliedCode, cartItems, catalogSynced, draft.deliveryZone, hasUnavailable, requestQuoteKey]);
 
   function applyPromotionCode() {
     const normalized = promotionCode.trim().toUpperCase();
@@ -507,12 +484,16 @@ export function CheckoutClient() {
     }
     setPromotionCode(normalized);
     setPromotionError("");
+    setQuotedRequestKey("");
+    setPromotionQuote(null);
     setAppliedCode(normalized);
   }
 
   function removePromotionCode() {
     setAppliedCode("");
     setPromotionCode("");
+    setQuotedRequestKey("");
+    setPromotionQuote(null);
     setPromotionError("");
   }
 
@@ -544,31 +525,9 @@ export function CheckoutClient() {
   function applySavedAddress(addressId: string) {
     setSelectedAddressId(addressId);
     if (!customerAccount) return;
-    if (!addressId) {
-      // Preserve visible delivery details when switching to manual entry.
-      setErrors({});
-      setSubmitFailure(null);
-      return;
-    }
-    const address = customerAccount.savedAddresses.find(
-      (row) => row.id === addressId,
-    );
-    if (!address) return;
-    if (address.landmark) setShowOptionalDelivery(true);
-    setDraft((current) => ({
-      ...current,
-      fullName: address.recipientName,
-      phone: address.phone,
-      email: customerAccount.email,
-      district: address.district,
-      area: address.area,
-      address: address.address,
-      landmark: address.landmark || "",
-      deliveryZone:
-        address.district.trim().toLowerCase() === "dhaka"
-          ? "inside-dhaka"
-          : "outside-dhaka",
-    }));
+    const address = customerAccount.savedAddresses?.find((row) => row.id === addressId);
+    if (address?.landmark) setShowOptionalDelivery(true);
+    setDraft((current) => chooseCheckoutAddress(current, customerAccount, addressId) ?? current);
     setErrors({});
     setSubmitFailure(null);
   }
@@ -711,7 +670,7 @@ export function CheckoutClient() {
       return;
     }
 
-    if (promotionLoading || Boolean(appliedCode && promotionError)) {
+    if (!canUseQuote) {
       setSubmitFailure({
         message: "Please finish checking the promotion code or remove it before reviewing.",
         code: "PROMOTION_NOT_READY", recoverable: true, cartAction: false, uncertain: false,
@@ -754,8 +713,7 @@ export function CheckoutClient() {
       Boolean(catalogError) ||
       hasUnavailable ||
       submitting ||
-      promotionLoading ||
-      Boolean(appliedCode && promotionError) ||
+      !canUseQuote ||
       draft.paymentMethod !== "COD" ||
       !draft.deliveryZone
     ) {
@@ -1548,7 +1506,7 @@ export function CheckoutClient() {
                   <div>
                     <p className="text-xs font-semibold text-[#713a35]">{activePromotion.badgeText || activePromotion.name}</p>
                     <p className="mt-1 text-[11px] leading-5 text-[#321f1c]/48">
-                      {promotionQuote?.savings ? `${formatPrice(promotionQuote.savings)} saved on this order.` : "Promotion applied."}
+                      {currentPromotionQuote?.savings ? `${formatPrice(promotionQuote.savings)} saved on this order.` : "Promotion applied."}
                     </p>
                   </div>
                   {appliedCode ? (
@@ -1608,7 +1566,7 @@ export function CheckoutClient() {
 
             <button
               type="submit"
-              disabled={!orderingStatusLoaded || !orderingEnabled || promotionLoading || Boolean(appliedCode && promotionError)}
+              disabled={!orderingStatusLoaded || !orderingEnabled || !canUseQuote}
               className="mt-6 hidden min-h-12 w-full items-center justify-center gap-3 rounded-full bg-[#713a35] px-6 py-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:bg-[#713a35]/30 lg:inline-flex"
             >
               Continue to review <ArrowIcon />
@@ -1627,7 +1585,7 @@ export function CheckoutClient() {
               </div>
               <button
                 type="submit"
-                disabled={!orderingStatusLoaded || !orderingEnabled || promotionLoading || Boolean(appliedCode && promotionError)}
+                disabled={!orderingStatusLoaded || !orderingEnabled || !canUseQuote}
                 className="min-h-12 rounded-full bg-[#713a35] px-6 text-sm font-semibold text-white disabled:bg-[#713a35]/30"
               >
                 Review order
@@ -1766,7 +1724,7 @@ export function CheckoutClient() {
                 <div className="my-3 rounded-[.8rem] bg-white/60 p-3 text-xs">
                   <div className="flex items-center justify-between gap-3">
                     <span className="font-semibold text-[#713a35]">{activePromotion.badgeText || activePromotion.name}</span>
-                    <span className="font-semibold text-[#713a35]">Save {formatPrice(promotionQuote?.savings ?? 0)}</span>
+                    <span className="font-semibold text-[#713a35]">Save {formatPrice(currentPromotionQuote?.savings ?? 0)}</span>
                   </div>
                 </div>
               ) : null}
