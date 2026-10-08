@@ -1,6 +1,7 @@
 "use server";
 
 import { normalizePresentation, safeNavigationHref } from "@/lib/storefront-presentation";
+import { normalizeHomepageOrder, safeHomepageImagePath } from "@/lib/homepage-builder";
 import { cookies, headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -293,8 +294,24 @@ export async function restoreVersionToDraftAction(formData: FormData) {
 
 export async function saveHomepage(formData: FormData) {
   const admin = await requireAdminPermission("homepage.edit");
-
+  let requestedOrder: unknown;
+  try {
+    requestedOrder = JSON.parse(text(formData, "sectionOrder", 3000));
+  } catch {
+    requestedOrder = null;
+  }
   await updateDraftStorefrontConfig((config) => {
+    config.site.appearance = ["rose", "sage", "sand"].includes(text(formData, "appearance", 10))
+      ? text(formData, "appearance", 10) as "rose" | "sage" | "sand"
+      : config.site.appearance;
+    config.presentation = normalizePresentation({
+      ...config.presentation,
+      contentWidth: text(formData, "contentWidth", 20) || config.presentation.contentWidth,
+      desktopColumns: Number(formData.get("desktopColumns")) || config.presentation.desktopColumns,
+      showHeroImageOnMobile: formData.get("showHeroImageOnMobile") === "on",
+      showRoutine: formData.get("showRoutine") === "on",
+    });
+
     config.homepage = {
       ...config.homepage,
       eyebrow: text(formData, "eyebrow", 120),
@@ -310,7 +327,23 @@ export async function saveHomepage(formData: FormData) {
         text(formData, "secondaryHref", 200),
         config.homepage.secondaryHref,
       ),
-      heroProductId: text(formData, "heroProductId", 120),
+      heroProductId: text(formData, "heroProductId", 120) || config.homepage.heroProductId,
+      heroImagePath: safeHomepageImagePath(text(formData, "heroImagePath", 200)),
+      heroStyle: ["soft", "minimal", "contrast"].includes(text(formData, "heroStyle", 10))
+        ? text(formData, "heroStyle", 10) as "soft" | "minimal" | "contrast"
+        : config.homepage.heroStyle,
+      heroAlignment: formData.get("heroAlignment") === "center" ? "center" : "left",
+      sectionOrder: requestedOrder ? normalizeHomepageOrder(requestedOrder) : config.homepage.sectionOrder,
+      showBrowse: formData.get("showBrowse") === "on",
+      browseEyebrow: text(formData, "browseEyebrow", 90),
+      browseTitle: text(formData, "browseTitle", 140),
+      browseIntro: text(formData, "browseIntro", 300),
+      browsePlaceholder: text(formData, "browsePlaceholder", 100),
+      showFocus: formData.get("showFocus") === "on",
+      showRoutineSteps: formData.get("showRoutineSteps") === "on",
+      categoriesEyebrow: text(formData, "categoriesEyebrow", 90),
+      categoriesTitle: text(formData, "categoriesTitle", 140),
+      categoriesIntro: text(formData, "categoriesIntro", 300),
       featureChips: list(text(formData, "featureChips", 1000), 6, 80),
       ideaEyebrow: text(formData, "ideaEyebrow", 120),
       ideaHeadline: text(formData, "ideaHeadline", 180),
@@ -323,7 +356,7 @@ export async function saveHomepage(formData: FormData) {
       showCategories: formData.get("showCategories") === "on",
       showBrandStory: formData.get("showBrandStory") === "on",
       promoPlacement: formData.get("promoPlacement") === "after-products" ? "after-products" : "before-products",
-      promoBanners: Array.from({ length: 2 }, (_, index) => {
+      promoBanners: Array.from({ length: 4 }, (_, index) => {
         const prefix = `promo${index}`;
         return {
           enabled: formData.get(`${prefix}Enabled`) === "on",
