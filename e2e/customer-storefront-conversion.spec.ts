@@ -51,6 +51,23 @@ test.describe("customer storefront usability", () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   });
 
+  test("checkout without items does not expose an order submission action", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await mockCatalog(page);
+    await page.goto("/checkout");
+    await expect(page.getByRole("button", { name: "Review order" })).toHaveCount(0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  });
+
+  test("cart remains empty after navigating between checkout and cart", async ({ page }) => {
+    await mockCatalog(page);
+    await page.goto("/cart");
+    await expect(page.getByText("Your cart is empty.")).toBeVisible();
+    await page.goto("/checkout");
+    await page.goto("/cart");
+    await expect(page.getByText("Your cart is empty.")).toBeVisible();
+  });
+
   test("mobile navigation and checkout entry are accessible", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto("/");
