@@ -43,7 +43,7 @@ test("visual builder keeps every commerce section and inserts custom blocks at r
 
 test("legacy homepage section rearrangement keeps custom block anchored to its section", () => {
   const first = normalizeVisualLayout({ blocks: [custom], order: ["core:hero", "custom:my-new-block", "core:products"] });
-  const reordered = reorderVisualCoreSections(first, ["products", "hero", "categories"] as never);
+  const reordered = reorderVisualCoreSections(first, ["products", "hero", "categories"]);
   expect(reordered.order.indexOf("custom:my-new-block")).toBe(reordered.order.indexOf("core:hero") + 1);
   expect(reordered.order.indexOf("core:products")).toBeLessThan(reordered.order.indexOf("core:hero"));
 });
