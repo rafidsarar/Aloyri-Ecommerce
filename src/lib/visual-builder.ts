@@ -35,6 +35,19 @@ export type VisualBlock = {
 };
 export type VisualLayout = { order: string[]; blocks: VisualBlock[]; hiddenCore: HomepageBlockId[] };
 
+export const visualPageKeys = ["about", "shipping", "returns", "contact", "faq", "shop", "category", "product"] as const;
+export type VisualPageKey = (typeof visualPageKeys)[number];
+export const visualPageNames: Record<VisualPageKey, string> = {
+  about: "About page",
+  shipping: "Shipping & delivery",
+  returns: "Returns & refunds",
+  contact: "Contact",
+  faq: "FAQ",
+  shop: "Shop",
+  category: "Category pages",
+  product: "Product pages",
+};
+
 export const coreBlockId = (id: HomepageBlockId) => `core:${id}`;
 export const customBlockId = (id: string) => `custom:${id}`;
 export const defaultVisualOrder = defaultHomepageOrder.map(coreBlockId);
@@ -108,4 +121,10 @@ export function normalizeVisualLayout(value: unknown, legacyOrder: HomepageBlock
     (id): id is HomepageBlockId => typeof id === "string" && allowedCore.has(coreBlockId(id as HomepageBlockId)),
   );
   return { order: result, blocks, hiddenCore: [...new Set(hiddenCore)] };
+}
+
+/** Extra editorial content for other page templates; core commerce UI is never replaced. */
+export function normalizeVisualPageLayout(value: unknown): VisualLayout {
+  const base = normalizeVisualLayout(value, []);
+  return { order: base.order.filter(id => id.startsWith("custom:")), blocks: base.blocks, hiddenCore: [] };
 }
