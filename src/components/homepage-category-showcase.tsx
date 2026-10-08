@@ -9,14 +9,14 @@ const categories = [
   { key: "sunscreen", category: "Sunscreen", step: "03 / PROTECT", title: "Sunscreen", note: "Make everyday SPF effortless.", href: "/category/sunscreen" },
 ] as const;
 
-export function HomepageCategoryShowcase({ products }: { products: Product[] }) {
+export function HomepageCategoryShowcase({ products, eyebrow, title, intro }: { products: Product[]; eyebrow: string; title: string; intro: string }) {
   return (
     <section className="shell py-9 md:py-14" aria-labelledby="shop-by-category">
       <div className="mb-7 flex flex-wrap items-end justify-between gap-4 md:mb-9">
         <div>
-          <p className="store-home-overline">A simpler way to shop</p>
-          <h2 id="shop-by-category" className="store-home-heading display mt-2">Shop by category</h2>
-          <p className="store-home-muted mt-3 max-w-xl text-sm leading-6">Start with a step in your routine, then explore the products that fit.</p>
+          <p className="store-home-overline">{eyebrow}</p>
+          <h2 id="shop-by-category" className="store-home-heading display mt-2">{title}</h2>
+          <p className="store-home-muted mt-3 max-w-xl text-sm leading-6">{intro}</p>
         </div>
         <Link href="/shop" className="store-home-text-link inline-flex min-h-11 items-center gap-2 text-sm font-semibold">
           View all skincare <ArrowIcon />
