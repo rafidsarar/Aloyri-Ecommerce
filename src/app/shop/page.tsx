@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { VisualPageSections } from "@/components/visual-page-sections";
 import Link from "next/link";
 import { shopSeoMetadata } from "@/lib/seo-manager";
 import { ShopClient } from "@/components/shop-client";
@@ -40,6 +41,7 @@ export default async function ShopPage({
   ]);
 
   return (
+    <>
     <main className="shell py-12 md:py-16">
       <div className="grid gap-4 border-b border-[#713a35]/10 pb-6 lg:grid-cols-[1fr_.7fr] lg:items-end">
         <div>
@@ -94,5 +96,7 @@ export default async function ShopPage({
         merchandisingSortMode={config.merchandising.shopSortMode}
       />
     </main>
+    <VisualPageSections layout={config.visualPages.shop} />
+    </>
   );
 }
