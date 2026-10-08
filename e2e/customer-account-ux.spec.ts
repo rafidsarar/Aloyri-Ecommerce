@@ -64,3 +64,14 @@ test.describe("customer account entry and signup UX", () => {
     expect(registerHref.searchParams.get("next")).toBe("/account/setup?next=%2Faccount");
   });
 });
+
+test("mobile shoppers can find account login directly in the header", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 720 });
+  await page.goto("/");
+  const accountLink = page.getByRole("link", { name: "Customer account and sign in" });
+  await expect(accountLink).toBeVisible();
+  await accountLink.click();
+  await expect(page).toHaveURL(/\/account$/);
+  await expect(page.getByRole("heading", { name: "Create an account" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
