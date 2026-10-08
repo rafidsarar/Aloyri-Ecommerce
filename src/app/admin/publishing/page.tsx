@@ -115,6 +115,12 @@ export default async function AdminPublishingPage({
           <div className="mt-5 flex flex-wrap gap-3">
             {canPreview ? (
               <form action={enableDraftPreview}>
+                <input type="hidden" name="path" value="/admin/preview-device" />
+                <button className="rounded-xl border border-[#713a35]/18 px-5 py-3 text-sm font-semibold text-[#713a35]">
+                  Preview at device sizes
+                </button>
+              </form>
+              <form action={enableDraftPreview}>
                 <input type="hidden" name="path" value="/" />
                 <button className="rounded-xl border border-[#713a35]/18 px-5 py-3 text-sm font-semibold text-[#713a35]">
                   Preview draft storefront
