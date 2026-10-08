@@ -114,6 +114,7 @@ export default async function AdminPublishingPage({
 
           <div className="mt-5 flex flex-wrap gap-3">
             {canPreview ? (
+              <>
               <form action={enableDraftPreview}>
                 <input type="hidden" name="path" value="/admin/preview-device" />
                 <button className="rounded-xl border border-[#713a35]/18 px-5 py-3 text-sm font-semibold text-[#713a35]">
@@ -126,6 +127,7 @@ export default async function AdminPublishingPage({
                   Preview draft storefront
                 </button>
               </form>
+              </>
             ) : null}
             {canDiscard ? (
               <details className="w-full border-t border-black/10 pt-4"><summary className="cursor-pointer text-xs text-black/60">Reset draft changes</summary><p className="my-3 text-xs text-black/60">This replaces your saved draft with the current live website.</p><form action={discardDraft}>
