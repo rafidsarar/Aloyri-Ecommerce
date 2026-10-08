@@ -1,6 +1,6 @@
 "use client";
 
-import { useReducer, useState, type DragEvent } from "react";
+import { useReducer, useState, type DragEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { saveVisualBuilder } from "@/app/admin/actions";
 import { VisualBuilderBlock } from "@/components/visual-builder-block";
@@ -60,7 +60,7 @@ function freshBlock(kind: VisualBlockKind): VisualBlock {
   };
 }
 
-export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], initialCoreContent }: { initialLayout: VisualLayout; pageKey: "home" | VisualPageKey; mediaPaths?: string[]; initialCoreContent?: CoreContent }) {
+export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], initialCoreContent, advancedSettings, initialView = "canvas" }: { initialLayout: VisualLayout; pageKey: "home" | VisualPageKey; mediaPaths?: string[]; initialCoreContent?: CoreContent; advancedSettings?: ReactNode; initialView?: "canvas" | "advanced" }) {
   const [{ past, current: layout, future }, dispatch] = useReducer(historyReducer, { past: [], current: initialLayout, future: [] });
   const [coreContent, setCoreContent] = useState<CoreContent | undefined>(initialCoreContent);
   const [initialCoreSnapshot] = useState(() => initialCoreContent ? JSON.stringify(initialCoreContent) : "");
@@ -75,6 +75,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
   function undoCore() { if (!corePast.length || !coreContent) return; setCoreFuture(f => [coreContent, ...f]); setCoreContent(corePast[corePast.length - 1]); setCorePast(p => p.slice(0, -1)); }
   function redoCore() { if (!coreFuture.length || !coreContent) return; setCorePast(p => [...p, coreContent]); setCoreContent(coreFuture[0]); setCoreFuture(f => f.slice(1)); }
   const [selectedId, setSelectedId] = useState(layout.order[0] || "");
+  const [view, setView] = useState<"canvas" | "advanced">(initialView);
   const [device, setDevice] = useState<"mobile" | "tablet" | "desktop">("desktop");
   const [filter, setFilter] = useState("");
   const isHomepage = pageKey === "home";
@@ -158,6 +159,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
       {isHomepage && coreContent && <input type="hidden" name="coreContent" value={JSON.stringify(coreContent)} />}
       {isHomepage && <input type="hidden" name="coreBaseline" value={initialCoreSnapshot} />}
       <input type="hidden" name="pageKey" value={pageKey} />
+      {isHomepage && advancedSettings && <input type="hidden" name="homepageControls" value="1" />}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-black/10 bg-white p-4">
         <div>
           <p className="text-sm font-semibold">Visual editor</p>
@@ -170,6 +172,12 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
           <button type="submit" className="min-h-11 rounded-xl bg-[#713a35] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#5a2e2a]">Save website changes</button>
         </div>
       </div>
+      {isHomepage && advancedSettings && <nav aria-label="Homepage editing tools" className="flex flex-wrap gap-2 rounded-2xl border border-black/10 bg-white p-3">
+        <button type="button" aria-current={view === "canvas" ? "page" : undefined} onClick={() => setView("canvas")} className={view === "canvas" ? "min-h-11 rounded-xl bg-[#713a35] px-4 text-sm font-semibold text-white" : secondaryButton}>Visual layout & components</button>
+        <button type="button" aria-current={view === "advanced" ? "page" : undefined} onClick={() => setView("advanced")} className={view === "advanced" ? "min-h-11 rounded-xl bg-[#713a35] px-4 text-sm font-semibold text-white" : secondaryButton}>Existing sections & detailed settings</button>
+        <p className="basis-full text-xs leading-5 text-black/60">One workspace, one save: switch between editors without losing unsaved changes. Both views save together.</p>
+      </nav>}
+      <div className={isHomepage && advancedSettings && view === "advanced" ? "hidden" : ""}>
       <div className="grid min-w-0 gap-4 xl:grid-cols-[210px_minmax(0,1fr)_300px]">
         <aside className="min-w-0 rounded-2xl border border-black/10 bg-white p-4" aria-label="Component library">
           <h2 className="text-sm font-semibold">Add components</h2>
@@ -255,7 +263,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
 <label className="block text-xs font-semibold">Heading<input aria-label="Heading" value={coreContent.ideaHeadline} maxLength={600} onChange={event => editCore("ideaHeadline", event.target.value)} className={field + " mt-1"} /></label>
 <label className="block text-xs font-semibold">Description<input aria-label="Description" value={coreContent.ideaCopy} maxLength={600} onChange={event => editCore("ideaCopy", event.target.value)} className={field + " mt-1"} /></label></div>}</> : <p className="mt-2 text-xs text-black/60">Use the linked management screen for this section.</p>}
             <label className="mt-4 flex items-center gap-2 text-sm"><input type="checkbox" checked={!layout.hiddenCore.includes(selectedCore)} onChange={() => toggleCore(selectedCore)} /> Show section</label>
-            <Link href={selectedCore === "products" ? "/admin/merchandising" : "/admin/homepage"} className="mt-4 inline-flex min-h-11 items-center rounded-xl border border-black/15 px-4 py-2 text-xs font-semibold">Advanced section settings →</Link>
+            {selectedCore === "products" ? <Link href="/admin/merchandising" className="mt-4 inline-flex min-h-11 items-center rounded-xl border border-black/15 px-4 py-2 text-xs font-semibold">Edit products & campaigns →</Link> : advancedSettings ? <button type="button" onClick={() => setView("advanced")} className={secondaryButton + " mt-4"}>Detailed section settings →</button> : <Link href="/admin/builder?view=advanced" className="mt-4 inline-flex min-h-11 items-center rounded-xl border border-black/15 px-4 py-2 text-xs font-semibold">Detailed section settings →</Link>}
           </> : selectedCustom ? <div className="mt-4 space-y-4">
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={duplicate} disabled={layout.blocks.length >= 32} className={secondaryButton}>Duplicate</button>
@@ -322,6 +330,10 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
           </div> : <p className="mt-3 text-xs text-black/60">Select a section to edit.</p>}
         </aside>
       </div>
+      </div>
+      {isHomepage && advancedSettings && <section className={view === "advanced" ? "min-w-0" : "hidden"} aria-label="Detailed homepage settings">
+        {advancedSettings}
+      </section>}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-black/10 bg-white p-4">
         <p className="text-xs text-black/60">Saving updates the selected public page with a recoverable version-history snapshot. Orders, prices and stock remain managed by their existing systems.</p>
         <button type="submit" className="min-h-11 rounded-xl bg-[#713a35] px-5 py-2.5 text-sm font-semibold text-white">Save website changes</button>

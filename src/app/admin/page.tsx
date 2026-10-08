@@ -99,7 +99,7 @@ export default async function AdminOverviewPage({
           <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {(
               [
-                ["Homepage", "Hero, featured content and campaign copy", "/admin/homepage", "homepage.view"],
+                ["Storefront Builder", "Edit homepage features, visual layouts, banners and content together", "/admin/builder", "homepage.view"],
                 ["Product content", "Descriptions, badges, guidance and photography", "/admin/products", "products.view"],
                 ["Customer pages", "About, shipping, returns, contact and FAQ", "/admin/pages", "pages.view"],
                 ["Store settings", "Announcement, footer and support details", "/admin/settings", "settings.view"],

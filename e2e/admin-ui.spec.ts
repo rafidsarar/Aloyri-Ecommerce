@@ -15,19 +15,19 @@ test.describe("minimal admin interface", () => {
     fixture.stderr?.on("data", data => { logs += data; });
     await expect.poll(async () => {
       if (fixture.exitCode !== null) throw new Error(logs);
-      try { return (await fetch(`${base}/admin/homepage`)).status; } catch { return 0; }
+      try { return (await fetch(`${base}/admin/builder`)).status; } catch { return 0; }
     }, { timeout: 100_000 }).toBe(200);
   });
   test.afterAll(() => fixture?.kill("SIGTERM"));
 
   test("desktop navigation shows current page and searches sections", async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 1440, height: 960 });
-    await page.goto(`${base}/admin/homepage`);
+    await page.goto(`${base}/admin/builder`);
     const nav = page.getByRole("navigation", { name: "Admin navigation" });
-    await expect(nav.getByRole("link", { name: "Homepage Builder", exact: true })).toHaveAttribute("aria-current", "page");
+    await expect(nav.getByRole("link", { name: "Storefront Builder", exact: true })).toHaveAttribute("aria-current", "page");
     await page.getByRole("searchbox", { name: "Find an admin section" }).fill("payments");
     await expect(nav.getByRole("link", { name: "Payments", exact: true })).toBeVisible();
-    await expect(nav.getByRole("link", { name: "Homepage Builder", exact: true })).toHaveCount(0);
+    await expect(nav.getByRole("link", { name: "Storefront Builder", exact: true })).toHaveCount(0);
     await page.getByRole("searchbox").fill("");
     await page.screenshot({ path: testInfo.outputPath("admin-desktop.png"), fullPage: true });
     await page.goto(`${base}/admin/products/item`);
@@ -36,7 +36,7 @@ test.describe("minimal admin interface", () => {
 
   test("mobile menu opens without horizontal page overflow", async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto(`${base}/admin/homepage`);
+    await page.goto(`${base}/admin/builder`);
     const toggle = page.getByRole("button", { name: /Browse sections/ });
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
     await toggle.click();

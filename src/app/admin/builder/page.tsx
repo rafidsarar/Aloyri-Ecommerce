@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AdminNotice, AdminShell } from "@/components/admin/admin-shell";
 import { VisualBuilderStudio } from "@/components/admin/visual-builder-studio";
+import { HomepageAdvancedControls } from "@/components/admin/homepage-advanced-controls";
 import { requireAdminPermission } from "@/lib/admin-auth";
 import { listStorefrontMedia, readDraftStorefrontConfig } from "@/lib/storefront-admin-store";
 import { visualPageKeys, visualPageNames, type VisualPageKey } from "@/lib/visual-builder";
@@ -8,7 +9,7 @@ import { visualPageKeys, visualPageNames, type VisualPageKey } from "@/lib/visua
 export default async function VisualBuilderPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string; error?: string; page?: string }>;
+  searchParams: Promise<{ saved?: string; error?: string; page?: string; view?: string }>;
 }) {
   const admin = await requireAdminPermission("homepage.view");
   const [config, query, media] = await Promise.all([readDraftStorefrontConfig(), searchParams, listStorefrontMedia()]);
@@ -17,26 +18,26 @@ export default async function VisualBuilderPage({
   return (
     <AdminShell
       username={admin.username}
-      title="Aloyri Visual Builder"
-      subtitle="Design and arrange your storefront homepage with reusable, safe components and a visual editor."
+      title="Aloyri Storefront Builder"
+      subtitle="Edit existing homepage features, design new sections and manage page layouts in one workspace."
     >
-      {query.saved ? <AdminNotice>Visual design saved to the live homepage. <Link href="/" target="_blank" className="underline">Open website ↗</Link></AdminNotice> : null}
+      {query.saved ? <AdminNotice>Storefront changes saved to the live website. <Link href="/" target="_blank" className="underline">Open website ↗</Link></AdminNotice> : null}
       {query.error ? <AdminNotice tone="warning">The design could not be saved. Check its content and try again.</AdminNotice> : null}
       <div className="mb-5 grid gap-3 rounded-2xl border border-black/10 bg-white p-5 sm:grid-cols-[1fr_auto] sm:items-center">
         <div>
           <p className="text-xs font-bold uppercase tracking-[.13em] text-[#713a35]">Website design studio</p>
-          <h2 className="mt-2 text-lg font-semibold">Build visually, keep commerce reliable.</h2>
-          <p className="mt-1 text-sm leading-6 text-black/60">Drag existing storefront sections into a new order. Add custom image, text, call-to-action, feature, FAQ and testimonial-style blocks. Save to publish instantly, or restore an earlier version.</p>
+          <h2 className="mt-2 text-lg font-semibold">One place for your entire homepage.</h2>
+          <p className="mt-1 text-sm leading-6 text-black/60">Edit existing banners, product discovery, section visibility, layout, promotions, editorial copy and styling alongside drag-and-drop components. All homepage changes share one save action and version history.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link href="/admin/homepage" className="inline-flex min-h-11 items-center rounded-xl border border-[#713a35]/20 px-4 py-2 text-xs font-semibold text-[#713a35]">Homepage settings →</Link>
+          <Link href="/admin/builder?page=home&view=advanced" className="inline-flex min-h-11 items-center rounded-xl border border-[#713a35]/20 px-4 py-2 text-xs font-semibold text-[#713a35]">Existing homepage features →</Link>
           <Link href="/admin/media" className="inline-flex min-h-11 items-center rounded-xl border border-[#713a35]/20 px-4 py-2 text-xs font-semibold text-[#713a35]">Media library →</Link>
         </div>
       </div>
       <nav aria-label="Choose page template" className="mb-5 flex flex-wrap gap-2 rounded-2xl border border-black/10 bg-white p-4">
         {([{ key: "home", label: "Homepage" }, ...visualPageKeys.map(key => ({ key, label: visualPageNames[key] }))] as const).map(item => <Link key={item.key} href={"/admin/builder?page=" + item.key} aria-current={pageKey === item.key ? "page" : undefined} className={`inline-flex min-h-10 items-center rounded-full border px-4 py-2 text-xs font-semibold ${pageKey === item.key ? "border-[#713a35] bg-[#713a35] text-white" : "border-black/15 bg-[#fffaf8] text-[#713a35]"}`}>{item.label}</Link>)}
       </nav>
-      <VisualBuilderStudio key={pageKey} pageKey={pageKey} initialLayout={layout} mediaPaths={media.slice(0, 150).map(item => item.pathname)} initialCoreContent={pageKey === "home" ? { eyebrow: config.homepage.eyebrow, headline: config.homepage.headline, intro: config.homepage.intro, primaryLabel: config.homepage.primaryLabel, primaryHref: config.homepage.primaryHref, secondaryLabel: config.homepage.secondaryLabel, secondaryHref: config.homepage.secondaryHref, heroImagePath: config.homepage.heroImagePath, heroStyle: config.homepage.heroStyle, heroAlignment: config.homepage.heroAlignment, heroLayout: config.homepage.heroLayout, browseEyebrow: config.homepage.browseEyebrow, browseTitle: config.homepage.browseTitle, browseIntro: config.homepage.browseIntro, browsePlaceholder: config.homepage.browsePlaceholder, categoriesEyebrow: config.homepage.categoriesEyebrow, categoriesTitle: config.homepage.categoriesTitle, categoriesIntro: config.homepage.categoriesIntro, routineFinderHeadline: config.homepage.routineFinderHeadline, routineFinderIntro: config.homepage.routineFinderIntro, ideaEyebrow: config.homepage.ideaEyebrow, ideaHeadline: config.homepage.ideaHeadline, ideaCopy: config.homepage.ideaCopy } : undefined} />
+      <VisualBuilderStudio key={pageKey} pageKey={pageKey} initialLayout={layout} mediaPaths={media.slice(0, 150).map(item => item.pathname)} initialCoreContent={pageKey === "home" ? { eyebrow: config.homepage.eyebrow, headline: config.homepage.headline, intro: config.homepage.intro, primaryLabel: config.homepage.primaryLabel, primaryHref: config.homepage.primaryHref, secondaryLabel: config.homepage.secondaryLabel, secondaryHref: config.homepage.secondaryHref, heroImagePath: config.homepage.heroImagePath, heroStyle: config.homepage.heroStyle, heroAlignment: config.homepage.heroAlignment, heroLayout: config.homepage.heroLayout, browseEyebrow: config.homepage.browseEyebrow, browseTitle: config.homepage.browseTitle, browseIntro: config.homepage.browseIntro, browsePlaceholder: config.homepage.browsePlaceholder, categoriesEyebrow: config.homepage.categoriesEyebrow, categoriesTitle: config.homepage.categoriesTitle, categoriesIntro: config.homepage.categoriesIntro, routineFinderHeadline: config.homepage.routineFinderHeadline, routineFinderIntro: config.homepage.routineFinderIntro, ideaEyebrow: config.homepage.ideaEyebrow, ideaHeadline: config.homepage.ideaHeadline, ideaCopy: config.homepage.ideaCopy } : undefined} initialView={pageKey === "home" && query.view === "advanced" ? "advanced" : "canvas"} advancedSettings={pageKey === "home" ? <HomepageAdvancedControls config={config} /> : undefined} />
     </AdminShell>
   );
 }
