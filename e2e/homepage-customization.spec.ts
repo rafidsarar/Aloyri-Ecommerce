@@ -11,5 +11,5 @@ test("customer-facing promotional content never replaces account or checkout lin
   await page.setViewportSize({ width: 320, height: 720 });
   await page.goto("/");
   await expect(page.getByRole("link", { name: "Customer account and sign in" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "View cart" }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: /^Cart(?: with .*)?$/ }).first()).toBeVisible();
 });
