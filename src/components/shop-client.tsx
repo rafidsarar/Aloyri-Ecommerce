@@ -300,7 +300,7 @@ export function ShopClient({
   return (
     <>
       <div className="grid gap-4 border-b border-[#713a35]/10 py-7 lg:grid-cols-[1fr_auto] lg:items-center">
-        <div className="relative max-w-xl">
+        <div className="relative min-w-0 max-w-xl">
           <label htmlFor="storefront-search" className="sr-only">
             Search skincare
           </label>
@@ -355,13 +355,13 @@ export function ShopClient({
           ) : null}
         </div>
 
-        <label className="flex items-center gap-3 text-xs text-[#321f1c]/50">
+        <label className="flex min-w-0 items-center justify-between gap-3 text-xs text-[#321f1c]/50 lg:justify-start">
           Sort
           <select
             aria-label="Sort"
             value={sort}
             onChange={(event) => setSort(event.target.value as SortKey)}
-            className="h-11 rounded-full border border-[#713a35]/14 bg-white px-4 text-sm text-[#321f1c] outline-none"
+            className="h-11 min-w-0 max-w-full rounded-full border border-[#713a35]/14 bg-white px-4 text-sm text-[#321f1c] outline-none"
           >
             <option value="recommended">
               {query.trim() ? "Recommended / relevant" : "Recommended"}
@@ -455,7 +455,7 @@ export function ShopClient({
         {activeFilterCount > 0 ? <button type="button" onClick={clearFilters} className="min-h-11 rounded-full border border-[#713a35]/14 px-4 text-xs font-semibold text-[#713a35]">Clear {activeFilterCount} filters</button> : null}
       </div>
       <details className="mb-7 rounded-2xl border border-[#713a35]/10 bg-white/55" open={brand !== "All" || stock !== "all" || priceBand !== "all" ? true : undefined}>
-        <summary className="cursor-pointer px-5 py-4 text-sm font-semibold text-[#713a35]">Filter by brand, availability &amp; price</summary>
+        <summary className="min-h-12 cursor-pointer px-5 py-4 text-sm font-semibold text-[#713a35]">Filter by brand, availability &amp; price{activeFilterCount > 0 ? ` · ${activeFilterCount} active` : ""}</summary>
         <div className="grid gap-3 px-4 pb-4 sm:grid-cols-3">
         <label className="grid gap-1.5 text-xs font-medium text-[#321f1c]/55">
           Brand
@@ -507,7 +507,7 @@ export function ShopClient({
       </details>
 
       {filtered.length > 0 ? (
-        <div className="storefront-product-grid grid grid-cols-2 gap-x-4 gap-y-8 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="storefront-product-grid grid grid-cols-2 gap-x-3 gap-y-7 sm:gap-x-5 sm:gap-y-9 lg:grid-cols-3 xl:grid-cols-4">
           {filtered.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
