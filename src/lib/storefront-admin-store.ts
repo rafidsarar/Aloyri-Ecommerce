@@ -197,6 +197,9 @@ export type StorefrontConfig = {
     ideaCopy: string;
     showHero: boolean;
     showCategories: boolean;
+    showRoutineFinder: boolean;
+    routineFinderHeadline: string;
+    routineFinderIntro: string;
     showBrandStory: boolean;
     heroLayout: "split" | "stacked";
   };
@@ -405,6 +408,9 @@ export const defaultStorefrontConfig: StorefrontConfig = {
       "Aloyri keeps the storefront focused on what customers need to make a choice: product, category, size, price and a clear place in the routine.",
     showHero: true,
     showCategories: true,
+    showRoutineFinder: true,
+    routineFinderHeadline: "Your routine, made simple.",
+    routineFinderIntro: "Just three questions. Explore cleansers, moisturizers and SPF from the Aloyri edit using your preferences and current availability. No account needed to explore.",
     showBrandStory: true,
     heroLayout: "split",
   },

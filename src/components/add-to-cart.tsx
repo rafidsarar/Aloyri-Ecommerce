@@ -8,9 +8,11 @@ import { trackStorefrontEvent } from "@/lib/analytics";
 export function AddToCart({
   productId,
   compact = false,
+  ariaLabel,
 }: {
   productId: string;
   compact?: boolean;
+  ariaLabel?: string;
 }) {
   const [added, setAdded] = useState(false);
   const { product, synced, error } = useCatalogProduct(productId);
@@ -54,6 +56,7 @@ export function AddToCart({
       type="button"
       onClick={add}
       disabled={disabled}
+      aria-label={ariaLabel}
       className={
         "w-full rounded-full font-semibold text-white transition " +
         (compact ? "px-4 py-3 text-xs " : "px-6 py-4 text-sm ") +

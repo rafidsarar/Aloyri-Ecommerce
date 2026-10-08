@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ProductCard } from "@/components/product-card";
 import { useCatalog } from "@/components/catalog-provider";
 import { salePriceFor } from "@/lib/promotions";
+import { matchesSkinFocus, skinFocusOptions, type SkinFocus } from "@/lib/skin-focus";
 import { safeSearchTerm, trackStorefrontEvent } from "@/lib/analytics";
 import {
   getSearchSuggestions,
@@ -31,6 +32,7 @@ export function ShopClient({
   initialCategory,
   initialQuery,
   initialBrand,
+  initialFocus = "all",
   initialStock = "all",
   initialPriceBand = "all",
   initialSort = "recommended",
@@ -43,6 +45,7 @@ export function ShopClient({
   initialCategory?: string;
   initialQuery?: string;
   initialBrand?: string;
+  initialFocus?: SkinFocus;
   initialStock?: StockFilter;
   initialPriceBand?: PriceFilter;
   initialSort?: SortKey;
@@ -56,6 +59,7 @@ export function ShopClient({
   const [query, setQuery] = useState(initialQuery || "");
   const [category, setCategory] = useState(initialCategory || "All");
   const [brand, setBrand] = useState(initialBrand || "All");
+  const [focus, setFocus] = useState<SkinFocus>(initialFocus);
   const [stock, setStock] = useState<StockFilter>(initialStock);
   const [priceBand, setPriceBand] = useState<PriceFilter>(initialPriceBand);
   const [sort, setSort] = useState<SortKey>(initialSort);
@@ -123,6 +127,7 @@ export function ShopClient({
 
         if (category !== "All" && product.category !== category) return false;
         if (brand !== "All" && product.brand !== brand) return false;
+        if (!matchesSkinFocus(product, focus)) return false;
 
         const available = (product.availableStock ?? 0) > 0;
         if (stock === "in-stock" && !available) return false;
@@ -197,6 +202,7 @@ export function ShopClient({
     products,
     category,
     brand,
+    focus,
     stock,
     priceBand,
     query,
@@ -207,6 +213,7 @@ export function ShopClient({
 
   const activeFilterCount =
     Number(brand !== "All") +
+    Number(focus !== "all") +
     Number(stock !== "all") +
     Number(priceBand !== "all") +
     Number(!lockCategory && category !== "All");
@@ -222,6 +229,7 @@ export function ShopClient({
     update("q", query.trim(), "");
     update("category", category, "All");
     update("brand", brand, "All");
+    update("focus", focus, "all");
     update("stock", stock, "all");
     update("price", priceBand, "all");
     update("sort", sort, "recommended");
@@ -232,7 +240,7 @@ export function ShopClient({
     if (nextUrl !== currentUrl) {
       window.history.replaceState(window.history.state, "", nextUrl);
     }
-  }, [query, category, brand, stock, priceBand, sort, lockCategory]);
+  }, [query, category, brand, focus, stock, priceBand, sort, lockCategory]);
 
   useEffect(() => {
     if (!synced) return;
@@ -252,6 +260,7 @@ export function ShopClient({
 
   function clearFilters() {
     setBrand("All");
+    setFocus("all");
     setStock("all");
     setPriceBand("all");
     if (!lockCategory) setCategory("All");
@@ -385,6 +394,22 @@ export function ShopClient({
           ))}
         </div>
       ) : null}
+
+      <nav aria-label="Shop by product focus" className="border-b border-[#713a35]/10 py-5">
+        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+          <p className="store-discovery-accent text-[11px] font-semibold uppercase tracking-[.18em]">Explore by focus</p>
+          <p className="store-discovery-muted text-xs">Matched from published product descriptions</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {skinFocusOptions.map((item) => (
+            <button key={item.value} type="button" onClick={() => setFocus(item.value)}
+              aria-pressed={focus === item.value} title={item.description}
+              className={"store-focus-chip min-h-11 rounded-full border px-4 text-xs font-semibold transition " + (focus === item.value ? "is-selected" : "")}>
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </nav>
 
       <div className="flex flex-wrap items-center gap-2 py-6">
         {!lockCategory

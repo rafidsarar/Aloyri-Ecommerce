@@ -230,3 +230,54 @@ body[data-storefront-theme="sand"] {
 .store-category-card { border-color: var(--store-border); background: var(--store-surface); color: var(--store-ink); }
 .store-category-card:hover { border-color: var(--store-accent); }
 .store-brand-panel { background: var(--store-accent); color: var(--store-on-accent); }
+
+/* Editorial discovery and guided shopping adopt published storefront themes. */
+.store-discovery-menu, .store-discovery-panel {
+  border-color: var(--store-border);
+  background: var(--store-surface);
+  color: var(--store-ink);
+}
+.store-discovery-feature {
+  border-color: var(--store-border);
+  background: var(--store-panel);
+  color: var(--store-ink);
+}
+.store-discovery-feature-steps {
+  background: color-mix(in srgb, var(--store-surface) 80%, var(--store-panel));
+}
+.store-discovery-step {
+  border-color: var(--store-border);
+  background: var(--store-surface);
+}
+.store-discovery-muted, .store-discovery-title + p { color: var(--store-muted); }
+.store-discovery-title { color: var(--store-ink); }
+.store-discovery-accent { color: var(--store-accent); }
+.store-discovery-link { color: var(--store-ink); }
+.store-discovery-link:hover, .store-discovery-link:focus-visible { background: var(--store-panel); color: var(--store-accent); }
+.store-discovery-strip { background: var(--store-panel); color: var(--store-ink); }
+.store-discovery-button {
+  background: var(--store-accent);
+  color: var(--store-on-accent);
+  transition: filter 180ms ease, transform 180ms ease;
+}
+.store-discovery-button:hover:not(:disabled) { filter: brightness(.91); transform: translateY(-1px); }
+.store-discovery-progress { background: var(--store-panel); }
+.store-discovery-progress-active { background: var(--store-accent); }
+.store-choice { border-color: var(--store-border); background: var(--store-surface); color: var(--store-ink); }
+.store-choice:hover, .store-choice:focus-visible { border-color: var(--store-accent); }
+.store-choice.is-selected {
+  background: var(--store-panel);
+  border-color: var(--store-accent);
+  box-shadow: inset 0 0 0 1px var(--store-accent);
+}
+.store-product-card-action button { min-height: 44px; background: var(--store-accent); color: var(--store-on-accent); }
+.store-product-card-action button:disabled { background: var(--store-panel); color: var(--store-muted); }
+.store-product-card-action button:not(:disabled):hover { filter: brightness(.94); }
+@media (prefers-reduced-motion: reduce) {
+  .store-discovery-button { transition: none; }
+  .store-discovery-button:hover:not(:disabled) { transform: none; }
+}
+
+.store-focus-chip { border-color: var(--store-border); background: var(--store-surface); color: var(--store-ink); }
+.store-focus-chip:hover, .store-focus-chip:focus-visible { border-color: var(--store-accent); }
+.store-focus-chip.is-selected { border-color: var(--store-accent); background: var(--store-accent); color: var(--store-on-accent); }
