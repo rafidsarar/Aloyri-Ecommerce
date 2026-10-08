@@ -6,7 +6,7 @@ const headers = { "Cache-Control": "private, no-store", "X-Content-Type-Options"
 
 export async function GET(request: Request) {
   const session = await currentCustomerSession();
-  if (!session || session.session.method !== "google" || session.account.displayName.trim().length < 2 || !/^(?:\+?88)?01[3-9]\d{8}$/.test(session.account.phone || "")) return new Response("Completed Google account required.", { status: 403, headers });
+  if (!session || session.session?.method !== "google" || session.account.displayName.trim().length < 2 || !/^(?:\+?88)?01[3-9]\d{8}$/.test(session.account.phone || "")) return new Response("Completed Google account required.", { status: 403, headers });
   const orderNumber = new URL(request.url).searchParams.get("order")?.trim().toUpperCase() || "";
   const ref = session.account.orderRefs.find((row) => row.orderNumber === orderNumber);
   if (!ref) return new Response("Order not found.", { status: 404, headers });
