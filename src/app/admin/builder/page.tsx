@@ -3,14 +3,17 @@ import { AdminNotice, AdminShell } from "@/components/admin/admin-shell";
 import { VisualBuilderStudio } from "@/components/admin/visual-builder-studio";
 import { requireAdminPermission } from "@/lib/admin-auth";
 import { readDraftStorefrontConfig } from "@/lib/storefront-admin-store";
+import { visualPageKeys, visualPageNames, type VisualPageKey } from "@/lib/visual-builder";
 
 export default async function VisualBuilderPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string; error?: string }>;
+  searchParams: Promise<{ saved?: string; error?: string; page?: string }>;
 }) {
   const admin = await requireAdminPermission("homepage.view");
   const [config, query] = await Promise.all([readDraftStorefrontConfig(), searchParams]);
+  const pageKey = query.page === "home" || !query.page ? "home" : visualPageKeys.includes(query.page as VisualPageKey) ? query.page as VisualPageKey : "home";
+  const layout = pageKey === "home" ? config.homepage.visualLayout : config.visualPages[pageKey];
   return (
     <AdminShell
       username={admin.username}
@@ -30,7 +33,10 @@ export default async function VisualBuilderPage({
           <Link href="/admin/media" className="inline-flex min-h-11 items-center rounded-xl border border-[#713a35]/20 px-4 py-2 text-xs font-semibold text-[#713a35]">Media library →</Link>
         </div>
       </div>
-      <VisualBuilderStudio initialLayout={config.homepage.visualLayout} />
+      <nav aria-label="Choose page template" className="mb-5 flex flex-wrap gap-2 rounded-2xl border border-black/10 bg-white p-4">
+        {([{ key: "home", label: "Homepage" }, ...visualPageKeys.map(key => ({ key, label: visualPageNames[key] }))] as const).map(item => <Link key={item.key} href={"/admin/builder?page=" + item.key} aria-current={pageKey === item.key ? "page" : undefined} className={`inline-flex min-h-10 items-center rounded-full border px-4 py-2 text-xs font-semibold ${pageKey === item.key ? "border-[#713a35] bg-[#713a35] text-white" : "border-black/15 bg-[#fffaf8] text-[#713a35]"}`}>{item.label}</Link>)}
+      </nav>
+      <VisualBuilderStudio key={pageKey} pageKey={pageKey} initialLayout={layout} />
     </AdminShell>
   );
 }
