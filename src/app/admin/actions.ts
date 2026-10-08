@@ -2,6 +2,7 @@
 
 import { normalizePresentation, safeNavigationHref } from "@/lib/storefront-presentation";
 import { normalizeHomepageOrder, safeHomepageImagePath } from "@/lib/homepage-builder";
+import { normalizeVisualLayout } from "@/lib/visual-builder";
 import { cookies, headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -396,6 +397,37 @@ export async function saveHomepage(formData: FormData) {
   });
 
   redirect("/admin/homepage?saved=1");
+}
+
+export async function saveVisualBuilder(formData: FormData) {
+  const admin = await requireAdminPermission("homepage.edit");
+  let requested: unknown;
+  try {
+    requested = JSON.parse(text(formData, "layout", 50000));
+  } catch {
+    redirect("/admin/builder?error=invalid");
+  }
+  if (!requested || typeof requested !== "object" || Array.isArray(requested) ||
+      !Array.isArray((requested as Record<string, unknown>).order) ||
+      !Array.isArray((requested as Record<string, unknown>).blocks)) {
+    redirect("/admin/builder?error=invalid");
+  }
+
+  await updateDraftStorefrontConfig(config => {
+    const layout = normalizeVisualLayout(requested, config.homepage.sectionOrder);
+    config.homepage.visualLayout = layout;
+    config.homepage.sectionOrder = normalizeHomepageOrder(
+      layout.order.filter(id => id.startsWith("core:")).map(id => id.slice(5)),
+    );
+    return config;
+  }, {
+    actor: admin.username,
+    action: "homepage.visual_builder_saved",
+    scope: "homepage",
+    target: "visual-builder",
+    detail: "Visual website layout updated live.",
+  });
+  redirect("/admin/builder?saved=1");
 }
 
 export async function saveSiteSettings(formData: FormData) {
