@@ -362,8 +362,26 @@ export async function saveHomepage(formData: FormData) {
           ctaLabel: text(formData, `${prefix}CtaLabel`, 60),
           ctaHref: safeHref(text(formData, `${prefix}CtaHref`, 160), ""),
           layout: formData.get(`${prefix}Layout`) === "centered" ? "centered" as const : "split" as const,
+          mobileLayout: formData.get(`${prefix}MobileLayout`) === "compact" ? "compact" as const : "stacked" as const,
+          imagePath: text(formData, `${prefix}ImagePath`, 200),
+          startAt: text(formData, `${prefix}StartAt`, 16),
+          endAt: text(formData, `${prefix}EndAt`, 16),
         };
       }).filter((banner) => banner.title || banner.copy),
+      editorialSections: Array.from({ length: 6 }, (_, index) => {
+        const prefix = `editorial${index}`;
+        return {
+          enabled: formData.get(`${prefix}Enabled`) === "on",
+          kind: text(formData, `${prefix}Kind`, 20) as "story" | "testimonial" | "faq" | "announcement",
+          title: text(formData, `${prefix}Title`, 160),
+          eyebrow: text(formData, `${prefix}Eyebrow`, 80),
+          copy: text(formData, `${prefix}Copy`, 800),
+          ctaLabel: text(formData, `${prefix}CtaLabel`, 60),
+          ctaHref: safeHref(text(formData, `${prefix}CtaHref`, 160), ""),
+          position: text(formData, `${prefix}Position`, 30) as "before-products" | "after-products" | "before-story",
+          layout: formData.get(`${prefix}Layout`) === "centered" ? "centered" as const : "split" as const,
+        };
+      }).filter((section) => section.title || section.copy),
 
     };
     return config;
