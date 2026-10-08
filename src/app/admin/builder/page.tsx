@@ -2,6 +2,11 @@ import Link from "next/link";
 import { AdminNotice, AdminShell } from "@/components/admin/admin-shell";
 import { VisualBuilderStudio } from "@/components/admin/visual-builder-studio";
 import { HomepageAdvancedControls } from "@/components/admin/homepage-advanced-controls";
+import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
+import { mergeLiveCatalog, products as fallbackProducts } from "@/lib/catalog";
+import { applyMerchandisingRules } from "@/lib/merchandising";
+import { applyStorefrontEditorial } from "@/lib/storefront-admin-store";
+import type { BuilderPreviewData } from "@/components/admin/storefront-core-preview";
 import { requireAdminPermission } from "@/lib/admin-auth";
 import { listStorefrontMedia, readDraftStorefrontConfig } from "@/lib/storefront-admin-store";
 import { visualPageKeys, visualPageNames, type VisualPageKey } from "@/lib/visual-builder";
@@ -15,6 +20,25 @@ export default async function VisualBuilderPage({
   const [config, query, media] = await Promise.all([readDraftStorefrontConfig(), searchParams, listStorefrontMedia()]);
   const pageKey = query.page === "home" || !query.page ? "home" : visualPageKeys.includes(query.page as VisualPageKey) ? query.page as VisualPageKey : "home";
   const layout = pageKey === "home" ? config.homepage.visualLayout : config.visualPages[pageKey];
+  // One CRM catalog read feeds both the advanced controls and the visual preview.
+  const catalog = pageKey === "home" ? await fetchCrmCatalog() : null;
+  const previewProducts = catalog?.ok
+    ? mergeLiveCatalog(applyMerchandisingRules(applyStorefrontEditorial(catalog.body.products, config), config))
+    : fallbackProducts;
+  const previewData: BuilderPreviewData | undefined = pageKey === "home" ? {
+    homepage: config.homepage,
+    showRoutine: config.presentation.showRoutine,
+    products: previewProducts.filter(p => p.active !== false).map(p => ({
+      id: p.id, name: p.name, brand: p.brand, category: p.category,
+      price: p.price, salePrice: p.salePrice, availableStock: p.availableStock || 0,
+      mediaPath: p.mediaPath,
+    })),
+    sections: config.merchandising.homepageSections,
+    campaigns: config.merchandising.campaigns.map(c => ({
+      id: c.id, title: c.title, copy: c.copy, eyebrow: c.eyebrow,
+      badgeText: c.badgeText || "", imagePath: c.imagePath || "", enabled: c.active,
+    })),
+  } : undefined;
   return (
     <AdminShell
       username={admin.username}
@@ -37,7 +61,7 @@ export default async function VisualBuilderPage({
       <nav aria-label="Choose page template" className="mb-5 flex flex-wrap gap-2 rounded-2xl border border-black/10 bg-white p-4">
         {([{ key: "home", label: "Homepage" }, ...visualPageKeys.map(key => ({ key, label: visualPageNames[key] }))] as const).map(item => <Link key={item.key} href={"/admin/builder?page=" + item.key} aria-current={pageKey === item.key ? "page" : undefined} className={`inline-flex min-h-10 items-center rounded-full border px-4 py-2 text-xs font-semibold ${pageKey === item.key ? "border-[#713a35] bg-[#713a35] text-white" : "border-black/15 bg-[#fffaf8] text-[#713a35]"}`}>{item.label}</Link>)}
       </nav>
-      <VisualBuilderStudio key={pageKey} pageKey={pageKey} initialLayout={layout} mediaPaths={media.slice(0, 150).map(item => item.pathname)} initialCoreContent={pageKey === "home" ? { eyebrow: config.homepage.eyebrow, headline: config.homepage.headline, intro: config.homepage.intro, primaryLabel: config.homepage.primaryLabel, primaryHref: config.homepage.primaryHref, secondaryLabel: config.homepage.secondaryLabel, secondaryHref: config.homepage.secondaryHref, heroImagePath: config.homepage.heroImagePath, heroStyle: config.homepage.heroStyle, heroAlignment: config.homepage.heroAlignment, heroLayout: config.homepage.heroLayout, browseEyebrow: config.homepage.browseEyebrow, browseTitle: config.homepage.browseTitle, browseIntro: config.homepage.browseIntro, browsePlaceholder: config.homepage.browsePlaceholder, categoriesEyebrow: config.homepage.categoriesEyebrow, categoriesTitle: config.homepage.categoriesTitle, categoriesIntro: config.homepage.categoriesIntro, routineFinderHeadline: config.homepage.routineFinderHeadline, routineFinderIntro: config.homepage.routineFinderIntro, ideaEyebrow: config.homepage.ideaEyebrow, ideaHeadline: config.homepage.ideaHeadline, ideaCopy: config.homepage.ideaCopy } : undefined} initialView={pageKey === "home" && query.view === "advanced" ? "advanced" : "canvas"} advancedSettings={pageKey === "home" ? <HomepageAdvancedControls config={config} /> : undefined} />
+      <VisualBuilderStudio key={pageKey} pageKey={pageKey} initialLayout={layout} mediaPaths={media.slice(0, 150).map(item => item.pathname)} initialCoreContent={pageKey === "home" ? { eyebrow: config.homepage.eyebrow, headline: config.homepage.headline, intro: config.homepage.intro, primaryLabel: config.homepage.primaryLabel, primaryHref: config.homepage.primaryHref, secondaryLabel: config.homepage.secondaryLabel, secondaryHref: config.homepage.secondaryHref, heroImagePath: config.homepage.heroImagePath, heroStyle: config.homepage.heroStyle, heroAlignment: config.homepage.heroAlignment, heroLayout: config.homepage.heroLayout, browseEyebrow: config.homepage.browseEyebrow, browseTitle: config.homepage.browseTitle, browseIntro: config.homepage.browseIntro, browsePlaceholder: config.homepage.browsePlaceholder, categoriesEyebrow: config.homepage.categoriesEyebrow, categoriesTitle: config.homepage.categoriesTitle, categoriesIntro: config.homepage.categoriesIntro, routineFinderHeadline: config.homepage.routineFinderHeadline, routineFinderIntro: config.homepage.routineFinderIntro, ideaEyebrow: config.homepage.ideaEyebrow, ideaHeadline: config.homepage.ideaHeadline, ideaCopy: config.homepage.ideaCopy } : undefined} initialPreviewData={previewData} initialView={pageKey === "home" && query.view === "advanced" ? "advanced" : "canvas"} advancedSettings={pageKey === "home" ? <HomepageAdvancedControls config={config} catalogResult={catalog || undefined} /> : undefined} />
     </AdminShell>
   );
 }
