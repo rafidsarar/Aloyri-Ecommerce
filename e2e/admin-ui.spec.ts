@@ -144,7 +144,7 @@ test.describe("minimal admin interface", () => {
       throw error;
     }
     await expect(page.getByRole("combobox", { name: /^Saved address/ })).toHaveValue("");
-    await expect(page.getByLabel("District")).toHaveValue("");
+    await expect(page.getByRole("combobox", { name: /^District/ })).toHaveValue("");
 
     const preview = page.getByText("View order summary");
     await expect(preview).toBeVisible();
@@ -152,7 +152,7 @@ test.describe("minimal admin interface", () => {
     await expect(page.locator(".checkout-mobile-summary")).toContainText("699");
 
     await page.getByRole("combobox", { name: /^Saved address/ }).selectOption("saved-home");
-    await expect(page.getByLabel("District")).toHaveValue("Dhaka");
+    await expect(page.getByRole("combobox", { name: /^District/ })).toHaveValue("Dhaka");
     await expect(page.getByRole("button", { name: /Inside Dhaka/ })).toHaveAttribute("aria-pressed", "true");
     await expect(page.getByRole("checkbox", { name: /Save this address to my account/ })).not.toBeChecked();
     await expect(page.getByRole("button", { name: "Review order" })).toBeEnabled();
@@ -180,7 +180,7 @@ test.describe("minimal admin interface", () => {
     await expect(review).toBeEnabled();
     await review.click();
     await expect(page.getByText("Please check your delivery details.")).toBeVisible();
-    await page.getByLabel("District").selectOption("Dhaka");
+    await page.getByRole("combobox", { name: /^District/ }).selectOption("Dhaka");
     await expect(page.getByRole("button", { name: /Inside Dhaka/ })).toHaveAttribute("aria-pressed", "true");
     await page.getByLabel("Area / thana / upazila").fill("Dhanmondi");
     await page.getByLabel("Full delivery address").fill("House 12, Road 9, Dhanmondi, Dhaka");
