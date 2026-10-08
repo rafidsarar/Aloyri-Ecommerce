@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { VisualPageSections } from "@/components/visual-page-sections";
 import { notFound } from "next/navigation";
 import { ShopClient } from "@/components/shop-client";
 import { safeJsonLd } from "@/lib/seo";
@@ -90,6 +91,7 @@ export default async function CategoryPage({
   };
 
   return (
+    <>
     <main className="shell py-12 md:py-16">
       <script
         type="application/ld+json"
@@ -117,5 +119,7 @@ export default async function CategoryPage({
         merchandisingSortMode={config.merchandising.shopSortMode}
       />
     </main>
+    <VisualPageSections layout={config.visualPages.category} />
+    </>
   );
 }
