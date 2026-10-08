@@ -165,7 +165,7 @@ export default function CartPage() {
   }
 
   return (
-    <main className="shell min-w-0 py-8 md:py-16">
+    <main className="shell min-w-0 pb-32 pt-8 md:pb-16 lg:pb-16">
       <div className="border-b border-[#713a35]/10 pb-8">
         <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/48">
           Your selection
@@ -187,7 +187,7 @@ export default function CartPage() {
           </Link>
         </div>
       ) : (
-        <div className="grid min-w-0 gap-7 py-8 lg:grid-cols-[minmax(0,1fr)_370px] lg:gap-14">
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-8 py-8 lg:grid-cols-[minmax(0,1fr)_370px] lg:gap-14">
           <div>
             {rows.map(({ product, liveProduct, qty, productId }) => {
               const available = liveProduct?.availableStock ?? 0;
@@ -197,7 +197,7 @@ export default function CartPage() {
               return (
                 <div
                   key={productId}
-                  className="grid min-w-0 grid-cols-[72px_minmax(0,1fr)_auto] gap-3 border-b border-[#713a35]/10 py-5 first:pt-0 sm:grid-cols-[120px_minmax(0,1fr)_auto] sm:gap-4] sm:gap-6"
+                  className="grid min-w-0 grid-cols-[76px_minmax(0,1fr)] gap-4 border-b border-[#713a35]/10 py-5 first:pt-0 sm:grid-cols-[100px_minmax(0,1fr)_auto] sm:gap-6 lg:grid-cols-[120px_minmax(0,1fr)_auto]"
                 >
                   {product ? (
                     <Link href={`/product/${product.slug}`}>
@@ -235,7 +235,8 @@ export default function CartPage() {
                       <div className="mt-5 inline-flex items-center overflow-hidden rounded-full border border-[#713a35]/14 bg-white">
                         <button
                           type="button"
-                          className="h-11 w-11 text-[#713a35]"
+                          className="h-11 w-11 text-[#713a35] disabled:opacity-30"
+                          disabled={qty <= 1}
                           aria-label={`Decrease ${product?.name || "product"} quantity`}
                           onClick={() =>
                             save(
@@ -284,7 +285,8 @@ export default function CartPage() {
                     ) : null}
                   </div>
 
-                  <div className="text-right">
+                  <div className="col-span-2 flex min-w-0 items-center justify-between gap-4 pl-[92px] sm:col-span-1 sm:block sm:pl-0 sm:text-right">
+                    <div className="min-w-0">
                     <p className="text-sm font-semibold">
                       {liveProduct ? formatPrice(salePriceFor(liveProduct) * qty) : "—"}
                     </p>
@@ -298,8 +300,10 @@ export default function CartPage() {
                         </p>
                       </>
                     ) : null}
+                    </div>
                     <button
                       type="button"
+                      aria-label={`Remove ${product?.name || "product"} from cart`}
                       onClick={() =>
                         save(
                           items.filter((item) => item.productId !== productId),
@@ -310,7 +314,7 @@ export default function CartPage() {
                           },
                         )
                       }
-                      className="mt-6 text-xs text-[#713a35]/48 underline decoration-[#713a35]/25 underline-offset-4"
+                      className="min-h-11 shrink-0 text-xs font-semibold text-[#713a35] underline decoration-[#713a35]/25 underline-offset-4 sm:mt-6"
                     >
                       Remove
                     </button>
@@ -352,7 +356,7 @@ export default function CartPage() {
             {canCheckout ? (
               <Link
                 href="/checkout"
-                className="mt-7 inline-flex w-full items-center justify-center gap-3 rounded-full bg-[#713a35] px-6 py-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#60312d]"
+                className="mt-7 hidden min-h-12 w-full items-center justify-center gap-3 rounded-full bg-[#713a35] px-6 py-4 text-sm font-semibold text-white transition hover:bg-[#60312d] lg:inline-flex"
               >
                 Continue to checkout <ArrowIcon />
               </Link>
@@ -360,7 +364,7 @@ export default function CartPage() {
               <button
                 type="button"
                 disabled
-                className="mt-7 w-full cursor-not-allowed rounded-full bg-[#713a35]/30 px-6 py-4 text-sm font-semibold text-white"
+                className="mt-7 hidden w-full cursor-not-allowed rounded-full bg-[#713a35]/30 px-6 py-4 text-sm font-semibold text-white lg:block"
               >
                 Checkout unavailable
               </button>
@@ -370,6 +374,23 @@ export default function CartPage() {
               Your cart is temporary for this visit. Saved products are kept in your signed-in account.
             </p>
           </aside>
+          <div className="checkout-mobile-bar fixed inset-x-0 bottom-0 z-30 border-t border-[#713a35]/10 bg-[#fffaf7]/96 p-3 backdrop-blur lg:hidden">
+            <div className="mx-auto flex max-w-xl items-center gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] uppercase tracking-wider text-[#321f1c]/60">Subtotal · shipping next</p>
+                <p className="font-semibold">{formatPrice(subtotal)}</p>
+              </div>
+              {canCheckout ? (
+                <Link href="/checkout" className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#713a35] px-5 text-sm font-semibold text-white">
+                  Checkout <ArrowIcon />
+                </Link>
+              ) : (
+                <button type="button" disabled className="min-h-12 rounded-full bg-[#713a35]/30 px-5 text-sm font-semibold text-white">
+                  Checkout unavailable
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </main>
