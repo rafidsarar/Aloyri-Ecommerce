@@ -63,13 +63,19 @@ function dateTimeLabel(value: string) {
 
 export function OrderTrackingClient({
   initialOrder = "",
+  initialResult = null,
+  initialError = "",
+  accountTracking = false,
 }: {
   initialOrder?: string;
+  initialResult?: PublicTrackedOrder | null;
+  initialError?: string;
+  accountTracking?: boolean;
 }) {
   const [orderNumber, setOrderNumber] = useState(initialOrder);
   const [phone, setPhone] = useState("");
-  const [result, setResult] = useState<PublicTrackedOrder | null>(null);
-  const [error, setError] = useState("");
+  const [result, setResult] = useState<PublicTrackedOrder | null>(initialResult);
+  const [error, setError] = useState(initialError);
   const [submitting, setSubmitting] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -135,12 +141,11 @@ export function OrderTrackingClient({
             Follow your Aloyri order.
           </h1>
           <p className="mt-5 max-w-xl text-sm leading-7 text-[#321f1c]/52">
-            Enter the website order number and the Bangladesh mobile number used
-            during checkout. We&apos;ll show the latest status directly from Aloyri CRM.
+            {accountTracking ? "The latest status of your order, directly from Aloyri CRM." : "Enter the website order number and the Bangladesh mobile number used during checkout to see the latest status."}
           </p>
         </div>
 
-        <form
+        {accountTracking ? <div className="mt-6 flex gap-6 text-sm font-semibold"><Link href="/account" className="underline">Back to my orders</Link><a href={"/track-order?order=" + encodeURIComponent(initialOrder)} className="underline">Refresh tracking</a></div> : <form
           onSubmit={submit}
           className="mt-9 grid gap-4 rounded-[1.5rem] border border-[#713a35]/10 bg-[#f5e8e2] p-5 sm:grid-cols-[1fr_1fr_auto] sm:items-end sm:p-6"
         >
@@ -175,7 +180,7 @@ export function OrderTrackingClient({
             {submitting ? "Checking…" : "Track order"}
             {!submitting ? <ArrowIcon /> : null}
           </button>
-        </form>
+        </form>}
 
         {error ? (
           <p

@@ -142,7 +142,7 @@ export function CustomerPostPurchaseCenter({section}:{section:string}){
           <p className="mt-4 text-xl font-semibold">{formatPrice(row.order.total)}</p>
           <div className="mt-4 flex flex-wrap gap-3 text-xs font-semibold text-[#713a35]">
             <Link href={"/track-order?order="+encodeURIComponent(row.order.orderNumber)}>Track order</Link>
-            <a href={"/api/customer/order-summary?order="+encodeURIComponent(row.order.orderNumber)}>Download summary</a>
+            <a href={"/api/customer/order-invoice?order="+encodeURIComponent(row.order.orderNumber)}>Download invoice</a>
             {row.canRequestCancellation?<button disabled={busy!==""} onClick={()=>void orderAction("cancellation",row.order.orderNumber)}>Request cancellation</button>:null}
             {row.canReportDeliveryIssue?<button disabled={busy!==""} onClick={()=>void orderAction("delivery-issue",row.order.orderNumber)}>Report delivery issue</button>:null}
             {row.canRequestReturn?<Link href={"/return-request?order="+encodeURIComponent(row.order.orderNumber)}>Request return</Link>:null}

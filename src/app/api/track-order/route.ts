@@ -1,15 +1,9 @@
 import { rateAllowed } from "@/lib/request-rate-limit";
-import { fetchCrmOrderTracking } from "@/lib/crm-tracking-integration";
+import { fetchOrderTracking } from "@/lib/order-tracking";
 import {
   isValidBangladeshPhone,
   normalizeBangladeshPhone,
 } from "@/lib/checkout";
-import { reconcileSettlementFromTracking } from "@/lib/payment-settlement";
-import {
-  publicShipmentTracking,
-  reconcileShipmentFromTracking,
-} from "@/lib/courier-shipment";
-
 export const dynamic = "force-dynamic";
 
 
@@ -101,44 +95,10 @@ export async function POST(request: Request) {
     );
   }
 
-  const result = await fetchCrmOrderTracking({
+  const result = await fetchOrderTracking({
     orderNumber: input.orderNumber.trim(),
     phone: normalizeBangladeshPhone(input.phone),
   });
-
-  if (result.ok) {
-    try {
-      await reconcileSettlementFromTracking({
-        orderNumber: result.body.orderNumber,
-        paymentMethod: result.body.paymentMethod,
-        total: result.body.total,
-        orderStatus: result.body.status,
-      });
-    } catch (error) {
-      console.error("Payment reconciliation failed", error);
-    }
-
-    let shipment = null;
-    try {
-      shipment = await reconcileShipmentFromTracking({
-        orderNumber: result.body.orderNumber,
-        orderTotal: result.body.total,
-        paymentMethod: result.body.paymentMethod,
-        orderStatus: result.body.status,
-        trackingReference: result.body.trackingReference,
-      });
-    } catch (error) {
-      console.error("Shipment reconciliation failed", error);
-    }
-
-    return response(
-      {
-        ...result.body,
-        shipment: publicShipmentTracking(shipment),
-      },
-      result.status,
-    );
-  }
 
   return response(result.body, result.status);
 }
