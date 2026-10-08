@@ -1,3 +1,4 @@
+import { submitCrmReturnRequest } from "@/lib/crm-return-integration";
 import { ownsSupportCase } from "@/lib/support-ownership";
 import { currentCustomerSession } from "@/lib/customer-auth";
 import { fetchCrmOrderTracking } from "@/lib/crm-tracking-integration";
@@ -91,6 +92,37 @@ export async function POST(request: Request) {
       : action === "cancellation"
         ? "Customer requested cancellation before fulfillment."
         : "Customer reported a delivery issue from the signed-in account.";
+
+  if (action === "cancellation") {
+    const result = await submitCrmReturnRequest({
+      requestType: "cancellation",
+      orderNumber: ref.orderNumber,
+      phone: ref.phone,
+      reason: "Changed mind",
+      condition: "Not received",
+      preferredResolution: "Other",
+      note: "Cancellation request: " + note,
+      items: tracking.body.items.map((item, line) => ({ line, qty: item.qty })),
+    });
+    if (!result.ok || !result.body.requestId) {
+      return reply({ error: result.body.error || "CRM could not accept the cancellation request. Please try again." }, result.ok ? 502 : result.status);
+    }
+    // CRM acceptance is authoritative; do not report failure after it succeeds.
+    try {
+      if (!result.body.duplicate) await createCustomerSupportCase({
+        accountId: session.account.id,
+        customerName: session.account.displayName || "Aloyri customer",
+        phone: ref.phone,
+        email: session.account.email,
+        orderNumber: ref.orderNumber,
+        category: "order",
+        note: "Cancellation request · CRM " + result.body.requestId + " · " + note,
+      });
+    } catch (error) {
+      console.error("Cancellation support context failed", error);
+    }
+    return reply({ caseId: result.body.requestId, status: result.body.status, duplicate: result.body.duplicate }, result.body.duplicate ? 200 : 201);
+  }
 
   const row = await createCustomerSupportCase({
     accountId: session.account.id,
