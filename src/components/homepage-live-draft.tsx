@@ -10,11 +10,10 @@ type CoreSection = { id: string; content: ReactNode };
 export function HomepageLiveDraft({ sections, initialLayout }: { sections: CoreSection[]; initialLayout: VisualLayout }) {
   const [layout, setLayout] = useState(initialLayout);
   const [content, setContent] = useState<Record<string, string>>({});
-  const [active, setActive] = useState(false);
+  const active = true;
 
   useEffect(() => {
     if (window.parent === window || new URLSearchParams(window.location.search).get("builderPreview") !== "1") return;
-    setActive(true);
     const onMessage = (event: MessageEvent) => {
       if (event.origin !== window.location.origin || event.source !== window.parent) return;
       const payload = event.data as DraftMessage;
