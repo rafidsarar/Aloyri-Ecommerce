@@ -192,4 +192,104 @@ test.describe("minimal admin interface", () => {
     expect(await page.evaluate(() => Object.keys(localStorage).filter(key => key.startsWith("aloyri_")))).toEqual([]);
   });
 
+  test("promotion retry recovers the same code and repeated apply stays usable", async ({ page }) => {
+    await mockCheckoutApi(page);
+    await page.setViewportSize({ width: 390, height: 844 });
+    let codeRequests = 0;
+    await page.route("**/api/promotions/quote", async route => {
+      const { code, deliveryZone } = route.request().postDataJSON();
+      if (code) codeRequests += 1;
+      if (code && codeRequests === 1) {
+        await route.fulfill({ status: 503, json: { error: "Promotion service temporarily unavailable." } });
+        return;
+      }
+      const shipping = deliveryZone === "inside-dhaka" ? 80 : 0;
+      await route.fulfill({ json: {
+        productsSubtotal: 699, discount: code ? 70 : 0, discountedSubtotal: code ? 629 : 699,
+        deliveryChargeBeforeDiscount: shipping, shippingDiscount: 0, deliveryCharge: shipping,
+        total: (code ? 629 : 699) + shipping, savings: code ? 70 : 0,
+        requestedCode: code || "", codeApplied: Boolean(code),
+        promotion: code ? { id: "save10", name: "Save ten", badgeText: "SAVE10" } : null,
+      } });
+    });
+    await page.goto(`${base}/checkout`);
+    await page.getByRole("combobox", { name: /^Saved address/ }).selectOption("saved-home");
+    const review = page.getByRole("button", { name: "Review order" });
+    await expect(review).toBeEnabled();
+    await page.getByRole("textbox", { name: "Promotion code" }).fill("SAVE10");
+    await page.getByRole("button", { name: "Apply", exact: true }).click();
+    await expect(page.getByText("Promotion service temporarily unavailable.")).toBeVisible();
+    await expect(review).toBeDisabled();
+    // Applying the unchanged code must actually make a new request.
+    await page.getByRole("button", { name: "Apply", exact: true }).click();
+    await expect(review).toBeEnabled();
+    expect(codeRequests).toBe(2);
+    await expect(page.getByText(/70 saved on this order/)).toBeVisible();
+    await page.getByRole("button", { name: "Apply", exact: true }).click();
+    await expect(review).toBeEnabled();
+    expect(codeRequests).toBe(3);
+    await review.click();
+    await expect(page.getByRole("button", { name: /Place COD/ })).toContainText("709");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  });
+
+  test("editing saved recipient details switches to manual delivery without losing the address", async ({ page }) => {
+    await mockCheckoutApi(page);
+    await page.setViewportSize({ width: 320, height: 700 });
+    await page.goto(`${base}/checkout`);
+    const saved = page.getByRole("combobox", { name: /^Saved address/ });
+    await saved.selectOption("saved-home");
+    await page.getByLabel(/^Full name/).fill("Another Recipient");
+    await expect(saved).toHaveValue("");
+    await expect(page.getByLabel("Full delivery address")).toHaveValue("House 12, Road 9, Dhanmondi, Dhaka");
+    await saved.selectOption("saved-home");
+    await page.locator('[data-checkout-field="phone"]').fill("01812345678");
+    await expect(saved).toHaveValue("");
+    await expect(page.getByRole("combobox", { name: /^District/ })).toHaveValue("Dhaka");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  });
+
+  test("cart recovery accepts a valid account email only after explicit consent", async ({ page }) => {
+    await mockCheckoutApi(page);
+    await page.route("**/api/cart-recovery/status", route => route.fulfill({ json: { enabled: true } }));
+    const captures: unknown[] = [];
+    await page.route("**/api/cart-recovery", route => {
+      captures.push(route.request().postDataJSON());
+      return route.fulfill({ json: { ok: true } });
+    });
+    await page.goto(`${base}/checkout`);
+    const consent = page.getByRole("checkbox", { name: /Email me one secure link/ });
+    await expect(consent).not.toBeChecked();
+    expect(captures).toHaveLength(0);
+    await consent.check();
+    await expect.poll(() => captures.length).toBe(1);
+    expect(captures[0]).toMatchObject({ consent: true, email: "customer@example.test", items: [{ productId: "simple-wash", qty: 1 }] });
+  });
+
+  test("rejected promotion can be retried explicitly or removed without trapping checkout", async ({ page }) => {
+    await mockCheckoutApi(page);
+    await page.setViewportSize({ width: 320, height: 700 });
+    let rejectedRequests = 0;
+    await page.route("**/api/promotions/quote", async route => {
+      const { code } = route.request().postDataJSON();
+      if (!code) { await route.fallback(); return; }
+      rejectedRequests += 1;
+      await route.fulfill({ status: 400, json: { error: "This code is not eligible." } });
+    });
+    await page.goto(`${base}/checkout`);
+    const review = page.getByRole("button", { name: "Review order" });
+    await expect(review).toBeEnabled();
+    await page.getByRole("textbox", { name: "Promotion code" }).fill("BAD");
+    await page.getByRole("button", { name: "Apply", exact: true }).click();
+    await expect(page.getByText("This code is not eligible.")).toBeVisible();
+    await expect(review).toBeDisabled();
+    await page.getByRole("button", { name: "Retry code", exact: true }).click();
+    await expect(page.getByText("This code is not eligible.")).toBeVisible();
+    expect(rejectedRequests).toBe(2);
+    await page.getByRole("button", { name: "Remove code and continue" }).click();
+    await expect(review).toBeEnabled();
+    await expect(page.getByRole("textbox", { name: "Promotion code" })).toHaveValue("");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  });
+
 });
