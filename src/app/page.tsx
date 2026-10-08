@@ -632,6 +632,7 @@ export default async function Home() {
       {home.visualLayout.order.map((entry) => {
         if (entry.startsWith("core:")) {
           const id = entry.slice(5) as HomepageBlockId;
+          if (home.visualLayout.hiddenCore.includes(id)) return null;
           return <Fragment key={entry}>{blocks[id]}</Fragment>;
         }
         const block = home.visualLayout.blocks.find(item => entry === `custom:${item.id}`);
