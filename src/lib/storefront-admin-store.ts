@@ -1,4 +1,6 @@
 import "server-only";
+import { cache } from "react";
+import { defaultPresentation, normalizePresentation, type StorefrontPresentation } from "@/lib/storefront-presentation";
 
 import {
   createStructuredJsonOnce,
@@ -174,6 +176,7 @@ export type SeoConfig = {
 export type StorefrontConfig = {
   version: 1;
   updatedAt: string;
+  presentation: StorefrontPresentation;
   site: {
     announcement: string;
     footerDescription: string;
@@ -377,6 +380,7 @@ export const defaultMerchandisingConfig: MerchandisingConfig = {
 
 export const defaultStorefrontConfig: StorefrontConfig = {
   version: 1,
+  presentation: defaultPresentation,
   updatedAt: "2026-10-06T00:00:00.000Z",
   site: {
     announcement: "Let Your Skin Glow. · Curated skincare for Bangladesh",
@@ -696,6 +700,7 @@ function normalizeConfig(value: Partial<StorefrontConfig> | null): StorefrontCon
     ...defaultStorefrontConfig,
     ...value,
     version: 1,
+    presentation: normalizePresentation(value.presentation),
     site: {
       ...defaultStorefrontConfig.site,
       ...(value.site || {}),
@@ -934,14 +939,14 @@ export async function readDraftStorefrontConfig(): Promise<StorefrontConfig> {
   return readPublishedStorefrontConfig();
 }
 
-export async function readStorefrontConfig(): Promise<StorefrontConfig> {
+export const readStorefrontConfig = cache(async (): Promise<StorefrontConfig> => {
   // Published edits live in the datastore, so never freeze them at build time.
   await connection();
   const preview = await draftMode();
   return preview.isEnabled
     ? readDraftStorefrontConfig()
     : readPublishedStorefrontConfig();
-}
+});
 
 export async function saveStorefrontConfig(config: StorefrontConfig) {
   const next = normalizedWithTimestamp(config);

@@ -68,6 +68,7 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: safeJsonLd(websiteSchema) }}
         />
         <SiteChrome
+          presentation={config.presentation}
           announcement={config.site.announcement}
           footerDescription={config.site.footerDescription}
           preview={previewState.isEnabled}

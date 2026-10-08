@@ -134,6 +134,7 @@ export function LiveProductPage({
           <ProductMedia
             product={product}
             priority
+            sizes="(max-width: 1024px) 90vw, 720px"
             className="aspect-[4/5] rounded-[2rem] soft-shadow"
           />
           {verified?.photo && !product.mediaPath ? (

@@ -10,10 +10,12 @@ export function ProductMedia({
   product,
   className = "",
   priority = false,
+  sizes = "(max-width: 640px) 46vw, (max-width: 1024px) 34vw, 360px",
 }: {
   product: Product;
   className?: string;
   priority?: boolean;
+  sizes?: string;
 }) {
   const [failed, setFailed] = useState(false);
   const verified = getVerifiedProductContent(product.id);
@@ -38,7 +40,7 @@ export function ProductMedia({
             alt={photo.alt}
             fill
             priority={priority}
-            sizes="(max-width: 640px) 46vw, (max-width: 1024px) 34vw, 520px"
+            sizes={sizes}
             onError={() => setFailed(true)}
             className="object-contain p-[7%]"
           />

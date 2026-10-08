@@ -8,14 +8,10 @@ import { CartLink } from "@/components/cart-link";
 import { ShopDiscoveryMenu } from "@/components/shop-discovery-menu";
 import { CloseIcon, MenuIcon, SearchIcon } from "@/components/icons";
 
-const links = [
-  ["Shop all", "/shop"],
-  ["Bestsellers", "/shop?sort=bestseller"],
-  ["Routine finder", "/routine-finder"],
-  ["Customer care", "/customer-care"],
-];
+import { defaultPresentation, type StorefrontPresentation } from "@/lib/storefront-presentation";
 
-export function Header({ announcement }: { announcement: string }) {
+export function Header({ announcement, presentation = defaultPresentation }: { announcement: string; presentation?: StorefrontPresentation }) {
+  const links = presentation.navigation.map(item=>[item.label,item.href]);
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -72,12 +68,12 @@ export function Header({ announcement }: { announcement: string }) {
 
   return (
     <>
-      {announcement ? <div className="store-announcement px-4 py-2.5 text-center text-[10px] font-medium uppercase tracking-[0.15em] sm:text-[11px]">
+      {presentation.showAnnouncement && announcement ? <div className="store-announcement px-4 py-2.5 text-center text-[10px] font-medium uppercase tracking-[0.15em] sm:text-[11px]">
         {announcement}
       </div> : null}
 
-      <header className="store-header sticky top-0 z-40 border-b backdrop-blur-xl">
-        <div className="shell grid min-h-[72px] grid-cols-[auto_1fr_auto] items-center gap-3 py-3 xl:grid-cols-[auto_1fr_auto]">
+      <header className={`store-header top-0 z-40 border-b backdrop-blur-xl ${presentation.stickyHeader ? "sticky" : "relative"}`}>
+        <div className="shell grid min-h-[68px] min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1 py-2.5 sm:gap-3 xl:grid-cols-[auto_minmax(0,1fr)_auto]">
           <div className="hidden xl:block"><BrandMark /></div>
           <nav className="hidden items-center justify-center gap-4 xl:flex xl:gap-5" aria-label="Primary navigation">
             <ShopDiscoveryMenu />
@@ -107,7 +103,7 @@ export function Header({ announcement }: { announcement: string }) {
 
           <div className="justify-self-center xl:hidden"><BrandMark compact /></div>
 
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex min-w-0 items-center justify-end gap-1 sm:gap-2">
             <Link href="/track-order" className="store-utility-link hidden rounded-full px-3 py-2 text-xs font-medium xl:block">Track order</Link>
             <Link href="/account" aria-current={current("/account") ? "page" : undefined} className="store-utility-link hidden rounded-full px-3 py-2 text-sm font-semibold sm:block">Account</Link>
             <Link href="/account" aria-label="Customer account and sign in"
@@ -121,7 +117,7 @@ export function Header({ announcement }: { announcement: string }) {
             </Link>
             <Link
               href="/shop"
-              className="store-icon-link inline-flex h-11 w-11 items-center justify-center rounded-full border transition"
+              className="store-icon-link hidden h-11 w-11 items-center justify-center rounded-full border transition min-[380px]:inline-flex"
               aria-label="Search products"
             >
               <SearchIcon />
@@ -138,7 +134,7 @@ export function Header({ announcement }: { announcement: string }) {
           role="dialog"
           aria-modal="true"
           aria-label="Navigation menu"
-          className="store-mobile-nav fixed inset-0 z-50 overflow-y-auto p-6 xl:hidden"
+          className="store-mobile-nav fixed inset-0 z-50 overflow-y-auto overscroll-contain p-4 pb-12 sm:p-6 xl:hidden"
         >
           <div className="flex items-center justify-between">
             <BrandMark />
@@ -167,6 +163,10 @@ export function Header({ announcement }: { announcement: string }) {
             ))}
           </nav>
 
+          <Link href="/shop" onClick={() => setOpen(false)}
+            className="store-mobile-tool mt-6 flex min-h-12 items-center justify-between rounded-2xl px-4 text-sm font-semibold">
+            Search skincare and brands <SearchIcon />
+          </Link>
           <div className="store-discovery-strip mt-6 rounded-2xl p-4">
             <p className="text-[10px] font-semibold uppercase tracking-[.18em]">Shop by routine</p>
             <div className="mt-3 grid grid-cols-2 gap-2 text-sm">

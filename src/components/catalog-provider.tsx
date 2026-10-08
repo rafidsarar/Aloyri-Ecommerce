@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -33,7 +34,10 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState("");
   const [refreshedAt, setRefreshedAt] = useState<string | null>(null);
 
+  const refreshingRef = useRef(false);
   const refresh = useCallback(async () => {
+    if (refreshingRef.current) return;
+    refreshingRef.current = true;
     setRefreshing(true);
     try {
       const response = await fetch("/api/catalog", {
@@ -62,6 +66,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
           : "Catalog is temporarily unavailable.",
       );
     } finally {
+      refreshingRef.current = false;
       setRefreshing(false);
     }
   }, []);
