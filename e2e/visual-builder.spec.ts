@@ -4,6 +4,7 @@ import {
   defaultVisualOrder,
   normalizeVisualBlock,
   normalizeVisualLayout,
+  normalizeVisualPageLayout,
   safeBuilderHref,
 } from "../src/lib/visual-builder";
 
@@ -54,6 +55,18 @@ test("visual builder enforces media path, link, component and text limits", () =
   expect(normalizeVisualBlock({ ...custom, kind: "html" })).toBeNull();
   expect(normalizeVisualBlock({ ...custom, id: "../malicious" })).toBeNull();
   expect(normalizeVisualLayout(null).order).toEqual(defaultVisualOrder);
+});
+
+test("page templates accept custom components without replacing operational sections", () => {
+  const page = normalizeVisualPageLayout({
+    order: ["core:hero", "custom:my-new-block", "core:products"],
+    blocks: [custom],
+    hiddenCore: ["products"],
+  });
+  expect(page.order).toEqual(["custom:my-new-block"]);
+  expect(page.blocks[0].title).toBe("Seasonal skincare");
+  expect(page.hiddenCore).toEqual([]);
+  expect(normalizeVisualPageLayout(null).order).toEqual([]);
 });
 
 test("visual builder admin page requires authenticated permission", async ({ page }) => {
