@@ -1,4 +1,4 @@
-import { withRecordRetry } from "@/lib/structured-record-store";
+import { sharedRateAllowed, withRecordRetry } from "@/lib/structured-record-store";
 import "server-only";
 
 import { cookies } from "next/headers";
@@ -491,6 +491,15 @@ export async function updateCurrentCustomerAccount(input: {
   if (!current) throw new Error("UNAUTHENTICATED");
   const stored = await accountById(current.account.id);
   if (!stored) throw new Error("UNAUTHENTICATED");
+  if (current.session.method !== "google") throw new Error("GOOGLE_AUTH_REQUIRED");
+  if (!(await sharedRateAllowed("customer-account-update:" + stored.id, 20, 10 * 60 * 1000))) throw new Error("RATE_LIMITED");
+  if (typeof input.phone === "string" && stored.phone) {
+    const proposed = input.phone.trim().replace(/[\s-]/g, "");
+    const canonical = proposed.startsWith("+88") ? proposed.slice(3) : proposed.startsWith("88") ? proposed.slice(2) : proposed;
+    if (canonical !== stored.phone && Date.now() - Date.parse(current.session.createdAt) > 20 * 60 * 1000) {
+      throw new Error("PHONE_REAUTH_REQUIRED");
+    }
+  }
 
   if (typeof input.displayName === "string") {
     const displayName = input.displayName.trim().replace(/\s+/g, " ");
