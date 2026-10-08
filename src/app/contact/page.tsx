@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { VisualPageSections } from "@/components/visual-page-sections";
 import { staticPageSeoMetadata } from "@/lib/seo-manager";
 import Link from "next/link";
 import { CustomerInfoPage } from "@/components/customer-info-page";
@@ -35,6 +36,7 @@ export default async function ContactPage() {
           Track an order
         </Link>
       </div>
+      <VisualPageSections layout={config.visualPages.contact} />
     </>
   );
 }
