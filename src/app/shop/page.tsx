@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { shopSeoMetadata } from "@/lib/seo-manager";
 import { ShopClient } from "@/components/shop-client";
 import { readStorefrontConfig } from "@/lib/storefront-admin-store";
@@ -52,7 +53,14 @@ export default async function ShopPage({
         </p>
       </div>
 
+      <nav aria-label="Ways to shop" className="flex flex-wrap items-center gap-3 border-b border-[#713a35]/10 py-5">
+        <Link href="/routine-finder" className="store-discovery-button inline-flex min-h-11 items-center rounded-full px-5 text-xs font-semibold">Find your routine →</Link>
+        <Link href="/shop?sort=bestseller" className="store-discovery-accent inline-flex min-h-11 items-center rounded-full border border-[#713a35]/15 px-5 text-xs font-semibold">Shop bestsellers</Link>
+        <Link href="/shop?stock=in-stock" className="store-discovery-accent inline-flex min-h-11 items-center rounded-full border border-[#713a35]/15 px-5 text-xs font-semibold">Available now</Link>
+      </nav>
+
       <ShopClient
+        key={[query.category, query.q, query.brand, query.stock, query.price, query.sort].join(":")}
         initialCategory={query.category}
         initialQuery={query.q}
         initialBrand={query.brand}
