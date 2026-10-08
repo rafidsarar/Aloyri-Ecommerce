@@ -57,7 +57,7 @@ function freshBlock(kind: VisualBlockKind): VisualBlock {
   };
 }
 
-export function VisualBuilderStudio({ initialLayout, pageKey }: { initialLayout: VisualLayout; pageKey: "home" | VisualPageKey }) {
+export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [] }: { initialLayout: VisualLayout; pageKey: "home" | VisualPageKey; mediaPaths?: string[] }) {
   const [{ past, current: layout, future }, dispatch] = useReducer(historyReducer, { past: [], current: initialLayout, future: [] });
   const [selectedId, setSelectedId] = useState(layout.order[0] || "");
   const [device, setDevice] = useState<"mobile" | "tablet" | "desktop">("desktop");
@@ -242,7 +242,13 @@ export function VisualBuilderStudio({ initialLayout, pageKey }: { initialLayout:
                 <textarea maxLength={1200} rows={4} value={selectedCustom.body} onChange={event => updateBlock("body", event.target.value)} className={field + " mt-1"} />
               </label>
             </>}
-            {selectedCustom.kind === "image" && <label className="block text-xs font-semibold">Media library image path
+            {selectedCustom.kind === "image" && <label className="block text-xs font-semibold">Media library image
+              <select value={mediaPaths.includes(selectedCustom.imagePath) ? selectedCustom.imagePath : ""} onChange={event => updateBlock("imagePath", event.target.value)} className={field + " mt-1"}>
+                <option value="">Choose an uploaded image</option>
+                {mediaPaths.map(path => <option key={path} value={path}>{path.replace(/^media\\//, "")}</option>)}
+              </select>
+              <span className="mt-2 block text-xs font-normal text-black/60">Or enter an image path manually:</span>
+              <span className="mt-2 block text-xs font-semibold">Image path</span>
               <input placeholder="media/your-image.webp" value={selectedCustom.imagePath} onChange={event => updateBlock("imagePath", event.target.value)} className={field + " mt-1"} />
               <Link href="/admin/media" target="_blank" className="mt-1 block font-normal text-[#713a35] underline">Open media library ↗</Link>
             </label>}
