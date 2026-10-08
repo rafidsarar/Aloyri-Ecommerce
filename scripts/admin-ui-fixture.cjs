@@ -39,6 +39,16 @@ fs.copyFileSync(path.join(root,'src/components/admin/storefront-layout-fields.ts
 fs.copyFileSync(path.join(root,'src/lib/storefront-presentation.ts'),path.join(temp,'lib/storefront-presentation.ts'));
 fs.mkdirSync(path.join(temp,'app/admin/settings'),{recursive:true});
 fs.writeFileSync(path.join(temp,'app/admin/settings/page.tsx'),`import {AdminShell} from "@/components/admin/admin-shell"; import {StorefrontLayoutFields} from "@/components/admin/storefront-layout-fields"; import {defaultPresentation} from "@/lib/storefront-presentation"; export default function Page(){return <AdminShell username="preview" title="Store settings" subtitle="Customize the storefront"><form><StorefrontLayoutFields value={defaultPresentation}/></form></AdminShell>}`);
+// Isolated Visual Builder interaction preview: reuses the production editor,
+// replacing only the server save action in this disposable test application.
+for (const file of ['visual-builder-studio.tsx']) fs.copyFileSync(path.join(root, 'src/components/admin', file), path.join(temp, 'components/admin', file));
+fs.copyFileSync(path.join(root,'src/components/visual-builder-block.tsx'),path.join(temp,'components/visual-builder-block.tsx'));
+for (const file of ['visual-builder.ts','homepage-builder.ts']) fs.copyFileSync(path.join(root,'src/lib',file),path.join(temp,'lib',file));
+fs.mkdirSync(path.join(temp,'app/admin/builder'),{recursive:true});
+fs.writeFileSync(path.join(temp,'app/admin/actions.ts'), '"use server"; export async function saveVisualBuilder(_formData: FormData) {}');
+fs.writeFileSync(path.join(temp,'app/admin/builder/page.tsx'),
+  'import {AdminShell} from "@/components/admin/admin-shell"; import {VisualBuilderStudio} from "@/components/admin/visual-builder-studio"; import {defaultVisualLayout} from "@/lib/visual-builder"; export default function Page(){return <AdminShell username="preview" title="Visual Builder preview" subtitle="Disposable UI fixture"><VisualBuilderStudio pageKey="home" initialLayout={defaultVisualLayout}/></AdminShell>}');
+
 // Isolated checkout renderer: uses the real client component but a disposable
 // Next.js app and mocked HTTP endpoints. Never bypasses production authentication.
 fs.mkdirSync(path.join(temp, 'app/test-cart'), {recursive:true});
