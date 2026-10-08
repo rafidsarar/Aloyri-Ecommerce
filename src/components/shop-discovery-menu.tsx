@@ -75,7 +75,7 @@ export function ShopDiscoveryMenu() {
         Explore <span aria-hidden="true" className={"text-[10px] transition-transform " + (open ? "rotate-180" : "")}>⌄</span>
       </button>
       {open ? (
-        <div id="aloyri-shop-discovery" aria-label="Explore skincare" className="store-discovery-menu absolute left-0 top-full z-50 mt-1 w-[min(78vw,860px)] rounded-[1.6rem] border p-6 shadow-xl">
+        <div id="aloyri-shop-discovery" role="group" aria-label="Explore skincare" className="store-discovery-menu absolute left-1/2 -translate-x-[25%] top-full z-50 mt-1 w-[min(78vw,860px)] rounded-[1.6rem] border p-6 shadow-xl">
           <div className="grid gap-6 md:grid-cols-4">
             {groups.map((group) => (
               <div key={group.title}>
