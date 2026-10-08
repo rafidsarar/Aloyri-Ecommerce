@@ -1,5 +1,6 @@
 import { currentCustomerSession } from "@/lib/customer-auth";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { CustomerAccountHub } from "@/components/customer-account-hub";
 
 export const metadata: Metadata = {
@@ -22,6 +23,9 @@ export default async function CustomerAccountPage({
       : "";
 
   const session = await currentCustomerSession();
+  if (session && (session.account.displayName.trim().length < 2 || !/^(?:\+?88)?01[3-9]\d{8}$/.test(session.account.phone || ""))) {
+    redirect("/account/setup?next=" + encodeURIComponent("/account"));
+  }
   const verified = completed && Boolean(session?.account.orderRefs.some(ref => ref.orderNumber === order));
   return (
     <>
