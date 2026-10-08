@@ -2,7 +2,7 @@
 
 import { normalizePresentation, safeNavigationHref } from "@/lib/storefront-presentation";
 import { normalizeHomepageOrder, safeHomepageImagePath } from "@/lib/homepage-builder";
-import { normalizeVisualLayout } from "@/lib/visual-builder";
+import { normalizeVisualLayout, normalizeVisualPageLayout, visualPageKeys, type VisualPageKey } from "@/lib/visual-builder";
 import { cookies, headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -413,21 +413,28 @@ export async function saveVisualBuilder(formData: FormData) {
     redirect("/admin/builder?error=invalid");
   }
 
+  const pageKey = text(formData, "pageKey", 24);
+  const selected = pageKey === "home" ? "home" : visualPageKeys.includes(pageKey as VisualPageKey) ? pageKey as VisualPageKey : null;
+  if (!selected) redirect("/admin/builder?error=invalid");
   await updateDraftStorefrontConfig(config => {
-    const layout = normalizeVisualLayout(requested, config.homepage.sectionOrder);
-    config.homepage.visualLayout = layout;
-    config.homepage.sectionOrder = normalizeHomepageOrder(
-      layout.order.filter(id => id.startsWith("core:")).map(id => id.slice(5)),
-    );
+    if (selected === "home") {
+      const layout = normalizeVisualLayout(requested, config.homepage.sectionOrder);
+      config.homepage.visualLayout = layout;
+      config.homepage.sectionOrder = normalizeHomepageOrder(
+        layout.order.filter(id => id.startsWith("core:")).map(id => id.slice(5)),
+      );
+    } else {
+      config.visualPages[selected] = normalizeVisualPageLayout(requested);
+    }
     return config;
   }, {
     actor: admin.username,
     action: "homepage.visual_builder_saved",
     scope: "homepage",
-    target: "visual-builder",
+    target: selected,
     detail: "Visual website layout updated live.",
   });
-  redirect("/admin/builder?saved=1");
+  redirect("/admin/builder?page=" + selected + "&saved=1");
 }
 
 export async function saveSiteSettings(formData: FormData) {
