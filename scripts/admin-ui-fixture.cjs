@@ -29,11 +29,11 @@ fs.mkdirSync(path.join(temp, 'app/admin/products/item'), { recursive: true });
 fs.writeFileSync(path.join(temp, 'app/admin/products/item/page.tsx'), fixturePage);
 // Account UI preview uses the real hub and aftercare components with fixture API data.
 fs.mkdirSync(path.join(temp, 'lib'), {recursive:true});
-for(const file of ['customer-account-hub.tsx','customer-auth-panel.tsx','customer-post-purchase-center.tsx'])fs.copyFileSync(path.join(root,'src/components',file),path.join(temp,'components',file));
+for(const file of ['customer-account-hub.tsx','customer-auth-panel.tsx','customer-auth-landing.tsx','customer-post-purchase-center.tsx'])fs.copyFileSync(path.join(root,'src/components',file),path.join(temp,'components',file));
 for(const file of ['catalog.ts','product-preferences.ts','volatile-storage.ts'])fs.copyFileSync(path.join(root,'src/lib',file),path.join(temp,'lib',file));
 fs.writeFileSync(path.join(temp,'components/saved-products-client.tsx'),'export function SavedProductsClient(){return <section><h2>Your account wishlist</h2></section>}');
 fs.mkdirSync(path.join(temp,'app/account'),{recursive:true});
-fs.writeFileSync(path.join(temp,'app/account/page.tsx'),'import {CustomerAccountHub} from "@/components/customer-account-hub"; export default function Page(){return <CustomerAccountHub authenticated={true} displayName="Preview customer"/>}');
+fs.writeFileSync(path.join(temp,'app/account/page.tsx'),'import {CustomerAccountHub} from "@/components/customer-account-hub"; export default function Page(){return <CustomerAccountHub authenticated={true} displayName="Preview customer" profileComplete={true}/>}');
 const child = spawn(process.execPath, [path.join(root, 'node_modules/next/dist/bin/next'), 'dev', '--webpack', '--hostname', '127.0.0.1', '--port', process.argv[2] || '3100'], { cwd: temp, stdio: 'inherit' });
 function stop(){ child.kill('SIGTERM'); }
 process.on('SIGTERM', stop); process.on('SIGINT', stop);
