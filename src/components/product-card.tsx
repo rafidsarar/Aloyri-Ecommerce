@@ -37,7 +37,7 @@ export function ProductCard({
     <article className="group store-product-card">
       <Link
         href={`/product/${product.slug}`}
-        className="block"
+        className="block rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#713a35]"
         onClick={() => {
           trackStorefrontEvent(
             collectionId ? "collection_product_click" : "product_click",
@@ -99,7 +99,7 @@ export function ProductCard({
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#713a35]/48">
                 {product.brand}
               </p>
-              <h3 className="mt-1 text-[15px] leading-6 font-medium text-[#321f1c]">
+              <h3 className="mt-1 line-clamp-2 min-h-12 text-[15px] leading-6 font-medium text-[#321f1c]">
                 {product.name}
               </h3>
               <p className="mt-1 line-clamp-2 min-h-10 text-xs leading-5 text-[#321f1c]/60">
