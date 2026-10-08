@@ -38,7 +38,7 @@ import {
 import { formatPrice, getProductById } from "@/lib/catalog";
 import { getAnalyticsContext, trackStorefrontEvent } from "@/lib/analytics";
 import { salePriceFor, type PromotionQuote } from "@/lib/promotions";
-import { checkoutQuoteKey, chooseCheckoutAddress, prefillCheckoutAccount, promotionQuoteReady, type CheckoutAccount } from "@/lib/checkout-conversion";
+import { checkoutQuoteKey, chooseCheckoutAddress, prefillCheckoutAccount, promotionQuoteReady, type CheckoutAccount, type CheckoutSavedAddress } from "@/lib/checkout-conversion";
 
 
 type FieldErrors = Partial<Record<keyof CheckoutDraft, string>>;
