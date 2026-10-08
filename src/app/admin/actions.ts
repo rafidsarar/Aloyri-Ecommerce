@@ -2,7 +2,7 @@
 
 import { normalizePresentation, safeNavigationHref } from "@/lib/storefront-presentation";
 import { normalizeHomepageOrder, safeHomepageImagePath } from "@/lib/homepage-builder";
-import { normalizeVisualLayout, normalizeVisualPageLayout, visualPageKeys, type VisualPageKey } from "@/lib/visual-builder";
+import { normalizeVisualLayout, normalizeVisualPageLayout, reorderVisualCoreSections, visualPageKeys, type VisualPageKey } from "@/lib/visual-builder";
 import { cookies, headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -389,6 +389,7 @@ export async function saveHomepage(formData: FormData) {
       }).filter((section) => section.title || section.copy),
 
     };
+    config.homepage.visualLayout = reorderVisualCoreSections(config.homepage.visualLayout, config.homepage.sectionOrder);
     return config;
   }, {
     actor: admin.username,
