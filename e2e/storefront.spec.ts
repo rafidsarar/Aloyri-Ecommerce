@@ -75,8 +75,8 @@ test("guest can add products to cart but must sign up before checkout", async ({
   await expect(page.getByText("Refreshing Facial Wash", { exact: true }).first()).toBeVisible();
   await page.getByRole("link", { name: /Checkout|Continue to checkout/i }).click();
   await expect(page).toHaveURL(/\/account\/setup/);
-  await expect(page.getByRole("heading", { name: "Create your Aloyri account" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Continue with Google" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Your account, then checkout." })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Sign in with Google" })).toBeVisible();
   await page.goto("/track-order");
   await expect(page.getByLabel("Order number")).toBeVisible();
 });
@@ -90,7 +90,7 @@ test("guest tracking directs return requests to Google sign-in", async ({ page }
   await expect(page.getByRole("heading", { name: "Delivered" })).toBeVisible();
   await page.getByRole("link", { name: "Request return / refund review" }).click();
   await expect(page).toHaveURL(/account\?section=support/);
-  await expect(page.getByRole("link",{name:"Continue with Google"})).toBeVisible();
+  await expect(page.getByRole("link",{name:"Sign in with Google"})).toBeVisible();
 });
 
 test("security headers, noindex and API content-type boundary", async ({ page, request }) => {
