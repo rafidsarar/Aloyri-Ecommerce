@@ -109,7 +109,7 @@ export function RoutineFinder() {
           </h1>
           <p className="store-discovery-muted mt-6 max-w-lg text-sm leading-7">
             Answer three quick questions to browse skincare from our current selection.
-            There's no signup, saved quiz profile or personal information required.
+            There&apos;s no signup, saved quiz profile or personal information required.
           </p>
           <div className="store-discovery-strip mt-8 rounded-2xl p-5">
             <p className="text-sm font-semibold">Simple by design</p>
@@ -156,7 +156,7 @@ export function RoutineFinder() {
               <p className="store-discovery-muted text-xs font-semibold uppercase tracking-[.2em]">Your skincare edit</p>
               <h2 className="display mt-3 text-4xl">A simple place to begin.</h2>
               <p className="store-discovery-muted mt-4 text-sm leading-7">
-                These are shopping suggestions based on Aloyri's published product descriptions and current stock.
+                These are shopping suggestions based on Aloyri&apos;s published product descriptions and current stock.
                 They are not skin diagnoses or claims of suitability, and availability can change before checkout.
               </p>
               {!synced ? (
