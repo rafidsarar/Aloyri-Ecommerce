@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
 import { HomepagePromoBanners } from "@/components/homepage-promo-banners";
+import { HomepageEditorialSections } from "@/components/homepage-editorial-sections";
 import { ArrowIcon } from "@/components/icons";
 import { ProductMedia } from "@/components/product-media";
 import { MerchandisingProductGrid } from "@/components/merchandising-product-grid";
@@ -253,6 +254,7 @@ export default async function Home() {
         </section>
       ) : null}
 
+      <HomepageEditorialSections sections={home.editorialSections} position="before-products" />
       {home.promoPlacement === "before-products" ? <HomepagePromoBanners banners={home.promoBanners} /> : null}
 
       {homepageSections.map((section) => {
@@ -486,6 +488,7 @@ export default async function Home() {
         );
       })}
 
+      <HomepageEditorialSections sections={home.editorialSections} position="after-products" />
       {home.promoPlacement === "after-products" ? <HomepagePromoBanners banners={home.promoBanners} /> : null}
 
       {config.presentation.showRoutine && <section className="border-y border-[#713a35]/10 bg-[#f5e8e2]">
@@ -522,6 +525,7 @@ export default async function Home() {
         </div>
       </section>}
 
+      <HomepageEditorialSections sections={home.editorialSections} position="before-story" />
       {home.showBrandStory && <section className="shell py-12 md:py-16">
         <div className="store-brand-panel overflow-hidden rounded-[2rem]">
           <div className="grid lg:grid-cols-[1.18fr_.82fr]">
