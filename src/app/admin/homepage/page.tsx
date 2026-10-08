@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { AdminSubmitButton } from "@/components/admin/admin-submit-button";
+import { HomepageSectionOrganizer } from "@/components/admin/homepage-section-organizer";
+import { StorefrontDevicePreview } from "@/components/admin/storefront-device-preview";
 import { saveHomepage } from "@/app/admin/actions";
 import { AdminCard, AdminNotice, AdminShell } from "@/components/admin/admin-shell";
 import { requireAdminPermission } from "@/lib/admin-auth";
@@ -30,10 +32,40 @@ export default async function AdminHomepagePage({
   return (
     <AdminShell
       username={admin.username}
-      title="Homepage"
-      subtitle="Edit your homepage, save changes directly to your live website."
+      title="Homepage Control Center"
+      subtitle="Arrange, design and customize every major part of your storefront homepage from one place."
     >
-      {saved ? <AdminNotice>Changes saved live. <Link href="/admin/history" className="font-semibold underline">Version history →</Link></AdminNotice> : null}
+      {saved ? <AdminNotice>Homepage changes are live. <Link href="/admin/history" className="font-semibold underline">View version history →</Link></AdminNotice> : null}
+      <div className="mb-5 rounded-2xl border border-black/10 bg-white p-5 sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-[#713a35]">Storefront design & content</p>
+            <h2 className="mt-2 text-xl font-semibold tracking-tight sm:text-2xl">Make your homepage your own.</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-black/60">Reorder sections, change banners and imagery, adjust design and update every main shopping entry point. All changes are saved live with an audit history.</p>
+          </div>
+          <Link href="/" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center rounded-xl bg-[#713a35] px-5 text-sm font-semibold text-white">Open storefront ↗</Link>
+        </div>
+        <nav aria-label="Homepage editor sections" className="mt-5 flex flex-wrap gap-2">
+          {[
+            ["Layout & order", "#home-order"],
+            ["Look & visibility", "#home-layout"],
+            ["Main banner", "#home-hero"],
+            ["Discovery", "#home-discovery"],
+            ["Campaign banners", "#home-banners"],
+            ["Editorial", "#home-editorial"],
+            ["Brand story", "#home-story"],
+          ].map(([label, href]) => (
+            <a key={href} href={href} className="inline-flex min-h-10 items-center rounded-full border border-black/10 bg-[#f9f7f5] px-4 text-xs font-semibold text-[#713a35] hover:border-[#713a35]/40">{label}</a>
+          ))}
+        </nav>
+      </div>
+      <details className="mb-5 overflow-hidden rounded-2xl border border-black/10 bg-white">
+        <summary className="cursor-pointer px-5 py-4 text-sm font-semibold">Preview live homepage on mobile, tablet or desktop <span className="text-black/40">↓</span></summary>
+        <div className="border-t border-black/10 p-4 sm:p-6">
+          <StorefrontDevicePreview />
+          <p className="mt-2 text-xs text-black/60">Preview shows the current live page. Save changes and refresh the preview to see your update.</p>
+        </div>
+      </details>
       <div className="grid gap-3 sm:grid-cols-3">
         <Link href="/admin/merchandising" className="rounded-xl border border-black/10 bg-white p-4 text-sm font-semibold hover:border-[#713a35]/40 focus-visible:outline-2 focus-visible:outline-offset-2">
           Arrange homepage sections <span aria-hidden="true">→</span>
@@ -43,16 +75,30 @@ export default async function AdminHomepagePage({
           Website appearance & settings <span aria-hidden="true">→</span>
           <span className="mt-1 block text-xs font-normal text-black/60">Manage site-wide branding and storefront information.</span>
         </Link>
-        <Link href="/admin/history" className="rounded-xl border border-black/10 bg-white p-4 text-sm font-semibold hover:border-[#713a35]/40 focus-visible:outline-2 focus-visible:outline-offset-2">
-          Version history <span aria-hidden="true">→</span>
-          <span className="mt-1 block text-xs font-normal text-black/60">Every save updates the live website; previous versions remain available.</span>
+        <Link href="/admin/media" className="rounded-xl border border-black/10 bg-white p-4 text-sm font-semibold hover:border-[#713a35]/40 focus-visible:outline-2 focus-visible:outline-offset-2">
+          Media library <span aria-hidden="true">→</span>
+          <span className="mt-1 block text-xs font-normal text-black/60">Upload homepage photos and campaign artwork for your banners.</span>
         </Link>
       </div>
       <form action={saveHomepage} className="grid gap-5">
+        <div id="home-order" className="scroll-mt-24">
+          <AdminCard>
+            <h2 className="text-lg font-semibold">Section layout & order</h2>
+            <p className="mt-1 mb-5 text-xs text-black/60">Use the arrows to decide what customers see first. Product groups retain their own order in Sections & Merchandising.</p>
+            <HomepageSectionOrganizer initialOrder={home.sectionOrder} />
+          </AdminCard>
+        </div>
+        <div id="home-layout" className="scroll-mt-24">
         <AdminCard>
-          <h2 className="mb-4 text-sm font-semibold">Homepage layout</h2>
+          <h2 className="mb-4 text-lg font-semibold">Appearance & section visibility</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showHero" defaultChecked={home.showHero} /> Show main banner</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showBrowse" defaultChecked={home.showBrowse} /> Show search & quick links</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showFocus" defaultChecked={home.showFocus} /> Show skincare focus links</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showRoutineFinder" defaultChecked={home.showRoutineFinder} /> Show guided routine finder</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showRoutineSteps" defaultChecked={home.showRoutineSteps} /> Show three-step routine on homepage</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showRoutine" defaultChecked={config.presentation.showRoutine} /> Enable routine-section layout</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showHeroImageOnMobile" defaultChecked={config.presentation.showHeroImageOnMobile} /> Show hero image on phones</label>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showCategories" defaultChecked={home.showCategories} /> Show category shortcuts</label>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showBrandStory" defaultChecked={home.showBrandStory} /> Show brand story</label>
             <label className="grid gap-1 text-sm font-medium">Banner layout
@@ -62,6 +108,43 @@ export default async function AdminHomepagePage({
               </select>
             </label>
           </div>
+          <div className="mt-5 grid gap-4 border-t border-black/10 pt-5 sm:grid-cols-3">
+            <label className="grid gap-1.5 text-sm font-medium">Color palette
+              <select name="appearance" defaultValue={config.site.appearance} className="min-h-11 rounded-xl border border-black/10 px-4 py-3">
+                <option value="rose">Rose — Aloyri signature</option>
+                <option value="sage">Sage — botanical</option>
+                <option value="sand">Sand — warm neutral</option>
+              </select>
+            </label>
+            <label className="grid gap-1.5 text-sm font-medium">Content width
+              <select name="contentWidth" defaultValue={config.presentation.contentWidth} className="min-h-11 rounded-xl border border-black/10 px-4 py-3">
+                <option value="wide">Wide</option><option value="comfortable">Comfortable</option>
+              </select>
+            </label>
+            <label className="grid gap-1.5 text-sm font-medium">Desktop product columns
+              <select name="desktopColumns" defaultValue={config.presentation.desktopColumns} className="min-h-11 rounded-xl border border-black/10 px-4 py-3">
+                <option value="3">Three — larger product images</option><option value="4">Four — more products visible</option>
+              </select>
+            </label>
+          </div>
+        </AdminCard>
+        </div>
+        <div id="home-discovery" className="scroll-mt-24">
+        <AdminCard>
+          <h2 className="mb-4 text-lg font-semibold">Search & shopping discovery</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="grid gap-1.5 text-sm font-medium">Search section label<input name="browseEyebrow" defaultValue={home.browseEyebrow} maxLength={90} className="min-h-11 rounded-xl border border-black/10 px-4" /></label>
+            <label className="grid gap-1.5 text-sm font-medium">Search headline<input name="browseTitle" defaultValue={home.browseTitle} maxLength={140} className="min-h-11 rounded-xl border border-black/10 px-4" /></label>
+            <label className="grid gap-1.5 text-sm font-medium">Search placeholder<input name="browsePlaceholder" defaultValue={home.browsePlaceholder} maxLength={100} className="min-h-11 rounded-xl border border-black/10 px-4" /></label>
+            <label className="grid gap-1.5 text-sm font-medium">Search intro<textarea name="browseIntro" defaultValue={home.browseIntro} maxLength={300} rows={2} className="rounded-xl border border-black/10 px-4 py-3" /></label>
+          </div>
+          <h3 className="mt-6 border-t border-black/10 pt-5 text-sm font-semibold">Category showcase</h3>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <label className="grid gap-1.5 text-sm font-medium">Category label<input name="categoriesEyebrow" defaultValue={home.categoriesEyebrow} maxLength={90} className="min-h-11 rounded-xl border border-black/10 px-4" /></label>
+            <label className="grid gap-1.5 text-sm font-medium">Category headline<input name="categoriesTitle" defaultValue={home.categoriesTitle} maxLength={140} className="min-h-11 rounded-xl border border-black/10 px-4" /></label>
+            <label className="grid gap-1.5 text-sm font-medium sm:col-span-2">Category description<textarea name="categoriesIntro" defaultValue={home.categoriesIntro} maxLength={300} rows={2} className="rounded-xl border border-black/10 px-4 py-3" /></label>
+          </div>
+          <p className="mt-3 text-xs text-black/50">Category photos and availability use your CRM-synced products.</p>
         </AdminCard>
         <AdminCard>
           <h2 className="mb-4 text-sm font-semibold">Guided shopping feature</h2>
@@ -75,8 +158,10 @@ export default async function AdminHomepagePage({
             </label>
           </div>
         </AdminCard>
+        </div>
+        <div id="home-hero" className="scroll-mt-24">
         <AdminCard>
-          <h2 className="mb-4 text-sm font-semibold">Main banner</h2>
+          <h2 className="mb-4 text-lg font-semibold">Main banner</h2>
           <div className="grid gap-4">
             <label className="grid gap-1.5 text-sm font-medium">
               Short label above heading
@@ -93,6 +178,24 @@ export default async function AdminHomepagePage({
           </div>
         </AdminCard>
 
+        <AdminCard>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="grid gap-1.5 text-sm font-medium">Banner treatment
+              <select name="heroStyle" defaultValue={home.heroStyle} className="min-h-11 rounded-xl border border-black/10 px-4">
+                <option value="soft">Soft & editorial</option><option value="minimal">Clean minimal</option><option value="contrast">Bold contrast</option>
+              </select>
+            </label>
+            <label className="grid gap-1.5 text-sm font-medium">Text alignment
+              <select name="heroAlignment" defaultValue={home.heroAlignment} className="min-h-11 rounded-xl border border-black/10 px-4">
+                <option value="left">Left aligned</option><option value="center">Centered</option>
+              </select>
+            </label>
+            <label className="grid gap-1.5 text-sm font-medium sm:col-span-2">Custom banner image from Media Library
+              <input name="heroImagePath" defaultValue={home.heroImagePath} maxLength={200} placeholder="media/homepage-hero.webp" className="min-h-11 rounded-xl border border-black/10 px-4" />
+              <span className="text-xs font-normal text-black/50">Optional. Leave empty to display the featured product. Upload images under <Link href="/admin/media" className="underline">Media</Link> and paste the media path here.</span>
+            </label>
+          </div>
+        </AdminCard>
         <div className="grid gap-5 xl:grid-cols-2">
           <AdminCard>
             <p className="text-sm font-semibold">Main button</p>
@@ -151,10 +254,12 @@ export default async function AdminHomepagePage({
           </div>
         </AdminCard>
 
+        </div>
+        <div id="home-banners" className="scroll-mt-24">
         <AdminCard>
-          <h2 className="text-sm font-semibold">Promotional banners</h2>
+          <h2 className="text-lg font-semibold">Promotional banners</h2>
           <p className="mt-2 text-xs leading-5 text-black/60">
-            Create up to two customer-facing banners. Save to update the live website immediately. Only safe internal shop and collection destinations are supported.
+            Create up to four customer-facing banners. Save to update the live website immediately. Only safe internal shop and collection destinations are supported.
           </p>
           <label className="mt-5 grid gap-2 text-sm font-medium">Banner placement
             <select name="promoPlacement" defaultValue={home.promoPlacement} className="min-h-11 rounded-xl border border-black/10 px-4">
@@ -163,7 +268,7 @@ export default async function AdminHomepagePage({
             </select>
           </label>
           <div className="mt-5 grid gap-5">
-            {Array.from({ length: 2 }, (_, index) => {
+            {Array.from({ length: 4 }, (_, index) => {
               const banner = home.promoBanners[index];
               const prefix = `promo${index}`;
               return (
@@ -222,8 +327,10 @@ export default async function AdminHomepagePage({
           </div>
         </AdminCard>
 
+        </div>
+        <div id="home-editorial" className="scroll-mt-24">
         <AdminCard>
-          <h2 className="text-sm font-semibold">Visual section builder</h2>
+          <h2 className="text-lg font-semibold">Visual section builder</h2>
           <p className="mt-2 text-xs leading-5 text-black/60">Add up to six editorial sections. Choose a type and position, then save to update the live website. Position groups are rendered in the order shown here.</p>
           <div className="mt-5 grid gap-5">
             {Array.from({ length: 6 }, (_, index) => {
@@ -273,8 +380,10 @@ export default async function AdminHomepagePage({
           </div>
         </AdminCard>
 
+        </div>
+        <div id="home-story" className="scroll-mt-24">
         <AdminCard>
-          <p className="text-sm font-semibold">Brand story</p>
+          <p className="text-lg font-semibold">Brand story</p>
           <div className="mt-4 grid gap-4">
             <label className="grid gap-1.5 text-sm font-medium">
               Eyebrow
@@ -291,6 +400,7 @@ export default async function AdminHomepagePage({
           </div>
         </AdminCard>
 
+        </div>
         <div className="admin-save-bar">
           <p className="text-xs text-black/60">Saving updates the live storefront immediately.</p>
           <AdminSubmitButton pendingLabel="Saving…">Save changes</AdminSubmitButton>
