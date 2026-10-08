@@ -66,26 +66,19 @@ test("catalog search and mobile navigation", async ({ page }) => {
   await expect(page.getByRole("dialog", { name: "Navigation menu" })).toBeVisible();
 });
 
-test("guest COD checkout returns to independent tracking without browser-saved data", async ({ page }) => {
+test("guest can add products to cart but must sign up before checkout", async ({ page }) => {
   await mockCommerce(page);
   await page.goto("/shop");
   await page.getByRole("link", { name: /Refreshing Facial Wash/i }).click();
-  await page.getByRole("button",{name:"Add to cart",exact:true}).first().click();
-  await page.getByRole("link",{name:/Cart/}).first().click();
-  await page.getByRole("link",{name:/Checkout|Continue to checkout/}).click();
-  await page.getByLabel("Full name").fill("Aloyri E2E Customer");
-  await page.getByLabel("Mobile number").fill("01700000000");
-  await page.getByRole("button", { name: /Inside Dhaka/ }).click();
-  await page.getByLabel("District").selectOption("Dhaka");
-  await page.getByLabel("Area / thana / upazila").fill("Dhanmondi");
-  await page.getByLabel("Full delivery address").fill("House 1, Road 2, Dhanmondi, Dhaka");
-  await page.getByRole("button", { name: "Continue to review" }).click();
-  await page.getByRole("button", { name: /Place COD order/ }).click();
-
-  await expect(page).toHaveURL(/track-order/);
-  await expect(page.getByLabel("Order number")).toHaveValue(delivered.orderNumber);
-  expect(await page.evaluate(()=>Object.keys(localStorage).filter(key=>key.startsWith("aloyri_")))).toEqual([]);
-  expect(await page.evaluate(()=>Object.keys(sessionStorage).filter(key=>key.startsWith("aloyri_")))).toEqual([]);
+  await page.getByRole("button", { name: "Add to cart", exact: true }).first().click();
+  await page.getByRole("link", { name: /Cart/ }).first().click();
+  await expect(page.getByText("Refreshing Facial Wash", { exact: true }).first()).toBeVisible();
+  await page.getByRole("link", { name: /Checkout|Continue to checkout/i }).click();
+  await expect(page).toHaveURL(/\/account\/setup/);
+  await expect(page.getByRole("heading", { name: "Create your Aloyri account" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Continue with Google" })).toBeVisible();
+  await page.goto("/track-order");
+  await expect(page.getByLabel("Order number")).toBeVisible();
 });
 
 test("guest tracking directs return requests to Google sign-in", async ({ page }) => {
