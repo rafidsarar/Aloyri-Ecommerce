@@ -152,6 +152,59 @@ export default async function AdminHomepagePage({
         </AdminCard>
 
         <AdminCard>
+          <h2 className="text-sm font-semibold">Promotional banners</h2>
+          <p className="mt-2 text-xs leading-5 text-black/60">
+            Create up to two customer-facing banners. Save as a draft, preview the layout and publish when ready. Only safe internal shop and collection destinations are supported.
+          </p>
+          <label className="mt-5 grid gap-2 text-sm font-medium">Banner placement
+            <select name="promoPlacement" defaultValue={home.promoPlacement} className="min-h-11 rounded-xl border border-black/10 px-4">
+              <option value="before-products">Before product collections</option>
+              <option value="after-products">After product collections</option>
+            </select>
+          </label>
+          <div className="mt-5 grid gap-5">
+            {Array.from({ length: 2 }, (_, index) => {
+              const banner = home.promoBanners[index];
+              const prefix = `promo${index}`;
+              return (
+                <fieldset key={index} className="min-w-0 rounded-2xl border border-black/10 bg-black/[.02] p-4 sm:p-5">
+                  <legend className="px-2 text-sm font-semibold">Banner {index + 1}</legend>
+                  <div className="grid gap-4">
+                    <label className="flex min-h-11 items-center gap-3 text-sm">
+                      <input type="checkbox" name={`${prefix}Enabled`} defaultChecked={banner?.enabled || false} />
+                      Show this banner
+                    </label>
+                    <label className="grid gap-1.5 text-sm font-medium">Small label
+                      <input name={`${prefix}Eyebrow`} defaultValue={banner?.eyebrow || ""} maxLength={80} className="min-h-11 w-full rounded-xl border border-black/10 bg-white px-4" />
+                    </label>
+                    <label className="grid gap-1.5 text-sm font-medium">Headline
+                      <input name={`${prefix}Title`} defaultValue={banner?.title || ""} maxLength={160} className="min-h-11 w-full rounded-xl border border-black/10 bg-white px-4" />
+                    </label>
+                    <label className="grid gap-1.5 text-sm font-medium">Supporting copy
+                      <textarea name={`${prefix}Copy`} defaultValue={banner?.copy || ""} rows={3} maxLength={360} className="w-full rounded-xl border border-black/10 bg-white px-4 py-3" />
+                    </label>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <label className="grid gap-1.5 text-sm font-medium">Button text
+                        <input name={`${prefix}CtaLabel`} defaultValue={banner?.ctaLabel || ""} maxLength={60} className="min-h-11 min-w-0 rounded-xl border border-black/10 bg-white px-4" />
+                      </label>
+                      <label className="grid gap-1.5 text-sm font-medium">Button destination
+                        <input name={`${prefix}CtaHref`} defaultValue={banner?.ctaHref || ""} maxLength={160} placeholder="/shop" className="min-h-11 min-w-0 rounded-xl border border-black/10 bg-white px-4" />
+                      </label>
+                    </div>
+                    <label className="grid gap-1.5 text-sm font-medium">Banner layout
+                      <select name={`${prefix}Layout`} defaultValue={banner?.layout || "split"} className="min-h-11 rounded-xl border border-black/10 bg-white px-4">
+                        <option value="split">Split — text and action</option>
+                        <option value="centered">Centered — compact promotion</option>
+                      </select>
+                    </label>
+                  </div>
+                </fieldset>
+              );
+            })}
+          </div>
+        </AdminCard>
+
+        <AdminCard>
           <p className="text-sm font-semibold">Brand story</p>
           <div className="mt-4 grid gap-4">
             <label className="grid gap-1.5 text-sm font-medium">
