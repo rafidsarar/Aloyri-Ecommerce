@@ -150,6 +150,7 @@ export function CustomerAuthPanel() {
             />
           </label>
 
+          <p className="text-xs text-[#321f1c]/55">Changing your mobile number requires a recent Google sign-in. Your number is format-checked, not SMS-verified.</p>
           <label className="text-xs font-medium">Mobile number
             <input name="phone" type="tel" autoComplete="tel" required defaultValue={status.account.phone || ""} placeholder="01XXXXXXXXX" className="mt-2 h-11 w-full max-w-md rounded-xl border border-[#713a35]/12 bg-white px-3 text-sm" />
           </label>
