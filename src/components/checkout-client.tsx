@@ -969,7 +969,7 @@ export function CheckoutClient() {
     : "Not selected";
 
   return (
-    <main className="shell pb-32 pt-8 md:pb-16 md:pt-12">
+    <main className="shell min-w-0 pb-36 pt-6 sm:pt-8 md:pb-16 md:pt-12">
       <nav aria-label="Checkout progress" className="mb-8">
         <ol className="grid grid-cols-3 gap-2 rounded-[1.2rem] border border-[#713a35]/10 bg-white/55 p-2 text-center text-[10px] font-semibold uppercase tracking-[0.12em] sm:max-w-xl">
           <li>
@@ -1003,12 +1003,18 @@ export function CheckoutClient() {
         </ol>
       </nav>
 
+      <div role="status" className="mb-5 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border border-[#713a35]/10 bg-[#f5e8e2]/60 px-4 py-3 text-xs text-[#321f1c]/75">
+        <span className="font-semibold">Google account checkout</span>
+        <span>Cash on Delivery · No online payment</span>
+        <span>Review before placing your order</span>
+      </div>
+
       <div className="mb-9 flex flex-col gap-4 border-b border-[#713a35]/10 pb-8 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/48">
             Secure Aloyri checkout
           </p>
-          <h1 className="display mt-3 text-5xl sm:text-6xl">
+          <h1 className="display mt-3 text-4xl leading-tight sm:text-6xl">
             {step === "details" ? "Delivery details." : "Review everything."}
           </h1>
           <p className="mt-3 max-w-xl text-sm leading-7 text-[#321f1c]/48">
@@ -1031,14 +1037,21 @@ export function CheckoutClient() {
         </p>
       ) : null}
 
+      {step === "details" && Object.keys(errors).length > 0 ? (
+        <div role="alert" aria-live="assertive" className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          <p className="font-semibold">Please check your delivery details</p>
+          <p className="mt-1">Correct the highlighted fields before reviewing your order.</p>
+        </div>
+      ) : null}
+
       {step === "details" ? (
         <form
           id="checkout-details-form"
           onSubmit={reviewOrder}
-          className="grid gap-8 lg:grid-cols-[1fr_390px] lg:gap-12"
+          className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,390px)] lg:gap-12"
           noValidate
         >
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
             <section className="rounded-[1.5rem] border border-[#713a35]/10 bg-white/60 p-5 sm:p-7">
               <div className="mb-6">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#713a35]/48">
@@ -1547,8 +1560,8 @@ export function CheckoutClient() {
           </div>
         </form>
       ) : (
-        <div className="grid gap-8 lg:grid-cols-[1fr_390px] lg:gap-12">
-          <div className="space-y-5">
+        <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,390px)] lg:gap-12">
+          <div className="min-w-0 space-y-5">
             <section className="rounded-[1.5rem] border border-[#713a35]/10 bg-white/65 p-5 sm:p-7">
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -1779,6 +1792,21 @@ export function CheckoutClient() {
           </div>
         </div>
       )}
+      {step === "details" ? (
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#713a35]/10 bg-[#fffaf7]/95 px-4 py-3 shadow-[0_-6px_24px_rgba(50,31,28,0.06)] backdrop-blur lg:hidden">
+          <div className="mx-auto flex max-w-xl items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-medium text-[#321f1c]/60">Estimated total</p>
+              <p className="truncate text-sm font-bold text-[#321f1c]">{formatPrice(quotedTotal)}</p>
+            </div>
+            <button type="submit" form="checkout-details-form"
+              disabled={!orderingStatusLoaded || !orderingEnabled}
+              className="min-h-12 rounded-full bg-[#713a35] px-6 text-sm font-semibold text-white disabled:bg-[#713a35]/30">
+              Review order <span aria-hidden="true">→</span>
+            </button>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }
