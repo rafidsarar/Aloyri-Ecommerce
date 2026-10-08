@@ -739,10 +739,6 @@ function normalizeConfig(value: Partial<StorefrontConfig> | null): StorefrontCon
               ctaHref: href || "",
               position: (["before-products", "after-products", "before-story"].includes(item.position) ? item.position : "after-products") as "before-products" | "after-products" | "before-story",
               layout: item.layout === "centered" ? "centered" as const : "split" as const,
-              mobileLayout: item.mobileLayout === "compact" ? "compact" as const : "stacked" as const,
-              imagePath: typeof item.imagePath === "string" && /^media\/[a-zA-Z0-9][a-zA-Z0-9._/-]{0,180}\.(?:png|jpe?g|webp)$/.test(item.imagePath) && !item.imagePath.includes("..") ? item.imagePath : "",
-              startAt: typeof item.startAt === "string" && /^\d{4}-\d\d-\d\dT\d\d:\d\d$/.test(item.startAt) ? item.startAt : "",
-              endAt: typeof item.endAt === "string" && /^\d{4}-\d\d-\d\dT\d\d:\d\d$/.test(item.endAt) ? item.endAt : "",
             }];
           })
         : [],
@@ -759,6 +755,10 @@ function normalizeConfig(value: Partial<StorefrontConfig> | null): StorefrontCon
               ctaLabel: href ? clean(item.ctaLabel, 60) : "",
               ctaHref: href || "",
               layout: item.layout === "centered" ? "centered" as const : "split" as const,
+              mobileLayout: item.mobileLayout === "compact" ? "compact" as const : "stacked" as const,
+              imagePath: typeof item.imagePath === "string" && /^media\/[a-zA-Z0-9][a-zA-Z0-9._/-]{0,180}\.(?:png|jpe?g|webp)$/.test(item.imagePath) && !item.imagePath.includes("..") ? item.imagePath : "",
+              startAt: typeof item.startAt === "string" && /^\d{4}-\d\d-\d\dT\d\d:\d\d$/.test(item.startAt) ? item.startAt : "",
+              endAt: typeof item.endAt === "string" && /^\d{4}-\d\d-\d\dT\d\d:\d\d$/.test(item.endAt) ? item.endAt : "",
             }];
           })
         : [],
