@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ProductMedia } from "@/components/product-media";
+import { AddToCart } from "@/components/add-to-cart";
 import { useCatalogProduct } from "@/components/catalog-provider";
 import {
   formatPrice,
@@ -33,7 +34,7 @@ export function ProductCard({
   const onSale = synced && hasSalePrice(product);
 
   return (
-    <article className="group">
+    <article className="group store-product-card">
       <Link
         href={`/product/${product.slug}`}
         className="block"
@@ -118,6 +119,9 @@ export function ProductCard({
           </div>
         </div>
       </Link>
+      <div className="store-product-card-action mt-3">
+        <AddToCart productId={product.id} compact ariaLabel={`Add ${product.name} to cart`} />
+      </div>
     </article>
   );
 }
