@@ -22,6 +22,15 @@ const groups = [
     ],
   },
   {
+    title: "Explore by focus",
+    links: [
+      { label: "Hydration", href: "/shop?focus=hydration" },
+      { label: "Light textures", href: "/shop?focus=lightweight" },
+      { label: "Simple & gentle", href: "/shop?focus=gentle" },
+      { label: "Daily SPF", href: "/shop?focus=spf" },
+    ],
+  },
+  {
     title: "Shopping help",
     links: [
       { label: "Find your routine", href: "/routine-finder" },
@@ -71,8 +80,8 @@ export function ShopDiscoveryMenu() {
         Explore <span aria-hidden="true" className={"text-[10px] transition-transform " + (open ? "rotate-180" : "")}>⌄</span>
       </button>
       {open ? (
-        <div id="aloyri-shop-discovery" aria-label="Explore skincare" className="store-discovery-menu absolute left-0 top-full z-50 mt-1 w-[min(76vw,790px)] rounded-[1.6rem] border p-6 shadow-xl">
-          <div className="grid gap-6 md:grid-cols-3">
+        <div id="aloyri-shop-discovery" aria-label="Explore skincare" className="store-discovery-menu absolute left-0 top-full z-50 mt-1 w-[min(78vw,860px)] rounded-[1.6rem] border p-6 shadow-xl">
+          <div className="grid gap-6 md:grid-cols-4">
             {groups.map((group) => (
               <div key={group.title}>
                 <p className="store-discovery-muted text-[10px] font-semibold uppercase tracking-[.2em]">{group.title}</p>
