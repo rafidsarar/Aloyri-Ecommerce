@@ -191,6 +191,24 @@ export default async function AdminHomepagePage({
                         <input name={`${prefix}CtaHref`} defaultValue={banner?.ctaHref || ""} maxLength={160} placeholder="/shop" className="min-h-11 min-w-0 rounded-xl border border-black/10 bg-white px-4" />
                       </label>
                     </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <label className="grid gap-1.5 text-sm font-medium">Image from Media Library
+                        <input name={`${prefix}ImagePath`} defaultValue={banner?.imagePath || ""} maxLength={200} placeholder="media/banner.webp" className="min-h-11 min-w-0 rounded-xl border border-black/10 bg-white px-4" />
+                        <span className="text-xs font-normal text-black/50">Upload under Admin → Media, then paste its media path.</span>
+                      </label>
+                      <label className="grid gap-1.5 text-sm font-medium">Mobile layout
+                        <select name={`${prefix}MobileLayout`} defaultValue={banner?.mobileLayout || "stacked"} className="min-h-11 rounded-xl border border-black/10 bg-white px-4">
+                          <option value="stacked">Stacked image and text</option>
+                          <option value="compact">Compact text-first</option>
+                        </select>
+                      </label>
+                      <label className="grid gap-1.5 text-sm font-medium">Starts (Bangladesh time)
+                        <input type="datetime-local" name={`${prefix}StartAt`} defaultValue={banner?.startAt || ""} className="min-h-11 min-w-0 rounded-xl border border-black/10 bg-white px-4" />
+                      </label>
+                      <label className="grid gap-1.5 text-sm font-medium">Ends (Bangladesh time)
+                        <input type="datetime-local" name={`${prefix}EndAt`} defaultValue={banner?.endAt || ""} className="min-h-11 min-w-0 rounded-xl border border-black/10 bg-white px-4" />
+                      </label>
+                    </div>
                     <label className="grid gap-1.5 text-sm font-medium">Banner layout
                       <select name={`${prefix}Layout`} defaultValue={banner?.layout || "split"} className="min-h-11 rounded-xl border border-black/10 bg-white px-4">
                         <option value="split">Split — text and action</option>
@@ -200,6 +218,57 @@ export default async function AdminHomepagePage({
                   </div>
                 </fieldset>
               );
+            })}
+          </div>
+        </AdminCard>
+
+        <AdminCard>
+          <h2 className="text-sm font-semibold">Visual section builder</h2>
+          <p className="mt-2 text-xs leading-5 text-black/60">Add up to six editorial sections. Choose a type and position, then save and preview before publishing. Position groups are rendered in the order shown here.</p>
+          <div className="mt-5 grid gap-5">
+            {Array.from({ length: 6 }, (_, index) => {
+              const section = home.editorialSections[index];
+              const prefix = `editorial${index}`;
+              return <fieldset key={index} className="min-w-0 rounded-2xl border border-black/10 bg-black/[.02] p-4 sm:p-5">
+                <legend className="px-2 text-sm font-semibold">Section {index + 1}</legend>
+                <div className="grid gap-4">
+                  <label className="flex min-h-11 items-center gap-3 text-sm"><input type="checkbox" name={`${prefix}Enabled`} defaultChecked={section?.enabled || false} /> Show section</label>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <label className="grid gap-1.5 text-sm font-medium">Section type
+                      <select name={`${prefix}Kind`} defaultValue={section?.kind || "story"} className="min-h-11 min-w-0 rounded-xl border border-black/10 bg-white px-4">
+                        <option value="story">Brand story</option><option value="testimonial">Customer testimonial</option><option value="faq">FAQ highlight</option><option value="announcement">Announcement</option>
+                      </select>
+                    </label>
+                    <label className="grid gap-1.5 text-sm font-medium">Position
+                      <select name={`${prefix}Position`} defaultValue={section?.position || "after-products"} className="min-h-11 min-w-0 rounded-xl border border-black/10 bg-white px-4">
+                        <option value="before-products">Before product collections</option><option value="after-products">After product collections</option><option value="before-story">Before brand story</option>
+                      </select>
+                    </label>
+                    <label className="grid gap-1.5 text-sm font-medium">Layout
+                      <select name={`${prefix}Layout`} defaultValue={section?.layout || "split"} className="min-h-11 min-w-0 rounded-xl border border-black/10 bg-white px-4">
+                        <option value="split">Split</option><option value="centered">Centered</option>
+                      </select>
+                    </label>
+                    <label className="grid gap-1.5 text-sm font-medium">Small label
+                      <input name={`${prefix}Eyebrow`} defaultValue={section?.eyebrow || ""} maxLength={80} className="min-h-11 min-w-0 rounded-xl border border-black/10 bg-white px-4" />
+                    </label>
+                  </div>
+                  <label className="grid gap-1.5 text-sm font-medium">Heading
+                    <input name={`${prefix}Title`} defaultValue={section?.title || ""} maxLength={160} className="min-h-11 rounded-xl border border-black/10 bg-white px-4" />
+                  </label>
+                  <label className="grid gap-1.5 text-sm font-medium">Content
+                    <textarea name={`${prefix}Copy`} defaultValue={section?.copy || ""} maxLength={800} rows={3} className="w-full rounded-xl border border-black/10 bg-white px-4 py-3" />
+                  </label>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <label className="grid gap-1.5 text-sm font-medium">Button text
+                      <input name={`${prefix}CtaLabel`} defaultValue={section?.ctaLabel || ""} maxLength={60} className="min-h-11 min-w-0 rounded-xl border border-black/10 bg-white px-4" />
+                    </label>
+                    <label className="grid gap-1.5 text-sm font-medium">Button destination
+                      <input name={`${prefix}CtaHref`} defaultValue={section?.ctaHref || ""} maxLength={160} placeholder="/shop" className="min-h-11 min-w-0 rounded-xl border border-black/10 bg-white px-4" />
+                    </label>
+                  </div>
+                </div>
+              </fieldset>;
             })}
           </div>
         </AdminCard>
