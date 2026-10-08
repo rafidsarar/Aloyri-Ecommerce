@@ -390,6 +390,22 @@ export async function saveHomepage(formData: FormData) {
 
     };
     config.homepage.visualLayout = reorderVisualCoreSections(config.homepage.visualLayout, config.homepage.sectionOrder);
+    const layout = config.homepage.visualLayout;
+    // Old homepage controls and the visual studio must agree on visibility.
+    const legacyVisibility = [
+      ["hero", config.homepage.showHero],
+      ["browse", config.homepage.showBrowse],
+      ["categories", config.homepage.showCategories],
+      ["focus", config.homepage.showFocus],
+      ["routineFinder", config.homepage.showRoutineFinder],
+      ["routineSteps", config.homepage.showRoutineSteps],
+      ["brandStory", config.homepage.showBrandStory],
+    ] as const;
+    const managed = new Set<string>(legacyVisibility.map(([id]) => id));
+    layout.hiddenCore = [
+      ...layout.hiddenCore.filter(id => !managed.has(id)),
+      ...legacyVisibility.filter(([, visible]) => !visible).map(([id]) => id),
+    ];
     return config;
   }, {
     actor: admin.username,
@@ -421,6 +437,13 @@ export async function saveVisualBuilder(formData: FormData) {
     if (selected === "home") {
       const layout = normalizeVisualLayout(requested, config.homepage.sectionOrder);
       config.homepage.visualLayout = layout;
+      config.homepage.showHero = !layout.hiddenCore.includes("hero");
+      config.homepage.showBrowse = !layout.hiddenCore.includes("browse");
+      config.homepage.showCategories = !layout.hiddenCore.includes("categories");
+      config.homepage.showFocus = !layout.hiddenCore.includes("focus");
+      config.homepage.showRoutineFinder = !layout.hiddenCore.includes("routineFinder");
+      config.homepage.showRoutineSteps = !layout.hiddenCore.includes("routineSteps");
+      config.homepage.showBrandStory = !layout.hiddenCore.includes("brandStory");
       config.homepage.sectionOrder = normalizeHomepageOrder(
         layout.order.filter(id => id.startsWith("core:")).map(id => id.slice(5)),
       );
