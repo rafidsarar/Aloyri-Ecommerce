@@ -14,6 +14,7 @@ const nav: Array<{
   group: string;
 }> = [
   { group: "Workspace", label: "Overview", href: "/admin", permission: "dashboard.view" },
+  { group: "Storefront", label: "Visual Builder", href: "/admin/builder", permission: "homepage.view" },
   { group: "Storefront", label: "Homepage Builder", href: "/admin/homepage", permission: "homepage.view" },
   { group: "Storefront", label: "Products", href: "/admin/products", permission: "products.view" },
   { group: "Orders & service", label: "Reviews", href: "/admin/reviews", permission: "products.view" },

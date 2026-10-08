@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { VisualPageSections } from "@/components/visual-page-sections";
 import { staticPageSeoMetadata } from "@/lib/seo-manager";
 import Link from "next/link";
 import { CustomerInfoPage } from "@/components/customer-info-page";
@@ -26,6 +27,7 @@ export default async function ReturnsRefundsPage() {
           You will verify the website order with the same mobile number used at checkout before selecting products for review.
         </p>
       </div>
+      <VisualPageSections layout={config.visualPages.returns} />
     </>
   );
 }

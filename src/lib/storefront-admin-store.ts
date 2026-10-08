@@ -1,4 +1,5 @@
 import "server-only";
+import { defaultVisualLayout, normalizeVisualLayout, normalizeVisualPageLayout, visualPageKeys, type VisualLayout, type VisualPageKey } from "@/lib/visual-builder";
 import { defaultHomepageOrder, normalizeHomepageOrder, safeHomepageImagePath, type HomepageBlockId } from "@/lib/homepage-builder";
 import { cache } from "react";
 import { revalidatePath } from "next/cache";
@@ -209,6 +210,7 @@ export type StorefrontConfig = {
     categoriesTitle: string;
     categoriesIntro: string;
     sectionOrder: HomepageBlockId[];
+    visualLayout: VisualLayout;
     featureChips: string[];
     ideaEyebrow: string;
     ideaHeadline: string;
@@ -224,6 +226,7 @@ export type StorefrontConfig = {
     editorialSections: Array<{ enabled: boolean; kind: "story" | "testimonial" | "faq" | "announcement"; title: string; eyebrow: string; copy: string; ctaLabel: string; ctaHref: string; position: "before-products" | "after-products" | "before-story"; layout: "split" | "centered" }>;
     promoPlacement: "before-products" | "after-products";
   };
+  visualPages: Record<VisualPageKey, VisualLayout>;
   pages: {
     about: InfoPageContent;
     shipping: InfoPageContent;
@@ -433,6 +436,7 @@ export const defaultStorefrontConfig: StorefrontConfig = {
     categoriesTitle: "Shop by category",
     categoriesIntro: "Start with a step in your routine, then explore the products that fit.",
     sectionOrder: [...defaultHomepageOrder],
+    visualLayout: structuredClone(defaultVisualLayout),
     featureChips: [
       "Curated selection",
       "BDT pricing",
@@ -453,6 +457,7 @@ export const defaultStorefrontConfig: StorefrontConfig = {
     promoBanners: [],
     editorialSections: [],
   },
+  visualPages: Object.fromEntries(visualPageKeys.map(key => [key, { order: [], blocks: [], hiddenCore: [] }])) as unknown as Record<VisualPageKey, VisualLayout>,
   pages: {
     about: {
       eyebrow: "About Aloyri",
@@ -754,6 +759,7 @@ function normalizeConfig(value: Partial<StorefrontConfig> | null): StorefrontCon
       ...(value.homepage || {}),
       promoPlacement: value.homepage?.promoPlacement === "after-products" ? "after-products" : "before-products",
       sectionOrder: normalizeHomepageOrder(value.homepage?.sectionOrder),
+      visualLayout: normalizeVisualLayout(value.homepage?.visualLayout, normalizeHomepageOrder(value.homepage?.sectionOrder)),
       heroImagePath: safeHomepageImagePath(value.homepage?.heroImagePath),
       heroStyle: value.homepage?.heroStyle === "contrast" || value.homepage?.heroStyle === "minimal" ? value.homepage.heroStyle : "soft",
       heroAlignment: value.homepage?.heroAlignment === "center" ? "center" : "left",
@@ -811,6 +817,7 @@ function normalizeConfig(value: Partial<StorefrontConfig> | null): StorefrontCon
           ? value.homepage.featureChips.slice(0, 6)
           : defaultStorefrontConfig.homepage.featureChips,
     },
+    visualPages: Object.fromEntries(visualPageKeys.map(key => [key, normalizeVisualPageLayout(value.visualPages?.[key])])) as unknown as Record<VisualPageKey, VisualLayout>,
     pages: {
       about: {
         ...defaultStorefrontConfig.pages.about,

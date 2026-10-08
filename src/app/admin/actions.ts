@@ -2,6 +2,7 @@
 
 import { normalizePresentation, safeNavigationHref } from "@/lib/storefront-presentation";
 import { normalizeHomepageOrder, safeHomepageImagePath } from "@/lib/homepage-builder";
+import { normalizeVisualLayout, normalizeVisualPageLayout, reorderVisualCoreSections, visualPageKeys, type VisualPageKey } from "@/lib/visual-builder";
 import { cookies, headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -388,6 +389,23 @@ export async function saveHomepage(formData: FormData) {
       }).filter((section) => section.title || section.copy),
 
     };
+    config.homepage.visualLayout = reorderVisualCoreSections(config.homepage.visualLayout, config.homepage.sectionOrder);
+    const layout = config.homepage.visualLayout;
+    // Old homepage controls and the visual studio must agree on visibility.
+    const legacyVisibility = [
+      ["hero", config.homepage.showHero],
+      ["browse", config.homepage.showBrowse],
+      ["categories", config.homepage.showCategories],
+      ["focus", config.homepage.showFocus],
+      ["routineFinder", config.homepage.showRoutineFinder],
+      ["routineSteps", config.homepage.showRoutineSteps],
+      ["brandStory", config.homepage.showBrandStory],
+    ] as const;
+    const managed = new Set<string>(legacyVisibility.map(([id]) => id));
+    layout.hiddenCore = [
+      ...layout.hiddenCore.filter(id => !managed.has(id)),
+      ...legacyVisibility.filter(([, visible]) => !visible).map(([id]) => id),
+    ];
     return config;
   }, {
     actor: admin.username,
@@ -396,6 +414,51 @@ export async function saveHomepage(formData: FormData) {
   });
 
   redirect("/admin/homepage?saved=1");
+}
+
+export async function saveVisualBuilder(formData: FormData) {
+  const admin = await requireAdminPermission("homepage.edit");
+  let requested: unknown;
+  try {
+    requested = JSON.parse(text(formData, "layout", 50000));
+  } catch {
+    redirect("/admin/builder?error=invalid");
+  }
+  if (!requested || typeof requested !== "object" || Array.isArray(requested) ||
+      !Array.isArray((requested as Record<string, unknown>).order) ||
+      !Array.isArray((requested as Record<string, unknown>).blocks)) {
+    redirect("/admin/builder?error=invalid");
+  }
+
+  const pageKey = text(formData, "pageKey", 24);
+  const selected = pageKey === "home" ? "home" : visualPageKeys.includes(pageKey as VisualPageKey) ? pageKey as VisualPageKey : null;
+  if (!selected) redirect("/admin/builder?error=invalid");
+  await updateDraftStorefrontConfig(config => {
+    if (selected === "home") {
+      const layout = normalizeVisualLayout(requested, config.homepage.sectionOrder);
+      config.homepage.visualLayout = layout;
+      config.homepage.showHero = !layout.hiddenCore.includes("hero");
+      config.homepage.showBrowse = !layout.hiddenCore.includes("browse");
+      config.homepage.showCategories = !layout.hiddenCore.includes("categories");
+      config.homepage.showFocus = !layout.hiddenCore.includes("focus");
+      config.homepage.showRoutineFinder = !layout.hiddenCore.includes("routineFinder");
+      config.homepage.showRoutineSteps = !layout.hiddenCore.includes("routineSteps");
+      config.homepage.showBrandStory = !layout.hiddenCore.includes("brandStory");
+      config.homepage.sectionOrder = normalizeHomepageOrder(
+        layout.order.filter(id => id.startsWith("core:")).map(id => id.slice(5)),
+      );
+    } else {
+      config.visualPages[selected] = normalizeVisualPageLayout(requested);
+    }
+    return config;
+  }, {
+    actor: admin.username,
+    action: "homepage.visual_builder_saved",
+    scope: "homepage",
+    target: selected,
+    detail: "Visual website layout updated live.",
+  });
+  redirect("/admin/builder?page=" + selected + "&saved=1");
 }
 
 export async function saveSiteSettings(formData: FormData) {

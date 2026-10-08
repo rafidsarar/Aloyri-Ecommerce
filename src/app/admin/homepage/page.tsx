@@ -41,7 +41,8 @@ export default async function AdminHomepagePage({
           <div>
             <p className="text-[11px] font-bold uppercase tracking-widest text-[#713a35]">Storefront design & content</p>
             <h2 className="mt-2 text-xl font-semibold tracking-tight sm:text-2xl">Make your homepage your own.</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-black/60">Reorder sections, change banners and imagery, adjust design and update every main shopping entry point. All changes are saved live with an audit history.</p>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-black/60">Manage built-in banners, imagery and shopping entry points. For drag-and-drop section layouts and new custom components, use the Visual Builder.</p>
+            <Link href="/admin/builder" className="mt-4 inline-flex min-h-11 items-center rounded-xl border border-[#713a35]/20 bg-[#fff8f5] px-5 text-sm font-semibold text-[#713a35]">Open Visual Builder →</Link>
           </div>
           <Link href="/" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center rounded-xl bg-[#713a35] px-5 text-sm font-semibold text-white">Open storefront ↗</Link>
         </div>
