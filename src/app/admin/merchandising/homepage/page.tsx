@@ -49,7 +49,7 @@ export default async function HomepageMerchandisingPage({
       title="Homepage merchandising"
       subtitle="Control hero product, storefront section order, collection/campaign placement and global out-of-stock presentation. Live commerce values stay in CRM."
     >
-      {query.saved ? <AdminNotice>Homepage merchandising draft saved.</AdminNotice> : null}
+      {query.saved ? <AdminNotice>Homepage merchandising saved live.</AdminNotice> : null}
       {query.error ? <AdminNotice tone="warning">{query.error}</AdminNotice> : null}
       {!catalog.ok ? (
         <AdminNotice tone="warning">
@@ -248,12 +248,12 @@ export default async function HomepageMerchandisingPage({
         </div>
 
         <AdminNotice tone="neutral">
-          Campaign schedules become active automatically after the campaign has been published once. Scheduling changes themselves still use Draft → Preview → Publish.
+          Campaign schedules run automatically once saved.
         </AdminNotice>
 
         <div className="flex justify-end">
           <button className="rounded-xl bg-[#713a35] px-6 py-3.5 text-sm font-semibold text-white">
-            Save homepage merchandising draft
+            Save homepage merchandising
           </button>
         </div>
       </form>

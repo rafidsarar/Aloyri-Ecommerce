@@ -25,7 +25,7 @@ const nav: Array<{
   { group: "Orders & service", label: "Delivery", href: "/admin/delivery", permission: "analytics.view" },
   { group: "Orders & service", label: "Customer Service", href: "/admin/customer-service", permission: "support.view" },
   { group: "Growth", label: "SEO", href: "/admin/seo", permission: "seo.view" },
-  { group: "Storefront", label: "Publishing", href: "/admin/publishing", permission: "publishing.view" },
+  { group: "Storefront", label: "Version History", href: "/admin/history", permission: "publishing.view" },
   { group: "Administration", label: "Team", href: "/admin/staff", permission: "staff.view" },
   { group: "Administration", label: "Audit", href: "/admin/audit", permission: "audit.view" },
   { group: "Administration", label: "Operations", href: "/admin/operations", permission: "health.view" },

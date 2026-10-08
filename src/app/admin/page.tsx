@@ -37,7 +37,7 @@ export default async function AdminOverviewPage({
     <AdminShell
       username={admin.username}
       title="Overview"
-      subtitle="Manage your storefront, review customer operations and publish website updates."
+      subtitle="Manage your storefront, review customer operations and save website updates instantly."
     >
       {query.forbidden ? (
         <AdminNotice tone="warning">
@@ -46,7 +46,7 @@ export default async function AdminOverviewPage({
       ) : null}
       {publishing.hasDraftChanges ? (
         <AdminNotice tone="warning">
-          You have unpublished changes. <Link href="/admin/publishing" className="font-semibold underline">Review and publish →</Link>
+          Changes are saved live. <Link href="/admin/history" className="font-semibold underline">Version history →</Link>
         </AdminNotice>
       ) : null}
       {!catalog.ok ? (
@@ -106,7 +106,7 @@ export default async function AdminOverviewPage({
                 ["Merchandising", "Campaigns, collections, badges and product ordering", "/admin/merchandising", "merchandising.view"],
                 ["Analytics", "Conversion funnel, attribution and storefront intelligence", "/admin/analytics", "analytics.view"],
                 ["SEO", "Search metadata, social previews, sitemap and redirects", "/admin/seo", "seo.view"],
-                ["Publishing", "Preview, publish, restore and version history", "/admin/publishing", "publishing.view"],
+                ["Version History", "Automatic live updates and restore", "/admin/history", "publishing.view"],
                 ["Customer service", "Review support and return requests", "/admin/customer-service", "support.view"],
                 ["Delivery", "Track shipments and delivery exceptions", "/admin/delivery", "analytics.view"],
                 ["Operations", "Health checks and website configuration backups", "/admin/operations", "health.view"],

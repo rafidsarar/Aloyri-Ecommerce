@@ -1,5 +1,6 @@
 import "server-only";
 import { cache } from "react";
+import { revalidatePath } from "next/cache";
 import { defaultPresentation, normalizePresentation, type StorefrontPresentation } from "@/lib/storefront-presentation";
 
 import {
@@ -9,7 +10,6 @@ import {
   structuredDatastoreConfigured,
   writeStructuredJson,
 } from "@/lib/structured-record-store";
-import { draftMode } from "next/headers";
 import { connection } from "next/server";
 import { listMediaObjects, mediaStorageConfigured, putMediaObject } from "@/lib/media-storage";
 import type { LiveCatalogProduct } from "@/lib/catalog";
@@ -988,18 +988,15 @@ export async function readPublishedStorefrontConfig(): Promise<StorefrontConfig>
 }
 
 export async function readDraftStorefrontConfig(): Promise<StorefrontConfig> {
-  const stored = await readPrivateJson<Partial<StorefrontConfig>>(DRAFT_CONFIG_PATH);
-  if (stored) return normalizeConfig(stored);
+  // Legacy editor calls now read the canonical live config. Old unpublished drafts
+  // are deliberately not auto-applied to Production during migration.
   return readPublishedStorefrontConfig();
 }
 
 export const readStorefrontConfig = cache(async (): Promise<StorefrontConfig> => {
   // Published edits live in the datastore, so never freeze them at build time.
   await connection();
-  const preview = await draftMode();
-  return preview.isEnabled
-    ? readDraftStorefrontConfig()
-    : readPublishedStorefrontConfig();
+  return readPublishedStorefrontConfig();
 });
 
 export async function saveStorefrontConfig(config: StorefrontConfig) {
@@ -1084,6 +1081,40 @@ function auditDiff(
   ];
 }
 
+function refreshLiveStorefront() {
+  revalidatePath("/", "layout");
+  revalidatePath("/");
+  revalidatePath("/shop");
+  revalidatePath("/category/[category]", "page");
+  revalidatePath("/collections/[slug]", "page");
+  revalidatePath("/about");
+  revalidatePath("/faq");
+  revalidatePath("/contact");
+  revalidatePath("/shipping-delivery");
+  revalidatePath("/returns-refunds");
+  revalidatePath("/customer-care");
+  revalidatePath("/privacy");
+  revalidatePath("/terms");
+  revalidatePath("/product/[slug]", "page");
+  revalidatePath("/sitemap.xml");
+  revalidatePath("/robots.txt");
+  revalidatePath("/api/catalog");
+}
+
+async function recordLiveVersion(actor: string, note: string, config: StorefrontConfig) {
+  const record: StorefrontVersionRecord = {
+    version: 1,
+    id: safeId(),
+    publishedAt: config.updatedAt,
+    publishedBy: actor,
+    note: note.slice(0, 300),
+    config,
+  };
+  const pathname = HISTORY_PREFIX + record.publishedAt.replace(/[:.]/g, "-") + "-" + record.id + ".json";
+  await writePrivateJson(pathname, record);
+  return record;
+}
+
 export async function updateDraftStorefrontConfig(
   updater: (current: StorefrontConfig) => StorefrontConfig,
   audit?: {
@@ -1094,41 +1125,34 @@ export async function updateDraftStorefrontConfig(
     detail?: string;
   },
 ) {
-  const current = await readDraftStorefrontConfig();
-  const next = updater(structuredClone(current));
-  const saved = await saveDraftStorefrontConfig(next);
-
+  // Compatibility name retained for existing Admin actions: saves are LIVE.
+  const current = await readPublishedStorefrontConfig();
+  const next = normalizedWithTimestamp(updater(structuredClone(current)));
+  await ensureBaselineVersion(current);
+  // Save the recovery snapshot before mutating the live config.
+  await recordLiveVersion(audit?.actor || "system", audit?.detail || audit?.action || "Storefront updated", next);
+  await writePrivateJson(PUBLISHED_CONFIG_PATH, next);
   if (audit) {
-    await writeAdminAuditEvent(
-      audit.actor,
-      audit.action,
-      audit.detail,
-      {
-        scope: audit.scope,
-        target: audit.target,
-        changes: auditDiff(current, saved),
-      },
-    );
+    await writeAdminAuditEvent(audit.actor, audit.action, audit.detail, {
+      scope: audit.scope,
+      target: audit.target,
+      changes: auditDiff(current, next),
+    });
   }
-
-  return saved;
+  refreshLiveStorefront();
+  return next;
 }
 
 export async function getPublishingStatus() {
-  const [published, draft] = await Promise.all([
-    readPublishedStorefrontConfig(),
-    readDraftStorefrontConfig(),
-  ]);
-  const [publishedHash, draftHash] = await Promise.all([
-    configHash(published),
-    configHash(draft),
-  ]);
+  // Legacy callers always see a clean live state in direct-save mode.
+  const published = await readPublishedStorefrontConfig();
+  const hash = await configHash(published);
   return {
     published,
-    draft,
-    publishedHash,
-    draftHash,
-    hasDraftChanges: publishedHash !== draftHash,
+    draft: published,
+    publishedHash: hash,
+    draftHash: hash,
+    hasDraftChanges: false,
   };
 }
 
@@ -1271,29 +1295,23 @@ export async function discardDraftStorefront(actor: string) {
   return draft;
 }
 
-export async function restoreStorefrontVersionToDraft(
-  actor: string,
-  versionId: string,
-) {
-  if (!/^[a-f0-9]{32}$/.test(versionId)) {
-    throw new Error("Invalid storefront version.");
-  }
+export async function restoreStorefrontVersionToDraft(actor: string, versionId: string) {
+  // Existing action name retained; restore now updates Production directly.
+  if (!/^[a-f0-9]{32}$/.test(versionId)) throw new Error("Invalid storefront version.");
   const versions = await historyRecords(100);
   const record = versions.find((candidate) => candidate.id === versionId);
   if (!record) throw new Error("Storefront version not found.");
-
-  const before = await readDraftStorefrontConfig();
-  const restored = await saveDraftStorefrontConfig(record.config);
-  await writeAdminAuditEvent(
-    actor,
-    "storefront.version_restore_to_draft",
-    "Restored version from " + record.publishedAt,
-    {
-      scope: "publishing",
-      target: record.id,
-      changes: auditDiff(before, restored),
-    },
-  );
+  const before = await readPublishedStorefrontConfig();
+  await ensureBaselineVersion(before);
+  const restored = normalizedWithTimestamp(record.config);
+  await recordLiveVersion(actor, "Restored version from " + record.publishedAt, restored);
+  await writePrivateJson(PUBLISHED_CONFIG_PATH, restored);
+  await writeAdminAuditEvent(actor, "storefront.version_restore", "Restored version from " + record.publishedAt, {
+    scope: "history",
+    target: record.id,
+    changes: auditDiff(before, restored),
+  });
+  refreshLiveStorefront();
   return { restored, record };
 }
 

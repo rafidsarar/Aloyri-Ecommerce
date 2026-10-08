@@ -34,7 +34,7 @@ export default async function CampaignsPage({
       title="Campaigns"
       subtitle="Schedule campaign presentation, creative and product targets while CRM remains authoritative for actual sale price and promotion eligibility."
     >
-      {query.deleted ? <AdminNotice>Campaign removed from Draft.</AdminNotice> : null}
+      {query.deleted ? <AdminNotice>Campaign removed from live storefront.</AdminNotice> : null}
 
       <div className="mb-5 flex justify-end">
         <Link

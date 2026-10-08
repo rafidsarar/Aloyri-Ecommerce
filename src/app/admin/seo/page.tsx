@@ -29,11 +29,11 @@ export default async function SeoManagerPage() {
     <AdminShell
       username={admin.username}
       title="SEO & Discoverability"
-      subtitle="Manage search metadata, social previews, indexing, canonicals, structured product discovery and redirects through the same Draft → Preview → Publish workflow."
+      subtitle="Manage search metadata, social previews, indexing, canonicals, structured product discovery and redirects through the automatic live-save workflow."
     >
       {publishing.hasDraftChanges ? (
         <AdminNotice tone="warning">
-          SEO changes in this dashboard are Draft-only until they are explicitly published.
+          SEO changes update the live website when saved.
         </AdminNotice>
       ) : null}
       {!catalog.ok ? (
@@ -55,7 +55,7 @@ export default async function SeoManagerPage() {
             Errors
           </p>
           <p className="mt-3 text-4xl font-semibold">{report.errors}</p>
-          <p className="mt-1 text-xs text-black/42">should be fixed before publish</p>
+          <p className="mt-1 text-xs text-black/42">should be reviewed before saving</p>
         </AdminCard>
         <AdminCard>
           <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-black/40">
@@ -99,10 +99,10 @@ export default async function SeoManagerPage() {
             </p>
           </div>
           <Link
-            href="/admin/publishing"
+            href="/admin/history"
             className="rounded-lg border border-[#713a35]/16 px-3 py-2 text-xs font-semibold text-[#713a35]"
           >
-            Open Publishing
+            Open Version History
           </Link>
         </div>
 
@@ -130,7 +130,7 @@ export default async function SeoManagerPage() {
           </div>
         ) : (
           <p className="mt-5 text-sm text-emerald-700">
-            No SEO health issues detected in the current draft.
+            No SEO health issues detected in the live storefront.
           </p>
         )}
       </AdminCard>

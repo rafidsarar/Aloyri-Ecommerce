@@ -36,7 +36,7 @@ export default async function MerchandisingOverviewPage() {
     >
       {publishing.hasDraftChanges ? (
         <AdminNotice tone="warning">
-          Merchandising changes are in Draft. Customers will not see them until you publish.
+          Changes save directly to the live website.
         </AdminNotice>
       ) : null}
       {!catalog.ok ? (
@@ -133,10 +133,10 @@ export default async function MerchandisingOverviewPage() {
             </p>
           </div>
           <Link
-            href="/admin/publishing"
+            href="/admin/history"
             className="rounded-lg border border-[#713a35]/16 px-3 py-2 text-xs font-semibold text-[#713a35]"
           >
-            Open Publishing
+            Open Version History
           </Link>
         </div>
 
@@ -164,7 +164,7 @@ export default async function MerchandisingOverviewPage() {
           </div>
         ) : (
           <p className="mt-5 text-sm text-emerald-700">
-            No merchandising health issues detected in the current draft.
+            No merchandising health issues detected in the live storefront.
           </p>
         )}
       </AdminCard>

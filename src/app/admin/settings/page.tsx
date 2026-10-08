@@ -23,14 +23,14 @@ export default async function AdminSettingsPage({
       title="Store settings"
       subtitle="Customer-facing website settings live here. Commerce-critical price, stock and order controls remain in CRM."
     >
-      {saved ? <AdminNotice>Draft saved. <Link href="/admin/publishing" className="underline">Preview and publish →</Link></AdminNotice> : null}
+      {saved ? <AdminNotice>Changes saved live. <Link href="/admin/history" className="underline">Version history →</Link></AdminNotice> : null}
       {error ? <AdminNotice tone="neutral">{error}</AdminNotice> : null}
 
       <form action={saveSiteSettings} className="grid gap-5">
         <StorefrontLayoutFields value={config.presentation} />
         <AdminCard>
           <h2 className="mb-3 text-sm font-semibold">Storefront appearance</h2>
-          <p className="mb-4 text-xs text-black/60">Choose a color theme. Save as a draft, preview, then publish.</p>
+          <p className="mb-4 text-xs text-black/60">Choose a color theme. Save to update your live website.</p>
           <label className="grid gap-2 text-sm font-medium">Color theme
             <select name="appearance" defaultValue={config.site.appearance} className="rounded-xl border border-black/10 px-4 py-3">
               <option value="rose">Rose — Aloyri classic</option>
@@ -77,7 +77,7 @@ export default async function AdminSettingsPage({
           Delivery pricing, ordering enable/disable state and payment method availability are still operational settings tied to the CRM/order bridge and are intentionally not editable here.
         </AdminNotice>
 
-        <div className="admin-save-bar"><p className="text-xs text-black/60">Save your draft, preview the storefront, then publish.</p><AdminSubmitButton pendingLabel="Saving…">Save draft</AdminSubmitButton></div>
+        <div className="admin-save-bar"><p className="text-xs text-black/60">Saving updates the live storefront. You can restore an earlier version from Version History.</p><AdminSubmitButton pendingLabel="Saving…">Save changes</AdminSubmitButton></div>
       </form>
     </AdminShell>
   );

@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { enableDraftPreview } from "@/app/admin/actions";
 import { saveProductSeo } from "@/app/admin/seo/actions";
 import {
   AdminCard,
@@ -67,7 +66,7 @@ export default async function ProductSeoEditor({
       title={product.name + " SEO"}
       subtitle="SEO metadata is website-owned. CRM price, stock and order data are not editable here."
     >
-      {query.saved ? <AdminNotice>Product SEO draft saved.</AdminNotice> : null}
+      {query.saved ? <AdminNotice>Product SEO saved live.</AdminNotice> : null}
       {query.error ? <AdminNotice tone="warning">{query.error}</AdminNotice> : null}
 
       <form action={saveProductSeo} className="grid gap-5">
@@ -210,14 +209,8 @@ export default async function ProductSeoEditor({
         />
 
         <div className="flex flex-wrap justify-end gap-3">
-          <button
-            formAction={enableDraftPreview}
-            className="rounded-xl border border-[#713a35]/18 px-5 py-3.5 text-sm font-semibold text-[#713a35]"
-          >
-            Preview product draft
-          </button>
           <button className="rounded-xl bg-[#713a35] px-6 py-3.5 text-sm font-semibold text-white">
-            Save product SEO draft
+            Save product SEO
           </button>
         </div>
       </form>

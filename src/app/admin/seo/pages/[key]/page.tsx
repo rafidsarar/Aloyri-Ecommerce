@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { enableDraftPreview } from "@/app/admin/actions";
 import { savePageSeo } from "@/app/admin/seo/actions";
 import {
   AdminCard,
@@ -106,9 +105,9 @@ export default async function SeoPageEditor({
     <AdminShell
       username={admin.username}
       title={resolved.label + " SEO"}
-      subtitle="Search and social metadata saves to Draft and reaches customers only after Publishing."
+      subtitle="Search and social metadata updates go live as soon as you save."
     >
-      {query.saved ? <AdminNotice>SEO draft saved.</AdminNotice> : null}
+      {query.saved ? <AdminNotice>SEO saved live.</AdminNotice> : null}
       {query.error ? <AdminNotice tone="warning">{query.error}</AdminNotice> : null}
 
       <form action={savePageSeo} className="grid gap-5">
@@ -228,14 +227,8 @@ export default async function SeoPageEditor({
         />
 
         <div className="flex flex-wrap justify-end gap-3">
-          <button
-            formAction={enableDraftPreview}
-            className="rounded-xl border border-[#713a35]/18 px-5 py-3.5 text-sm font-semibold text-[#713a35]"
-          >
-            Preview current draft
-          </button>
           <button className="rounded-xl bg-[#713a35] px-6 py-3.5 text-sm font-semibold text-white">
-            Save SEO draft
+            Save SEO changes
           </button>
         </div>
       </form>
