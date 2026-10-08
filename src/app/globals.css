@@ -470,3 +470,22 @@ body[data-storefront-theme="sand"] {
   .store-home-primary, .store-home-search-button, .store-category-visual, .store-category-product { transition: none; }
   .store-home-primary:hover, .store-home-search-button:hover, .store-category-visual:hover, .store-category-visual:hover .store-category-product { transform: none; }
 }
+
+
+/* Controlled homepage hero presets, scoped so they never change the admin workspace. */
+.store-hero-minimal { background: var(--store-surface); box-shadow: none; }
+.store-hero-minimal .store-hero-art { background: var(--store-surface); }
+.store-hero-contrast { background: var(--store-accent); color: var(--store-on-accent); }
+.store-hero-contrast .store-hero-heading,
+.store-hero-contrast .store-home-overline,
+.store-hero-contrast .store-hero-muted,
+.store-hero-contrast .store-hero-features { color: var(--store-on-accent); }
+.store-hero-contrast .store-hero-muted,
+.store-hero-contrast .store-hero-features { opacity: .85; }
+.store-hero-contrast .store-hero-primary { background: var(--store-on-accent); color: var(--store-accent); }
+.store-hero-contrast .store-hero-secondary { border-color: color-mix(in srgb, var(--store-on-accent) 45%, transparent); background: transparent; color: var(--store-on-accent); }
+.store-hero-contrast .store-hero-check { background: color-mix(in srgb, var(--store-on-accent) 25%, transparent); color: var(--store-on-accent); }
+.store-hero-align-center .store-hero-copy { align-items: center; text-align: center; }
+.store-hero-align-center .store-hero-copy > div { justify-content: center; }
+.store-hero-align-center .store-hero-copy p { margin-inline: auto; }
+.store-hero-align-center .store-hero-heading { margin-inline: auto; }
