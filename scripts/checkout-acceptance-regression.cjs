@@ -93,7 +93,7 @@ const promoRequest=(code, extra={})=>new Request('https://store.example.test/api
    session={session:{method:'google'},account:{displayName:'Fixture Customer',phone:'01212345678'}};
    await assert.rejects(CheckoutPage(),/REDIRECT:/);
    session={session:{method:'google'},account:{id:'fixture-account',displayName:'Fixture Customer',phone:'01712345678',email:'verified@example.test',savedAddresses:[]}};
-   assert.ok((await CheckoutPage()).props.children);
+   assert.equal(typeof (await CheckoutPage()).type, "function");
  });
  await check('checkout profile uses account identity, not an unselected saved address',async()=>{
    const account={...session.account,savedAddresses:[{id:'addr-1',label:'Work',recipientName:'Other Recipient',phone:'01812345678',district:'Chattogram',area:'Pahartali',address:'123 Street Address'}]};
