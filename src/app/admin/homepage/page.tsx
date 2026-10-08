@@ -31,9 +31,9 @@ export default async function AdminHomepagePage({
     <AdminShell
       username={admin.username}
       title="Homepage"
-      subtitle="Edit your homepage, save a draft, then preview and publish when ready."
+      subtitle="Edit your homepage, save changes directly to your live website."
     >
-      {saved ? <AdminNotice>Draft saved. <Link href="/admin/publishing" className="font-semibold underline">Preview and publish →</Link></AdminNotice> : null}
+      {saved ? <AdminNotice>Changes saved live. <Link href="/admin/history" className="font-semibold underline">Version history →</Link></AdminNotice> : null}
       <div className="grid gap-3 sm:grid-cols-3">
         <Link href="/admin/merchandising" className="rounded-xl border border-black/10 bg-white p-4 text-sm font-semibold hover:border-[#713a35]/40 focus-visible:outline-2 focus-visible:outline-offset-2">
           Arrange homepage sections <span aria-hidden="true">→</span>
@@ -43,9 +43,9 @@ export default async function AdminHomepagePage({
           Website appearance & settings <span aria-hidden="true">→</span>
           <span className="mt-1 block text-xs font-normal text-black/60">Manage site-wide branding and storefront information.</span>
         </Link>
-        <Link href="/admin/publishing" className="rounded-xl border border-black/10 bg-white p-4 text-sm font-semibold hover:border-[#713a35]/40 focus-visible:outline-2 focus-visible:outline-offset-2">
-          Preview & publish <span aria-hidden="true">→</span>
-          <span className="mt-1 block text-xs font-normal text-black/60">Review drafts before they become visible to customers.</span>
+        <Link href="/admin/history" className="rounded-xl border border-black/10 bg-white p-4 text-sm font-semibold hover:border-[#713a35]/40 focus-visible:outline-2 focus-visible:outline-offset-2">
+          Version history <span aria-hidden="true">→</span>
+          <span className="mt-1 block text-xs font-normal text-black/60">Every save updates the live website; previous versions remain available.</span>
         </Link>
       </div>
       <form action={saveHomepage} className="grid gap-5">
@@ -154,7 +154,7 @@ export default async function AdminHomepagePage({
         <AdminCard>
           <h2 className="text-sm font-semibold">Promotional banners</h2>
           <p className="mt-2 text-xs leading-5 text-black/60">
-            Create up to two customer-facing banners. Save as a draft, preview the layout and publish when ready. Only safe internal shop and collection destinations are supported.
+            Create up to two customer-facing banners. Save to update the live website immediately. Only safe internal shop and collection destinations are supported.
           </p>
           <label className="mt-5 grid gap-2 text-sm font-medium">Banner placement
             <select name="promoPlacement" defaultValue={home.promoPlacement} className="min-h-11 rounded-xl border border-black/10 px-4">
@@ -224,7 +224,7 @@ export default async function AdminHomepagePage({
 
         <AdminCard>
           <h2 className="text-sm font-semibold">Visual section builder</h2>
-          <p className="mt-2 text-xs leading-5 text-black/60">Add up to six editorial sections. Choose a type and position, then save and preview before publishing. Position groups are rendered in the order shown here.</p>
+          <p className="mt-2 text-xs leading-5 text-black/60">Add up to six editorial sections. Choose a type and position, then save to update the live website. Position groups are rendered in the order shown here.</p>
           <div className="mt-5 grid gap-5">
             {Array.from({ length: 6 }, (_, index) => {
               const section = home.editorialSections[index];
@@ -292,8 +292,8 @@ export default async function AdminHomepagePage({
         </AdminCard>
 
         <div className="admin-save-bar">
-          <p className="text-xs text-black/60">Saving updates your draft. Publish to show changes to customers.</p>
-          <AdminSubmitButton pendingLabel="Saving…">Save draft</AdminSubmitButton>
+          <p className="text-xs text-black/60">Saving updates the live storefront immediately.</p>
+          <AdminSubmitButton pendingLabel="Saving…">Save changes</AdminSubmitButton>
         </div>
       </form>
     </AdminShell>
