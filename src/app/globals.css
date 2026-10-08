@@ -281,3 +281,114 @@ body[data-storefront-theme="sand"] {
 .store-focus-chip { border-color: var(--store-border); background: var(--store-surface); color: var(--store-ink); }
 .store-focus-chip:hover, .store-focus-chip:focus-visible { border-color: var(--store-accent); }
 .store-focus-chip.is-selected { border-color: var(--store-accent); background: var(--store-accent); color: var(--store-on-accent); }
+
+/* Customer account experience — follows the published Rose/Sage/Sand tokens. */
+.account-entry, .account-dashboard-intro, .account-panel, .account-info-strip {
+  color: var(--store-ink);
+}
+.account-display { color: var(--store-ink); }
+.account-muted, .account-section-caption { color: var(--store-muted); }
+.account-overline {
+  color: var(--store-accent);
+  font-size: .69rem;
+  font-weight: 700;
+  letter-spacing: .19em;
+  text-transform: uppercase;
+}
+.account-panel {
+  border-color: var(--store-border);
+  background: var(--store-surface);
+  box-shadow: 0 12px 36px color-mix(in srgb, var(--store-accent) 5%, transparent);
+}
+.account-panel-highlight {
+  background: color-mix(in srgb, var(--store-panel) 55%, var(--store-surface));
+}
+.account-info-strip, .account-dashboard-intro {
+  background: var(--store-panel);
+}
+.account-primary-button {
+  background: var(--store-accent);
+  color: var(--store-on-accent);
+  transition: filter .15s ease, transform .15s ease;
+}
+.account-primary-button:hover:not(:disabled) { filter: brightness(.90); }
+.account-primary-button:active:not(:disabled) { transform: translateY(1px); }
+.account-secondary-button, .account-outline-button {
+  border: 1px solid var(--store-accent);
+  background: var(--store-surface);
+  color: var(--store-accent);
+  transition: background .15s ease;
+}
+.account-secondary-button:hover, .account-outline-button:hover:not(:disabled) {
+  background: var(--store-panel);
+}
+.account-google-mark {
+  display: inline-grid;
+  width: 1.6rem;
+  height: 1.6rem;
+  place-items: center;
+  border: 1px solid var(--store-border);
+  border-radius: 50%;
+  background: #fff;
+  color: #4285f4;
+  font-size: 1rem;
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 700;
+}
+.account-check-list li, .account-number-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: .75rem;
+  line-height: 1.6;
+}
+.account-check-list li > span {
+  color: var(--store-accent);
+  font-weight: 800;
+}
+.account-number-list li > span {
+  display: inline-flex;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--store-accent);
+  color: var(--store-on-accent);
+  font-size: .75rem;
+  font-weight: 700;
+}
+.account-inline-link { color: var(--store-accent); }
+.account-inline-link:hover { text-decoration: underline; }
+.account-input {
+  min-height: 3rem;
+  border-color: var(--store-border);
+  background: #fff;
+  color: var(--store-ink);
+  outline-color: var(--store-accent);
+}
+.account-input::placeholder { color: var(--store-muted); opacity: .65; }
+.account-input:read-only {
+  background: var(--store-panel);
+  cursor: default;
+}
+.account-input:focus-visible { outline: 2px solid var(--store-accent); outline-offset: 2px; }
+.account-verified { color: var(--store-accent); }
+.account-section-link { color: var(--store-muted); }
+.account-section-link:hover, .account-section-link:focus-visible {
+  background: var(--store-panel);
+  color: var(--store-ink);
+}
+.account-section-link.is-active {
+  background: var(--store-accent);
+  color: var(--store-on-accent);
+}
+.account-section-link.is-active .account-section-caption {
+  color: var(--store-on-accent);
+  opacity: .8;
+}
+.account-menu-help { border-color: var(--store-border); }
+.account-section-navigation { scrollbar-width: thin; scrollbar-color: var(--store-border) transparent; }
+@media (prefers-reduced-motion: reduce) {
+  .account-primary-button, .account-secondary-button, .account-outline-button { transition: none; }
+}
