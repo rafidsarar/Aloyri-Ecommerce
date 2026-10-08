@@ -1509,7 +1509,7 @@ export function CheckoutClient() {
             <p className="mt-5 rounded-[.9rem] border border-[#713a35]/10 bg-white/60 p-3 text-xs leading-6 text-[#321f1c]/65">
               {draft.deliveryZone
                 ? `Delivery estimate: ${formatPrice(quotedDelivery)} for ${zoneLabel}. The final shipping amount is confirmed before you place the order.`
-                : "Choose your delivery zone above to see the shipping charge before you review."}
+                : "Delivery: Inside Dhaka ৳80 · Outside Dhaka ৳150. Select your zone to confirm the live charge."}
             </p>
             <div className="mt-6 rounded-[1rem] border border-[#713a35]/10 bg-white/65 p-4">
               <div className="flex items-center justify-between gap-3">
@@ -1611,7 +1611,7 @@ export function CheckoutClient() {
             </p>
           </aside>
 
-          <div className="checkout-mobile-bar fixed inset-x-0 bottom-0 z-30 border-t border-[#713a35]/10 bg-[#fffaf7]/96 p-3 backdrop-blur lg:hidden">
+          <div className="checkout-mobile-bar fixed inset-x-0 bottom-0 z-30 border-t border-[#713a35]/10 bg-[#fffaf7]/96 px-3 pt-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] backdrop-blur lg:hidden">
             <div className="mx-auto flex max-w-xl items-center gap-3">
               <div className="min-w-0 flex-1 pl-1">
                 <p className="text-[10px] uppercase tracking-[0.12em] text-[#321f1c]/40">Estimated total</p>
@@ -1619,7 +1619,7 @@ export function CheckoutClient() {
               </div>
               <button
                 type="submit"
-                disabled={!orderingStatusLoaded || !orderingEnabled}
+                disabled={!orderingStatusLoaded || !orderingEnabled || promotionLoading || Boolean(appliedCode && promotionError)}
                 className="min-h-12 rounded-full bg-[#713a35] px-6 text-sm font-semibold text-white disabled:bg-[#713a35]/30"
               >
                 Review order
