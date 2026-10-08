@@ -77,9 +77,9 @@ export function Header({ announcement }: { announcement: string }) {
       </div> : null}
 
       <header className="store-header sticky top-0 z-40 border-b backdrop-blur-xl">
-        <div className="shell grid min-h-[72px] grid-cols-[auto_1fr_auto] items-center gap-3 py-3 lg:grid-cols-[auto_1fr_auto]">
-          <div className="hidden lg:block"><BrandMark /></div>
-          <nav className="hidden items-center justify-center gap-4 lg:flex xl:gap-5" aria-label="Primary navigation">
+        <div className="shell grid min-h-[72px] grid-cols-[auto_1fr_auto] items-center gap-3 py-3 xl:grid-cols-[auto_1fr_auto]">
+          <div className="hidden xl:block"><BrandMark /></div>
+          <nav className="hidden items-center justify-center gap-4 xl:flex xl:gap-5" aria-label="Primary navigation">
             <ShopDiscoveryMenu />
             {links.map(([label, href]) => (
               <Link
@@ -97,7 +97,7 @@ export function Header({ announcement }: { announcement: string }) {
             ref={menuButtonRef}
             type="button"
             onClick={() => setOpen(true)}
-            className="store-icon-link inline-flex h-11 w-11 items-center justify-center rounded-full border lg:hidden"
+            className="store-icon-link inline-flex h-11 w-11 items-center justify-center rounded-full border xl:hidden"
             aria-label="Open menu"
             aria-expanded={open}
             aria-controls="mobile-navigation"
@@ -105,10 +105,10 @@ export function Header({ announcement }: { announcement: string }) {
             <MenuIcon />
           </button>
 
-          <div className="justify-self-center lg:hidden"><BrandMark compact /></div>
+          <div className="justify-self-center xl:hidden"><BrandMark compact /></div>
 
           <div className="flex items-center justify-end gap-2">
-            <Link href="/track-order" className="store-utility-link hidden rounded-full px-3 py-2 text-xs font-medium lg:block">Track order</Link>
+            <Link href="/track-order" className="store-utility-link hidden rounded-full px-3 py-2 text-xs font-medium xl:block">Track order</Link>
             <Link href="/account" aria-current={current("/account") ? "page" : undefined} className="store-utility-link hidden rounded-full px-3 py-2 text-sm font-semibold sm:block">Account</Link>
             <Link
               href="/shop"
@@ -129,7 +129,7 @@ export function Header({ announcement }: { announcement: string }) {
           role="dialog"
           aria-modal="true"
           aria-label="Navigation menu"
-          className="store-mobile-nav fixed inset-0 z-50 overflow-y-auto p-6 lg:hidden"
+          className="store-mobile-nav fixed inset-0 z-50 overflow-y-auto p-6 xl:hidden"
         >
           <div className="flex items-center justify-between">
             <BrandMark />
