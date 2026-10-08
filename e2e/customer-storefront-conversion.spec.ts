@@ -42,6 +42,15 @@ test.describe("customer storefront usability", () => {
     await expect(page.getByText(/2 products/)).toBeVisible();
   });
 
+  test("mobile empty cart offers a clear return to shopping without overflow", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 740 });
+    await mockCatalog(page);
+    await page.goto("/cart");
+    await expect(page.getByText("Your cart is empty.")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Shop skincare" })).toHaveAttribute("href", "/shop");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  });
+
   test("mobile navigation and checkout entry are accessible", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto("/");
