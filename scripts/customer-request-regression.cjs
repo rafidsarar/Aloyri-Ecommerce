@@ -22,6 +22,7 @@ function request(body={},origin='https://store.example.test'){return new Request
 (async()=>{
  let response=await POST(request());assert.equal(response.status,201);assert.equal((await response.json()).caseId,'crm-request');
  assert.equal(calls[0].requestType,'cancellation');assert.equal(calls[0].phone,'01712345678');assert.deepEqual(calls[0].items,[{line:0,qty:2}]);assert.equal(support.length,1);
+ crmResult={ok:true,status:200,body:{requestId:'crm-request',status:'Requested',duplicate:true}};response=await POST(request());assert.equal(response.status,200);assert.equal(support.length,1);
  crmResult={ok:false,status:503,body:{error:'Unavailable'}};response=await POST(request());assert.equal(response.status,503);assert.equal(support.length,1);
  status='Packed';let before=calls.length;assert.equal((await POST(request())).status,409);assert.equal(calls.length,before);
  status='New';assert.equal((await POST(request({orderNumber:'WEB-OTHER-12345678'}))).status,404);assert.equal(calls.length,before);

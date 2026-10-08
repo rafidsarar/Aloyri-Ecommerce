@@ -109,7 +109,7 @@ export async function POST(request: Request) {
     }
     // CRM acceptance is authoritative; do not report failure after it succeeds.
     try {
-      await createCustomerSupportCase({
+      if (!result.body.duplicate) await createCustomerSupportCase({
         accountId: session.account.id,
         customerName: session.account.displayName || "Aloyri customer",
         phone: ref.phone,
