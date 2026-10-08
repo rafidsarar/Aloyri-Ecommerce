@@ -277,3 +277,7 @@ body[data-storefront-theme="sand"] {
   .store-discovery-button { transition: none; }
   .store-discovery-button:hover:not(:disabled) { transform: none; }
 }
+
+.store-focus-chip { border-color: var(--store-border); background: var(--store-surface); color: var(--store-ink); }
+.store-focus-chip:hover, .store-focus-chip:focus-visible { border-color: var(--store-accent); }
+.store-focus-chip.is-selected { border-color: var(--store-accent); background: var(--store-accent); color: var(--store-on-accent); }
