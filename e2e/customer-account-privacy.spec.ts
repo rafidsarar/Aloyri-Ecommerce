@@ -7,8 +7,8 @@ test("signed-out account hides personal sections and clears legacy browser recor
   sessionStorage.setItem("aloyri_checkout_draft",JSON.stringify({fullName:"Private legacy customer"}));
  });
  await page.goto("/account");
- await expect(page.getByRole("heading",{name:"Customer account."})).toBeVisible();
- await expect(page.getByRole("link",{name:"Continue with Google"})).toBeVisible();
+ await expect(page.getByRole("heading",{name:"Welcome to your account."})).toBeVisible();
+ await expect(page.getByRole("link",{name:"Sign in with Google"})).toBeVisible();
  await expect(page.getByRole("navigation",{name:"Account sections"})).toHaveCount(0);
  await expect(page.getByText("Private legacy customer")).toHaveCount(0);
  await expect(page.getByText("WEB-PRIVATE-12345678")).toHaveCount(0);
@@ -20,7 +20,7 @@ test("signed-out account hides personal sections and clears legacy browser recor
 test("wishlist is consolidated into the authenticated account area",async({page})=>{
  await page.goto("/wishlist");
  await expect(page).toHaveURL(/\/account\?section=wishlist/);
- await expect(page.getByRole("link",{name:"Continue with Google"})).toBeVisible();
+ await expect(page.getByRole("link",{name:"Sign in with Google"})).toBeVisible();
  await expect(page.getByRole("heading",{name:"Wishlist."})).toHaveCount(0);
 });
 

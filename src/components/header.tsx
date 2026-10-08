@@ -110,6 +110,15 @@ export function Header({ announcement }: { announcement: string }) {
           <div className="flex items-center justify-end gap-2">
             <Link href="/track-order" className="store-utility-link hidden rounded-full px-3 py-2 text-xs font-medium xl:block">Track order</Link>
             <Link href="/account" aria-current={current("/account") ? "page" : undefined} className="store-utility-link hidden rounded-full px-3 py-2 text-sm font-semibold sm:block">Account</Link>
+            <Link href="/account" aria-label="Customer account and sign in"
+              className="store-icon-link inline-flex h-11 w-11 items-center justify-center rounded-full border sm:hidden"
+              aria-current={current("/account") ? "page" : undefined}>
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"
+                strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="8" r="3.5" />
+                <path d="M5.5 20c0-3.3 2.7-6 6.5-6s6.5 2.7 6.5 6" />
+              </svg>
+            </Link>
             <Link
               href="/shop"
               className="store-icon-link inline-flex h-11 w-11 items-center justify-center rounded-full border transition"

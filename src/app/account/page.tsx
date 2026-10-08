@@ -37,7 +37,7 @@ export default async function CustomerAccountPage({
           </div>
         </div>
       ) : null}
-      <CustomerAccountHub authenticated={Boolean(session)} displayName={session?.account.displayName || ""} />
+      <CustomerAccountHub authenticated={Boolean(session)} displayName={session?.account.displayName || ""} profileComplete={Boolean(session && session.account.displayName.trim().length >= 2 && session.account.phone)} />
     </>
   );
 }
