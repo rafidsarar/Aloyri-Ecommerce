@@ -21,6 +21,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (request.headers.get("content-type") && !request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) return reply({ error: "Invalid request content type." }, 415);
   const origin = request.headers.get("origin");
   if (origin && origin !== new URL(request.url).origin) {
     return reply({ error: "Invalid request origin." }, 403);
