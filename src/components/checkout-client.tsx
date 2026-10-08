@@ -252,6 +252,7 @@ export function CheckoutClient() {
   const [promotionQuote, setPromotionQuote] = useState<PromotionQuote | null>(null);
   const [quotedRequestKey, setQuotedRequestKey] = useState("");
   const [promotionLoading, setPromotionLoading] = useState(false);
+  const [quoteAttempt, setQuoteAttempt] = useState(0);
   const [promotionError, setPromotionError] = useState("");
   const [recoveryAvailable, setRecoveryAvailable] = useState(false);
   const [recoveryConsent, setRecoveryConsent] = useState(false);
@@ -458,7 +459,7 @@ export function CheckoutClient() {
       !recoveryAvailable ||
       !recoveryConsent ||
       recoverySaved ||
-      !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(draft.email.trim()) ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email.trim()) ||
       cartItems.length === 0
     ) {
       return;
@@ -521,6 +522,7 @@ export function CheckoutClient() {
       })
         .then(async (response) => {
           const result = (await response.json()) as PromotionQuote & { error?: string };
+          if (controller.signal.aborted) return;
           if (!response.ok) {
             throw new Error(result.error || "That promotion could not be applied.");
           }
@@ -548,19 +550,30 @@ export function CheckoutClient() {
       window.clearTimeout(refreshQuote);
       controller.abort();
     };
-  }, [appliedCode, cartItems, catalogSynced, draft.deliveryZone, hasUnavailable, requestQuoteKey]);
+  }, [appliedCode, cartItems, catalogSynced, draft.deliveryZone, hasUnavailable, requestQuoteKey, quoteAttempt]);
+
+  function retryPromotionQuote() {
+    setPromotionError("");
+    setQuotedRequestKey("");
+    setPromotionQuote(null);
+    setPromotionLoading(true);
+    setQuoteAttempt((attempt) => attempt + 1);
+  }
 
   function applyPromotionCode() {
+    if (promotionLoading) return;
     const normalized = promotionCode.trim().toUpperCase();
     if (!normalized) {
       setPromotionError("Enter a promotion code first.");
       return;
     }
+    if (!/^[A-Z0-9_-]{1,40}$/.test(normalized)) {
+      setPromotionError("Use letters, numbers, hyphens or underscores in your promotion code.");
+      return;
+    }
     setPromotionCode(normalized);
-    setPromotionError("");
-    setQuotedRequestKey("");
-    setPromotionQuote(null);
     setAppliedCode(normalized);
+    retryPromotionQuote();
   }
 
   function removePromotionCode() {
@@ -590,6 +603,9 @@ export function CheckoutClient() {
     field: K,
     value: CheckoutDraft[K],
   ) {
+    if (["fullName", "phone", "district", "area", "address", "landmark", "deliveryZone"].includes(field)) {
+      setSelectedAddressId("");
+    }
     setDraft((current) => ({ ...current, [field]: value }));
     setErrors((current) => ({ ...current, [field]: undefined }));
     setSubmitFailure(null);
@@ -1568,10 +1584,16 @@ export function CheckoutClient() {
                 <div className="mt-2 flex flex-wrap items-center gap-3" role="alert">
                   <p className="text-xs leading-5 text-red-700">{promotionError}</p>
                   {appliedCode ? (
-                    <button type="button" onClick={removePromotionCode}
-                      className="min-h-11 text-xs font-semibold text-[#713a35] underline underline-offset-4">
-                      Remove code and continue
-                    </button>
+                    <>
+                      <button type="button" onClick={retryPromotionQuote} disabled={promotionLoading}
+                        className="min-h-11 text-xs font-semibold text-[#713a35] underline underline-offset-4 disabled:opacity-50">
+                        Retry code
+                      </button>
+                      <button type="button" onClick={removePromotionCode}
+                        className="min-h-11 text-xs font-semibold text-[#713a35] underline underline-offset-4">
+                        Remove code and continue
+                      </button>
+                    </>
                   ) : null}
                 </div>
               ) : null}
@@ -1832,8 +1854,7 @@ export function CheckoutClient() {
               onClick={() => void placeOrder()}
               disabled={
                 submitting ||
-                promotionLoading ||
-                Boolean(appliedCode && promotionError) ||
+                !canUseQuote ||
                 !orderingEnabled ||
                 Boolean(submitFailure && !submitFailure.recoverable)
               }
@@ -1883,8 +1904,7 @@ export function CheckoutClient() {
                 onClick={() => void placeOrder()}
                 disabled={
                 submitting ||
-                promotionLoading ||
-                Boolean(appliedCode && promotionError) ||
+                !canUseQuote ||
                 !orderingEnabled ||
                 Boolean(submitFailure && !submitFailure.recoverable)
               }
