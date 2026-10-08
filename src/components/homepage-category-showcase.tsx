@@ -15,7 +15,7 @@ export function HomepageCategoryShowcase({ products }: { products: Product[] }) 
       <div className="mb-7 flex flex-wrap items-end justify-between gap-4 md:mb-9">
         <div>
           <p className="store-home-overline">A simpler way to shop</p>
-          <h2 id="shop-by-category" className="store-home-heading display mt-2">Find your daily essentials.</h2>
+          <h2 id="shop-by-category" className="store-home-heading display mt-2">Shop by category</h2>
           <p className="store-home-muted mt-3 max-w-xl text-sm leading-6">Start with a step in your routine, then explore the products that fit.</p>
         </div>
         <Link href="/shop" className="store-home-text-link inline-flex min-h-11 items-center gap-2 text-sm font-semibold">
