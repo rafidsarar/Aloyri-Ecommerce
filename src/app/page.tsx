@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
 import { HomepagePromoBanners } from "@/components/homepage-promo-banners";
+import { VisualBuilderBlock } from "@/components/visual-builder-block";
 import { HomepageCategoryShowcase } from "@/components/homepage-category-showcase";
 import { HomepageEditorialSections } from "@/components/homepage-editorial-sections";
 import { ArrowIcon } from "@/components/icons";
@@ -628,7 +629,14 @@ export default async function Home() {
         properties={{ placementId: "homepage-hero", placementKind: "hero" }}
         context={{ placementId: "homepage-hero", placementKind: "hero" }}
       />
-      {home.sectionOrder.map((id) => <Fragment key={id}>{blocks[id]}</Fragment>)}
+      {home.visualLayout.order.map((entry) => {
+        if (entry.startsWith("core:")) {
+          const id = entry.slice(5) as HomepageBlockId;
+          return <Fragment key={entry}>{blocks[id]}</Fragment>;
+        }
+        const block = home.visualLayout.blocks.find(item => entry === `custom:${item.id}`);
+        return block ? <VisualBuilderBlock key={entry} block={block} /> : null;
+      })}
     </main>
   );
 }
