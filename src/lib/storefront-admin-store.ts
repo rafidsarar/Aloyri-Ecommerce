@@ -205,7 +205,8 @@ export type StorefrontConfig = {
     routineFinderIntro: string;
     showBrandStory: boolean;
     heroLayout: "split" | "stacked";
-    promoBanners: Array<{ enabled: boolean; eyebrow: string; title: string; copy: string; ctaLabel: string; ctaHref: string; layout: "split" | "centered" }>;
+    promoBanners: Array<{ enabled: boolean; eyebrow: string; title: string; copy: string; ctaLabel: string; ctaHref: string; layout: "split" | "centered"; mobileLayout: "stacked" | "compact"; imagePath: string; startAt: string; endAt: string }>;
+    editorialSections: Array<{ enabled: boolean; kind: "story" | "testimonial" | "faq" | "announcement"; title: string; eyebrow: string; copy: string; ctaLabel: string; ctaHref: string; position: "before-products" | "after-products" | "before-story"; layout: "split" | "centered" }>;
     promoPlacement: "before-products" | "after-products";
   };
   pages: {
@@ -421,6 +422,7 @@ export const defaultStorefrontConfig: StorefrontConfig = {
     heroLayout: "split",
     promoPlacement: "before-products",
     promoBanners: [],
+    editorialSections: [],
   },
   pages: {
     about: {
@@ -722,6 +724,28 @@ function normalizeConfig(value: Partial<StorefrontConfig> | null): StorefrontCon
       ...defaultStorefrontConfig.homepage,
       ...(value.homepage || {}),
       promoPlacement: value.homepage?.promoPlacement === "after-products" ? "after-products" : "before-products",
+      editorialSections: Array.isArray(value.homepage?.editorialSections)
+        ? value.homepage.editorialSections.slice(0, 6).flatMap((item) => {
+            if (!item || typeof item !== "object") return [];
+            const clean = (v: unknown, limit: number) => typeof v === "string" ? v.trim().slice(0, limit) : "";
+            const href = safePromoHref(item.ctaHref);
+            return [{
+              enabled: item.enabled === true,
+              kind: (["story", "testimonial", "faq", "announcement"].includes(item.kind) ? item.kind : "story") as "story" | "testimonial" | "faq" | "announcement",
+              title: clean(item.title, 160),
+              eyebrow: clean(item.eyebrow, 80),
+              copy: clean(item.copy, 800),
+              ctaLabel: href ? clean(item.ctaLabel, 60) : "",
+              ctaHref: href || "",
+              position: (["before-products", "after-products", "before-story"].includes(item.position) ? item.position : "after-products") as "before-products" | "after-products" | "before-story",
+              layout: item.layout === "centered" ? "centered" as const : "split" as const,
+              mobileLayout: item.mobileLayout === "compact" ? "compact" as const : "stacked" as const,
+              imagePath: typeof item.imagePath === "string" && /^media\/[a-zA-Z0-9][a-zA-Z0-9._/-]{0,180}\.(?:png|jpe?g|webp)$/.test(item.imagePath) && !item.imagePath.includes("..") ? item.imagePath : "",
+              startAt: typeof item.startAt === "string" && /^\d{4}-\d\d-\d\dT\d\d:\d\d$/.test(item.startAt) ? item.startAt : "",
+              endAt: typeof item.endAt === "string" && /^\d{4}-\d\d-\d\dT\d\d:\d\d$/.test(item.endAt) ? item.endAt : "",
+            }];
+          })
+        : [],
       promoBanners: Array.isArray(value.homepage?.promoBanners)
         ? value.homepage.promoBanners.slice(0, 2).flatMap((item) => {
             if (!item || typeof item !== "object") return [];
