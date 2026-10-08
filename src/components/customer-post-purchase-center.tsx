@@ -65,7 +65,8 @@ export function CustomerPostPurchaseCenter({section}:{section:string}){
       if(!response.ok||!result.account)throw new Error(result.error||"Unable to save address.");
       setData(current=>current?{...current,account:{...current.account,savedAddresses:result.account!.savedAddresses}}:current);
       setNotice("Saved delivery details updated.");
-    }catch(reason){setError(reason instanceof Error?reason.message:"Unable to save address.");}
+      return true;
+    }catch(reason){setError(reason instanceof Error?reason.message:"Unable to save address."); return false;}
     finally{setBusy("");}
   }
 
@@ -83,8 +84,8 @@ export function CustomerPostPurchaseCenter({section}:{section:string}){
       landmark:String(f.get("landmark")||""),
     };
     const form=event.currentTarget;
-    await saveAddresses([...data.account.savedAddresses,next].slice(0,5));
-    form.reset();
+    const saved=await saveAddresses([...data.account.savedAddresses,next].slice(0,5));
+    if(saved)form.reset();
   }
 
   async function orderAction(action:"cancellation"|"delivery-issue",orderNumber:string){
