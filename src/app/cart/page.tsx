@@ -193,6 +193,7 @@ export default function CartPage() {
               const available = liveProduct?.availableStock ?? 0;
               const unavailable = !liveProduct || available <= 0;
               const overStock = Boolean(liveProduct) && qty > available;
+              const correctableStock = Boolean(liveProduct) && available > 0 && qty > available;
 
               return (
                 <div
@@ -285,6 +286,18 @@ export default function CartPage() {
                     ) : null}
                   </div>
 
+                  {correctableStock ? (
+                    <div className="col-span-2 sm:col-span-1">
+                      <button type="button"
+                        className="min-h-11 rounded-full border border-[#713a35]/20 px-4 text-xs font-semibold text-[#713a35]"
+                        onClick={() => save(items.map(item => item.productId === productId ? { ...item, qty: available } : item), {
+                          name: "cart_quantity_change", productId, quantityDelta: available - qty,
+                        })}
+                      >
+                        Update to {available} available
+                      </button>
+                    </div>
+                  ) : null}
                   <div className="col-span-2 flex min-w-0 items-center justify-between gap-4 pl-[92px] sm:col-span-1 sm:block sm:pl-0 sm:text-right">
                     <div className="min-w-0">
                     <p className="text-sm font-semibold">
