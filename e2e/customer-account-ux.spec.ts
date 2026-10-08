@@ -41,7 +41,7 @@ test.describe("customer account entry and signup UX", () => {
   test("mobile entry stays readable and Google failure gets actionable feedback", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/account?auth=google-failed");
-    await expect(page.getByRole("alert")).toContainText("could not complete");
+    await expect(page.locator(".account-entry [role=alert]")).toContainText("could not complete");
     await expect(page.getByRole("link", { name: "Sign in with Google" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Create account with Google" })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
