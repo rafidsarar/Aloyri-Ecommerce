@@ -14,6 +14,9 @@ test.describe("customer post-purchase account", () => {
     const security = await request.get("/api/customer/security");
     expect(security.status()).toBe(401);
 
+    const invoice = await request.get("/api/customer/order-invoice?order=WEB-TEST-12345678");
+    expect(invoice.status()).toBe(401);
+
     const summary = await request.get("/api/customer/order-summary?order=WEB-TEST-12345678");
     expect(summary.status()).toBe(401);
 

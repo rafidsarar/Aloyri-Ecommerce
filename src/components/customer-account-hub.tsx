@@ -150,8 +150,8 @@ export function CustomerAccountHub({
             ))}
           </nav>
           <div className="account-menu-help mt-3 hidden border-t px-3 pt-4 lg:block">
-            <Link href="/track-order" className="account-inline-link text-xs font-semibold underline underline-offset-4">
-              Track an order without signing in ↗
+            <Link href="/account?section=orders" className="account-inline-link text-xs font-semibold underline underline-offset-4">
+              Track my orders ↗
             </Link>
             <Link href="/shop" className="account-inline-link mt-4 block text-xs font-semibold underline underline-offset-4">
               Continue shopping ↗
@@ -168,7 +168,7 @@ export function CustomerAccountHub({
               </h2>
             </div>
             <Link
-              href="/track-order"
+              href="/account?section=orders"
               className="account-inline-link text-xs font-semibold underline underline-offset-4 lg:hidden"
             >
               Track order ↗
