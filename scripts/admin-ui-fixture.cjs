@@ -41,13 +41,44 @@ fs.mkdirSync(path.join(temp,'app/admin/settings'),{recursive:true});
 fs.writeFileSync(path.join(temp,'app/admin/settings/page.tsx'),`import {AdminShell} from "@/components/admin/admin-shell"; import {StorefrontLayoutFields} from "@/components/admin/storefront-layout-fields"; import {defaultPresentation} from "@/lib/storefront-presentation"; export default function Page(){return <AdminShell username="preview" title="Store settings" subtitle="Customize the storefront"><form><StorefrontLayoutFields value={defaultPresentation}/></form></AdminShell>}`);
 // Isolated Visual Builder interaction preview: reuses the production editor,
 // replacing only the server save action in this disposable test application.
-for (const file of ['visual-builder-studio.tsx']) fs.copyFileSync(path.join(root, 'src/components/admin', file), path.join(temp, 'components/admin', file));
+for (const file of ['visual-builder-studio.tsx', 'storefront-core-preview.tsx']) fs.copyFileSync(path.join(root, 'src/components/admin', file), path.join(temp, 'components/admin', file));
 fs.copyFileSync(path.join(root,'src/components/visual-builder-block.tsx'),path.join(temp,'components/visual-builder-block.tsx'));
 for (const file of ['visual-builder.ts','homepage-builder.ts']) fs.copyFileSync(path.join(root,'src/lib',file),path.join(temp,'lib',file));
 fs.mkdirSync(path.join(temp,'app/admin/builder'),{recursive:true});
 fs.writeFileSync(path.join(temp,'app/admin/actions.ts'), '"use server"; export async function saveVisualBuilder(_formData: FormData) {}');
 fs.writeFileSync(path.join(temp,'app/admin/builder/page.tsx'),
-  'import {AdminShell} from "@/components/admin/admin-shell"; import {VisualBuilderStudio} from "@/components/admin/visual-builder-studio"; import {defaultVisualLayout} from "@/lib/visual-builder"; export default function Page(){return <AdminShell username="preview" title="Visual Builder preview" subtitle="Disposable UI fixture"><VisualBuilderStudio pageKey="home" initialLayout={defaultVisualLayout}/></AdminShell>}');
+  `import {AdminShell} from "@/components/admin/admin-shell";
+import {VisualBuilderStudio} from "@/components/admin/visual-builder-studio";
+import {defaultVisualLayout} from "@/lib/visual-builder";
+import type {BuilderPreviewData} from "@/components/admin/storefront-core-preview";
+const homepage = {
+  eyebrow:"The Aloyri edit", headline:"Skincare worth discovering", intro:"Find an easy everyday routine",
+  primaryLabel:"Shop the edit",primaryHref:"/shop",secondaryLabel:"Explore sunscreen",secondaryHref:"/category/sunscreen",
+  heroProductId:"simple-wash",heroImagePath:"",heroStyle:"soft",heroAlignment:"left",heroLayout:"split",
+  showHero:true,showBrowse:true,showCategories:true,showFocus:true,showRoutineFinder:true,showRoutineSteps:true,showBrandStory:true,
+  browseEyebrow:"Explore",browseTitle:"Find your skincare",browseIntro:"Browse by concern",browsePlaceholder:"Search by product",
+  categoriesEyebrow:"Curated selection",categoriesTitle:"Shop by category",categoriesIntro:"Explore a step in your routine",
+  routineFinderHeadline:"Your routine, made simple",routineFinderIntro:"Take three quick steps to discover skincare",
+  ideaEyebrow:"Our story",ideaHeadline:"Less noise. Better choices.",ideaCopy:"Considered skincare for everyday care",
+  featureChips:["Curated selection","BDT pricing"],sectionOrder:[],visualLayout:defaultVisualLayout,
+  promoBanners:[{enabled:true,eyebrow:"Limited offer",title:"October skin edit",copy:"Explore this month's picks",ctaLabel:"Browse now",ctaHref:"/shop",layout:"split",mobileLayout:"stacked",imagePath:"",startAt:"",endAt:""}],
+  promoPlacement:"before-products",
+  editorialSections:[{enabled:true,kind:"story",title:"Our daily essentials",eyebrow:"The routine",copy:"Everyday skin care",ctaLabel:"",ctaHref:"",position:"before-products",layout:"split"}],
+} as unknown as BuilderPreviewData["homepage"];
+const previewData:BuilderPreviewData={
+  homepage,showRoutine:true,
+  products:[{id:"simple-wash",name:"Refreshing Facial Wash",brand:"Simple",category:"Cleanser",price:749,availableStock:5},
+            {id:"daily-spf",name:"Everyday sunscreen",brand:"Aloyri",category:"Sunscreen",price:899,availableStock:5}],
+  sections:[{id:"fixture-products",kind:"featured",enabled:true,eyebrow:"Popular products",title:"Featured skincare",copy:"Our selection",maxProducts:2}],
+  campaigns:[],
+};
+export default function Page(){return <AdminShell username="preview" title="Visual Builder preview" subtitle="Disposable UI fixture">
+  <VisualBuilderStudio pageKey="home" initialLayout={defaultVisualLayout} initialCoreContent={homepage}
+    initialPreviewData={previewData}
+    advancedSettings={<div><label>Advanced hero headline<input name="headline" defaultValue={homepage.headline}/></label>
+      {["showHero","showBrowse","showCategories","showFocus","showRoutineFinder","showRoutineSteps","showBrandStory"].map(name=><input key={name} type="checkbox" name={name} defaultChecked aria-label={name}/>)}
+    </div>}/>
+</AdminShell>}`);
 
 // Isolated checkout renderer: uses the real client component but a disposable
 // Next.js app and mocked HTTP endpoints. Never bypasses production authentication.
