@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
+import { HomepagePromoBanners } from "@/components/homepage-promo-banners";
 import { ArrowIcon } from "@/components/icons";
 import { ProductMedia } from "@/components/product-media";
 import { MerchandisingProductGrid } from "@/components/merchandising-product-grid";
@@ -252,6 +253,8 @@ export default async function Home() {
         </section>
       ) : null}
 
+      {home.promoPlacement === "before-products" ? <HomepagePromoBanners banners={home.promoBanners} /> : null}
+
       {homepageSections.map((section) => {
         if (section.kind === "campaign") {
           const campaign = config.merchandising.campaigns.find(
@@ -482,6 +485,8 @@ export default async function Home() {
           </section>
         );
       })}
+
+      {home.promoPlacement === "after-products" ? <HomepagePromoBanners banners={home.promoBanners} /> : null}
 
       {config.presentation.showRoutine && <section className="border-y border-[#713a35]/10 bg-[#f5e8e2]">
         <div className="shell py-16 md:py-20">
