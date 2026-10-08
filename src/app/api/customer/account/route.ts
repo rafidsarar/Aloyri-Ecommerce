@@ -87,6 +87,15 @@ export async function PUT(request: Request) {
       },
     );
   } catch (error) {
+    if (error instanceof Error && error.message === "RATE_LIMITED") {
+      return Response.json({ error: "Too many account updates. Please retry in a few minutes." }, { status: 429, headers: { "Retry-After": "600", "Cache-Control": "no-store" } });
+    }
+    if (error instanceof Error && error.message === "PHONE_REAUTH_REQUIRED") {
+      return Response.json({ error: "For your security, sign in again with Google before changing your mobile number.", code: "PHONE_REAUTH_REQUIRED" }, { status: 403 });
+    }
+    if (error instanceof Error && error.message === "GOOGLE_AUTH_REQUIRED") {
+      return Response.json({ error: "Google sign-in is required." }, { status: 403 });
+    }
     if (error instanceof Error && error.message === "INVALID_PHONE") {
       return Response.json({ error: "Enter a valid Bangladesh mobile number." }, { status: 400 });
     }
