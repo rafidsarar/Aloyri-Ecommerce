@@ -245,7 +245,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [] }:
             {selectedCustom.kind === "image" && <label className="block text-xs font-semibold">Media library image
               <select value={mediaPaths.includes(selectedCustom.imagePath) ? selectedCustom.imagePath : ""} onChange={event => updateBlock("imagePath", event.target.value)} className={field + " mt-1"}>
                 <option value="">Choose an uploaded image</option>
-                {mediaPaths.map(path => <option key={path} value={path}>{path.replace(/^media\\//, "")}</option>)}
+                {mediaPaths.map(path => <option key={path} value={path}>{path.startsWith("media/") ? path.slice(6) : path}</option>)}
               </select>
               <span className="mt-2 block text-xs font-normal text-black/60">Or enter an image path manually:</span>
               <span className="mt-2 block text-xs font-semibold">Image path</span>
