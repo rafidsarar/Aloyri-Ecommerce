@@ -1,9 +1,10 @@
 "use client";
 
-import { useReducer, useState, type DragEvent, type ReactNode } from "react";
+import { useReducer, useState, type DragEvent, type ReactNode, type FormEvent } from "react";
 import Link from "next/link";
 import { saveVisualBuilder } from "@/app/admin/actions";
 import { VisualBuilderBlock } from "@/components/visual-builder-block";
+import { StorefrontCorePreview, type BuilderPreviewData } from "@/components/admin/storefront-core-preview";
 import { homepageBlocks, type HomepageBlockId } from "@/lib/homepage-builder";
 import type { StorefrontConfig } from "@/lib/storefront-admin-store";
 import {
@@ -22,6 +23,69 @@ type HistoryAction = { type: "change"; next: VisualLayout } | { type: "undo" | "
 const sections = new Map<string, string>(homepageBlocks.map(block => [coreBlockId(block.id), block.label]));
 
 type CoreContent = Pick<StorefrontConfig["homepage"], "eyebrow" | "headline" | "intro" | "primaryLabel" | "primaryHref" | "secondaryLabel" | "secondaryHref" | "heroImagePath" | "heroStyle" | "heroAlignment" | "heroLayout" | "browseEyebrow" | "browseTitle" | "browseIntro" | "browsePlaceholder" | "categoriesEyebrow" | "categoriesTitle" | "categoriesIntro" | "routineFinderHeadline" | "routineFinderIntro" | "ideaEyebrow" | "ideaHeadline" | "ideaCopy">;
+
+/**
+ * Preview advanced-form edits before save. These changes are display-only;
+ * the existing permission-checked server action still validates and persists.
+ */
+function homepageFromAdvancedForm(initial: BuilderPreviewData["homepage"], form: FormData): BuilderPreviewData["homepage"] {
+  const value = (key: string, fallback: string) => typeof form.get(key) === "string" ? String(form.get(key)) : fallback;
+  const bool = (key: string) => form.has(key);
+  return {
+    ...initial,
+    eyebrow: value("eyebrow", initial.eyebrow),
+    headline: value("headline", initial.headline),
+    intro: value("intro", initial.intro),
+    primaryLabel: value("primaryLabel", initial.primaryLabel),
+    secondaryLabel: value("secondaryLabel", initial.secondaryLabel),
+    heroImagePath: value("heroImagePath", initial.heroImagePath),
+    heroStyle: value("heroStyle", initial.heroStyle) as BuilderPreviewData["homepage"]["heroStyle"],
+    heroAlignment: value("heroAlignment", initial.heroAlignment) as BuilderPreviewData["homepage"]["heroAlignment"],
+    heroLayout: value("heroLayout", initial.heroLayout) as BuilderPreviewData["homepage"]["heroLayout"],
+    browseEyebrow: value("browseEyebrow", initial.browseEyebrow),
+    browseTitle: value("browseTitle", initial.browseTitle),
+    browseIntro: value("browseIntro", initial.browseIntro),
+    browsePlaceholder: value("browsePlaceholder", initial.browsePlaceholder),
+    categoriesEyebrow: value("categoriesEyebrow", initial.categoriesEyebrow),
+    categoriesTitle: value("categoriesTitle", initial.categoriesTitle),
+    categoriesIntro: value("categoriesIntro", initial.categoriesIntro),
+    routineFinderHeadline: value("routineFinderHeadline", initial.routineFinderHeadline),
+    routineFinderIntro: value("routineFinderIntro", initial.routineFinderIntro),
+    ideaEyebrow: value("ideaEyebrow", initial.ideaEyebrow),
+    ideaHeadline: value("ideaHeadline", initial.ideaHeadline),
+    ideaCopy: value("ideaCopy", initial.ideaCopy),
+    featureChips: value("featureChips", initial.featureChips.join("\n")).split(/\r?\n/).map(v => v.trim()).filter(Boolean).slice(0, 6),
+    showHero: bool("showHero"), showBrowse: bool("showBrowse"),
+    showCategories: bool("showCategories"), showFocus: bool("showFocus"),
+    showRoutineFinder: bool("showRoutineFinder"), showRoutineSteps: bool("showRoutineSteps"),
+    showBrandStory: bool("showBrandStory"),
+    promoPlacement: value("promoPlacement", initial.promoPlacement) as BuilderPreviewData["homepage"]["promoPlacement"],
+    promoBanners: Array.from({ length: 4 }, (_, i) => ({
+      enabled: bool(`promo${i}Enabled`),
+      eyebrow: value(`promo${i}Eyebrow`, ""),
+      title: value(`promo${i}Title`, ""),
+      copy: value(`promo${i}Copy`, ""),
+      ctaLabel: value(`promo${i}CtaLabel`, ""),
+      ctaHref: value(`promo${i}CtaHref`, ""),
+      layout: value(`promo${i}Layout`, "split") as "split" | "centered",
+      mobileLayout: value(`promo${i}MobileLayout`, "stacked") as "stacked" | "compact",
+      imagePath: value(`promo${i}ImagePath`, ""),
+      startAt: value(`promo${i}StartAt`, ""),
+      endAt: value(`promo${i}EndAt`, ""),
+    })).filter(banner => banner.title || banner.copy),
+    editorialSections: Array.from({ length: 6 }, (_, i) => ({
+      enabled: bool(`editorial${i}Enabled`),
+      eyebrow: value(`editorial${i}Eyebrow`, ""),
+      title: value(`editorial${i}Title`, ""),
+      copy: value(`editorial${i}Copy`, ""),
+      ctaLabel: value(`editorial${i}CtaLabel`, ""),
+      ctaHref: value(`editorial${i}CtaHref`, ""),
+      kind: value(`editorial${i}Kind`, "story") as "story" | "testimonial" | "faq" | "announcement",
+      position: value(`editorial${i}Position`, "before-products") as "before-products" | "after-products" | "before-story",
+      layout: value(`editorial${i}Layout`, "split") as "split" | "centered",
+    })).filter(item => item.title || item.copy),
+  };
+}
 
 function historyReducer(state: History, action: HistoryAction): History {
   if (action.type === "reset") return { past: [], current: structuredClone(defaultVisualLayout), future: [] };
@@ -60,10 +124,11 @@ function freshBlock(kind: VisualBlockKind): VisualBlock {
   };
 }
 
-export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], initialCoreContent, advancedSettings, initialView = "canvas" }: { initialLayout: VisualLayout; pageKey: "home" | VisualPageKey; mediaPaths?: string[]; initialCoreContent?: CoreContent; advancedSettings?: ReactNode; initialView?: "canvas" | "advanced" }) {
+export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], initialCoreContent, initialPreviewData, advancedSettings, initialView = "canvas" }: { initialLayout: VisualLayout; pageKey: "home" | VisualPageKey; mediaPaths?: string[]; initialCoreContent?: CoreContent; initialPreviewData?: BuilderPreviewData; advancedSettings?: ReactNode; initialView?: "canvas" | "advanced" }) {
   const [{ past, current: layout, future }, dispatch] = useReducer(historyReducer, { past: [], current: initialLayout, future: [] });
   const [coreContent, setCoreContent] = useState<CoreContent | undefined>(initialCoreContent);
   const [initialCoreSnapshot] = useState(() => initialCoreContent ? JSON.stringify(initialCoreContent) : "");
+  const [advancedPreview, setAdvancedPreview] = useState<BuilderPreviewData["homepage"] | null>(null);
   const [corePast, setCorePast] = useState<CoreContent[]>([]);
   const [coreFuture, setCoreFuture] = useState<CoreContent[]>([]);
   function editCore<K extends keyof CoreContent>(key: K, value: CoreContent[K]) {
@@ -79,6 +144,23 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
   const [device, setDevice] = useState<"mobile" | "tablet" | "desktop">("desktop");
   const [filter, setFilter] = useState("");
   const isHomepage = pageKey === "home";
+  const initialHome = initialPreviewData?.homepage;
+  const pendingCore = coreContent && initialCoreContent ? Object.fromEntries(
+    (Object.keys(coreContent) as (keyof CoreContent)[])
+      .filter(key => coreContent[key] !== initialCoreContent[key])
+      .map(key => [key, coreContent[key]])
+  ) : {};
+  const previewData = initialPreviewData && initialHome
+    ? { ...initialPreviewData, homepage: { ...(advancedPreview || initialHome), ...pendingCore } }
+    : undefined;
+
+  function updateAdvancedPreview(event: FormEvent<HTMLFormElement>) {
+    if (!initialHome || !advancedSettings) return;
+    const target = event.target as HTMLElement;
+    if (!target.closest('[aria-label="Detailed homepage settings"]')) return;
+    setAdvancedPreview(homepageFromAdvancedForm(initialHome, new FormData(event.currentTarget)));
+  }
+
   const selectedCustom = layout.blocks.find(block => customBlockId(block.id) === selectedId);
   const selectedCore = selectedId.startsWith("core:") ? selectedId.slice(5) as HomepageBlockId : null;
 
@@ -154,7 +236,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
 
   const deviceWidths = { mobile: 390, tablet: 768, desktop: 1060 };
   return (
-    <form action={saveVisualBuilder} className="space-y-4">
+    <form action={saveVisualBuilder} onInputCapture={updateAdvancedPreview} onChangeCapture={updateAdvancedPreview} className="space-y-4">
       <input type="hidden" name="layout" value={JSON.stringify(layout)} />
       {isHomepage && coreContent && <input type="hidden" name="coreContent" value={JSON.stringify(coreContent)} />}
       {isHomepage && <input type="hidden" name="coreBaseline" value={initialCoreSnapshot} />}
@@ -218,7 +300,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
           </div>
           <div className="overflow-hidden rounded-2xl border border-black/10 bg-white p-3 sm:p-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <div><h2 className="text-sm font-semibold">Unsaved design preview</h2><p className="text-xs text-black/55">{isHomepage ? "Custom blocks render here; built-in sections are shown as placeholders." : "Page-specific blocks appear after the existing essential page content."}</p></div>
+              <div><h2 className="text-sm font-semibold">Unsaved design preview</h2><p className="text-xs text-black/55">{isHomepage && previewData ? "Existing homepage content, campaigns and product collections appear alongside unsaved edits. Layout is approximate; use the live preview for final styling." : "Page-specific blocks appear after the existing essential page content."}</p></div>
               <div className="flex flex-wrap gap-1" role="group" aria-label="Design preview device">
                 {(["mobile", "tablet", "desktop"] as const).map(item => <button key={item} type="button" aria-pressed={device === item} onClick={() => setDevice(item)}
                   className={`min-h-9 rounded-lg px-3 py-1 text-xs font-semibold ${device === item ? "bg-[#713a35] text-white" : "bg-[#f7f1ee] text-[#713a35]"}`}>{item}</button>)}
@@ -229,7 +311,20 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
                 <div className="flex justify-between border-b border-black/10 bg-white px-5 py-3 text-xs font-semibold"><span>ALOYRI</span><span>Preview</span></div>
                 {layout.order.map(id => {
                   if (hidden(id)) return null;
-                  if (id.startsWith("core:")) return <div key={id} className="mx-3 my-2 rounded-lg border border-dashed border-[#a98075]/35 bg-[#f7efeb] px-4 py-6 text-center text-xs font-semibold text-[#87675d]">{selectedId === id && coreContent ? <span className="block text-left"><span className="font-semibold">{id === "core:hero" ? coreContent.headline : id === "core:browse" ? coreContent.browseTitle : id === "core:categories" ? coreContent.categoriesTitle : id === "core:routineFinder" ? coreContent.routineFinderHeadline : id === "core:brandStory" ? coreContent.ideaHeadline : name(id)}</span></span> : name(id)}<span className="mt-1 block text-[10px] font-normal">Existing storefront section · select to edit</span></div>;
+                  if (id.startsWith("core:")) {
+                    const coreId = id.slice(5) as HomepageBlockId;
+                    const home = previewData?.homepage;
+                    if (home && ((coreId === "hero" && !home.showHero) || (coreId === "browse" && !home.showBrowse) || (coreId === "categories" && !home.showCategories) || (coreId === "focus" && !home.showFocus) || (coreId === "routineFinder" && !home.showRoutineFinder) || (coreId === "routineSteps" && !home.showRoutineSteps) || (coreId === "brandStory" && !home.showBrandStory))) return null;
+                    return <div key={id} data-preview-core={coreId} className={`group relative mx-2 my-3 overflow-hidden rounded-xl border ${selectedId === id ? "border-[#713a35] ring-2 ring-[#713a35]/20" : "border-black/10"}`}>
+                      <div className="flex items-center justify-between gap-2 border-b border-black/10 bg-[#fffaf8] px-3 py-2">
+                        <span className="text-[11px] font-semibold text-[#6f4c44]">{name(id)}</span>
+                        <button type="button" onClick={() => setSelectedId(id)} aria-label={`Edit ${name(id)}`} className="min-h-8 rounded-lg border border-[#713a35]/20 bg-white px-3 text-xs font-semibold text-[#713a35]">Edit section</button>
+                      </div>
+                      <div className="pointer-events-none" aria-label={`Preview of ${name(id)}`}>
+                        {previewData ? <StorefrontCorePreview section={coreId} data={previewData} /> : <div className="p-5 text-xs text-[#765e55]">{name(id)} · available on the live storefront</div>}
+                      </div>
+                    </div>;
+                  }
                   const block = layout.blocks.find(item => customBlockId(item.id) === id);
                   return block ? <VisualBuilderBlock key={id} block={block} /> : null;
                 })}
