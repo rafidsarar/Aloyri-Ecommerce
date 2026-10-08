@@ -9,6 +9,7 @@ import { CloseIcon, MenuIcon, SearchIcon } from "@/components/icons";
 
 const links = [
   ["Shop all", "/shop"],
+  ["Routine finder", "/routine-finder"],
   ["Cleansers", "/category/cleansers"],
   ["Moisturizers", "/category/moisturizers"],
   ["Sunscreen", "/category/sunscreen"],

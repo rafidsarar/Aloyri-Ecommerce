@@ -188,6 +188,23 @@ export default async function Home() {
         </div>
       </section>}
 
+      <section className="shell pt-10 pb-4 md:pt-14" aria-labelledby="routine-discovery-title">
+        <div className="grid overflow-hidden rounded-[2rem] border border-[#713a35]/10 bg-[#f2ebe2] lg:grid-cols-[1.1fr_.9fr]">
+          <div className="p-7 sm:p-10 lg:p-14">
+            <p className="text-xs font-semibold uppercase tracking-[.22em] text-[#713a35]/65">Discover your routine</p>
+            <h2 id="routine-discovery-title" className="display mt-4 max-w-xl text-4xl leading-[1.05] sm:text-5xl">A beautiful routine begins with the right essentials.</h2>
+            <p className="mt-5 max-w-xl text-sm leading-7 text-[#321f1c]/65">Tell us which step you’re shopping for and the texture you prefer. Explore matching products from Aloyri’s live catalog—no account required.</p>
+            <Link href="/routine-finder" className="mt-7 inline-flex min-h-12 items-center gap-3 rounded-full bg-[#713a35] px-6 py-3 text-sm font-semibold text-white">Explore the routine finder <ArrowIcon /></Link>
+          </div>
+          <div className="grid grid-cols-3 gap-2 border-t border-[#713a35]/10 p-5 sm:gap-4 sm:p-9 lg:border-l lg:border-t-0" aria-label="Three skincare steps">
+            {routine.map(item => <Link key={item.step} href={item.href} className="flex min-h-48 flex-col justify-between rounded-[1.5rem] border border-[#713a35]/10 bg-white/65 p-4 transition hover:bg-white sm:min-h-60 sm:p-6">
+              <span className="display text-3xl text-[#713a35]/55">{item.step}</span>
+              <span className="break-words text-sm font-semibold text-[#321f1c] sm:text-lg">{item.title}</span>
+            </Link>)}
+          </div>
+        </div>
+      </section>
+
       {home.showCategories && <section className="shell py-8 md:py-10" aria-labelledby="shop-by-category">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <h2 id="shop-by-category" className="display text-3xl">Shop by category</h2>
