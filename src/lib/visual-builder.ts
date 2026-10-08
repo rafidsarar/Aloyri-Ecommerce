@@ -33,12 +33,12 @@ export type VisualBlock = {
   hideMobile: boolean;
   hideDesktop: boolean;
 };
-export type VisualLayout = { order: string[]; blocks: VisualBlock[] };
+export type VisualLayout = { order: string[]; blocks: VisualBlock[]; hiddenCore: HomepageBlockId[] };
 
 export const coreBlockId = (id: HomepageBlockId) => `core:${id}`;
 export const customBlockId = (id: string) => `custom:${id}`;
 export const defaultVisualOrder = defaultHomepageOrder.map(coreBlockId);
-export const defaultVisualLayout: VisualLayout = { order: [...defaultVisualOrder], blocks: [] };
+export const defaultVisualLayout: VisualLayout = { order: [...defaultVisualOrder], blocks: [], hiddenCore: [] };
 const allowedCore = new Set(defaultVisualOrder);
 const allowedKinds = new Set<string>(visualComponentCatalog.map(({ kind }) => kind));
 
@@ -104,5 +104,8 @@ export function normalizeVisualLayout(value: unknown, legacyOrder: HomepageBlock
   for (const id of [...legacyOrder.map(coreBlockId), ...blocks.map(block => customBlockId(block.id))]) {
     if (!seen.has(id)) { seen.add(id); result.push(id); }
   }
-  return { order: result, blocks };
+  const hiddenCore = (Array.isArray(input.hiddenCore) ? input.hiddenCore : []).filter(
+    (id): id is HomepageBlockId => typeof id === "string" && allowedCore.has(coreBlockId(id as HomepageBlockId)),
+  );
+  return { order: result, blocks, hiddenCore: [...new Set(hiddenCore)] };
 }
