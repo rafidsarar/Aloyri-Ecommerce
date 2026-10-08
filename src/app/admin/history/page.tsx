@@ -45,7 +45,7 @@ export default async function StorefrontHistoryPage({ searchParams }: {
           </div>
           {canRestore ? <form action={restoreVersionToDraftAction}>
             <input type="hidden" name="versionId" value={version.id}/>
-            <AdminSubmitButton className="min-h-11 rounded-xl border border-[#713a35]/20 px-4 text-sm font-semibold text-[#713a35]">Restore live</AdminSubmitButton>
+            <AdminSubmitButton pendingLabel="Restoring…">Restore live</AdminSubmitButton>
           </form> : null}
         </div>)}
       </div>
