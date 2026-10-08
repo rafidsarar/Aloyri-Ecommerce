@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
 import { HomepagePromoBanners } from "@/components/homepage-promo-banners";
+import { HomepageCategoryShowcase } from "@/components/homepage-category-showcase";
 import { HomepageEditorialSections } from "@/components/homepage-editorial-sections";
 import { ArrowIcon } from "@/components/icons";
 import { ProductMedia } from "@/components/product-media";
@@ -109,15 +110,15 @@ export default async function Home() {
         context={{ placementId: "homepage-hero", placementKind: "hero" }}
       />
       {home.showHero && <section className="shell pt-5 md:pt-8">
-        <div className={`store-hero grid min-h-[440px] overflow-hidden rounded-[2rem] border ${home.heroLayout === "stacked" ? "grid-cols-1" : "lg:grid-cols-[1.03fr_.97fr]"}`}>
-          <div className="flex flex-col justify-between p-7 sm:p-10 lg:p-14">
-            <div className="flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/55">
+        <div className={`store-hero grid min-h-[490px] overflow-hidden rounded-[2rem] border ${home.heroLayout === "stacked" ? "grid-cols-1" : "lg:grid-cols-[1.03fr_.97fr]"}`}>
+          <div className="store-hero-copy relative z-10 flex flex-col justify-between p-7 sm:p-10 lg:p-14">
+            <div className="store-home-overline flex items-center gap-3">
               <span className="h-px w-8 bg-[#b9725f]/55" />
               {home.eyebrow}
             </div>
 
             <div className="max-w-2xl py-8 lg:py-10">
-              <h1 className="store-hero-heading display text-[clamp(2.75rem,5.5vw,5.5rem)] leading-[1.02]">
+              <h1 className="store-hero-heading display max-w-[13ch] text-[clamp(2.75rem,5.5vw,5.6rem)] leading-[1.02]">
                 {home.headline}
               </h1>
               <p className="store-hero-muted mt-7 max-w-xl text-base leading-7 sm:text-lg">
@@ -140,14 +141,14 @@ export default async function Home() {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs text-[#321f1c]/45">
+            <div className="store-hero-features flex flex-wrap gap-x-6 gap-y-3 text-xs">
               {home.featureChips.map((chip) => (
-                <span key={chip}>{chip}</span>
+                <span className="inline-flex items-center gap-2" key={chip}><span className="store-hero-check" aria-hidden="true">✓</span>{chip}</span>
               ))}
             </div>
           </div>
 
-          <div className={`relative min-h-[280px] lg:min-h-[420px] p-6 sm:p-9 lg:p-12 ${config.presentation.showHeroImageOnMobile ? "" : "hidden lg:block"}`}>
+          <div className={`store-hero-art relative min-h-[280px] lg:min-h-[420px] p-6 sm:p-9 lg:p-12 ${config.presentation.showHeroImageOnMobile ? "" : "hidden lg:block"}`}>
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_18%,rgba(255,255,255,.85),transparent_36%)]" />
             <div className="relative mx-auto flex h-full max-w-[580px] items-center">
               <div className="relative w-full">
@@ -155,9 +156,9 @@ export default async function Home() {
                   product={heroProduct}
                   priority
                   sizes="(max-width: 1024px) 90vw, 600px"
-                  className="aspect-square max-h-[440px] rounded-[2rem] soft-shadow"
+                  className="store-hero-product aspect-square max-h-[440px] rounded-[2rem] soft-shadow"
                 />
-                <div className="absolute -bottom-5 left-5 right-5 rounded-[1.35rem] border border-white/70 bg-white/82 p-5 backdrop-blur-md sm:left-8 sm:right-8">
+                <div className="store-hero-product-caption absolute -bottom-5 left-5 right-5 rounded-[1.35rem] border border-white/70 bg-white/90 p-5 shadow-xl backdrop-blur-md sm:left-8 sm:right-8">
                   <div className="flex items-end justify-between gap-5">
                     <div>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#713a35]/50">
@@ -191,17 +192,30 @@ export default async function Home() {
         </div>
       </section>}
 
-      {home.showCategories && <section className="shell py-8 md:py-10" aria-labelledby="shop-by-category">
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <h2 id="shop-by-category" className="display text-3xl">Shop by category</h2>
-          <Link href="/shop" className="text-sm font-semibold text-[#713a35] underline underline-offset-4">View all skincare</Link>
+      <section className="shell pt-7 md:pt-9" aria-label="Find your skincare">
+        <div className="store-home-browse grid gap-5 rounded-[1.5rem] border p-5 sm:p-6 lg:grid-cols-[.85fr_1.15fr] lg:items-center lg:gap-8 lg:px-8">
+          <div>
+            <p className="store-home-overline">Your skincare, your way</p>
+            <h2 className="display mt-2 text-2xl leading-tight sm:text-3xl">What are you looking for today?</h2>
+            <p className="store-home-muted mt-2 text-xs leading-5 sm:text-sm">Search our edit, or take a shortcut to what is available.</p>
+          </div>
+          <div className="min-w-0">
+            <form action="/shop" method="get" role="search" aria-label="Search skincare products" className="store-home-search flex min-w-0 items-center gap-2 rounded-full border p-1.5 pl-4 sm:pl-5">
+              <label htmlFor="home-product-search" className="sr-only">Search products and brands</label>
+              <svg width="19" height="19" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="10.8" cy="10.8" r="6.3" /><path d="m16 16 4.5 4.5" /></svg>
+              <input id="home-product-search" name="q" type="search" placeholder="Try sunscreen, cleanser, brand..." className="min-w-0 flex-1 bg-transparent py-2 text-sm outline-none" />
+              <button type="submit" className="store-home-search-button min-h-11 shrink-0 rounded-full px-4 text-xs font-semibold sm:px-6 sm:text-sm">Search</button>
+            </form>
+            <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs">
+              <Link className="store-home-text-link" href="/shop?sort=bestseller">Bestsellers →</Link>
+              <Link className="store-home-text-link" href="/shop?stock=in-stock">Available now →</Link>
+              <Link className="store-home-text-link" href="/routine-finder">Find my routine →</Link>
+            </div>
+          </div>
         </div>
-        <div className="grid gap-3 sm:grid-cols-3">
-          {routine.map(item => <Link key={item.step} href={item.href} className="store-category-card group flex items-center justify-between gap-4 rounded-2xl border p-5 transition">
-            <div><p className="text-xs text-[#796762]">Step {item.step}</p><h3 className="mt-1 text-lg font-semibold">{item.title === "Cleanse" ? "Cleansers" : item.title === "Moisturize" ? "Moisturizers" : "Sunscreen"}</h3></div><ArrowIcon className="h-4 w-4 text-[#713a35]" />
-          </Link>)}
-        </div>
-      </section>}
+      </section>
+
+      {home.showCategories ? <HomepageCategoryShowcase products={catalogProducts} /> : null}
 
       {home.showCategories ? (
         <nav aria-label="Shop by skincare focus" className="shell flex flex-wrap items-center gap-2 pb-6">
