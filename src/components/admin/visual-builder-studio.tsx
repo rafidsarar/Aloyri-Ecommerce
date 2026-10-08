@@ -13,6 +13,7 @@ import {
   type VisualBlock,
   type VisualBlockKind,
   type VisualLayout,
+  type VisualPageKey,
 } from "@/lib/visual-builder";
 
 type History = { past: VisualLayout[]; current: VisualLayout; future: VisualLayout[] };
@@ -56,11 +57,12 @@ function freshBlock(kind: VisualBlockKind): VisualBlock {
   };
 }
 
-export function VisualBuilderStudio({ initialLayout }: { initialLayout: VisualLayout }) {
+export function VisualBuilderStudio({ initialLayout, pageKey }: { initialLayout: VisualLayout; pageKey: "home" | VisualPageKey }) {
   const [{ past, current: layout, future }, dispatch] = useReducer(historyReducer, { past: [], current: initialLayout, future: [] });
   const [selectedId, setSelectedId] = useState(layout.order[0] || "");
   const [device, setDevice] = useState<"mobile" | "tablet" | "desktop">("desktop");
   const [filter, setFilter] = useState("");
+  const isHomepage = pageKey === "home";
   const selectedCustom = layout.blocks.find(block => customBlockId(block.id) === selectedId);
   const selectedCore = selectedId.startsWith("core:") ? selectedId.slice(5) as HomepageBlockId : null;
 
@@ -138,6 +140,7 @@ export function VisualBuilderStudio({ initialLayout }: { initialLayout: VisualLa
   return (
     <form action={saveVisualBuilder} className="space-y-4">
       <input type="hidden" name="layout" value={JSON.stringify(layout)} />
+      <input type="hidden" name="pageKey" value={pageKey} />
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-black/10 bg-white p-4">
         <div>
           <p className="text-sm font-semibold">Visual editor</p>
@@ -165,7 +168,7 @@ export function VisualBuilderStudio({ initialLayout }: { initialLayout: VisualLa
         <section className="min-w-0 space-y-4" aria-label="Homepage canvas">
           <div className="rounded-2xl border border-black/10 bg-white p-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-              <div><h2 className="text-sm font-semibold">Homepage structure</h2><p className="mt-1 text-xs text-black/55">{layout.order.length} sections · {layout.blocks.length} custom components</p></div>
+              <div><h2 className="text-sm font-semibold">{isHomepage ? "Homepage structure" : "Page content blocks"}</h2><p className="mt-1 text-xs text-black/55">{layout.order.length} sections · {layout.blocks.length} custom components</p></div>
               <input aria-label="Find a section" value={filter} onChange={event => setFilter(event.target.value)} placeholder="Find a section…" className={field + " max-w-48"} />
             </div>
             <ol className="max-h-[570px] space-y-2 overflow-y-auto pr-1">
@@ -190,7 +193,7 @@ export function VisualBuilderStudio({ initialLayout }: { initialLayout: VisualLa
           </div>
           <div className="overflow-hidden rounded-2xl border border-black/10 bg-white p-3 sm:p-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <div><h2 className="text-sm font-semibold">Unsaved design preview</h2><p className="text-xs text-black/55">Custom blocks render here; built-in sections are shown as placeholders.</p></div>
+              <div><h2 className="text-sm font-semibold">Unsaved design preview</h2><p className="text-xs text-black/55">{isHomepage ? "Custom blocks render here; built-in sections are shown as placeholders." : "Page-specific blocks appear after the existing essential page content."}</p></div>
               <div className="flex flex-wrap gap-1" role="group" aria-label="Design preview device">
                 {(["mobile", "tablet", "desktop"] as const).map(item => <button key={item} type="button" aria-pressed={device === item} onClick={() => setDevice(item)}
                   className={`min-h-9 rounded-lg px-3 py-1 text-xs font-semibold ${device === item ? "bg-[#713a35] text-white" : "bg-[#f7f1ee] text-[#713a35]"}`}>{item}</button>)}
@@ -278,7 +281,7 @@ export function VisualBuilderStudio({ initialLayout }: { initialLayout: VisualLa
         </aside>
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-black/10 bg-white p-4">
-        <p className="text-xs text-black/60">Saving updates the live homepage with a recoverable version-history snapshot. Orders, prices and stock remain managed by their existing systems.</p>
+        <p className="text-xs text-black/60">Saving updates the selected public page with a recoverable version-history snapshot. Orders, prices and stock remain managed by their existing systems.</p>
         <button type="submit" className="min-h-11 rounded-xl bg-[#713a35] px-5 py-2.5 text-sm font-semibold text-white">Save website changes</button>
       </div>
     </form>
