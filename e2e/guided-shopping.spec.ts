@@ -69,3 +69,16 @@ test("mobile customer journey exposes finder and no horizontal overflow", async 
   await expect(page.getByRole("dialog", { name: "Navigation menu" })).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
+
+test("published focus choices filter the live shop and remain shareable", async ({ page }) => {
+  await mockCatalog(page);
+  await page.goto("/shop?focus=spf");
+  const dailySpf = page.getByRole("button", { name: "Daily SPF" });
+  await expect(dailySpf).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("link", { name: /Skin Aqua Super Moisture UV Gel/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Refreshing Facial Wash/ })).toHaveCount(0);
+  await page.getByRole("button", { name: "All focuses" }).click();
+  await expect(page.getByRole("link", { name: /Refreshing Facial Wash/ })).toBeVisible();
+  await page.getByRole("link", { name: "Shop bestsellers" }).click();
+  await expect(page.getByRole("combobox", { name: "Sort" })).toHaveValue("bestseller");
+});
