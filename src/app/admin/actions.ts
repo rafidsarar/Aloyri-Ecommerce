@@ -345,6 +345,9 @@ export async function saveHomepage(formData: FormData) {
       ideaCopy: text(formData, "ideaCopy", 600),
       showHero: formData.get("showHero") === "on",
       showCategories: formData.get("showCategories") === "on",
+      showRoutineFinder: formData.get("showRoutineFinder") === "on",
+      routineFinderHeadline: text(formData, "routineFinderHeadline", 140),
+      routineFinderIntro: text(formData, "routineFinderIntro", 420),
       showBrandStory: formData.get("showBrandStory") === "on",
       heroLayout: formData.get("heroLayout") === "stacked" ? "stacked" : "split",
     };
