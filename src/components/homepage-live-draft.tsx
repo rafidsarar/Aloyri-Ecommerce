@@ -10,7 +10,6 @@ type CoreSection = { id: string; content: ReactNode };
 export function HomepageLiveDraft({ sections, initialLayout }: { sections: CoreSection[]; initialLayout: VisualLayout }) {
   const [layout, setLayout] = useState(initialLayout);
   const [content, setContent] = useState<Record<string, string>>({});
-  const [selected, setSelected] = useState("");
   const [active, setActive] = useState(false);
 
   useEffect(() => {
@@ -66,6 +65,5 @@ export function HomepageLiveDraft({ sections, initialLayout }: { sections: CoreS
       const block = layout.blocks.find(item => entry === `custom:${item.id}`);
       return block ? <div key={entry} data-builder-custom={block.id}><VisualBuilderBlock block={block} /></div> : null;
     })}
-    {active && <div className="sr-only" aria-live="polite">{selected}</div>}
   </div>;
 }
