@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CustomerGoogleLink } from "@/components/customer-google-link";
 
 function GoogleMark() {
   return (
@@ -69,10 +70,10 @@ export function CustomerAuthLanding({
             <li><span aria-hidden="true">✓</span> Wishlist and customer support</li>
           </ul>
           <div className="mt-auto pt-9">
-            <a href={loginHref} className="account-primary-button flex min-h-13 w-full items-center justify-center gap-3 rounded-full px-5 py-3 text-sm font-semibold">
+            <CustomerGoogleLink href={loginHref} className="account-primary-button flex min-h-13 w-full items-center justify-center gap-3 rounded-full px-5 py-3 text-sm font-semibold">
               <GoogleMark />
               Sign in with Google
-            </a>
+            </CustomerGoogleLink>
             <p className="account-muted mt-3 text-center text-xs leading-5">
               No separate Aloyri password needed.
             </p>
@@ -93,10 +94,10 @@ export function CustomerAuthLanding({
             <li><span>3</span> Add a delivery address when you order</li>
           </ol>
           <div className="mt-auto pt-9">
-            <a href={signupHref} className="account-secondary-button flex min-h-13 w-full items-center justify-center gap-3 rounded-full px-5 py-3 text-sm font-semibold">
+            <CustomerGoogleLink href={signupHref} className="account-secondary-button flex min-h-13 w-full items-center justify-center gap-3 rounded-full px-5 py-3 text-sm font-semibold">
               <GoogleMark />
               Create account with Google
-            </a>
+            </CustomerGoogleLink>
             <p className="account-muted mt-3 text-center text-xs leading-5">
               Your email comes from Google. No password to remember.
             </p>
