@@ -11,10 +11,12 @@ function inSchedule(startAt: string, endAt: string, now: number) {
   return (start === null || now >= start) && (end === null || now < end);
 }
 
+function serverTimestamp() { return Date.now(); }
+
 export function HomepagePromoBanners({ banners }: {
   banners: StorefrontConfig["homepage"]["promoBanners"];
 }) {
-  const now = Date.now();
+  const now = serverTimestamp();
   const visible = banners.filter((banner) =>
     banner.enabled && banner.title.trim() && inSchedule(banner.startAt, banner.endAt, now)
   );
