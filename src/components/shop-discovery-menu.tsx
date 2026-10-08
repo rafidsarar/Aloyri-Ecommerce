@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 const groups = [
@@ -43,10 +42,6 @@ const groups = [
 export function ShopDiscoveryMenu() {
   const [open, setOpen] = useState(false);
   const wrapper = useRef<HTMLDivElement>(null);
-  const pathname = usePathname();
-
-  useEffect(() => { setOpen(false); }, [pathname]);
-
   useEffect(() => {
     if (!open) return;
     const dismiss = (event: PointerEvent) => {
