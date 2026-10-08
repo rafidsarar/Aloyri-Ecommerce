@@ -457,7 +457,7 @@ export const defaultStorefrontConfig: StorefrontConfig = {
     promoBanners: [],
     editorialSections: [],
   },
-  visualPages: Object.fromEntries(visualPageKeys.map(key => [key, { order: [], blocks: [], hiddenCore: [] }])) as Record<VisualPageKey, VisualLayout>,
+  visualPages: Object.fromEntries(visualPageKeys.map(key => [key, { order: [], blocks: [], hiddenCore: [] }])) as unknown as Record<VisualPageKey, VisualLayout>,
   pages: {
     about: {
       eyebrow: "About Aloyri",
@@ -817,7 +817,7 @@ function normalizeConfig(value: Partial<StorefrontConfig> | null): StorefrontCon
           ? value.homepage.featureChips.slice(0, 6)
           : defaultStorefrontConfig.homepage.featureChips,
     },
-    visualPages: Object.fromEntries(visualPageKeys.map(key => [key, normalizeVisualPageLayout(value.visualPages?.[key])])) as Record<VisualPageKey, VisualLayout>,
+    visualPages: Object.fromEntries(visualPageKeys.map(key => [key, normalizeVisualPageLayout(value.visualPages?.[key])])) as unknown as Record<VisualPageKey, VisualLayout>,
     pages: {
       about: {
         ...defaultStorefrontConfig.pages.about,
