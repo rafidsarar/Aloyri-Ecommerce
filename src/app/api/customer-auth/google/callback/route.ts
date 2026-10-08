@@ -60,7 +60,8 @@ export async function GET(request: Request) {
   try {
     const identity = await exchangeGoogleAuthCode(code, verifier);
     const session = await createCustomerSessionFromGoogleIdentity(identity);
-    const destination = new URL(next, base);
+    const profileComplete = session.account.displayName.trim().length >= 2 && /^(?:\+?88)?01[3-9]\d{8}$/.test(session.account.phone || "");
+    const destination = new URL(profileComplete ? next : "/account/setup?next=" + encodeURIComponent(next), base);
     const response = NextResponse.redirect(destination);
     response.cookies.set(CUSTOMER_SESSION_COOKIE, session.sessionToken, {
       httpOnly: true,
