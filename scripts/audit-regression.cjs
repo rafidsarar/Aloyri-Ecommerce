@@ -43,34 +43,31 @@ const publishing=require('../src/lib/storefront-admin-store.ts');
 let passed=0;
 async function check(name,fn){await fn();passed++;console.log('PASS '+name);}
 (async()=>{
- await check('draft stays private until publish and subsequent reads see new content',async()=>{
+ await check('storefront admin saves are immediately live; legacy draft storage cannot override',async()=>{
   const initial=await publishing.readPublishedStorefrontConfig();
   initial.homepage.headline='Published fixture';await publishing.saveStorefrontConfig(initial);
-  const draft=structuredClone(initial);draft.homepage.headline='New draft fixture';await publishing.saveDraftStorefrontConfig(draft);
   assert.equal((await publishing.readStorefrontConfig()).homepage.headline,'Published fixture');
-  draftPreview=true;assert.equal((await publishing.readStorefrontConfig()).homepage.headline,'New draft fixture');draftPreview=false;
-  await publishing.publishDraftStorefront('fixture-owner','Acceptance fixture');
-  assert.equal((await publishing.readStorefrontConfig()).homepage.headline,'New draft fixture');
+  const obsolete=structuredClone(initial);obsolete.homepage.headline='Unpublished legacy fixture';
+  await publishing.saveDraftStorefrontConfig(obsolete);
+  assert.equal((await publishing.readDraftStorefrontConfig()).homepage.headline,'Published fixture');
+  assert.equal((await publishing.readPublishedStorefrontConfig()).homepage.headline,'Published fixture');
+  const updated=structuredClone(initial);updated.homepage.headline='Immediate live fixture';
+  await publishing.saveStorefrontConfig(updated);
+  assert.equal((await publishing.readPublishedStorefrontConfig()).homepage.headline,'Immediate live fixture');
  });
- await check('presentation draft stays private until publication',async()=>{
+ await check('presentation edits are available immediately in published config',async()=>{
   const current=await publishing.readPublishedStorefrontConfig();
-  const draft=structuredClone(current);draft.presentation={...draft.presentation,contentWidth:'comfortable',desktopColumns:3,showAnnouncement:false,navigation:[{label:'Browse',href:'/shop'}]};
-  await publishing.saveDraftStorefrontConfig(draft);
-  assert.equal((await publishing.readPublishedStorefrontConfig()).presentation.desktopColumns,4);
-  draftPreview=true;assert.equal((await publishing.readStorefrontConfig()).presentation.desktopColumns,3);draftPreview=false;
-  await publishing.publishDraftStorefront('fixture-owner','Presentation fixture');
-  assert.equal((await publishing.readStorefrontConfig()).presentation.navigation[0].label,'Browse');
+  const updated=structuredClone(current);
+  updated.presentation={...updated.presentation,contentWidth:'comfortable',desktopColumns:3,showAnnouncement:false,navigation:[{label:'Browse',href:'/shop'}]};
+  await publishing.saveStorefrontConfig(updated);
+  const live=await publishing.readPublishedStorefrontConfig();
+  assert.equal(live.presentation.desktopColumns,3);
+  assert.equal(live.presentation.navigation[0].label,'Browse');
  });
  await check('presentation normalization rejects unsafe links and invalid layout values',async()=>{
   const {normalizePresentation}=require('../src/lib/storefront-presentation.ts');
   const safe=normalizePresentation({desktopColumns:100,contentWidth:'bad',showAnnouncement:'false',navigation:[{label:'Bad',href:'javascript:alert(1)'},{label:'Admin',href:'/admin'},{label:'Bad',href:'//evil.test'},{label:'Shop',href:'/shop'}]});
   assert.equal(safe.desktopColumns,4);assert.equal(safe.contentWidth,'wide');assert.equal(safe.showAnnouncement,true);assert.deepEqual(safe.navigation,[{label:'Shop',href:'/shop'}]);
- });
- await check('draft-mode rendering signals escape instead of freezing published content',async()=>{
-  const {DynamicServerError}=require('next/dist/client/components/hooks-server-context');
-  draftSignal=new DynamicServerError('draftMode');
-  await assert.rejects(publishing.readStorefrontConfig(),error=>error===draftSignal);
-  draftSignal=null;
  });
  await check('phone/email cannot grant unrelated support access',async()=>{
   assert.equal(ownsSupportCase({phone:'01700000000',email:'owner@test'},'account-a',new Set()),false);
