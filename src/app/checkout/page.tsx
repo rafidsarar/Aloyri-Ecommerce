@@ -18,7 +18,7 @@ export default async function CheckoutPage() {
   const session = await currentCustomerSession();
   if (!session || session.session.method !== "google" ||
       session.account.displayName.trim().length < 2 || !session.account.phone) {
-    redirect("/account/setup");
+    redirect("/account/setup?next=/checkout");
   }
   return <CheckoutClient />;
 }
