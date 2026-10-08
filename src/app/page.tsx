@@ -217,17 +217,16 @@ export default async function Home() {
         </nav>
       ) : null}
 
-      {home.showCategories ? (
+      {home.showRoutineFinder ? (
         <section className="shell pb-10 pt-2 md:pb-14" aria-labelledby="routine-finder-feature">
           <div className="store-discovery-feature grid overflow-hidden rounded-[2rem] border lg:grid-cols-[1.1fr_.9fr]">
             <div className="p-7 sm:p-10 lg:p-14">
               <p className="store-discovery-muted text-[11px] font-semibold uppercase tracking-[.22em]">A little guidance, a better beginning</p>
               <h2 id="routine-finder-feature" className="store-discovery-title display mt-5 max-w-lg text-4xl leading-tight sm:text-5xl">
-                Your routine, made simple.
+                {home.routineFinderHeadline}
               </h2>
               <p className="store-discovery-muted mt-5 max-w-xl text-sm leading-7">
-                Just three questions. Explore cleansers, moisturizers and SPF from the Aloyri edit
-                using your preferences and current availability. No account needed to explore.
+                {home.routineFinderIntro}
               </p>
               <Link href="/routine-finder" className="store-discovery-button mt-8 inline-flex min-h-12 items-center gap-3 rounded-full px-6 py-3 text-sm font-semibold">
                 Find your routine <ArrowIcon />
