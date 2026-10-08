@@ -51,6 +51,15 @@ test.describe("customer storefront usability", () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   });
 
+  test("unsigned shoppers are routed to Google account setup before checkout", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto("/checkout");
+    await expect(page).toHaveURL(/\/account\/setup\?next=%2Fcheckout/);
+    await expect(page.getByRole("link", { name: /continue with google/i }).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: /place cod order/i })).toHaveCount(0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  });
+
   test("checkout without items does not expose an order submission action", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await mockCatalog(page);
