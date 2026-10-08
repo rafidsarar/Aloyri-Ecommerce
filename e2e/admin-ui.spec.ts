@@ -94,7 +94,7 @@ test.describe("minimal admin interface", () => {
     await page.getByLabel("Area / Thana / Upazila").fill("Dhanmondi");
     await page.getByLabel("Full delivery address").fill("House 12, Road 3, Dhanmondi");
     await page.getByRole("button", { name: "Save address" }).click();
-    await expect(page.getByRole("alert")).toContainText("storage temporarily unavailable");
+    await expect(page.getByText("Account storage temporarily unavailable.", { exact: true })).toBeVisible();
     await expect(page.getByLabel("Recipient name")).toHaveValue("Preview Customer");
     await expect(page.getByLabel("Full delivery address")).toHaveValue("House 12, Road 3, Dhanmondi");
   });
