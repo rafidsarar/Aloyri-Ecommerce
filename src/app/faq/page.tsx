@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { VisualPageSections } from "@/components/visual-page-sections";
 import { staticPageSeoMetadata } from "@/lib/seo-manager";
 import Link from "next/link";
 import { safeJsonLd } from "@/lib/seo";
@@ -23,6 +24,7 @@ export default async function FAQPage() {
   };
 
   return (
+    <>
     <main className="shell py-12 md:py-18">
       <script
         type="application/ld+json"
@@ -67,5 +69,7 @@ export default async function FAQPage() {
         .
       </p>
     </main>
+    <VisualPageSections layout={config.visualPages.faq} />
+    </>
   );
 }
