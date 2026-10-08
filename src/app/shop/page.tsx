@@ -3,8 +3,10 @@ import Link from "next/link";
 import { shopSeoMetadata } from "@/lib/seo-manager";
 import { ShopClient } from "@/components/shop-client";
 import { readStorefrontConfig } from "@/lib/storefront-admin-store";
+import type { SkinFocus } from "@/lib/skin-focus";
 
 const stocks = new Set(["all", "in-stock", "out-of-stock"]);
+const focuses = new Set(["all", "hydration", "lightweight", "gentle", "spf"]);
 const prices = new Set(["all", "under-600", "600-999", "1000-plus"]);
 const sorts = new Set([
   "recommended",
@@ -26,6 +28,7 @@ export default async function ShopPage({
     category?: string;
     q?: string;
     brand?: string;
+    focus?: string;
     stock?: string;
     price?: string;
     sort?: string;
@@ -60,10 +63,11 @@ export default async function ShopPage({
       </nav>
 
       <ShopClient
-        key={[query.category, query.q, query.brand, query.stock, query.price, query.sort].join(":")}
+        key={[query.category, query.q, query.brand, query.focus, query.stock, query.price, query.sort].join(":")}
         initialCategory={query.category}
         initialQuery={query.q}
         initialBrand={query.brand}
+        initialFocus={focuses.has(query.focus || "") ? (query.focus as SkinFocus) : "all"}
         initialStock={
           stocks.has(query.stock || "")
             ? (query.stock as "all" | "in-stock" | "out-of-stock")
