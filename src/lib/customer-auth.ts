@@ -493,15 +493,14 @@ export async function updateCurrentCustomerAccount(input: {
   if (!stored) throw new Error("UNAUTHENTICATED");
 
   if (typeof input.displayName === "string") {
-    stored.displayName = input.displayName
-      .trim()
-      .replace(/\s+/g, " ")
-      .slice(0, 80);
+    const displayName = input.displayName.trim().replace(/\s+/g, " ");
+    if (displayName.length < 2 || displayName.length > 80) throw new Error("INVALID_NAME");
+    stored.displayName = displayName;
   }
   if (typeof input.phone === "string") {
     const phone = input.phone.trim().replace(/[\s-]/g, "");
-    if (!/^\+?\d{10,15}$/.test(phone)) throw new Error("INVALID_PHONE");
-    stored.phone = phone;
+    if (!/^(?:\+?88)?01[3-9]\d{8}$/.test(phone)) throw new Error("INVALID_PHONE");
+    stored.phone = phone.startsWith("+88") ? phone.slice(3) : phone.startsWith("88") ? phone.slice(2) : phone;
   }
   if (input.savedProductIds !== undefined) {
     stored.savedProductIds = safeIds(input.savedProductIds);
