@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useCatalog } from "@/components/catalog-provider";
 import { ArrowIcon } from "@/components/icons";
 import { ProductMedia } from "@/components/product-media";
-import { readCart, type CartItem, writeCart } from "@/lib/cart";
+import { mergeRecoveredCart, readCart, type CartItem, writeCart } from "@/lib/cart";
 import { formatPrice, getProductById } from "@/lib/catalog";
 import { hasSalePrice, salePriceFor } from "@/lib/promotions";
 import { trackStorefrontEvent } from "@/lib/analytics";
@@ -40,24 +40,7 @@ export default function CartPage() {
           })
           .then((result) => {
             if (!result?.items?.length) return;
-            const merged = new Map(existing.map((item) => [item.productId, item.qty]));
-            for (const item of result.items) {
-              if (
-                item &&
-                typeof item.productId === "string" &&
-                Number.isInteger(item.qty) &&
-                item.qty > 0
-              ) {
-                merged.set(
-                  item.productId,
-                  Math.max(merged.get(item.productId) || 0, item.qty),
-                );
-              }
-            }
-            const restored = [...merged.entries()].map(([productId, qty]) => ({
-              productId,
-              qty,
-            }));
+            const restored = mergeRecoveredCart(readCart(), result.items);
             setItems(restored);
             writeCart(restored);
             trackStorefrontEvent("recovery_restore", {
@@ -226,9 +209,16 @@ export default function CartPage() {
                     </p>
 
                     {overStock ? (
-                      <p className="mt-2 text-xs font-medium text-red-700">
-                        Your cart has {qty}, but only {available} is currently available.
-                      </p>
+                      <div className="mt-2 space-y-2">
+                        <p className="text-xs font-medium text-red-700" role="status">
+                          Your cart has {qty}, but only {available} is currently available.
+                        </p>
+                        <button type="button" className="min-h-11 rounded-full border border-[#713a35]/20 bg-white px-4 text-xs font-semibold text-[#713a35]"
+                          onClick={() => save(items.map(item => item.productId === productId ? { ...item, qty: available } : item),
+                            { name: "cart_quantity_change", productId, quantityDelta: available - qty })}>
+                          Adjust to {available} available
+                        </button>
+                      </div>
                     ) : null}
 
                     {!unavailable ? (
@@ -255,7 +245,7 @@ export default function CartPage() {
                         >
                           −
                         </button>
-                        <span className="w-9 text-center text-sm">{qty}</span>
+                        <output aria-label={`${product?.name || "Product"} quantity`} className="w-9 text-center text-sm">{qty}</output>
                         <button
                           type="button"
                           disabled={qty >= available}
