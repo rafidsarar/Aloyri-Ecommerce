@@ -5,6 +5,7 @@ import {
   normalizeVisualBlock,
   normalizeVisualLayout,
   normalizeVisualPageLayout,
+  reorderVisualCoreSections,
   safeBuilderHref,
 } from "../src/lib/visual-builder";
 
@@ -38,6 +39,13 @@ test("visual builder keeps every commerce section and inserts custom blocks at r
   expect(new Set(layout.order).size).toBe(layout.order.length);
   expect(layout.hiddenCore).toEqual(["categories"]);
   expect(layout.order).toContain(coreBlockId("brandStory"));
+});
+
+test("legacy homepage section rearrangement keeps custom block anchored to its section", () => {
+  const first = normalizeVisualLayout({ blocks: [custom], order: ["core:hero", "custom:my-new-block", "core:products"] });
+  const reordered = reorderVisualCoreSections(first, ["products", "hero", "categories"] as never);
+  expect(reordered.order.indexOf("custom:my-new-block")).toBe(reordered.order.indexOf("core:hero") + 1);
+  expect(reordered.order.indexOf("core:products")).toBeLessThan(reordered.order.indexOf("core:hero"));
 });
 
 test("visual builder enforces media path, link, component and text limits", () => {
