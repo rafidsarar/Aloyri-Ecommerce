@@ -34,7 +34,35 @@ export default async function AdminHomepagePage({
       subtitle="Edit your homepage, save a draft, then preview and publish when ready."
     >
       {saved ? <AdminNotice>Draft saved. <Link href="/admin/publishing" className="font-semibold underline">Preview and publish →</Link></AdminNotice> : null}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Link href="/admin/merchandising" className="rounded-xl border border-black/10 bg-white p-4 text-sm font-semibold hover:border-[#713a35]/40 focus-visible:outline-2 focus-visible:outline-offset-2">
+          Arrange homepage sections <span aria-hidden="true">→</span>
+          <span className="mt-1 block text-xs font-normal text-black/60">Show, hide and reorder product collections and campaigns.</span>
+        </Link>
+        <Link href="/admin/settings" className="rounded-xl border border-black/10 bg-white p-4 text-sm font-semibold hover:border-[#713a35]/40 focus-visible:outline-2 focus-visible:outline-offset-2">
+          Website appearance & settings <span aria-hidden="true">→</span>
+          <span className="mt-1 block text-xs font-normal text-black/60">Manage site-wide branding and storefront information.</span>
+        </Link>
+        <Link href="/admin/publishing" className="rounded-xl border border-black/10 bg-white p-4 text-sm font-semibold hover:border-[#713a35]/40 focus-visible:outline-2 focus-visible:outline-offset-2">
+          Preview & publish <span aria-hidden="true">→</span>
+          <span className="mt-1 block text-xs font-normal text-black/60">Review drafts before they become visible to customers.</span>
+        </Link>
+      </div>
       <form action={saveHomepage} className="grid gap-5">
+        <AdminCard>
+          <h2 className="mb-4 text-sm font-semibold">Homepage layout</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showHero" defaultChecked={home.showHero} /> Show main banner</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showCategories" defaultChecked={home.showCategories} /> Show category shortcuts</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showBrandStory" defaultChecked={home.showBrandStory} /> Show brand story</label>
+            <label className="grid gap-1 text-sm font-medium">Banner layout
+              <select name="heroLayout" defaultValue={home.heroLayout} className="rounded-xl border border-black/10 px-4 py-3">
+                <option value="split">Split — text beside product</option>
+                <option value="stacked">Stacked — text above product</option>
+              </select>
+            </label>
+          </div>
+        </AdminCard>
         <AdminCard>
           <h2 className="mb-4 text-sm font-semibold">Main banner</h2>
           <div className="grid gap-4">

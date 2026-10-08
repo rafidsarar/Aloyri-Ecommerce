@@ -24,6 +24,17 @@ export default async function AdminSettingsPage({
 
       <form action={saveSiteSettings} className="grid gap-5">
         <AdminCard>
+          <h2 className="mb-3 text-sm font-semibold">Storefront appearance</h2>
+          <p className="mb-4 text-xs text-black/60">Choose a color theme. Save as a draft, preview, then publish.</p>
+          <label className="grid gap-2 text-sm font-medium">Color theme
+            <select name="appearance" defaultValue={config.site.appearance} className="rounded-xl border border-black/10 px-4 py-3">
+              <option value="rose">Rose — Aloyri classic</option>
+              <option value="sage">Sage — natural green</option>
+              <option value="sand">Sand — warm neutral</option>
+            </select>
+          </label>
+        </AdminCard>
+        <AdminCard>
           <div className="grid gap-4">
             <label className="grid gap-1.5 text-sm font-medium">
               Announcement bar

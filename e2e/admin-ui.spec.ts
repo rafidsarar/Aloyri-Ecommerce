@@ -24,10 +24,10 @@ test.describe("minimal admin interface", () => {
     await page.setViewportSize({ width: 1440, height: 960 });
     await page.goto(`${base}/admin/homepage`);
     const nav = page.getByRole("navigation", { name: "Admin navigation" });
-    await expect(nav.getByRole("link", { name: "Homepage", exact: true })).toHaveAttribute("aria-current", "page");
+    await expect(nav.getByRole("link", { name: "Homepage Builder", exact: true })).toHaveAttribute("aria-current", "page");
     await page.getByRole("searchbox", { name: "Find an admin section" }).fill("payments");
     await expect(nav.getByRole("link", { name: "Payments", exact: true })).toBeVisible();
-    await expect(nav.getByRole("link", { name: "Homepage", exact: true })).toHaveCount(0);
+    await expect(nav.getByRole("link", { name: "Homepage Builder", exact: true })).toHaveCount(0);
     await page.getByRole("searchbox").fill("");
     await page.screenshot({ path: testInfo.outputPath("admin-desktop.png"), fullPage: true });
     await page.goto(`${base}/admin/products/item`);

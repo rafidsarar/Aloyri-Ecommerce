@@ -180,6 +180,7 @@ export type StorefrontConfig = {
     supportEmail: string;
     supportPhone: string;
     supportHours: string;
+    appearance: "rose" | "sage" | "sand";
   };
   homepage: {
     eyebrow: string;
@@ -194,6 +195,10 @@ export type StorefrontConfig = {
     ideaEyebrow: string;
     ideaHeadline: string;
     ideaCopy: string;
+    showHero: boolean;
+    showCategories: boolean;
+    showBrandStory: boolean;
+    heroLayout: "split" | "stacked";
   };
   pages: {
     about: InfoPageContent;
@@ -377,6 +382,7 @@ export const defaultStorefrontConfig: StorefrontConfig = {
     supportEmail: "",
     supportPhone: "",
     supportHours: "",
+    appearance: "rose",
   },
   homepage: {
     eyebrow: "Aloyri skincare edit",
@@ -397,6 +403,10 @@ export const defaultStorefrontConfig: StorefrontConfig = {
     ideaHeadline: "Less noise. Better product choices.",
     ideaCopy:
       "Aloyri keeps the storefront focused on what customers need to make a choice: product, category, size, price and a clear place in the routine.",
+    showHero: true,
+    showCategories: true,
+    showBrandStory: true,
+    heroLayout: "split",
   },
   pages: {
     about: {

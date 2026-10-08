@@ -14,12 +14,12 @@ const nav: Array<{
   group: string;
 }> = [
   { group: "Workspace", label: "Overview", href: "/admin", permission: "dashboard.view" },
-  { group: "Storefront", label: "Homepage", href: "/admin/homepage", permission: "homepage.view" },
+  { group: "Storefront", label: "Homepage Builder", href: "/admin/homepage", permission: "homepage.view" },
   { group: "Storefront", label: "Products", href: "/admin/products", permission: "products.view" },
   { group: "Orders & service", label: "Reviews", href: "/admin/reviews", permission: "products.view" },
   { group: "Storefront", label: "Pages & FAQ", href: "/admin/pages", permission: "pages.view" },
   { group: "Storefront", label: "Media", href: "/admin/media", permission: "media.view" },
-  { group: "Growth", label: "Merchandising", href: "/admin/merchandising", permission: "merchandising.view" },
+  { group: "Growth", label: "Sections & Merchandising", href: "/admin/merchandising", permission: "merchandising.view" },
   { group: "Growth", label: "Analytics", href: "/admin/analytics", permission: "analytics.view" },
   { group: "Orders & service", label: "Payments", href: "/admin/payments", permission: "analytics.view" },
   { group: "Orders & service", label: "Delivery", href: "/admin/delivery", permission: "analytics.view" },
@@ -30,7 +30,7 @@ const nav: Array<{
   { group: "Administration", label: "Audit", href: "/admin/audit", permission: "audit.view" },
   { group: "Administration", label: "Operations", href: "/admin/operations", permission: "health.view" },
   { group: "Administration", label: "Security", href: "/admin/security", permission: "security.self" },
-  { group: "Administration", label: "Settings", href: "/admin/settings", permission: "settings.view" },
+  { group: "Administration", label: "Appearance & Settings", href: "/admin/settings", permission: "settings.view" },
 ];
 
 export async function AdminShell({
