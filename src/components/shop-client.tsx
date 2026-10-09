@@ -95,6 +95,11 @@ export function ShopClient({
     return () => { document.body.style.overflow = previousOverflow; document.removeEventListener("keydown", onEscape); };
   }, [searchFocused]);
   useEffect(() => {
+    const openFromHeader = () => searchInputRef.current?.focus({ preventScroll: true });
+    window.addEventListener("aloyri:open-shop-search", openFromHeader);
+    return () => window.removeEventListener("aloyri:open-shop-search", openFromHeader);
+  }, []);
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("search") !== "1") return;
     searchInputRef.current?.focus({ preventScroll: true });
