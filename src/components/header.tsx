@@ -116,15 +116,15 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
             <div ref={accountRef} className="relative">
               <button type="button" aria-label="Account menu" aria-expanded={accountOpen} aria-controls="header-account-menu"
                 onClick={() => setAccountOpen(value => !value)}
-                className="store-icon-link inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#713a35]/15 bg-white/70 transition hover:border-[#713a35]/30 hover:bg-white">
+                className="store-icon-link inline-flex h-11 w-11 items-center justify-center rounded-full border border-[var(--store-border)] bg-[var(--store-panel)] transition hover:border-[var(--store-border)] hover:bg-[var(--store-surface)]">
                 <svg className="h-5 w-5" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <circle cx="12" cy="8" r="3.5" /><path d="M5.5 20c0-3.3 2.7-6 6.5-6s6.5 2.7 6.5 6" />
                 </svg>
               </button>
               {accountOpen ? (
                 <nav id="header-account-menu" aria-label="Account shortcuts"
-                  className="absolute right-0 top-full z-50 mt-3 w-64 max-w-[calc(100vw-1rem)] rounded-2xl border border-[#713a35]/15 bg-[#fffaf7] p-3 shadow-2xl">
-                  <p className="border-b border-[#713a35]/10 px-4 pb-3 pt-2 text-xs font-semibold uppercase tracking-widest text-[#713a35]">Your Aloyri account</p>
+                  className="absolute right-0 top-full z-50 mt-3 w-64 max-w-[calc(100vw-1rem)] rounded-2xl border border-[var(--store-border)] bg-[var(--store-surface)] p-3 shadow-2xl">
+                  <p className="border-b border-[var(--store-border)] px-4 pb-3 pt-2 text-xs font-semibold uppercase tracking-widest text-[var(--store-accent)]">Your Aloyri account</p>
                   {[
                     ["My account", "/account"],
                     ["My orders & returns", "/account?section=orders"],
@@ -134,7 +134,7 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
                     ["My cart", "/cart"],
                   ].map(([label, href]) => (
                     <Link key={href} href={href} onClick={() => setAccountOpen(false)}
-                      className="block rounded-xl px-4 py-3 text-sm font-medium text-[#321f1c] transition hover:bg-[#f5e8e2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#713a35]">
+                      className="block rounded-xl px-4 py-3 text-sm font-medium text-[var(--store-ink)] transition hover:bg-[var(--store-panel)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#713a35]">
                       {label}
                     </Link>
                   ))}
@@ -161,7 +161,7 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
           <div ref={menuDialogRef} id="mobile-navigation" role="dialog" aria-modal="true"
             aria-label="Store navigation menu"
             className="store-mobile-nav store-navigation-drawer absolute inset-y-0 left-0 flex w-[min(92vw,440px)] flex-col overflow-y-auto overscroll-contain border-r border-[#713a35]/10 px-5 pb-7 pt-5 shadow-2xl sm:px-7">
-            <div className="store-drawer-heading flex items-center justify-between gap-4 border-b border-[#713a35]/10 pb-5">
+            <div className="store-drawer-heading flex items-center justify-between gap-4 border-b border-[var(--store-border)] pb-5">
               <BrandMark compact />
               <button ref={closeButtonRef} type="button" onClick={closeMenu}
                 className="store-icon-link inline-flex h-11 w-11 items-center justify-center rounded-full border"
@@ -176,12 +176,12 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
               {links.map(([label, href]) => (
                 <Link key={label} href={href} aria-current={current(href) ? "page" : undefined}
                   onClick={closeMenu}
-                  className="store-mobile-link flex min-h-12 items-center justify-between border-b py-3 text-[17px] font-medium transition hover:pl-2 hover:text-[#713a35]">
+                  className="store-mobile-link flex min-h-12 items-center justify-between border-b py-3 text-[17px] font-medium transition hover:pl-2 hover:text-[var(--store-accent)]">
                   <span>{label}</span><span aria-hidden="true" className="text-[#a77d73]">↗</span>
                 </Link>
               ))}
             </nav>
-            <div className="mt-7 border-b border-[#713a35]/10 pb-4">
+            <div className="mt-7 border-b border-[var(--store-border)] pb-4">
               <button type="button" onClick={() => setCategoriesExpanded(value => !value)}
                 aria-expanded={categoriesExpanded} aria-controls="drawer-categories"
                 className="flex w-full items-center justify-between py-2 text-left text-[11px] font-semibold uppercase tracking-[.17em]">
@@ -199,9 +199,9 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
               </div> : null}
             </div>
             <div className="mt-auto pt-7">
-              <div className="rounded-2xl border border-[#713a35]/10 bg-[#f5e8e2] p-4">
-                <p className="text-xs font-semibold tracking-[.1em] text-[#713a35]">ALOYRI SKINCARE</p>
-                <p className="mt-2 text-sm leading-6 text-[#321f1c]/70">Find the right products for your everyday skincare routine.</p>
+              <div className="rounded-2xl border border-[var(--store-border)] bg-[var(--store-panel)] p-4">
+                <p className="text-xs font-semibold tracking-[.1em] text-[var(--store-accent)]">ALOYRI SKINCARE</p>
+                <p className="mt-2 text-sm leading-6 text-[var(--store-muted)]">Find the right products for your everyday skincare routine.</p>
               </div>
             </div>
           </div>
