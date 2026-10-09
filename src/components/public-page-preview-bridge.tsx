@@ -20,6 +20,13 @@ export function PublicPagePreviewBridge() {
     };
     const onMessage = (event: MessageEvent) => {
       if (event.origin !== window.location.origin || event.source !== window.parent || event.data?.type !== "aloyri-builder-page-draft") return;
+      const site = event.data.siteContent as { announcement?: string; footerDescription?: string } | undefined;
+      if (site) {
+        const footer = document.querySelector(".store-footer-description");
+        if (footer && typeof site.footerDescription === "string") footer.textContent = site.footerDescription;
+        const announcement = document.querySelector("[data-storefront-announcement]");
+        if (announcement && typeof site.announcement === "string") announcement.textContent = site.announcement;
+      }
       const content = event.data.content as { eyebrow?: string; title?: string; intro?: string; sections?: { title?: string }[] } | undefined;
       if (!content) return;
       const main = document.querySelector("main");
