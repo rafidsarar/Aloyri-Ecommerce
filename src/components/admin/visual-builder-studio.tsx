@@ -65,6 +65,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
   const [coreContent, setCoreContent] = useState<CoreContent | undefined>(initialCoreContent);
   const [pageContent, setPageContent] = useState<InfoPageContent | undefined>(initialPageContent);
   const publicFrame = useRef<HTMLIFrameElement>(null);
+  const [publicSelection, setPublicSelection] = useState<"header" | "footer" | "page">("page");
   const [initialCoreSnapshot] = useState(() => initialCoreContent ? JSON.stringify(initialCoreContent) : "");
   const [corePast, setCorePast] = useState<CoreContent[]>([]);
   const [coreFuture, setCoreFuture] = useState<CoreContent[]>([]);
@@ -94,7 +95,6 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
     sendDraft();
     return () => window.removeEventListener("message", receiveReady);
   }, [layout, sendDraft]);
-  const [publicSelection, setPublicSelection] = useState<"header" | "footer" | "page">("page");
   useEffect(() => {
     publicFrame.current?.contentWindow?.postMessage({ type: "aloyri-builder-page-draft", content: pageContent }, window.location.origin);
   }, [pageContent]);
