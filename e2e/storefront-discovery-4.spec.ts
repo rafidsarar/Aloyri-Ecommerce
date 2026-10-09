@@ -18,21 +18,28 @@ async function mockCatalog(page: Page) {
   }));
 }
 
-test("homepage offers CRM-backed quick search, accessible suggestions and native shop navigation", async ({ page }) => {
+test("homepage opens CRM-backed floating search without navigating until a result is chosen", async ({ page }) => {
   await mockCatalog(page);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
-  const search = page.getByRole("search", { name: "Search skincare products" });
-  await expect(search).toBeVisible();
-  const box = search.getByRole("combobox");
-  await box.fill("Skin Aqua");
-  await expect(page.getByRole("listbox", { name: "Suggested skincare products" }))
-    .toBeVisible({ timeout: 20_000 });
-  await expect(page.getByRole("listbox").getByRole("option", { name: /Skin Aqua Super Moisture UV Gel/ }))
+  const homeSearch = page.getByRole("search", { name: "Search skincare products" });
+  await expect(homeSearch).toBeVisible();
+  await homeSearch.getByRole("button", { name: "Search products and brands" }).click();
+  const modal = page.getByRole("dialog", { name: "Search discovery" });
+  await expect(modal).toBeVisible();
+  await expect(page).toHaveURL("/");
+  const input = modal.getByRole("combobox", { name: "Search skincare" });
+  await expect(input).toBeFocused();
+  await input.fill("Skin Aqua");
+  await expect(modal.getByRole("listbox", { name: "Search suggestions" }).getByRole("option", { name: /Skin Aqua Super Moisture UV Gel/ }))
     .toHaveAttribute("href", /\/product\/.*skin-aqua-super-moisture-uv-gel$/);
-  await box.press("Escape");
-  await expect(page.getByRole("listbox", { name: "Suggested skincare products" })).toHaveCount(0);
-  await search.getByRole("button", { name: "Search" }).click();
+  await expect(page).toHaveURL("/");
+  await input.press("Escape");
+  await expect(modal).toHaveCount(0);
+  await expect(page).toHaveURL("/");
+  await homeSearch.getByRole("button", { name: "Search products and brands" }).click();
+  await modal.getByRole("combobox", { name: "Search skincare" }).fill("Skin Aqua");
+  await modal.getByRole("button", { name: /View all results for/ }).click();
   await expect(page).toHaveURL(/\/shop\?q=Skin(\+|%20)Aqua/);
   await expect(page.getByRole("heading", { name: "Shop skincare." })).toBeVisible();
 });
@@ -81,82 +88,93 @@ for (const width of [320, 390, 768, 1440]) {
 }
 
 
-test("homepage search dropdown offers categories, featured discovery and session-only recent searches", async ({ page }) => {
+test("floating search retains categories, product suggestions and session-only recent searches", async ({ page }) => {
   await mockCatalog(page);
   await page.goto("/");
-  const input = page.getByRole("search", { name: "Search skincare products" }).getByRole("combobox");
-  await input.focus();
-  const dropdown = page.getByRole("listbox", { name: "Suggested skincare products" });
-  await expect(dropdown).toBeVisible();
-  await expect(dropdown.getByRole("tab", { name: "All" })).toHaveAttribute("aria-selected", "true");
-  await dropdown.getByRole("tab", { name: "Categories" }).click();
-  await expect(dropdown.getByRole("link", { name: /Sunscreen/ })).toBeVisible();
-  await dropdown.getByRole("tab", { name: "Products" }).click();
+  await page.getByRole("search", { name: "Search skincare products" }).getByRole("button", { name: "Search products and brands" }).click();
+  const modal = page.getByRole("dialog", { name: "Search discovery" });
+  const input = modal.getByRole("combobox", { name: "Search skincare" });
+  await expect(modal.getByRole("tab", { name: "All" })).toHaveAttribute("aria-selected", "true");
+  await modal.getByRole("tab", { name: "Categories" }).click();
+  await expect(modal.getByRole("link", { name: /Sunscreen/ })).toBeVisible();
+  await modal.getByRole("tab", { name: "Products" }).click();
   await input.fill("Skin Aqua");
-  await expect(dropdown.getByRole("option", { name: /Skin Aqua Super Moisture UV Gel/ })).toBeVisible();
-  await page.getByRole("search", { name: "Search skincare products" }).getByRole("button", { name: "Search" }).click();
+  await expect(modal.getByRole("option", { name: /Skin Aqua Super Moisture UV Gel/ })).toBeVisible();
+  await expect(page).toHaveURL("/");
+  await input.press("Enter");
   await expect(page).toHaveURL(/\/shop\?q=Skin(\+|%20)Aqua/);
   await page.goto("/");
-  await input.focus();
-  await expect(dropdown.getByRole("button", { name: "Skin Aqua" })).toBeVisible();
-  await dropdown.getByRole("button", { name: "Clear" }).click();
-  await expect(dropdown.getByRole("button", { name: "Skin Aqua" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Search products", exact: true }).click();
+  await expect(modal.getByRole("button", { name: "Skin Aqua" })).toBeVisible();
+  await modal.getByRole("button", { name: "Clear history" }).click();
+  await expect(modal.getByRole("button", { name: "Skin Aqua" })).toHaveCount(0);
 });
 
-
-test("shop search matches focused overlay reference while retaining CRM-backed discovery", async ({ page }) => {
+test("shop opens floating search without losing the product-focused page", async ({ page }) => {
   await mockCatalog(page);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/shop");
   await expect(page.getByRole("combobox", { name: "Search skincare" })).toHaveCount(0);
-  await page.getByRole("link", { name: "Search products" }).click();
-  const input = page.getByRole("combobox", { name: "Search skincare" });
-  await expect(input).toBeVisible();
-  const overlay = page.getByRole("dialog", { name: "Search discovery" });
-  await expect(overlay).toBeVisible();
+  await page.getByRole("button", { name: "Search products", exact: true }).click();
+  const modal = page.getByRole("dialog", { name: "Search discovery" });
+  await expect(modal).toBeVisible();
+  await expect(page).toHaveURL("/shop");
   await expect(page.getByRole("button", { name: "Close search overlay" })).toBeVisible();
-  await overlay.getByRole("tab", { name: "Categories" }).click();
-  await expect(overlay.getByRole("button", { name: "Sunscreen" })).toBeVisible();
-  await overlay.getByRole("tab", { name: "Products" }).click();
+  await modal.getByRole("tab", { name: "Categories" }).click();
+  await expect(modal.getByRole("link", { name: /Sunscreen/ })).toBeVisible();
+  await modal.getByRole("tab", { name: "Products" }).click();
+  const input = modal.getByRole("combobox", { name: "Search skincare" });
   await input.fill("Skin Aqua");
-  await expect(overlay.getByRole("option", { name: /Skin Aqua Super Moisture UV Gel/ })).toBeVisible();
+  await expect(modal.getByRole("option", { name: /Skin Aqua Super Moisture UV Gel/ })).toBeVisible();
+  await expect(page).toHaveURL("/shop");
   await page.screenshot({ path: "test-results/shop-search-desktop.png" });
   await input.press("Enter");
-  await expect(overlay).toHaveCount(0);
+  await expect(modal).toHaveCount(0);
   await expect(page).toHaveURL(/q=Skin(\+|%20)Aqua/);
-  await page.getByRole("link", { name: "Search products" }).click();
-  await expect(overlay).toBeVisible();
+  await page.getByRole("button", { name: "Search products", exact: true }).click();
+  await expect(modal).toBeVisible();
   await page.getByRole("button", { name: "Close search", exact: true }).click();
-  await expect(overlay).toHaveCount(0);
+  await expect(modal).toHaveCount(0);
 });
 
-test("mobile hamburger search opens the same minimal shop overlay", async ({ page }) => {
+test("mobile hamburger and header search open the same floating overlay", async ({ page }) => {
   await mockCatalog(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/shop");
   await expect(page.getByRole("combobox", { name: "Search skincare" })).toHaveCount(0);
   await page.getByRole("button", { name: "Open menu" }).click();
   const menu = page.getByRole("dialog", { name: "Store navigation menu" });
-  await menu.getByRole("link", { name: "Search products and brands" }).click();
+  await menu.getByRole("button", { name: "Search products and brands" }).click();
   const overlay = page.getByRole("dialog", { name: "Search discovery" });
   await expect(overlay).toBeVisible();
-  await expect(page.getByRole("combobox", { name: "Search skincare" })).toBeFocused();
+  await expect(overlay.getByRole("combobox", { name: "Search skincare" })).toBeFocused();
+  await expect(page).toHaveURL("/shop");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: "test-results/shop-search-mobile.png" });
   await page.getByRole("button", { name: "Close search", exact: true }).click();
   await expect(overlay).toHaveCount(0);
+  await page.getByRole("button", { name: "Open menu" }).click();
+  await page.getByRole("dialog", { name: "Store navigation menu" }).getByRole("button", { name: "Search products and brands" }).click();
+  await expect(overlay).toBeVisible();
 });
 
-test("header search from other pages opens shop discovery after CRM loads", async ({ page }) => {
+test("header search stays on the current page across storefront routes", async ({ page }) => {
   await mockCatalog(page);
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto("/");
-  await page.getByRole("link", { name: "Search products" }).click();
-  await expect(page).toHaveURL(/\/shop/);
-  await expect(page.getByRole("dialog", { name: "Search discovery" })).toBeVisible();
-  await expect(page.getByRole("combobox", { name: "Search skincare" })).toBeFocused();
+  for (const route of ["/", "/shop", "/cart", "/track-order"]) {
+    await page.goto(route);
+    await page.getByRole("button", { name: "Search products", exact: true }).click();
+    const modal = page.getByRole("dialog", { name: "Search discovery" });
+    await expect(modal).toBeVisible();
+    await expect(modal.getByRole("combobox", { name: "Search skincare" })).toBeFocused();
+    await expect(page).toHaveURL(route);
+    await modal.getByRole("combobox", { name: "Search skincare" }).fill("Skin Aqua");
+    await expect(modal.getByRole("option", { name: /Skin Aqua Super Moisture UV Gel/ })).toBeVisible();
+    await expect(page).toHaveURL(route);
+    await modal.getByRole("button", { name: "Close search" }).click();
+    await expect(modal).toHaveCount(0);
+  }
 });
-
 
 test("shop prioritizes the catalog above the fold and tucks away advanced filters", async ({ page }) => {
   await mockCatalog(page);

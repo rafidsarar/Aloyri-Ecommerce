@@ -72,6 +72,7 @@ export default async function RootLayout({
           announcement={config.site.announcement}
           footerDescription={config.site.footerDescription}
           preview={previewState.isEnabled}
+          searchSynonymGroups={config.merchandising.discovery.synonymGroups}
         >
           {children}
         </SiteChrome>

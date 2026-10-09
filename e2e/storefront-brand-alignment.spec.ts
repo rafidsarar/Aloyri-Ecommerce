@@ -18,7 +18,7 @@ for (const width of [320, 390, 768, 1060, 1440]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.getByRole("button", { name: "Open menu", exact: true }).click();
     const drawer = page.getByRole("dialog", { name: "Store navigation menu" });
-    await expect(drawer.getByRole("link", { name: "Search products and brands" })).toBeVisible();
+    await expect(drawer.getByRole("button", { name: "Search products and brands" })).toBeVisible();
     await expect(drawer.getByRole("link", { name: "My account", exact: true })).toHaveCount(0);
     expect(await drawer.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
     await page.keyboard.press("Escape");
