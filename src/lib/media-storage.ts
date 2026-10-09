@@ -64,7 +64,24 @@ export async function listMediaObjects(prefix: string): Promise<MediaObject[]> {
   const { url } = gateway(); if (!mediaStorageConfigured()) return [];
   const objects = new Map<string, MediaObject>(); const seen = new Set<string>(); let cursor = "";
   for (let page = 0; page < 100; page++) {
-    const response = await fetch(url + "/list?prefix=" + encodeURIComponent(prefix) + (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""), { headers: headers(), cache: "no-store", signal: AbortSignal.timeout(15_000) });
+    let response = await fetch(url + "/list?prefix=" + encodeURIComponent(prefix) + (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""), { headers: headers(), cache: "no-store", signal: AbortSignal.timeout(15_000) });
+    // Legacy subpath routing can return 405 on Supabase Edge Functions.
+    // Fall back to the gateway's supported action=list contract.
+    if (response.status === 405 && !cursor) {
+      const endpoint = new URL(url);
+      endpoint.searchParams.set("action", "list");
+      endpoint.searchParams.set("prefix", prefix);
+      response = await fetch(endpoint.toString(), { headers: headers(), cache: "no-store", signal: AbortSignal.timeout(15_000) });
+      if (!response.ok) throw new Error("Media listing failed (" + response.status + ").");
+      const items = await response.json() as Array<{ name: string; metadata?: { size?: number }; updated_at?: string; created_at?: string }>;
+      if (!Array.isArray(items)) throw new Error("MEDIA_LIST_INVALID");
+      if (items.length >= 100) throw new Error("MEDIA_PAGINATION_INCOMPLETE");
+      return items.filter(item => typeof item.name === "string").map(item => ({
+        pathname: prefix + item.name,
+        size: Number(item.metadata?.size || 0),
+        uploadedAt: item.updated_at || item.created_at,
+      }));
+    }
     if (!response.ok) throw new Error("Media listing failed (" + response.status + ").");
     const payload = await response.json() as { objects?: MediaObject[]; cursor?: string; nextCursor?: string; hasMore?: boolean };
     for (const item of payload.objects || []) if (typeof item.pathname === "string" && item.pathname.startsWith(prefix)) objects.set(item.pathname, { ...item, size: Number(item.size || 0) });
