@@ -55,8 +55,8 @@ test("cart drawer blocks direct checkout when CRM stock has not been verified", 
     status: 200, contentType: "application/json",
     body: JSON.stringify({ products: products.map(product => ({ ...product, availableStock: 0 })), generatedAt: new Date().toISOString() }),
   }));
-  await page.reload();
-  await page.getByRole("button", { name: "Cart with 1 item" }).click();
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+  await expect(drawer.getByRole("link", { name: "Review cart and availability" })).toBeVisible();
   await expect(page.getByRole("dialog", { name: "Shopping cart" }).getByRole("link", { name: "Proceed to checkout" })).toHaveCount(0);
   await expect(page.getByRole("dialog", { name: "Shopping cart" }).getByRole("link", { name: "Review cart and availability" })).toBeVisible();
 });
