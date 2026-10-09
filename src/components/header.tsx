@@ -39,8 +39,6 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
     };
   }, []);
 
-  useEffect(() => { setAccountOpen(false); }, [pathname]);
-
   function closeMenu() {
     setOpen(false);
     window.requestAnimationFrame(() => menuButtonRef.current?.focus());
