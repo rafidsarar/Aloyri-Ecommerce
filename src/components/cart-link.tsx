@@ -24,7 +24,7 @@ export function CartLink() {
   const count = cartCount(items);
   const rows = useMemo(() => items.map(item => ({ ...item, product: products.find(p => p.id === item.productId) })), [items, products]);
   const subtotal = rows.reduce((sum, row) => sum + (row.product ? salePriceFor(row.product) * row.qty : 0), 0);
-  const canCheckout = synced && !error && rows.length > 0 && rows.every(row => row.product && row.product.availableStock >= row.qty);
+  const canCheckout = synced && !error && rows.length > 0 && rows.every(row => row.product && (row.product.availableStock ?? 0) >= row.qty);
   const previousCount = useRef<number | null>(null);
 
   useEffect(() => {
@@ -125,7 +125,7 @@ export function CartLink() {
                         aria-label={`Remove ${product?.name ?? "product"} from cart`}
                         className="min-h-9 rounded-lg px-3 text-xs font-semibold text-[#713a35] underline underline-offset-4 transition hover:bg-[#f5e8e2] disabled:opacity-40">Remove</button>
                     </div>
-                    {!product || product.availableStock < qty ? <p className="mt-2 text-xs text-red-700">Update unavailable quantity in your cart.</p> : null}
+                    {!product || (product.availableStock ?? 0) < qty ? <p className="mt-2 text-xs text-red-700">Update unavailable quantity in your cart.</p> : null}
                   </div>
                 </div>
               ))}
