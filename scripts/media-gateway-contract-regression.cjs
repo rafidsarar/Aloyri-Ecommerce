@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const source = fs.readFileSync("src/lib/media-storage.ts", "utf8");
