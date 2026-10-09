@@ -48,7 +48,7 @@ test("new CRM categories appear as shop chips, can be removed, and preserve URL 
   await page.getByRole("button", { name: "Remove category: Lip care" }).click();
   await expect(categories.getByRole("button", { name: "All skincare" })).toHaveAttribute("aria-pressed", "true");
 
-  await page.getByText(/Filter by brand, availability & price/).click();
+  await page.getByText(/^Filters/).click();
   await page.getByLabel("Brand", { exact: true }).selectOption("Simple");
   await expect(page.getByRole("button", { name: "Remove brand: Simple" })).toBeVisible();
   await page.getByRole("button", { name: "Remove brand: Simple" }).click();
@@ -61,7 +61,7 @@ test("zero-results state resets query and filters without leaving CRM-safe shop"
   await expect(page.getByText("Nothing matched that search.")).toBeVisible({ timeout: 15_000 });
   await page.getByRole("button", { name: "Show all skincare" }).click();
   await expect(page.getByRole("status", { name: "" })).toContainText("2 products");
-  await expect(page.getByRole("combobox", { name: "Search skincare" })).toHaveValue("");
+  await expect(page.getByRole("combobox", { name: "Search skincare" })).toHaveCount(0);
   await expect(page).not.toHaveURL(/q=unlikelysearchphrase/);
 });
 
@@ -108,9 +108,10 @@ test("shop search matches focused overlay reference while retaining CRM-backed d
   await mockCatalog(page);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/shop");
+  await expect(page.getByRole("combobox", { name: "Search skincare" })).toHaveCount(0);
+  await page.getByRole("link", { name: "Search products" }).click();
   const input = page.getByRole("combobox", { name: "Search skincare" });
   await expect(input).toBeVisible();
-  await input.focus();
   const overlay = page.getByRole("dialog", { name: "Search discovery" });
   await expect(overlay).toBeVisible();
   await expect(page.getByRole("button", { name: "Close search overlay" })).toBeVisible();
@@ -133,6 +134,7 @@ test("mobile hamburger search opens the same minimal shop overlay", async ({ pag
   await mockCatalog(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/shop");
+  await expect(page.getByRole("combobox", { name: "Search skincare" })).toHaveCount(0);
   await page.getByRole("button", { name: "Open menu" }).click();
   const menu = page.getByRole("dialog", { name: "Store navigation menu" });
   await menu.getByRole("link", { name: "Search products and brands" }).click();
@@ -153,4 +155,25 @@ test("header search from other pages opens shop discovery after CRM loads", asyn
   await expect(page).toHaveURL(/\/shop/);
   await expect(page.getByRole("dialog", { name: "Search discovery" })).toBeVisible();
   await expect(page.getByRole("combobox", { name: "Search skincare" })).toBeFocused();
+});
+
+
+test("shop prioritizes the catalog above the fold and tucks away advanced filters", async ({ page }) => {
+  await mockCatalog(page);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/shop");
+  await expect(page.getByRole("heading", { name: "Shop skincare." })).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "Search skincare" })).toHaveCount(0);
+  await expect(page.getByRole("navigation", { name: "Shop categories" })).toBeVisible();
+  const firstProduct = page.getByRole("link", { name: /Refreshing Facial Wash/ }).first();
+  await expect(firstProduct).toBeVisible();
+  const bounds = await firstProduct.boundingBox();
+  expect(bounds).not.toBeNull();
+  expect(bounds!.y).toBeLessThan(900);
+  const filters = page.locator("details").filter({has: page.locator("summary").getByText("Filters", { exact: true })});
+  await expect(filters).not.toHaveAttribute("open", "");
+  await filters.locator("summary").click();
+  await expect(page.getByRole("navigation", { name: "Shop by product focus" })).toBeVisible();
+  await page.getByLabel("Brand", { exact: true }).selectOption("Simple");
+  await expect(page.getByRole("button", { name: "Remove brand: Simple" })).toBeVisible();
 });

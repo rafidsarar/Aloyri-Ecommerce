@@ -21,9 +21,9 @@ test.describe("customer storefront usability", () => {
       await page.setViewportSize({ width, height: 800 });
       await mockCatalog(page);
       await page.goto("/shop");
-      await expect(page.getByRole("combobox", { name: "Search skincare" })).toBeVisible();
+      await expect(page.getByRole("combobox", { name: "Search skincare" })).toHaveCount(0);
       await expect(page.getByRole("combobox", { name: "Sort" })).toBeVisible();
-      await expect(page.getByText("Filter by brand, availability & price")).toBeVisible();
+      await expect(page.getByText("Filters", { exact: true })).toBeVisible();
       await expect(page.getByRole("link", { name: /Gentle Facial Cleanser/i })).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     });
@@ -33,12 +33,14 @@ test.describe("customer storefront usability", () => {
     await page.setViewportSize({ width: 375, height: 812 });
     await mockCatalog(page);
     await page.goto("/shop");
+    await page.getByRole("button", { name: "Open menu" }).click();
+    await page.getByRole("dialog", { name: "Store navigation menu" }).getByRole("link", { name: "Search products and brands" }).click();
     await page.getByRole("combobox", { name: "Search skincare" }).fill("sunscreen");
     await expect(page.getByRole("link", { name: /Everyday SPF 50 Sunscreen/i })).toBeVisible();
     await expect(page.getByRole("link", { name: /Gentle Facial Cleanser/i })).toHaveCount(0);
     await page.getByRole("combobox", { name: "Search skincare" }).clear();
     await page.getByRole("button", { name: "Close search", exact: true }).click();
-    await page.getByText("Filter by brand, availability & price").click();
+    await page.getByText("Filters", { exact: true }).click();
     await page.getByRole("combobox", { name: "Availability" }).selectOption("in-stock");
     await expect(page.getByText(/2 products/)).toBeVisible();
   });

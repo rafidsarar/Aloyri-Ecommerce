@@ -55,6 +55,8 @@ test("catalog search and mobile navigation", async ({ page }) => {
   await mockCommerce(page);
   await page.goto("/shop");
   await expect(page.getByText("Refreshing Facial Wash")).toBeVisible();
+  await expect(page.getByRole("combobox",{name:"Search skincare"})).toHaveCount(0);
+  await page.getByRole("link",{name:"Search products"}).click();
   await page.getByRole("combobox",{name:"Search skincare"}).fill("Skin Aqua");
   await expect(
     page.getByRole("link", { name: /Skin Aqua Super Moisture UV Gel/i }),
@@ -111,13 +113,13 @@ test("security headers, noindex and API content-type boundary", async ({ page, r
 test("storefront structure keeps shopping and customer tools accessible on mobile", async ({ page }, testInfo) => {
   await mockCommerce(page);
   await page.goto("/shop");
-  const filters = page.locator("details").filter({has:page.getByText("Filter by brand, availability & price",{exact:true})});
+  const filters = page.locator("details").filter({has:page.locator("summary").getByText("Filters",{exact:true})});
   await expect(filters).not.toHaveAttribute("open", "");
   await filters.locator("summary").click();
   await page.getByLabel("Brand",{exact:true}).selectOption("Simple");
   await expect(page.getByText("Refreshing Facial Wash",{exact:true})).toBeVisible();
   await expect(page.getByRole("link",{name:/Skin Aqua Super Moisture UV Gel/i})).toHaveCount(0);
-  await page.getByRole("button",{name:/Clear .* filters/}).click();
+  await page.getByRole("button",{name:"Reset discovery"}).click();
   await expect(page.getByRole("link",{name:/Skin Aqua Super Moisture UV Gel/i})).toBeVisible();
   await page.screenshot({path:testInfo.outputPath("shop-desktop.png"),fullPage:true});
   await page.setViewportSize({width:390,height:844});

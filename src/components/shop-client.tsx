@@ -89,25 +89,31 @@ export function ShopClient({
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") { event.preventDefault(); setSearchFocused(false); searchInputRef.current?.focus({preventScroll: true}); }
+      if (event.key === "Escape") { event.preventDefault(); setSearchFocused(false); }
     };
     document.addEventListener("keydown", onEscape);
     return () => { document.body.style.overflow = previousOverflow; document.removeEventListener("keydown", onEscape); };
   }, [searchFocused]);
   useEffect(() => {
-    const openFromHeader = () => searchInputRef.current?.focus({ preventScroll: true });
+    const openFromHeader = () => setSearchFocused(true);
     window.addEventListener("aloyri:open-shop-search", openFromHeader);
     return () => window.removeEventListener("aloyri:open-shop-search", openFromHeader);
   }, []);
   useEffect(() => {
-    if (!synced || !searchInputRef.current) return;
+    if (!synced) return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("search") !== "1") return;
-    searchInputRef.current.focus({ preventScroll: true });
+    // Keep initial search opt-in, even when the shop no longer displays a search field.
     params.delete("search");
     const next = params.toString();
     window.history.replaceState(window.history.state, "", window.location.pathname + (next ? "?" + next : ""));
+    const frame = window.requestAnimationFrame(() => setSearchFocused(true));
+    return () => window.cancelAnimationFrame(frame);
   }, [synced]);
+  useEffect(() => {
+    if (!searchFocused) return;
+    searchInputRef.current?.focus({ preventScroll: true });
+  }, [searchFocused]);
 
   const lastTrackedSearch = useRef("");
 
@@ -356,9 +362,9 @@ export function ShopClient({
 
   return (
     <>
-      <div className="grid gap-4 border-b border-[#713a35]/10 py-7 lg:grid-cols-[1fr_auto] lg:items-center">
 
-        <div ref={searchRootRef} className="relative min-h-12 min-w-0 max-w-xl">
+      {searchFocused ? (
+        <div ref={searchRootRef} className="fixed inset-0 z-[70]">
           {searchFocused ? (
             <button type="button" tabIndex={-1} aria-label="Close search overlay"
               onClick={() => setSearchFocused(false)}
@@ -502,43 +508,9 @@ export function ShopClient({
             </div>
           ) : null}
         </div>
+      ) : null}
 
-        <label className="flex min-w-0 items-center justify-between gap-3 text-xs text-[#321f1c]/50 lg:justify-start">
-          Sort
-          <select
-            aria-label="Sort"
-            value={sort}
-            onChange={(event) => setSort(event.target.value as SortKey)}
-            className="h-11 min-w-0 max-w-full rounded-full border border-[#713a35]/14 bg-white px-4 text-sm text-[#321f1c] outline-none"
-          >
-            <option value="recommended">
-              {query.trim() ? "Recommended / relevant" : "Recommended"}
-            </option>
-            <option value="bestseller">Bestsellers first</option>
-            <option value="price-asc">Price: low to high</option>
-            <option value="price-desc">Price: high to low</option>
-            <option value="name">Name: A–Z</option>
-          </select>
-        </label>
-      </div>
-
-      <nav aria-label="Shop by product focus" className="border-b border-[#713a35]/10 py-5">
-        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-          <p className="store-discovery-accent text-[11px] font-semibold uppercase tracking-[.18em]">Explore by focus</p>
-          <p className="store-discovery-muted text-xs">Matched from published product descriptions</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {skinFocusOptions.map((item) => (
-            <button key={item.value} type="button" onClick={() => setFocus(item.value)}
-              aria-pressed={focus === item.value} title={item.description}
-              className={"store-focus-chip min-h-11 rounded-full border px-4 text-xs font-semibold transition " + (focus === item.value ? "is-selected" : "")}>
-              {item.label}
-            </button>
-          ))}
-        </div>
-      </nav>
-
-      <nav aria-label="Shop categories" className="shop-category-rail flex gap-2 overflow-x-auto py-5" tabIndex={0}>
+      <nav aria-label="Shop categories" className="shop-category-rail flex gap-2 overflow-x-auto py-4" tabIndex={0}>
         {!lockCategory
           ? ["All", ...categories].map((item) => {
               const active = category === item;
@@ -548,7 +520,7 @@ export function ShopClient({
                   type="button"
                   onClick={() => setCategory(item)}
                   aria-pressed={active}
-                  className={`shrink-0 min-h-11 rounded-full border px-4 py-2 text-xs font-medium transition ${
+                  className={`shrink-0 min-h-10 rounded-full border px-4 py-2 text-xs font-medium transition ${
                     active
                       ? "border-[#713a35] bg-[#713a35] text-white"
                       : "border-[#713a35]/12 bg-white/65 text-[#321f1c]/65 hover:border-[#713a35]/30"
@@ -577,32 +549,35 @@ export function ShopClient({
             )}
       </nav>
 
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <p role="status" className="text-sm text-[#796762]">{refreshing ? "Refreshing…" : `${filtered.length} ${filtered.length === 1 ? "product" : "products"}`}</p>
-        {activeFilterCount > 0 ? <button type="button" onClick={clearFilters} className="min-h-11 rounded-full border border-[#713a35]/14 px-4 text-xs font-semibold text-[#713a35]">Clear {activeFilterCount} filters</button> : null}
-      </div>
-      {query.trim() || activeFilterCount > 0 ? (
-        <div aria-label="Active shopping filters" className="mb-5 flex flex-wrap items-center gap-2" data-active-discovery-filters>
-          <span className="mr-1 text-[10px] font-semibold uppercase tracking-[.14em] text-[#713a35]/65">Your selection</span>
-          {query.trim() ? <button type="button" onClick={() => setQuery("")}
-            className="shop-active-filter rounded-full border px-3 py-2 text-xs" aria-label={`Remove search: ${query.trim()}`}>Search: {query.trim()} ×</button> : null}
-          {!lockCategory && category !== "All" ? <button type="button" onClick={() => setCategory("All")}
-            className="shop-active-filter rounded-full border px-3 py-2 text-xs" aria-label={`Remove category: ${category}`}>{category} ×</button> : null}
-          {brand !== "All" ? <button type="button" onClick={() => setBrand("All")}
-            className="shop-active-filter rounded-full border px-3 py-2 text-xs" aria-label={`Remove brand: ${brand}`}>Brand: {brand} ×</button> : null}
-          {focus !== "all" ? <button type="button" onClick={() => setFocus("all")}
-            className="shop-active-filter rounded-full border px-3 py-2 text-xs" aria-label="Remove skin focus">Focus: {focus} ×</button> : null}
-          {stock !== "all" ? <button type="button" onClick={() => setStock("all")}
-            className="shop-active-filter rounded-full border px-3 py-2 text-xs" aria-label="Remove availability filter">Availability: {stock === "in-stock" ? "In stock" : "Out of stock"} ×</button> : null}
-          {priceBand !== "all" ? <button type="button" onClick={() => setPriceBand("all")}
-            className="shop-active-filter rounded-full border px-3 py-2 text-xs" aria-label="Remove price filter">Price: {priceBand.replace("-", " ")} ×</button> : null}
-          <button type="button" onClick={() => { clearFilters(); setQuery(""); }}
-            className="min-h-10 rounded-full px-3 text-xs font-semibold text-[#713a35] underline underline-offset-4">Reset discovery</button>
+      <div className="relative mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-[#713a35]/10 pb-4">
+        <p role="status" className="text-xs text-[#796762] sm:text-sm">
+          {refreshing ? "Refreshing…" : `${filtered.length} ${filtered.length === 1 ? "product" : "products"}`}
+        </p>
+        <div className="flex min-w-0 items-center gap-3">
+          <details className="group relative">
+            <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 rounded-full border border-[#713a35]/14 bg-white px-4 text-xs font-semibold text-[#713a35] transition hover:border-[#713a35]/35 [&::-webkit-details-marker]:hidden">
+              <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                <path d="M4 7h16M7 12h10M10 17h4" />
+              </svg>
+              Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
+            </summary>
+            <div className="absolute right-0 top-[calc(100%+0.5rem)] z-40 w-[min(90vw,620px)] rounded-xl border border-[#713a35]/12 bg-white p-4 shadow-xl sm:p-5">
+      <nav aria-label="Shop by product focus" className="border-b border-[#713a35]/10 pb-4">
+        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+          <p className="store-discovery-accent text-[11px] font-semibold uppercase tracking-[.18em]">Explore by focus</p>
+          <p className="store-discovery-muted text-xs">Matched from published product descriptions</p>
         </div>
-      ) : null}
-      <details className="mb-7 rounded-2xl border border-[#713a35]/10 bg-white/55" open={brand !== "All" || stock !== "all" || priceBand !== "all" ? true : undefined}>
-        <summary className="min-h-12 cursor-pointer px-5 py-4 text-sm font-semibold text-[#713a35]">Filter by brand, availability &amp; price{activeFilterCount > 0 ? ` · ${activeFilterCount} active` : ""}</summary>
-        <div className="grid gap-3 px-4 pb-4 sm:grid-cols-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {skinFocusOptions.map((item) => (
+            <button key={item.value} type="button" onClick={() => setFocus(item.value)}
+              aria-pressed={focus === item.value} title={item.description}
+              className={"store-focus-chip min-h-11 rounded-full border px-4 text-xs font-semibold transition " + (focus === item.value ? "is-selected" : "")}>
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </nav>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
         <label className="grid gap-1.5 text-xs font-medium text-[#321f1c]/55">
           Brand
           <select
@@ -650,8 +625,47 @@ export function ShopClient({
         </label>
 
         </div>
-      </details>
+            </div>
+          </details>
+        <label className="flex min-w-0 items-center gap-2 text-xs text-[#321f1c]/60">
+          Sort
+          <select
+            aria-label="Sort"
+            value={sort}
+            onChange={(event) => setSort(event.target.value as SortKey)}
+            className="h-10 min-w-0 max-w-full rounded-full border border-[#713a35]/14 bg-white px-3 text-xs text-[#321f1c] outline-none sm:px-4 sm:text-sm"
+          >
+            <option value="recommended">
+              {query.trim() ? "Recommended / relevant" : "Recommended"}
+            </option>
+            <option value="bestseller">Bestsellers first</option>
+            <option value="price-asc">Price: low to high</option>
+            <option value="price-desc">Price: high to low</option>
+            <option value="name">Name: A–Z</option>
+          </select>
+        </label>
+        </div>
+      </div>
 
+      {query.trim() || activeFilterCount > 0 ? (
+        <div aria-label="Active shopping filters" className="mb-5 flex flex-wrap items-center gap-2" data-active-discovery-filters>
+          <span className="mr-1 text-[10px] font-semibold uppercase tracking-[.14em] text-[#713a35]/65">Your selection</span>
+          {query.trim() ? <button type="button" onClick={() => setQuery("")}
+            className="shop-active-filter rounded-full border px-3 py-2 text-xs" aria-label={`Remove search: ${query.trim()}`}>Search: {query.trim()} ×</button> : null}
+          {!lockCategory && category !== "All" ? <button type="button" onClick={() => setCategory("All")}
+            className="shop-active-filter rounded-full border px-3 py-2 text-xs" aria-label={`Remove category: ${category}`}>{category} ×</button> : null}
+          {brand !== "All" ? <button type="button" onClick={() => setBrand("All")}
+            className="shop-active-filter rounded-full border px-3 py-2 text-xs" aria-label={`Remove brand: ${brand}`}>Brand: {brand} ×</button> : null}
+          {focus !== "all" ? <button type="button" onClick={() => setFocus("all")}
+            className="shop-active-filter rounded-full border px-3 py-2 text-xs" aria-label="Remove skin focus">Focus: {focus} ×</button> : null}
+          {stock !== "all" ? <button type="button" onClick={() => setStock("all")}
+            className="shop-active-filter rounded-full border px-3 py-2 text-xs" aria-label="Remove availability filter">Availability: {stock === "in-stock" ? "In stock" : "Out of stock"} ×</button> : null}
+          {priceBand !== "all" ? <button type="button" onClick={() => setPriceBand("all")}
+            className="shop-active-filter rounded-full border px-3 py-2 text-xs" aria-label="Remove price filter">Price: {priceBand.replace("-", " ")} ×</button> : null}
+          <button type="button" onClick={() => { clearFilters(); setQuery(""); }}
+            className="min-h-10 rounded-full px-3 text-xs font-semibold text-[#713a35] underline underline-offset-4">Reset discovery</button>
+        </div>
+      ) : null}
       {filtered.length > 0 ? (
         <div className="storefront-product-grid grid grid-cols-2 gap-x-3 gap-y-7 sm:gap-x-5 sm:gap-y-9 lg:grid-cols-3 xl:grid-cols-4">
           {filtered.map((product) => (
