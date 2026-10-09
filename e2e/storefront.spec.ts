@@ -119,7 +119,7 @@ test("storefront structure keeps shopping and customer tools accessible on mobil
   await page.getByLabel("Brand",{exact:true}).selectOption("Simple");
   await expect(page.getByText("Refreshing Facial Wash",{exact:true})).toBeVisible();
   await expect(page.getByRole("link",{name:/Skin Aqua Super Moisture UV Gel/i})).toHaveCount(0);
-  await page.getByRole("button",{name:/Clear .* filters/}).click();
+  await page.getByRole("button",{name:"Reset discovery"}).click();
   await expect(page.getByRole("link",{name:/Skin Aqua Super Moisture UV Gel/i})).toBeVisible();
   await page.screenshot({path:testInfo.outputPath("shop-desktop.png"),fullPage:true});
   await page.setViewportSize({width:390,height:844});
