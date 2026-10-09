@@ -608,3 +608,17 @@ body[data-storefront-theme="sand"] {
 @media (prefers-reduced-motion: reduce) {
   .admin-nav-group a { transition: none; }
 }
+
+
+/* Unified storefront navigation: the two-line menu and centered brand remain
+ * consistent from phones to wide desktops.  Drawer interactions never require
+ * the shopper to hover over a desktop-only navigation bar. */
+.store-mobile-nav { animation: aloyri-drawer-appear 220ms ease-out both; }
+.store-mobile-nav .store-mobile-link:hover { background: color-mix(in srgb, var(--store-accent) 4%, transparent); }
+@keyframes aloyri-drawer-appear {
+  from { transform: translateX(-18px); opacity: .65; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .store-mobile-nav { animation: none; }
+}
