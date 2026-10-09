@@ -49,7 +49,7 @@ export function categoryNamesFromCatalog(
 ): string[] {
   const seen = new Set<string>();
   const names: string[] = [];
-  for (const value of [...(registered || []), ...products.map(product => product.category)]) {
+  for (const value of [...(Array.isArray(registered) ? registered : []), ...products.map(product => product.category)]) {
     const name = cleanCategoryName(value);
     if (!name || seen.has(key(name))) continue;
     seen.add(key(name));
