@@ -102,3 +102,55 @@ test("homepage search dropdown offers categories, featured discovery and session
   await dropdown.getByRole("button", { name: "Clear" }).click();
   await expect(dropdown.getByRole("button", { name: "Skin Aqua" })).toHaveCount(0);
 });
+
+
+test("shop search matches focused overlay reference while retaining CRM-backed discovery", async ({ page }) => {
+  await mockCatalog(page);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/shop");
+  const input = page.getByRole("combobox", { name: "Search skincare" });
+  await expect(input).toBeVisible();
+  await input.focus();
+  const overlay = page.getByRole("dialog", { name: "Search discovery" });
+  await expect(overlay).toBeVisible();
+  await expect(page.getByRole("button", { name: "Close search overlay" })).toBeVisible();
+  await overlay.getByRole("tab", { name: "Categories" }).click();
+  await expect(overlay.getByRole("button", { name: "Sunscreen" })).toBeVisible();
+  await overlay.getByRole("tab", { name: "Products" }).click();
+  await input.fill("Skin Aqua");
+  await expect(overlay.getByRole("option", { name: /Skin Aqua Super Moisture UV Gel/ })).toBeVisible();
+  await page.screenshot({ path: "test-results/shop-search-desktop.png" });
+  await input.press("Enter");
+  await expect(overlay).toHaveCount(0);
+  await expect(page).toHaveURL(/q=Skin(\+|%20)Aqua/);
+  await page.getByRole("link", { name: "Search products" }).click();
+  await expect(overlay).toBeVisible();
+  await page.getByRole("button", { name: "Close search" }).click();
+  await expect(overlay).toHaveCount(0);
+});
+
+test("mobile hamburger search opens the same minimal shop overlay", async ({ page }) => {
+  await mockCatalog(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/shop");
+  await page.getByRole("button", { name: "Open menu" }).click();
+  const menu = page.getByRole("dialog", { name: "Store navigation menu" });
+  await menu.getByRole("link", { name: "Search products and brands" }).click();
+  const overlay = page.getByRole("dialog", { name: "Search discovery" });
+  await expect(overlay).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "Search skincare" })).toBeFocused();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: "test-results/shop-search-mobile.png" });
+  await page.getByRole("button", { name: "Close search overlay" }).click();
+  await expect(overlay).toHaveCount(0);
+});
+
+test("header search from other pages opens shop discovery after CRM loads", async ({ page }) => {
+  await mockCatalog(page);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  await page.getByRole("link", { name: "Search products" }).click();
+  await expect(page).toHaveURL(/\/shop/);
+  await expect(page.getByRole("dialog", { name: "Search discovery" })).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "Search skincare" })).toBeFocused();
+});
