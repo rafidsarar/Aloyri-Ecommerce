@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useReducer, useRef, useState, type DragEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState, type DragEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { saveVisualBuilder } from "@/app/admin/actions";
 import { VisualBuilderBlock } from "@/components/visual-builder-block";
@@ -79,15 +79,17 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
   const [device, setDevice] = useState<"mobile" | "tablet" | "desktop">("desktop");
   const [previewMode, setPreviewMode] = useState<"live" | "draft">("live");
   const draftFrame = useRef<HTMLIFrameElement>(null);
-  const sendDraft = () => draftFrame.current?.contentWindow?.postMessage({ type: "aloyri-builder-draft", layout, coreContent }, window.location.origin);
+  const sendDraft = useCallback(() => draftFrame.current?.contentWindow?.postMessage({ type: "aloyri-builder-draft", layout, coreContent, selectedId }, window.location.origin), [layout, coreContent, selectedId]);
   useEffect(() => {
     const receiveReady = (event: MessageEvent) => {
-      if (event.origin === window.location.origin && event.source === draftFrame.current?.contentWindow && event.data?.type === "aloyri-builder-ready") sendDraft();
+      if (event.origin !== window.location.origin || event.source !== draftFrame.current?.contentWindow) return;
+      if (event.data?.type === "aloyri-builder-ready") sendDraft();
+      if (event.data?.type === "aloyri-builder-select" && typeof event.data.id === "string" && layout.order.includes(event.data.id)) setSelectedId(event.data.id);
     };
     window.addEventListener("message", receiveReady);
     sendDraft();
     return () => window.removeEventListener("message", receiveReady);
-  }, [layout, coreContent]);
+  }, [layout, sendDraft]);
   const [filter, setFilter] = useState("");
   const isHomepage = pageKey === "home";
   const selectedCustom = layout.blocks.find(block => customBlockId(block.id) === selectedId);
@@ -229,7 +231,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
           </div>
           <div className="overflow-hidden rounded-2xl border border-black/10 bg-white p-3 sm:p-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <div><h2 className="text-sm font-semibold">Storefront preview</h2><p className="text-xs text-black/55">{isHomepage ? previewMode === "live" ? "Actual storefront components with unsaved section order, visibility, text edits and custom blocks. Product and campaign data stays live." : "Unsaved section order and custom components; existing sections are represented by editable summaries." : "Page-specific blocks appear after the existing essential page content."}</p></div>
+              <div><h2 className="text-sm font-semibold">Storefront preview</h2><p className="text-xs text-black/55">{isHomepage ? previewMode === "live" ? "Actual storefront components with unsaved section order, visibility, text edits and custom blocks. Product and campaign data stays live." : "Unsaved section order and custom components; existing sections are represented by editable summaries." : "Existing page content appears in the preview above; custom components appear in the unsaved layout below. The existing page can be edited through its management screen."}</p></div>
               <div className="flex flex-wrap gap-1" role="group" aria-label="Design preview device">
                 {(["mobile", "tablet", "desktop"] as const).map(item => <button key={item} type="button" aria-pressed={device === item} onClick={() => setDevice(item)}
                   className={`min-h-9 rounded-lg px-3 py-1 text-xs font-semibold ${device === item ? "bg-[#713a35] text-white" : "bg-[#f7f1ee] text-[#713a35]"}`}>{item}</button>)}
@@ -241,6 +243,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
             </div>}
             <div className="overflow-x-auto rounded-xl bg-[#eee8e4] p-2 sm:p-4">
               {isHomepage && previewMode === "live" ? <iframe key={device} title={`Real storefront preview at ${deviceWidths[device]} pixels`} ref={draftFrame} src="/?builderPreview=1" onLoad={sendDraft} width={deviceWidths[device]} height={780} loading="lazy" className="mx-auto block rounded-lg border border-black/10 bg-white shadow-sm" style={{ width: deviceWidths[device], height: 780, maxWidth: "none" }} /> : null}
+              {!isHomepage && <iframe title={`Saved ${pageKey} page preview`} src={pageKey === "shipping" ? "/shipping-delivery" : pageKey === "returns" ? "/returns-refunds" : pageKey === "category" ? "/shop" : pageKey === "product" ? "/shop" : `/${pageKey}`} width={deviceWidths[device]} height={650} loading="lazy" className="mx-auto mb-3 block rounded-lg border border-black/10 bg-white" style={{ width: deviceWidths[device], maxWidth: "none" }} />}
               {(!isHomepage || previewMode === "draft") && <div className="mx-auto min-h-56 overflow-hidden rounded-lg bg-[#fffaf8] shadow-sm" style={{ width: deviceWidths[device], maxWidth: "none" }}>
                 <div className="flex justify-between border-b border-black/10 bg-white px-5 py-3 text-xs font-semibold"><span>ALOYRI</span><span>Preview</span></div>
                 {layout.order.map(id => {
@@ -251,7 +254,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
                 })}
               </div>}
             </div>
-            <p className="mt-3 text-xs text-black/55">{isHomepage && previewMode === "live" ? "This preview uses the real storefront sections with your unsaved order, visibility and editable text. Advanced settings not yet represented here may require saving to appear." : "This is an approximate draft layout. Existing commerce sections are represented by summaries; switch to Real storefront sections to see their actual content."}</p>
+            <p className="mt-3 text-xs text-black/55">{isHomepage && previewMode === "live" ? "This preview uses the real storefront sections with your unsaved order, visibility and editable text. Advanced settings not yet represented here may require saving to appear." : "This is an approximate draft layout. Existing commerce sections are represented by summaries; choose Interactive unsaved preview to see their actual content."}</p>
           </div>
         </section>
         <aside className="min-w-0 self-start rounded-2xl border border-black/10 bg-white p-4 xl:sticky xl:top-5" aria-label="Selected component properties">
