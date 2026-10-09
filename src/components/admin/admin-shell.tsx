@@ -38,11 +38,13 @@ export async function AdminShell({
   title,
   subtitle,
   children,
+  wide = false,
 }: {
   username: string;
   title: string;
   subtitle: string;
   children: React.ReactNode;
+  wide?: boolean;
 }) {
   const session = await currentAdmin();
   const visibleNav = session
@@ -50,10 +52,13 @@ export async function AdminShell({
     : [];
 
   return (
-    <div className="admin-workspace min-h-screen text-[#2f211f]">
+    <div className={`admin-workspace min-h-screen text-[#2f211f] ${wide ? "admin-workspace--wide" : ""}`}>
       <a href="#admin-content" className="skip-link">Skip to admin content</a>
       <header className="admin-header">
-        <Link href="/admin" className="font-semibold tracking-tight">Aloyri <span className="ml-2 text-xs font-normal text-black/55">Ecommerce Admin</span></Link>
+        <Link href="/admin" className="admin-brand flex min-w-0 items-center gap-2.5 font-semibold tracking-tight" aria-label="Aloyri Ecommerce Admin overview">
+          <span className="admin-brand-symbol" aria-hidden="true">A</span>
+          <span className="flex min-w-0 flex-col leading-tight"><span>Aloyri <span className="font-normal text-[#846e68]">/ Ecommerce</span></span><span className="text-[10px] font-medium uppercase tracking-[.13em] text-[#8c7370]">Administration</span></span>
+        </Link>
         <div className="flex flex-wrap items-center gap-3 text-sm">
           <Link href="/" target="_blank" rel="noopener noreferrer" className="admin-store-link">View store ↗</Link>
           <span className="hidden text-xs text-black/60 sm:inline">{session?.displayName || username}</span>
@@ -63,7 +68,11 @@ export async function AdminShell({
       <div className="admin-frame">
         <aside className="admin-sidebar"><AdminNavigation items={visibleNav} /></aside>
         <main id="admin-content" tabIndex={-1} className="admin-main min-w-0">
-          <div className="admin-page-heading"><h1>{title}</h1><p>{subtitle}</p></div>
+          <div className="admin-page-heading">
+            <p className="admin-page-eyebrow">{wide ? "Storefront / Design workspace" : "Ecommerce / Workspace"}</p>
+            <h1>{title}</h1>
+            <p>{subtitle}</p>
+          </div>
           {children}
         </main>
       </div>
