@@ -688,3 +688,40 @@ body[data-storefront-theme="sand"] {
 @media (prefers-reduced-motion: reduce) {
   #aloyri-cart-drawer, #aloyri-cart-drawer * { animation: none !important; transition-duration: 0ms !important; }
 }
+
+
+/* Customer account refresh — tokens follow the active storefront theme. */
+.account-dashboard-intro {
+  background: linear-gradient(115deg, var(--store-panel), var(--store-surface));
+}
+.account-avatar {
+  background: var(--store-accent);
+  color: var(--store-on-accent);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--store-accent) 12%, transparent);
+}
+.account-quick-action {
+  border-color: var(--store-border);
+  background: var(--store-surface);
+  color: var(--store-ink);
+}
+.account-quick-action:hover, .account-quick-action:focus-visible {
+  border-color: var(--store-accent);
+  background: var(--store-panel);
+  transform: translateY(-2px);
+}
+.account-quick-icon {
+  background: var(--store-panel);
+  color: var(--store-accent);
+}
+.account-nav-icon {
+  background: var(--store-panel);
+  color: var(--store-accent);
+}
+.account-section-link.is-active .account-nav-icon {
+  background: color-mix(in srgb, var(--store-on-accent) 18%, transparent);
+  color: var(--store-on-accent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .account-quick-action { transition: none; }
+  .account-quick-action:hover, .account-quick-action:focus-visible { transform: none; }
+}
