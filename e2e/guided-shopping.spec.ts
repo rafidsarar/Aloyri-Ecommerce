@@ -25,11 +25,15 @@ test("desktop discovery opens on click and closes on Escape", async ({ page }) =
   await expect(opener).toHaveAttribute("aria-expanded", "true");
   const drawer = page.getByRole("dialog", { name: "Store navigation menu" });
   await expect(drawer.getByRole("link", { name: "Cleanser" })).toHaveAttribute("href", "/category/cleansers");
-  await expect(drawer.getByRole("link", { name: "Track order" })).toBeVisible();
+  await expect(drawer.getByRole("link", { name: "Track order" })).toHaveCount(0);
   await page.keyboard.press("Escape");
   await expect(drawer).toHaveCount(0);
   await expect(opener).toHaveAttribute("aria-expanded", "false");
   await expect(opener).toBeFocused();
+  const accountButton = page.getByRole("button", { name: "Account menu" });
+  await accountButton.click();
+  await expect(page.getByRole("navigation", { name: "Account shortcuts" }).getByRole("link", { name: "Track order" })).toHaveAttribute("href", "/track-order");
+  await page.keyboard.press("Escape");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 

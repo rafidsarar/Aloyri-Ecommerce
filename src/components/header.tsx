@@ -116,12 +116,12 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
             <div ref={accountRef} className="relative">
               <button type="button" aria-label="Account menu" aria-expanded={accountOpen} aria-controls="header-account-menu"
                 onClick={() => setAccountOpen(value => !value)}
-                className="store-utility-link inline-flex min-h-11 items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold">
+                className="store-utility-link inline-flex h-11 w-11 items-center justify-center rounded-full border border-[var(--store-border)] p-0 text-sm font-semibold sm:h-auto sm:w-auto sm:min-h-11 sm:gap-2 sm:border-0 sm:px-3 sm:py-2">
                 <span className="hidden sm:inline">Account</span>
                 <svg className="sm:hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <circle cx="12" cy="8" r="3.5" /><path d="M5.5 20c0-3.3 2.7-6 6.5-6s6.5 2.7 6.5 6" />
                 </svg>
-                <span aria-hidden="true" className="text-xs">{accountOpen ? "⌃" : "⌄"}</span>
+                <span aria-hidden="true" className="hidden text-xs sm:inline">{accountOpen ? "⌃" : "⌄"}</span>
               </button>
               {accountOpen ? (
                 <nav id="header-account-menu" aria-label="Account shortcuts"
@@ -143,7 +143,7 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
 
             <Link
               href="/shop"
-              className="store-icon-link hidden h-11 w-11 items-center justify-center rounded-full border transition min-[380px]:inline-flex"
+              className="store-icon-link hidden h-11 w-11 items-center justify-center rounded-full border transition sm:inline-flex"
               aria-label="Search products"
             >
               <SearchIcon />
