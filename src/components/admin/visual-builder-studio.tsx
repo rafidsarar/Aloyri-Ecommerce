@@ -85,11 +85,13 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
       if (event.origin !== window.location.origin || event.source !== draftFrame.current?.contentWindow) return;
       if (event.data?.type === "aloyri-builder-ready") sendDraft();
       if (event.data?.type === "aloyri-builder-select" && typeof event.data.id === "string" && layout.order.includes(event.data.id)) setSelectedId(event.data.id);
+      if (event.data?.type === "aloyri-builder-public-select" && ["header", "footer", "page"].includes(event.data.section)) setPublicSelection(event.data.section);
     };
     window.addEventListener("message", receiveReady);
     sendDraft();
     return () => window.removeEventListener("message", receiveReady);
   }, [layout, sendDraft]);
+  const [publicSelection, setPublicSelection] = useState<"header" | "footer" | "page">("page");
   const [filter, setFilter] = useState("");
   const isHomepage = pageKey === "home";
   const selectedCustom = layout.blocks.find(block => customBlockId(block.id) === selectedId);
@@ -243,7 +245,12 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
             </div>}
             <div className="overflow-x-auto rounded-xl bg-[#eee8e4] p-2 sm:p-4">
               {isHomepage && previewMode === "live" ? <iframe key={device} title={`Real storefront preview at ${deviceWidths[device]} pixels`} ref={draftFrame} src="/?builderPreview=1" onLoad={sendDraft} width={deviceWidths[device]} height={780} loading="lazy" className="mx-auto block rounded-lg border border-black/10 bg-white shadow-sm" style={{ width: deviceWidths[device], height: 780, maxWidth: "none" }} /> : null}
-              {!isHomepage && <iframe title={`Saved ${pageKey} page preview`} src={pageKey === "shipping" ? "/shipping-delivery" : pageKey === "returns" ? "/returns-refunds" : pageKey === "category" ? "/shop" : pageKey === "product" ? "/shop" : `/${pageKey}`} width={deviceWidths[device]} height={650} loading="lazy" className="mx-auto mb-3 block rounded-lg border border-black/10 bg-white" style={{ width: deviceWidths[device], maxWidth: "none" }} />}
+              {!isHomepage && <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg bg-white p-3 text-xs">
+                <span className="font-semibold">Selected: {publicSelection === "header" ? "Site header" : publicSelection === "footer" ? "Site footer" : "Page content"}</span>
+                <Link className={secondaryButton} href={publicSelection === "page" && ["about", "shipping", "returns", "contact", "faq"].includes(pageKey) ? `/admin/pages/${pageKey}` : publicSelection === "page" ? "/admin/merchandising" : "/admin/settings"}>Edit selected existing feature ↗</Link>
+                <span className="text-black/50">Click an existing area in the preview to select it.</span>
+              </div>}
+              {!isHomepage && <iframe title={`Saved ${pageKey} page preview`} src={(pageKey === "shipping" ? "/shipping-delivery" : pageKey === "returns" ? "/returns-refunds" : pageKey === "category" ? "/shop" : pageKey === "product" ? "/shop" : `/${pageKey}`) + "?builderPreview=1"} width={deviceWidths[device]} height={650} loading="lazy" className="mx-auto mb-3 block rounded-lg border border-black/10 bg-white" style={{ width: deviceWidths[device], maxWidth: "none" }} />}
               {(!isHomepage || previewMode === "draft") && <div className="mx-auto min-h-56 overflow-hidden rounded-lg bg-[#fffaf8] shadow-sm" style={{ width: deviceWidths[device], maxWidth: "none" }}>
                 <div className="flex justify-between border-b border-black/10 bg-white px-5 py-3 text-xs font-semibold"><span>ALOYRI</span><span>Preview</span></div>
                 {layout.order.map(id => {
