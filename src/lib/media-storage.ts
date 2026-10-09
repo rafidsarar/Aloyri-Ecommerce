@@ -18,6 +18,16 @@ export function mediaStorageConfigured() {
   return Boolean(url && (key || oidc));
 }
 
+function gatewayUploadEndpoint() {
+  const { url } = gateway();
+  // Supabase Edge Functions route the invocation at /functions/v1/<slug>.
+  // Use the function's action query rather than appending a subpath that
+  // some gateways reject with HTTP 405.
+  const endpoint = new URL(url);
+  endpoint.searchParams.set("action", "upload");
+  return endpoint.toString();
+}
+
 function headers(extra: HeadersInit = {}) {
   const { key, oidc } = gateway();
   return {
@@ -28,19 +38,20 @@ function headers(extra: HeadersInit = {}) {
 }
 
 export async function putMediaObject(pathname: string, file: File) {
-  const { url } = gateway();
   if (!mediaStorageConfigured()) {
     throw new Error("Independent media storage is not configured.");
   }
 
-  const form = new FormData();
-  form.set("path", pathname);
-  form.set("file", file);
-
-  const response = await fetch(url + "/upload", {
+  // The gateway's action=upload handler accepts raw image bytes and
+  // x-object-path. Multipart FormData is supported only on /upload, which
+  // Supabase's Edge Function router may reject before reaching the handler.
+  const response = await fetch(gatewayUploadEndpoint(), {
     method: "POST",
-    headers: headers(),
-    body: form,
+    headers: headers({
+      "x-object-path": pathname,
+      "content-type": file.type,
+    }),
+    body: new Uint8Array(await file.arrayBuffer()),
     cache: "no-store",
     signal: AbortSignal.timeout(15_000),
   });
@@ -53,7 +64,24 @@ export async function listMediaObjects(prefix: string): Promise<MediaObject[]> {
   const { url } = gateway(); if (!mediaStorageConfigured()) return [];
   const objects = new Map<string, MediaObject>(); const seen = new Set<string>(); let cursor = "";
   for (let page = 0; page < 100; page++) {
-    const response = await fetch(url + "/list?prefix=" + encodeURIComponent(prefix) + (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""), { headers: headers(), cache: "no-store", signal: AbortSignal.timeout(15_000) });
+    let response = await fetch(url + "/list?prefix=" + encodeURIComponent(prefix) + (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""), { headers: headers(), cache: "no-store", signal: AbortSignal.timeout(15_000) });
+    // Legacy subpath routing can return 405 on Supabase Edge Functions.
+    // Fall back to the gateway's supported action=list contract.
+    if (response.status === 405 && !cursor) {
+      const endpoint = new URL(url);
+      endpoint.searchParams.set("action", "list");
+      endpoint.searchParams.set("prefix", prefix);
+      response = await fetch(endpoint.toString(), { headers: headers(), cache: "no-store", signal: AbortSignal.timeout(15_000) });
+      if (!response.ok) throw new Error("Media listing failed (" + response.status + ").");
+      const items = await response.json() as Array<{ name: string; metadata?: { size?: number }; updated_at?: string; created_at?: string }>;
+      if (!Array.isArray(items)) throw new Error("MEDIA_LIST_INVALID");
+      if (items.length >= 100) throw new Error("MEDIA_PAGINATION_INCOMPLETE");
+      return items.filter(item => typeof item.name === "string").map(item => ({
+        pathname: prefix + item.name,
+        size: Number(item.metadata?.size || 0),
+        uploadedAt: item.updated_at || item.created_at,
+      }));
+    }
     if (!response.ok) throw new Error("Media listing failed (" + response.status + ").");
     const payload = await response.json() as { objects?: MediaObject[]; cursor?: string; nextCursor?: string; hasMore?: boolean };
     for (const item of payload.objects || []) if (typeof item.pathname === "string" && item.pathname.startsWith(prefix)) objects.set(item.pathname, { ...item, size: Number(item.size || 0) });
@@ -68,8 +96,10 @@ export async function getMediaObject(pathname: string) {
   const { url } = gateway();
   if (!mediaStorageConfigured()) return null;
 
+  const endpoint = new URL(url);
+  endpoint.searchParams.set("path", pathname);
   const response = await fetch(
-    url + "/object?path=" + encodeURIComponent(pathname),
+    endpoint.toString(),
     {
       headers: headers(),
       cache: "no-store",

@@ -1,0 +1,11 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const source = fs.readFileSync("src/lib/media-storage.ts", "utf8");
+assert.match(source, /searchParams\.set\("action", "upload"\)/, "Upload must target Edge Function action query");
+assert.match(source, /"x-object-path": pathname/, "Upload must identify storage object");
+assert.match(source, /"content-type": file\.type/, "Upload must preserve image MIME type");
+assert.match(source, /new Uint8Array\(await file\.arrayBuffer\(\)\)/, "Upload must send raw image bytes");
+assert.doesNotMatch(source, /fetch\(url \+ "\/upload"/, "Do not call unsupported Edge Function subpath");
+assert.match(source, /endpoint\.searchParams\.set\("path", pathname\)/, "Reads must use gateway query routing");
+console.log("Media gateway upload/read contract regression: PASS");
