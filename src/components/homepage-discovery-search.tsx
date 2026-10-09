@@ -56,7 +56,12 @@ export function HomepageDiscoverySearch({
             if (!event.currentTarget.parentElement?.parentElement?.contains(event.relatedTarget)) setFocused(false);
           }}
           onKeyDown={event => {
-            if (event.key === "Escape") setFocused(false);
+            if (event.key === "Escape" && showSuggestions) {
+              // The native Escape action on input[type=search] clears the query.
+              // Dismissing suggestions must preserve what the customer typed.
+              event.preventDefault();
+              setFocused(false);
+            }
             if (event.key === "ArrowDown" && showSuggestions) {
               event.preventDefault();
               inputRef.current?.closest("div")?.querySelector<HTMLAnchorElement>('[data-home-suggestion]')?.focus();
