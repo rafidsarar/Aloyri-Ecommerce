@@ -8,6 +8,7 @@ import { StorefrontAnalyticsTracker } from "@/components/storefront-analytics-tr
 import { PerformanceReporter } from "@/components/performance-reporter";
 import { CustomerDataCleanup } from "@/components/customer-data-cleanup";
 import { Footer } from "@/components/footer";
+import { PublicPagePreviewBridge } from "@/components/public-page-preview-bridge";
 import { Header } from "@/components/header";
 
 export function SiteChrome({
@@ -33,6 +34,7 @@ export function SiteChrome({
     <CatalogProvider>
       <div data-storefront-columns={presentation.desktopColumns} style={{"--storefront-width": presentation.contentWidth === "comfortable" ? "1200px" : "1440px"} as CSSProperties}>
       <CustomerDataCleanup />
+      {pathname !== "/" && <PublicPagePreviewBridge />}
       {!preview ? <StorefrontAnalyticsTracker /> : null}
       {!preview ? <PerformanceReporter /> : null}
       {preview ? (
