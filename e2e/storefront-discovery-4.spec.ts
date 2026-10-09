@@ -153,7 +153,8 @@ test("mobile hamburger and header search open the same floating overlay", async 
   await page.screenshot({ path: "test-results/shop-search-mobile.png" });
   await page.getByRole("button", { name: "Close search", exact: true }).click();
   await expect(overlay).toHaveCount(0);
-  await page.getByRole("button", { name: "Search products", exact: true }).click();
+  await page.getByRole("button", { name: "Open menu" }).click();
+  await page.getByRole("dialog", { name: "Store navigation menu" }).getByRole("button", { name: "Search products and brands" }).click();
   await expect(overlay).toBeVisible();
 });
 
