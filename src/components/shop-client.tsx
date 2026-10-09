@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ProductCard } from "@/components/product-card";
+import { ProductMedia } from "@/components/product-media";
+import { formatPrice } from "@/lib/catalog";
 import { categoryNamesFromCatalog, matchesCategory } from "@/lib/storefront-categories";
 import { useCatalog } from "@/components/catalog-provider";
 import { salePriceFor } from "@/lib/promotions";
@@ -65,7 +67,42 @@ export function ShopClient({
   const [priceBand, setPriceBand] = useState<PriceFilter>(initialPriceBand);
   const [sort, setSort] = useState<SortKey>(initialSort);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [searchTab, setSearchTab] = useState<"all" | "products" | "categories">("all");
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const searchRootRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  function readRecentSearches() {
+    try {
+      const raw: unknown = JSON.parse(sessionStorage.getItem("aloyri-recent-searches") || "[]");
+      if (Array.isArray(raw)) setRecentSearches(raw.filter((v): v is string => typeof v === "string").slice(0, 5));
+    } catch { /* Browsing stays available if session storage is disabled. */ }
+  }
+  function rememberSearch(value: string) {
+    const term = value.trim().slice(0, 80);
+    if (!term) return;
+    const next = [term, ...recentSearches.filter(v => v.toLowerCase() !== term.toLowerCase())].slice(0, 5);
+    setRecentSearches(next);
+    try { sessionStorage.setItem("aloyri-recent-searches", JSON.stringify(next)); } catch { /* optional */ }
+  }
+  useEffect(() => {
+    if (!searchFocused) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") { event.preventDefault(); setSearchFocused(false); searchInputRef.current?.focus({preventScroll: true}); }
+    };
+    document.addEventListener("keydown", onEscape);
+    return () => { document.body.style.overflow = previousOverflow; document.removeEventListener("keydown", onEscape); };
+  }, [searchFocused]);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("search") !== "1") return;
+    searchInputRef.current?.focus({ preventScroll: true });
+    params.delete("search");
+    const next = params.toString();
+    window.history.replaceState(window.history.state, "", window.location.pathname + (next ? "?" + next : ""));
+  }, []);
+
   const lastTrackedSearch = useRef("");
 
   const categories = useMemo(() => {
@@ -115,6 +152,17 @@ export function ShopClient({
       ),
     [products, category, query, searchSynonymGroups],
   );
+  const trendingProducts = useMemo(() => products
+    .filter(product => !product.merchandisingHideFromSearch &&
+      (product.merchandisingOutOfStockMode !== "hide" || (product.availableStock ?? 0) > 0) &&
+      (product.featured || product.bestseller) &&
+      (category === "All" || matchesCategory(product.category, category)))
+    .slice(0, 4), [products, category]);
+  const hasSearchQuery = query.trim().length >= 2;
+  const searchCategoryMatches = categories.filter(name =>
+    !query.trim() || name.toLowerCase().includes(query.trim().toLowerCase())
+  ).slice(0, 8);
+
 
   const filtered = useMemo(() => {
     const hasQuery = query.trim().length > 0;
