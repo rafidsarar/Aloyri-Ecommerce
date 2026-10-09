@@ -210,7 +210,7 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
                 setAccountOpen(false);
                 window.dispatchEvent(new Event("aloyri:open-global-search"));
               }}
-              className="store-icon-link inline-flex h-10 w-10 items-center justify-center rounded-full border transition sm:h-11 sm:w-11"
+              className="store-icon-link hidden h-11 w-11 items-center justify-center rounded-full border transition sm:inline-flex"
               aria-label="Search products"
               aria-haspopup="dialog"
               aria-controls="global-storefront-search"
