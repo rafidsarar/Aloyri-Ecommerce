@@ -27,10 +27,10 @@ const securityHeaders = [
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
 ];
 
-// The Builder embeds only the public homepage from this same origin.
+// The Builder embeds public storefront pages from this same origin.
 // Keep the default anti-framing headers on every other route, especially Admin,
 // account and checkout pages. Last matching header rule wins for "/".
-const homepagePreviewHeaders = [
+const publicPreviewHeaders = [
   {
     key: "Content-Security-Policy",
     value: contentSecurityPolicy.replace("frame-ancestors 'none'", "frame-ancestors 'self'"),
@@ -44,7 +44,7 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
-      { source: "/", headers: homepagePreviewHeaders },
+      ...["/", "/about", "/shipping-delivery", "/returns-refunds", "/contact", "/faq", "/shop"].map(source => ({ source, headers: publicPreviewHeaders })),
     ];
   },
   images: {
