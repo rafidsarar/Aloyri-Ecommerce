@@ -30,7 +30,7 @@ fs.writeFileSync(path.join(temp, 'app/admin/products/item/page.tsx'), fixturePag
 // Account UI preview uses the real hub and aftercare components with fixture API data.
 fs.mkdirSync(path.join(temp, 'lib'), {recursive:true});
 for(const file of ['customer-account-hub.tsx','customer-auth-panel.tsx','customer-auth-landing.tsx','customer-post-purchase-center.tsx','checkout-client.tsx','catalog-provider.tsx','icons.tsx','product-media.tsx','product-artwork.tsx'])fs.copyFileSync(path.join(root,'src/components',file),path.join(temp,'components',file));
-for(const file of ['catalog.ts','product-preferences.ts','volatile-storage.ts','checkout.ts','cart.ts','promotions.ts','analytics.ts','product-verification.ts'])fs.copyFileSync(path.join(root,'src/lib',file),path.join(temp,'lib',file));
+for(const file of ['catalog.ts','product-preferences.ts','volatile-storage.ts','checkout.ts','cart.ts','promotions.ts','analytics.ts','product-verification.ts','storefront-categories.ts'])fs.copyFileSync(path.join(root,'src/lib',file),path.join(temp,'lib',file));
 fs.writeFileSync(path.join(temp,'components/saved-products-client.tsx'),'export function SavedProductsClient(){return <section><h2>Your account wishlist</h2></section>}');
 fs.mkdirSync(path.join(temp,'app/account'),{recursive:true});
 fs.writeFileSync(path.join(temp,'app/account/page.tsx'),'import {CustomerAccountHub} from "@/components/customer-account-hub"; export default function Page(){return <CustomerAccountHub authenticated={true} displayName="Preview customer" profileComplete={true}/>}');
