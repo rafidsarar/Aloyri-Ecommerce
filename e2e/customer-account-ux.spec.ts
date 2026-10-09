@@ -84,3 +84,33 @@ test("multiple signup return values fall back to account safely", async ({ page 
   const next = new URL(await register.getAttribute("href") || "", page.url()).searchParams.get("next");
   expect(next).toBe("/account/setup?next=%2Faccount");
 });
+
+
+test("header account menu offers sign out only for authenticated customers", async ({ page }) => {
+  let authenticated = false;
+  let logoutCalls = 0;
+  await page.route("**/api/customer-auth/status", route => route.fulfill({
+    status: 200, contentType: "application/json",
+    body: JSON.stringify({ authenticated }),
+  }));
+  await page.route("**/api/customer-auth/logout", route => {
+    logoutCalls++;
+    authenticated = false;
+    return route.fulfill({ status: 200, contentType: "application/json", body: "{}" });
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Account menu" }).click();
+  const menu = page.getByRole("navigation", { name: "Account shortcuts" });
+  await expect(menu.getByRole("button", { name: "Sign out" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Account menu" }).click();
+
+  authenticated = true;
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await page.getByRole("button", { name: "Account menu" }).click();
+  await expect(menu.getByRole("button", { name: "Sign out" })).toBeVisible();
+  await menu.getByRole("button", { name: "Sign out" }).click();
+  await expect(menu).toHaveCount(0);
+  expect(logoutCalls).toBe(1);
+  await page.getByRole("button", { name: "Account menu" }).click();
+  await expect(menu.getByRole("button", { name: "Sign out" })).toHaveCount(0);
+});
