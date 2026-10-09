@@ -42,14 +42,16 @@ export async function putMediaObject(pathname: string, file: File) {
     throw new Error("Independent media storage is not configured.");
   }
 
-  const form = new FormData();
-  form.set("path", pathname);
-  form.set("file", file);
-
+  // The gateway's action=upload handler accepts raw image bytes and
+  // x-object-path. Multipart FormData is supported only on /upload, which
+  // Supabase's Edge Function router may reject before reaching the handler.
   const response = await fetch(gatewayUploadEndpoint(), {
     method: "POST",
-    headers: headers(),
-    body: form,
+    headers: headers({
+      "x-object-path": pathname,
+      "content-type": file.type,
+    }),
+    body: new Uint8Array(await file.arrayBuffer()),
     cache: "no-store",
     signal: AbortSignal.timeout(15_000),
   });
