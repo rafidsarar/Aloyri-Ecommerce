@@ -81,7 +81,7 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
             ref={menuButtonRef}
             type="button"
             onClick={() => setOpen(true)}
-            className="store-icon-link inline-flex h-11 w-11 items-center justify-center justify-self-start rounded-full border transition hover:-translate-y-0.5"
+            className="store-icon-link inline-flex h-10 w-10 items-center justify-center justify-self-start sm:h-11 sm:w-11 rounded-full border transition hover:-translate-y-0.5"
             aria-label="Open menu"
             aria-expanded={open}
             aria-controls="storefront-navigation"
@@ -94,7 +94,7 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
           <div className="flex min-w-0 items-center justify-end gap-1 sm:gap-2">
             <Link href="/account" aria-current={current("/account") ? "page" : undefined} className="store-utility-link hidden rounded-full px-3 py-2 text-sm font-semibold sm:block">Account</Link>
             <Link href="/account" aria-label="Customer account and sign in"
-              className="store-icon-link inline-flex h-11 w-11 items-center justify-center rounded-full border sm:hidden"
+              className="store-icon-link inline-flex h-10 w-10 items-center justify-center rounded-full border sm:hidden"
               aria-current={current("/account") ? "page" : undefined}>
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"
                 strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -104,7 +104,7 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
             </Link>
             <Link
               href="/shop"
-              className="store-icon-link hidden h-11 w-11 items-center justify-center rounded-full border transition min-[380px]:inline-flex"
+              className="store-icon-link hidden h-10 w-10 items-center justify-center rounded-full border transition min-[380px]:inline-flex sm:h-11 sm:w-11"
               aria-label="Search products"
             >
               <SearchIcon />
