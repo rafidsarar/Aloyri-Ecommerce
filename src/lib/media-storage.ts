@@ -24,7 +24,7 @@ function gatewayEndpoint(action: "upload" | "list" | "object", params: Record<st
   // Use the function's action query rather than appending a subpath that
   // some gateways reject with HTTP 405.
   const endpoint = new URL(url);
-  endpoint.searchParams.set("action", action);
+  if (action === "upload") endpoint.searchParams.set("action", action);
   for (const [key, value] of Object.entries(params)) endpoint.searchParams.set(key, value);
   return endpoint.toString();
 }
