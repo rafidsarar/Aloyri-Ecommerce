@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { BrandMark } from "@/components/brand-mark";
 import { CartLink } from "@/components/cart-link";
-import { ShopDiscoveryMenu } from "@/components/shop-discovery-menu";
 import { useCatalog } from "@/components/catalog-provider";
 import { buildCategoryDirectory } from "@/lib/storefront-categories";
 import { CloseIcon, MenuIcon, SearchIcon } from "@/components/icons";
@@ -78,26 +77,12 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
 
       <header className={`store-header top-0 z-40 border-b backdrop-blur-xl ${presentation.stickyHeader ? "sticky" : "relative"}`}>
         <div className="shell grid min-h-[68px] min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1 py-2.5 sm:gap-3 xl:grid-cols-[auto_minmax(0,1fr)_auto]">
-          <div className="hidden xl:block"><BrandMark /></div>
-          <nav className="hidden items-center justify-center gap-4 xl:flex xl:gap-5" aria-label="Primary navigation">
-            <ShopDiscoveryMenu />
-            {links.map(([label, href]) => (
-              <Link
-                key={label}
-                href={href}
-                aria-current={current(href) ? "page" : undefined}
-                className="store-nav-link text-[13px] transition aria-[current=page]:font-semibold"
-              >
-                {label}
-              </Link>
-            ))}
-          </nav>
 
           <button
             ref={menuButtonRef}
             type="button"
             onClick={() => setOpen(true)}
-            className="store-icon-link inline-flex h-11 w-11 items-center justify-center rounded-full border xl:hidden"
+            className="store-icon-link inline-flex h-11 w-11 items-center justify-center rounded-full border"
             aria-label="Open menu"
             aria-expanded={open}
             aria-controls="mobile-navigation"
@@ -105,10 +90,10 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
             <MenuIcon />
           </button>
 
-          <div className="justify-self-center xl:hidden"><BrandMark compact /></div>
+          <div className="justify-self-center"><BrandMark compact /></div>
 
           <div className="flex min-w-0 items-center justify-end gap-1 sm:gap-2">
-            <Link href="/track-order" className="store-utility-link hidden rounded-full px-3 py-2 text-xs font-medium xl:block">Track order</Link>
+            <Link href="/track-order" className="store-utility-link hidden rounded-full px-3 py-2 text-xs font-medium lg:block">Track order</Link>
             <Link href="/account" aria-current={current("/account") ? "page" : undefined} className="store-utility-link hidden rounded-full px-3 py-2 text-sm font-semibold sm:block">Account</Link>
             <Link href="/account" aria-label="Customer account and sign in"
               className="store-icon-link inline-flex h-11 w-11 items-center justify-center rounded-full border sm:hidden"
@@ -137,8 +122,8 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
           id="mobile-navigation"
           role="dialog"
           aria-modal="true"
-          aria-label="Navigation menu"
-          className="store-mobile-nav fixed inset-0 z-50 overflow-y-auto overscroll-contain p-4 pb-12 sm:p-6 xl:hidden"
+          aria-label="Store navigation menu"
+          className="store-mobile-nav fixed inset-0 z-50 overflow-y-auto overscroll-contain p-4 pb-12 sm:p-6"
         >
           <div className="flex items-center justify-between">
             <BrandMark />
@@ -153,7 +138,7 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
             </button>
           </div>
 
-          <nav className="mt-8 flex flex-col" aria-label="Mobile navigation">
+          <nav className="mt-8 flex flex-col" aria-label="Store navigation">
             {links.map(([label, href]) => (
               <Link
                 key={label}
@@ -188,7 +173,7 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
           <div className="store-mobile-tool mt-8 rounded-3xl p-5">
             <p className="text-xs uppercase tracking-[0.18em] text-[#8d5f56]">Aloyri edit</p>
             <p className="mt-2 text-sm leading-6 text-[#321f1c]/62">
-              Cleansers, moisturizers and daily SPF selected for simple routines.
+              Discover skincare by category, explore our collections, and find your next routine.
             </p>
           </div>
         </div>
