@@ -12,7 +12,18 @@ test.describe("storefront appearance and navigation", () => {
     await expect(drawer.getByRole("navigation", { name: "Store navigation" }).getByRole("link", { name: "Shop all" })).toBeVisible();
     await drawer.getByRole("button", { name: "Close menu" }).click();
     await expect(drawer).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "Track order", exact: true }).first()).toBeVisible();
+    await expect(page.locator(".store-header").getByRole("link", { name: "Track order" })).toHaveCount(0);
+    const accountButton = page.getByRole("button", { name: "Account menu" });
+    await expect(accountButton).toHaveAttribute("aria-expanded", "false");
+    await accountButton.click();
+    const accountMenu = page.getByRole("navigation", { name: "Account shortcuts" });
+    await expect(accountButton).toHaveAttribute("aria-expanded", "true");
+    await expect(accountMenu.getByRole("link", { name: "My account" })).toHaveAttribute("href", "/account");
+    await expect(accountMenu.getByRole("link", { name: "My orders" })).toHaveAttribute("href", "/account#orders");
+    await expect(accountMenu.getByRole("link", { name: "Track order" })).toHaveAttribute("href", "/track-order");
+    await expect(accountMenu.getByRole("link", { name: "My cart" })).toHaveAttribute("href", "/cart");
+    await page.keyboard.press("Escape");
+    await expect(accountMenu).toHaveCount(0);
     await expect(page.locator(".store-header")).toBeVisible();
     await expect(page.locator(".store-footer")).toBeVisible();
     const accent = await page.locator("body").evaluate((element) => getComputedStyle(element).getPropertyValue("--store-accent").trim());
@@ -20,16 +31,23 @@ test.describe("storefront appearance and navigation", () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   });
 
-  test("mobile menu exposes account and login-free order tracking", async ({ page }) => {
+  test("mobile account dropdown provides all shortcuts outside the hamburger drawer", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
     await page.getByRole("button", { name: "Open menu" }).click();
-    const menu = page.getByRole("dialog", { name: "Store navigation menu" });
-    await expect(menu.getByRole("link", { name: "My account" })).toBeVisible();
-    await expect(menu.getByRole("link", { name: "Track order" })).toBeVisible();
-    await menu.getByRole("link", { name: "Track order" }).click();
+    const drawer = page.getByRole("dialog", { name: "Store navigation menu" });
+    await expect(drawer.getByRole("navigation", { name: "Customer tools" })).toHaveCount(0);
+    await drawer.getByRole("button", { name: "Close menu" }).click();
+    const accountButton = page.getByRole("button", { name: "Account menu" });
+    await expect(accountButton).toBeVisible();
+    await accountButton.click();
+    const accountMenu = page.getByRole("navigation", { name: "Account shortcuts" });
+    await expect(accountMenu.getByRole("link", { name: "My account" })).toBeVisible();
+    await expect(accountMenu.getByRole("link", { name: "My orders" })).toBeVisible();
+    await expect(accountMenu.getByRole("link", { name: "My cart" })).toBeVisible();
+    await accountMenu.getByRole("link", { name: "Track order" }).click();
     await expect(page).toHaveURL(/\/track-order/);
-    await expect(page.getByRole("dialog", { name: "Store navigation menu" })).toHaveCount(0);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    await expect(accountMenu).toHaveCount(0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
 });
