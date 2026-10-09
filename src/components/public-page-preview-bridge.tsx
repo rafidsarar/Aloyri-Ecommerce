@@ -24,7 +24,7 @@ export function PublicPagePreviewBridge() {
       if (site) {
         const footer = document.querySelector(".store-footer-description");
         if (footer && typeof site.footerDescription === "string") footer.textContent = site.footerDescription;
-        const announcement = document.querySelector("[data-storefront-announcement]");
+        const announcement = document.querySelector(".store-announcement");
         if (announcement && typeof site.announcement === "string") announcement.textContent = site.announcement;
       }
       const content = event.data.content as { eyebrow?: string; title?: string; intro?: string; sections?: { title?: string }[] } | undefined;
