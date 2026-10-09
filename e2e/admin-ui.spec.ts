@@ -102,7 +102,7 @@ test.describe("minimal admin interface", () => {
   test("tablet and mobile device previews stay inside the canvas", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`${base}/admin/builder`);
-    for (const [name, nativeWidth] of [["mobile", 390], ["tablet", 768], ["desktop", 1060]] as const) {
+    for (const [name, nativeWidth] of [["mobile", 390], ["tablet", 768], ["desktop", 1060], ["Full desktop", 1440]] as const) {
       await page.getByRole("button", { name, exact: true }).click();
       await expect.poll(async () => page.locator("[data-builder-preview-host] iframe").evaluate(frame => (frame as HTMLIFrameElement).clientWidth)).toBe(nativeWidth);
       await expect.poll(async () => page.evaluate(() => {

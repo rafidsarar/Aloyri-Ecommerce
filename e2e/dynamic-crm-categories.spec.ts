@@ -56,9 +56,10 @@ test("storefront category menu and shop filters refresh when CRM adds a category
   await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
   await expect(page.getByRole("button", { name: /Hair & scalp/ })).toBeVisible({ timeout: 15_000 });
 
-  await page.getByRole("button", { name: /Explore/ }).click();
-  await expect(page.getByRole("group", { name: "Explore skincare" }).getByRole("link", { name: "Hair & scalp" }))
+  await page.getByRole("button", { name: "Open menu" }).click();
+  await expect(page.getByRole("dialog", { name: "Navigation menu" }).getByRole("link", { name: "Hair & scalp" }))
     .toHaveAttribute("href", "/category/hair-scalp");
+  await page.getByRole("button", { name: "Close menu" }).click();
   await expect(page.getByRole("contentinfo").getByRole("link", { name: "Hair & scalp" }))
     .toHaveAttribute("href", "/category/hair-scalp");
 });

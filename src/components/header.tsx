@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { BrandMark } from "@/components/brand-mark";
 import { CartLink } from "@/components/cart-link";
-import { ShopDiscoveryMenu } from "@/components/shop-discovery-menu";
 import { useCatalog } from "@/components/catalog-provider";
 import { buildCategoryDirectory } from "@/lib/storefront-categories";
 import { CloseIcon, MenuIcon, SearchIcon } from "@/components/icons";
@@ -77,41 +76,25 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
       </div> : null}
 
       <header className={`store-header top-0 z-40 border-b backdrop-blur-xl ${presentation.stickyHeader ? "sticky" : "relative"}`}>
-        <div className="shell grid min-h-[68px] min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1 py-2.5 sm:gap-3 xl:grid-cols-[auto_minmax(0,1fr)_auto]">
-          <div className="hidden xl:block"><BrandMark /></div>
-          <nav className="hidden items-center justify-center gap-4 xl:flex xl:gap-5" aria-label="Primary navigation">
-            <ShopDiscoveryMenu />
-            {links.map(([label, href]) => (
-              <Link
-                key={label}
-                href={href}
-                aria-current={current(href) ? "page" : undefined}
-                className="store-nav-link text-[13px] transition aria-[current=page]:font-semibold"
-              >
-                {label}
-              </Link>
-            ))}
-          </nav>
-
+        <div className="shell grid min-h-[68px] min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 py-2.5 sm:min-h-[76px] sm:gap-3">
           <button
             ref={menuButtonRef}
             type="button"
             onClick={() => setOpen(true)}
-            className="store-icon-link inline-flex h-11 w-11 items-center justify-center rounded-full border xl:hidden"
+            className="store-icon-link inline-flex h-10 w-10 items-center justify-center justify-self-start sm:h-11 sm:w-11 rounded-full border transition hover:-translate-y-0.5"
             aria-label="Open menu"
             aria-expanded={open}
-            aria-controls="mobile-navigation"
+            aria-controls="storefront-navigation"
           >
             <MenuIcon />
           </button>
 
-          <div className="justify-self-center xl:hidden"><BrandMark compact /></div>
+          <div className="justify-self-center"><BrandMark compact /></div>
 
           <div className="flex min-w-0 items-center justify-end gap-1 sm:gap-2">
-            <Link href="/track-order" className="store-utility-link hidden rounded-full px-3 py-2 text-xs font-medium xl:block">Track order</Link>
             <Link href="/account" aria-current={current("/account") ? "page" : undefined} className="store-utility-link hidden rounded-full px-3 py-2 text-sm font-semibold sm:block">Account</Link>
             <Link href="/account" aria-label="Customer account and sign in"
-              className="store-icon-link inline-flex h-11 w-11 items-center justify-center rounded-full border sm:hidden"
+              className="store-icon-link inline-flex h-10 w-10 items-center justify-center rounded-full border sm:hidden"
               aria-current={current("/account") ? "page" : undefined}>
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"
                 strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -121,7 +104,7 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
             </Link>
             <Link
               href="/shop"
-              className="store-icon-link hidden h-11 w-11 items-center justify-center rounded-full border transition min-[380px]:inline-flex"
+              className="store-icon-link hidden h-10 w-10 items-center justify-center rounded-full border transition min-[380px]:inline-flex sm:h-11 sm:w-11"
               aria-label="Search products"
             >
               <SearchIcon />
@@ -133,15 +116,19 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
 
       {open ? (
         <div
-          ref={menuDialogRef}
-          id="mobile-navigation"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Navigation menu"
-          className="store-mobile-nav fixed inset-0 z-50 overflow-y-auto overscroll-contain p-4 pb-12 sm:p-6 xl:hidden"
+          id="storefront-navigation"
+          className="fixed inset-0 z-[60]"
         >
-          <div className="flex items-center justify-between">
-            <BrandMark />
+          <button type="button" tabIndex={-1} aria-label="Close navigation backdrop" onClick={closeMenu} className="absolute inset-0 h-full w-full bg-[#2f1d1a]/40 backdrop-blur-[3px]" />
+          <div
+            ref={menuDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation menu"
+            className="store-mobile-nav absolute inset-y-0 left-0 flex w-[min(100vw,460px)] flex-col overflow-y-auto overscroll-contain border-r border-[#713a35]/10 px-5 pb-10 pt-5 shadow-2xl sm:px-8 sm:pt-7"
+          >
+          <div className="flex items-center justify-between gap-4 border-b border-[#713a35]/10 pb-5">
+            <BrandMark onNavigate={() => setOpen(false)} />
             <button
               ref={closeButtonRef}
               type="button"
@@ -153,29 +140,33 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
             </button>
           </div>
 
-          <nav className="mt-8 flex flex-col" aria-label="Mobile navigation">
+          <p className="mt-7 text-[10px] font-bold uppercase tracking-[0.2em] text-[#8d5f56]">Discover Aloyri</p>
+          <nav className="mt-1 flex flex-col" aria-label="Primary navigation">
+            <Link href="/shop" onClick={() => setOpen(false)} aria-current={current("/shop") ? "page" : undefined} className="store-mobile-link display group flex items-center justify-between border-b py-3 text-2xl transition-all hover:pl-2 sm:text-[1.8rem]">
+              Explore skincare <span aria-hidden="true" className="text-base font-sans">↗</span>
+            </Link>
             {links.map(([label, href]) => (
               <Link
                 key={label}
                 href={href}
                 aria-current={current(href) ? "page" : undefined}
                 onClick={() => setOpen(false)}
-                className="store-mobile-link display border-b py-4 text-3xl"
+                className="store-mobile-link display group flex items-center justify-between border-b py-3 text-2xl transition-all hover:pl-2 sm:text-[1.8rem]"
               >
-                {label}
+                {label} <span aria-hidden="true" className="text-base font-sans opacity-50 transition-transform group-hover:translate-x-1">↗</span>
               </Link>
             ))}
           </nav>
 
           <Link href="/shop" onClick={() => setOpen(false)}
-            className="store-mobile-tool mt-6 flex min-h-12 items-center justify-between rounded-2xl px-4 text-sm font-semibold">
+            className="store-mobile-tool mt-6 flex min-h-12 items-center justify-between rounded-2xl px-4 text-sm font-semibold transition hover:brightness-95">
             Search skincare and brands <SearchIcon />
           </Link>
           <div className="store-discovery-strip mt-6 rounded-2xl p-4">
             <p className="text-[10px] font-semibold uppercase tracking-[.18em]">Shop by category</p>
             <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
               {synced && publicCategories.length
-                ? publicCategories.map(item => <Link key={item.slug} href={item.href} onClick={() => setOpen(false)}>{item.name}</Link>)
+                ? publicCategories.map(item => <Link key={item.slug} href={item.href} onClick={() => setOpen(false)} className="rounded-lg px-2 py-2 transition hover:bg-white/70">{item.name}</Link>)
                 : <Link href="/shop" onClick={() => setOpen(false)}>Browse all categories</Link>}
               <Link href="/shop?stock=in-stock" onClick={() => setOpen(false)}>Available now</Link>
             </div>
@@ -188,8 +179,9 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
           <div className="store-mobile-tool mt-8 rounded-3xl p-5">
             <p className="text-xs uppercase tracking-[0.18em] text-[#8d5f56]">Aloyri edit</p>
             <p className="mt-2 text-sm leading-6 text-[#321f1c]/62">
-              Cleansers, moisturizers and daily SPF selected for simple routines.
+              Discover the categories, products and routines that fit your skincare needs.
             </p>
+          </div>
           </div>
         </div>
       ) : null}

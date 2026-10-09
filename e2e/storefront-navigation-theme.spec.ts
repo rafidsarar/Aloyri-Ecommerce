@@ -5,8 +5,12 @@ test.describe("storefront appearance and navigation", () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/");
     await expect(page.locator("body")).toHaveAttribute("data-storefront-theme", /^(rose|sage|sand)$/);
-    await expect(page.getByRole("navigation", { name: "Primary navigation" }).getByRole("link", { name: "Shop all" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Track order", exact: true }).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: "Open menu" })).toBeVisible();
+    await page.getByRole("button", { name: "Open menu" }).click();
+    const drawer = page.getByRole("dialog", { name: "Navigation menu" });
+    await expect(drawer.getByRole("navigation", { name: "Primary navigation" }).getByRole("link", { name: "Shop all" })).toBeVisible();
+    await expect(drawer.getByRole("link", { name: "Track order" })).toBeVisible();
+    await page.getByRole("button", { name: "Close menu" }).click();
     await expect(page.locator(".store-header")).toBeVisible();
     await expect(page.locator(".store-footer")).toBeVisible();
     const accent = await page.locator("body").evaluate((element) => getComputedStyle(element).getPropertyValue("--store-accent").trim());
