@@ -25,6 +25,7 @@ test("cart icon opens a full-height themed drawer with keyboard dismissal and qu
   await expect(drawer).toBeVisible();
   await expect(drawer.getByText("Refreshing Facial Wash", { exact: true })).toBeVisible();
   await expect(drawer.getByRole("link", { name: "Proceed to checkout" })).toHaveAttribute("href", "/checkout");
+  await expect.poll(() => drawer.evaluate(node => Math.round(node.getBoundingClientRect().right))).toBe(390);
   const geometry = await drawer.evaluate(node => {
     const rect = node.getBoundingClientRect();
     return { left: rect.left, right: rect.right, height: rect.height, vw: innerWidth, vh: innerHeight };
