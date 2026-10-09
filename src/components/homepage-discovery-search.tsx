@@ -26,12 +26,14 @@ export function HomepageDiscoverySearch({
   const [tab, setTab] = useState<"all" | "products" | "categories">("all");
   const [recent, setRecent] = useState<string[]>([]);
   const rootRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
+  function readRecentSearches() {
     try {
       const saved: unknown = JSON.parse(sessionStorage.getItem("aloyri-recent-searches") || "[]");
-      if (Array.isArray(saved)) setRecent(saved.filter((v): v is string => typeof v === "string").slice(0, 5));
-    } catch { /* Storage is optional. */ }
-  }, []);
+      if (Array.isArray(saved)) {
+        setRecent(saved.filter((v): v is string => typeof v === "string").slice(0, 5));
+      }
+    } catch { /* Browsing remains available when session storage is blocked. */ }
+  }
   useEffect(() => {
     if (!focused) return;
     const closeOutside = (event: PointerEvent) => {
@@ -79,7 +81,7 @@ export function HomepageDiscoverySearch({
         </svg>
         <input ref={inputRef} id="home-product-search" name="q" type="text" inputMode="search" enterKeyHint="search"
           value={query} onChange={event => setQuery(event.target.value)}
-          onFocus={() => setFocused(true)}
+          onFocus={() => { readRecentSearches(); setFocused(true); }}
           onKeyDown={event => {
             if (event.key === "Escape" && showSuggestions) {
               // The native Escape action on input[type=search] clears the query.
