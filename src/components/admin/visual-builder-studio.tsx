@@ -255,7 +255,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
               <button type="button" aria-pressed={previewMode === "draft"} onClick={() => setPreviewMode("draft")} className={previewMode === "draft" ? "min-h-10 rounded-lg bg-[#713a35] px-3 text-xs font-semibold text-white" : secondaryButton}>Unsaved layout & components</button>
             </div>}
             <div className="overflow-x-auto rounded-xl bg-[#eee8e4] p-2 sm:p-4">
-              {isHomepage && previewMode === "live" ? <iframe key={device} title={`Real storefront preview at ${deviceWidths[device]} pixels`} ref={draftFrame} src="/?builderPreview=1" onLoad={sendDraft} width={deviceWidths[device]} height={780} loading="lazy" className="mx-auto block rounded-lg border border-black/10 bg-white shadow-sm" style={{ width: deviceWidths[device], height: 780, maxWidth: "none" }} /> : null}
+              {isHomepage && previewMode === "live" ? <iframe key={device} title={`Real storefront preview at ${deviceWidths[device]} pixels`} ref={draftFrame} src="/?builderPreview=1" onLoad={() => { sendDraft(); draftFrame.current?.contentWindow?.postMessage({ type: "aloyri-builder-site-draft", siteContent }, window.location.origin); }} width={deviceWidths[device]} height={780} loading="lazy" className="mx-auto block rounded-lg border border-black/10 bg-white shadow-sm" style={{ width: deviceWidths[device], height: 780, maxWidth: "none" }} /> : null}
               {siteContent && <div className="mb-3 space-y-3 rounded-xl border border-black/10 bg-white p-4" aria-label="Header and footer editor">
                 <p className="text-sm font-semibold">Existing header and footer content</p>
                 <label className="block text-xs font-semibold">Announcement text
