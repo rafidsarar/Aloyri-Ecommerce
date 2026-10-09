@@ -6,6 +6,8 @@ import { useEffect, useRef, useState } from "react";
 import { BrandMark } from "@/components/brand-mark";
 import { CartLink } from "@/components/cart-link";
 import { ShopDiscoveryMenu } from "@/components/shop-discovery-menu";
+import { useCatalog } from "@/components/catalog-provider";
+import { buildCategoryDirectory } from "@/lib/storefront-categories";
 import { CloseIcon, MenuIcon, SearchIcon } from "@/components/icons";
 
 import { defaultPresentation, type StorefrontPresentation } from "@/lib/storefront-presentation";
@@ -13,6 +15,8 @@ import { defaultPresentation, type StorefrontPresentation } from "@/lib/storefro
 export function Header({ announcement, presentation = defaultPresentation }: { announcement: string; presentation?: StorefrontPresentation }) {
   const links = presentation.navigation.map(item=>[item.label,item.href]);
   const pathname = usePathname();
+  const { categories: crmCategories, products, synced } = useCatalog();
+  const publicCategories = buildCategoryDirectory(crmCategories, products);
   const [open, setOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -168,11 +172,11 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
             Search skincare and brands <SearchIcon />
           </Link>
           <div className="store-discovery-strip mt-6 rounded-2xl p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[.18em]">Shop by routine</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[.18em]">Shop by category</p>
             <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-              <Link href="/category/cleansers" onClick={() => setOpen(false)}>Cleansers</Link>
-              <Link href="/category/moisturizers" onClick={() => setOpen(false)}>Moisturizers</Link>
-              <Link href="/category/sunscreen" onClick={() => setOpen(false)}>Sunscreen</Link>
+              {synced && publicCategories.length
+                ? publicCategories.map(item => <Link key={item.slug} href={item.href} onClick={() => setOpen(false)}>{item.name}</Link>)
+                : <Link href="/shop" onClick={() => setOpen(false)}>Browse all categories</Link>}
               <Link href="/shop?stock=in-stock" onClick={() => setOpen(false)}>Available now</Link>
             </div>
           </div>

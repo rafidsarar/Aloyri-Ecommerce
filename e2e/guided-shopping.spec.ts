@@ -17,12 +17,13 @@ async function mockCatalog(page: Page) {
 
 test("desktop discovery opens on click and closes on Escape", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
+  await mockCatalog(page);
   await page.goto("/");
   const explore = page.getByRole("button", { name: /Explore/ });
   await expect(explore).toBeVisible();
   await explore.click();
   await expect(explore).toHaveAttribute("aria-expanded", "true");
-  await expect(page.getByLabel("Explore skincare").getByRole("link", { name: "Cleansers" })).toBeVisible();
+  await expect(page.getByLabel("Explore skincare").getByRole("link", { name: "Cleanser" })).toHaveAttribute("href", "/category/cleansers");
   await page.keyboard.press("Escape");
   await expect(explore).toHaveAttribute("aria-expanded", "false");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

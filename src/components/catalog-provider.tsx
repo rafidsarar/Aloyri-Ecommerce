@@ -10,6 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { categoryNamesFromCatalog } from "@/lib/storefront-categories";
 import {
   mergeLiveCatalog,
   type LiveCatalogProduct,
@@ -18,6 +19,7 @@ import {
 
 type CatalogContextValue = {
   products: Product[];
+  categories: string[];
   synced: boolean;
   refreshing: boolean;
   error: string;
@@ -29,6 +31,7 @@ const CatalogContext = createContext<CatalogContextValue | null>(null);
 
 export function CatalogProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [synced, setSynced] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
@@ -46,6 +49,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       });
       const result = (await response.json()) as {
         products?: LiveCatalogProduct[];
+        categories?: string[];
         generatedAt?: string;
         error?: string;
       };
@@ -55,6 +59,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       }
 
       setProducts(mergeLiveCatalog(result.products));
+      setCategories(categoryNamesFromCatalog(result.categories, result.products.filter(product => product.active)));
       setSynced(true);
       setError("");
       setRefreshedAt(result.generatedAt || new Date().toISOString());
@@ -92,8 +97,8 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   const value = useMemo(
-    () => ({ products, synced, refreshing, error, refreshedAt, refresh }),
-    [products, synced, refreshing, error, refreshedAt, refresh],
+    () => ({ products, categories, synced, refreshing, error, refreshedAt, refresh }),
+    [products, categories, synced, refreshing, error, refreshedAt, refresh],
   );
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;

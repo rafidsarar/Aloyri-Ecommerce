@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { useCatalog } from "@/components/catalog-provider";
+import { buildCategoryDirectory } from "@/lib/storefront-categories";
 
 const groups = [
   {
@@ -10,14 +12,6 @@ const groups = [
       { label: "All skincare", href: "/shop" },
       { label: "Bestsellers", href: "/shop?sort=bestseller" },
       { label: "Available now", href: "/shop?stock=in-stock" },
-    ],
-  },
-  {
-    title: "Find your step",
-    links: [
-      { label: "Cleansers", href: "/category/cleansers" },
-      { label: "Moisturizers", href: "/category/moisturizers" },
-      { label: "Sunscreen & SPF", href: "/category/sunscreen" },
     ],
   },
   {
@@ -40,6 +34,18 @@ const groups = [
 ];
 
 export function ShopDiscoveryMenu() {
+  const { products, categories, synced } = useCatalog();
+  const directory = buildCategoryDirectory(categories, products);
+  const navigationGroups = [
+    groups[0],
+    {
+      title: "Shop by category",
+      links: synced && directory.length
+        ? directory.map(item => ({ label: item.name, href: item.href }))
+        : [{ label: "Browse categories", href: "/shop" }],
+    },
+    ...groups.slice(1),
+  ];
   const [open, setOpen] = useState(false);
   const wrapper = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -79,9 +85,9 @@ export function ShopDiscoveryMenu() {
         Explore <span aria-hidden="true" className={"text-[10px] transition-transform " + (open ? "rotate-180" : "")}>⌄</span>
       </button>
       {open ? (
-        <div id="aloyri-shop-discovery" role="group" aria-label="Explore skincare" className="store-discovery-menu absolute left-1/2 -translate-x-[25%] top-full z-50 mt-1 w-[min(78vw,860px)] rounded-[1.6rem] border p-6 shadow-xl">
+        <div id="aloyri-shop-discovery" role="group" aria-label="Explore skincare" className="store-discovery-menu absolute left-1/2 -translate-x-[25%] top-full z-50 mt-1 max-h-[min(75vh,690px)] w-[min(78vw,860px)] overflow-y-auto rounded-[1.6rem] border p-6 shadow-xl">
           <div className="grid gap-6 md:grid-cols-4">
-            {groups.map((group) => (
+            {navigationGroups.map((group) => (
               <div key={group.title}>
                 <p className="store-discovery-muted text-[10px] font-semibold uppercase tracking-[.2em]">{group.title}</p>
                 <div className="mt-4 flex flex-col gap-1">
