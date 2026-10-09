@@ -116,19 +116,20 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
             <div ref={accountRef} className="relative">
               <button type="button" aria-label="Account menu" aria-expanded={accountOpen} aria-controls="header-account-menu"
                 onClick={() => setAccountOpen(value => !value)}
-                className="store-utility-link inline-flex h-11 w-11 items-center justify-center rounded-full border border-[var(--store-border)] p-0 text-sm font-semibold sm:h-auto sm:w-auto sm:min-h-11 sm:gap-2 sm:border-0 sm:px-3 sm:py-2">
-                <span className="hidden sm:inline">Account</span>
-                <svg className="sm:hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                className="store-icon-link inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#713a35]/15 bg-white/70 transition hover:border-[#713a35]/30 hover:bg-white">
+                <svg className="h-5 w-5" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <circle cx="12" cy="8" r="3.5" /><path d="M5.5 20c0-3.3 2.7-6 6.5-6s6.5 2.7 6.5 6" />
                 </svg>
-                <span aria-hidden="true" className="hidden text-xs sm:inline">{accountOpen ? "⌃" : "⌄"}</span>
               </button>
               {accountOpen ? (
                 <nav id="header-account-menu" aria-label="Account shortcuts"
-                  className="absolute right-0 top-full z-50 mt-2 w-52 rounded-2xl border border-[#713a35]/15 bg-[#fffaf7] p-2 shadow-xl">
+                  className="absolute right-0 top-full z-50 mt-3 w-64 max-w-[calc(100vw-1rem)] rounded-2xl border border-[#713a35]/15 bg-[#fffaf7] p-3 shadow-2xl">
+                  <p className="border-b border-[#713a35]/10 px-4 pb-3 pt-2 text-xs font-semibold uppercase tracking-widest text-[#713a35]">Your Aloyri account</p>
                   {[
                     ["My account", "/account"],
-                    ["My orders", "/account#orders"],
+                    ["My orders & returns", "/account?section=orders"],
+                    ["Wishlist", "/account?section=wishlist"],
+                    ["Settings", "/account?section=preferences"],
                     ["Track order", "/track-order"],
                     ["My cart", "/cart"],
                   ].map(([label, href]) => (
