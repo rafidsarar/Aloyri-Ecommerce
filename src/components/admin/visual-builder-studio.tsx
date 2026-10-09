@@ -5,7 +5,7 @@ import Link from "next/link";
 import { saveVisualBuilder } from "@/app/admin/actions";
 import { VisualBuilderBlock } from "@/components/visual-builder-block";
 import { homepageBlocks, type HomepageBlockId } from "@/lib/homepage-builder";
-import type { StorefrontConfig } from "@/lib/storefront-admin-store";
+import type { InfoPageContent, StorefrontConfig } from "@/lib/storefront-admin-store";
 import {
   coreBlockId,
   customBlockId,
@@ -60,9 +60,11 @@ function freshBlock(kind: VisualBlockKind): VisualBlock {
   };
 }
 
-export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], initialCoreContent, advancedSettings, initialView = "canvas" }: { initialLayout: VisualLayout; pageKey: "home" | VisualPageKey; mediaPaths?: string[]; initialCoreContent?: CoreContent; advancedSettings?: ReactNode; initialView?: "canvas" | "advanced" }) {
+export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], initialCoreContent, advancedSettings, initialView = "canvas", initialPageContent }: { initialLayout: VisualLayout; pageKey: "home" | VisualPageKey; mediaPaths?: string[]; initialCoreContent?: CoreContent; advancedSettings?: ReactNode; initialView?: "canvas" | "advanced"; initialPageContent?: InfoPageContent }) {
   const [{ past, current: layout, future }, dispatch] = useReducer(historyReducer, { past: [], current: initialLayout, future: [] });
   const [coreContent, setCoreContent] = useState<CoreContent | undefined>(initialCoreContent);
+  const [pageContent, setPageContent] = useState<InfoPageContent | undefined>(initialPageContent);
+  const publicFrame = useRef<HTMLIFrameElement>(null);
   const [initialCoreSnapshot] = useState(() => initialCoreContent ? JSON.stringify(initialCoreContent) : "");
   const [corePast, setCorePast] = useState<CoreContent[]>([]);
   const [coreFuture, setCoreFuture] = useState<CoreContent[]>([]);
@@ -79,7 +81,6 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
   const [device, setDevice] = useState<"mobile" | "tablet" | "desktop">("desktop");
   const [previewMode, setPreviewMode] = useState<"live" | "draft">("live");
   const draftFrame = useRef<HTMLIFrameElement>(null);
-  const publicFrame = useRef<HTMLIFrameElement>(null);
   const sendDraft = useCallback(() => draftFrame.current?.contentWindow?.postMessage({ type: "aloyri-builder-draft", layout, coreContent, selectedId }, window.location.origin), [layout, coreContent, selectedId]);
   useEffect(() => {
     const receiveReady = (event: MessageEvent) => {
@@ -94,6 +95,9 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
     return () => window.removeEventListener("message", receiveReady);
   }, [layout, sendDraft]);
   const [publicSelection, setPublicSelection] = useState<"header" | "footer" | "page">("page");
+  useEffect(() => {
+    publicFrame.current?.contentWindow?.postMessage({ type: "aloyri-builder-page-draft", content: pageContent }, window.location.origin);
+  }, [pageContent]);
   const [filter, setFilter] = useState("");
   const isHomepage = pageKey === "home";
   const selectedCustom = layout.blocks.find(block => customBlockId(block.id) === selectedId);
@@ -176,6 +180,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
       {isHomepage && coreContent && <input type="hidden" name="coreContent" value={JSON.stringify(coreContent)} />}
       {isHomepage && <input type="hidden" name="coreBaseline" value={initialCoreSnapshot} />}
       <input type="hidden" name="pageKey" value={pageKey} />
+      {pageContent && <input type="hidden" name="pageContent" value={JSON.stringify(pageContent)} />}
       {isHomepage && advancedSettings && <input type="hidden" name="homepageControls" value="1" />}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-black/10 bg-white p-4">
         <div>
@@ -247,12 +252,22 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
             </div>}
             <div className="overflow-x-auto rounded-xl bg-[#eee8e4] p-2 sm:p-4">
               {isHomepage && previewMode === "live" ? <iframe key={device} title={`Real storefront preview at ${deviceWidths[device]} pixels`} ref={draftFrame} src="/?builderPreview=1" onLoad={sendDraft} width={deviceWidths[device]} height={780} loading="lazy" className="mx-auto block rounded-lg border border-black/10 bg-white shadow-sm" style={{ width: deviceWidths[device], height: 780, maxWidth: "none" }} /> : null}
+              {pageContent && <div className="mb-3 space-y-3 rounded-xl border border-black/10 bg-white p-4" aria-label="Existing page text editor">
+                <p className="text-sm font-semibold">Edit existing {pageKey} page</p>
+                <p className="text-xs text-black/60">Changes appear in the page preview and are saved together with the layout.</p>
+                {(["eyebrow", "title", "intro"] as const).map(key => <label key={key} className="block text-xs font-semibold capitalize">{key}
+                  <input className={field + " mt-1"} value={pageContent[key]} maxLength={key === "intro" ? 1000 : key === "title" ? 180 : 120} onChange={event => setPageContent(current => current ? { ...current, [key]: event.target.value } : current)} />
+                </label>)}
+                {pageContent.sections.map((section, index) => <label key={index} className="block text-xs font-semibold">Section {index + 1} heading
+                  <input className={field + " mt-1"} value={section.title} maxLength={180} onChange={event => setPageContent(current => current ? { ...current, sections: current.sections.map((item, i) => i === index ? { ...item, title: event.target.value } : item) } : current)} />
+                </label>)}
+              </div>}
               {!isHomepage && <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg bg-white p-3 text-xs">
                 <span className="font-semibold">Selected: {publicSelection === "header" ? "Site header" : publicSelection === "footer" ? "Site footer" : "Page content"}</span>
                 <Link className={secondaryButton} href={publicSelection === "page" && ["about", "shipping", "returns", "contact", "faq"].includes(pageKey) ? `/admin/pages/${pageKey}` : publicSelection === "page" ? "/admin/merchandising" : "/admin/settings"}>Edit selected existing feature ↗</Link>
                 <span className="text-black/50">Click an existing area in the preview to select it.</span>
               </div>}
-              {!isHomepage && <iframe ref={publicFrame} title={`Saved ${pageKey} page preview`} src={(pageKey === "shipping" ? "/shipping-delivery" : pageKey === "returns" ? "/returns-refunds" : pageKey === "category" ? "/shop" : pageKey === "product" ? "/shop" : `/${pageKey}`) + "?builderPreview=1"} width={deviceWidths[device]} height={650} loading="lazy" className="mx-auto mb-3 block rounded-lg border border-black/10 bg-white" style={{ width: deviceWidths[device], maxWidth: "none" }} />}
+              {!isHomepage && <iframe ref={publicFrame} onLoad={() => publicFrame.current?.contentWindow?.postMessage({ type: "aloyri-builder-page-draft", content: pageContent }, window.location.origin)} title={`Saved ${pageKey} page preview`} src={(pageKey === "shipping" ? "/shipping-delivery" : pageKey === "returns" ? "/returns-refunds" : pageKey === "category" ? "/shop" : pageKey === "product" ? "/shop" : `/${pageKey}`) + "?builderPreview=1"} width={deviceWidths[device]} height={650} loading="lazy" className="mx-auto mb-3 block rounded-lg border border-black/10 bg-white" style={{ width: deviceWidths[device], maxWidth: "none" }} />}
               {(!isHomepage || previewMode === "draft") && <div className="mx-auto min-h-56 overflow-hidden rounded-lg bg-[#fffaf8] shadow-sm" style={{ width: deviceWidths[device], maxWidth: "none" }}>
                 <div className="flex justify-between border-b border-black/10 bg-white px-5 py-3 text-xs font-semibold"><span>ALOYRI</span><span>Preview</span></div>
                 {layout.order.map(id => {
