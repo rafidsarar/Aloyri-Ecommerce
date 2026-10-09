@@ -228,7 +228,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
     ),
     categories: (
       <>
-      {home.showCategories ? <HomepageCategoryShowcase products={catalogProducts} eyebrow={home.categoriesEyebrow} title={home.categoriesTitle} intro={home.categoriesIntro} /> : null}
+      {home.showCategories ? <HomepageCategoryShowcase products={catalogProducts} eyebrow={home.categoriesEyebrow} title={home.categoriesTitle} intro={home.categoriesIntro} categoryOrder={config.merchandising.discovery.categoryOrder} synced={crm.ok} /> : null}
       </>
     ),
     focus: (
