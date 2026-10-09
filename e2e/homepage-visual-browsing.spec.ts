@@ -8,7 +8,7 @@ test.describe("homepage visual shopping", () => {
     const categories = page.locator('[aria-labelledby="shop-by-category"]');
     // Category cards follow the CRM registry, so a workspace is not
     // required to have the original three skincare categories.
-    const categoryLinks = categories.getByRole("link");
+    const categoryLinks = categories.locator('a[href^="/category/"]');
     await expect(categoryLinks.first()).toBeVisible();
     const hrefs = await categoryLinks.evaluateAll(links => links.map(link => link.getAttribute("href")));
     expect(hrefs.length).toBeGreaterThan(0);
