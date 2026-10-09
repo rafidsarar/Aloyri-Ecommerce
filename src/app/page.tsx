@@ -113,14 +113,14 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
       <>
       {home.showHero && <section className="shell pt-5 md:pt-8">
         <div className={`store-hero store-hero-${home.heroStyle} store-hero-align-${home.heroAlignment} grid min-h-[490px] overflow-hidden rounded-[2rem] border ${home.heroLayout === "stacked" ? "grid-cols-1" : "lg:grid-cols-[1.03fr_.97fr]"}`}>
-          <div className="store-hero-copy relative z-10 flex flex-col justify-between p-7 sm:p-10 lg:p-14">
+          <div className="store-hero-copy min-w-0 relative z-10 flex flex-col justify-between p-7 sm:p-10 lg:p-14">
             <div className="store-home-overline flex items-center gap-3">
               <span className="h-px w-8 bg-[#b9725f]/55" />
               {home.eyebrow}
             </div>
 
             <div className="max-w-2xl py-8 lg:py-10">
-              <h1 className="store-hero-heading display max-w-[13ch] text-[clamp(2.75rem,5.5vw,5.6rem)] leading-[1.02]">
+              <h1 className="store-hero-heading display max-w-[13ch] text-[clamp(2.25rem,4.8vw,5rem)] leading-[1.02]">
                 {home.headline}
               </h1>
               <p className="store-hero-muted mt-7 max-w-xl text-base leading-7 sm:text-lg">
@@ -150,7 +150,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
             </div>
           </div>
 
-          <div className={`store-hero-art relative min-h-[280px] lg:min-h-[420px] p-6 sm:p-9 lg:p-12 ${config.presentation.showHeroImageOnMobile ? "" : "hidden lg:block"}`}>
+          <div className={`store-hero-art min-w-0 relative min-h-[280px] lg:min-h-[420px] p-6 sm:p-9 lg:p-12 ${config.presentation.showHeroImageOnMobile ? "" : "hidden lg:block"}`}>
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_18%,rgba(255,255,255,.85),transparent_36%)]" />
             <div className="relative mx-auto flex h-full max-w-[580px] items-center">
               <div className="relative w-full">
@@ -167,7 +167,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
                 />
                 )}
                 {!home.heroImagePath && <div className="store-hero-product-caption absolute -bottom-5 left-5 right-5 rounded-[1.35rem] border border-white/70 bg-white/90 p-5 shadow-xl backdrop-blur-md sm:left-8 sm:right-8">
-                  <div className="flex items-end justify-between gap-5">
+                  <div className="flex min-w-0 items-end justify-between gap-4">
                     <div>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#713a35]/50">
                         Featured skincare

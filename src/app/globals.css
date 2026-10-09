@@ -103,7 +103,7 @@ a {
 
 @media (min-width: 768px) {
   .shell {
-    width: min(100% - 4rem, 1440px);
+    width: min(100% - 4rem, var(--storefront-width, 1440px));
   }
 }
 
@@ -650,3 +650,30 @@ body[data-storefront-theme="sand"] {
   .shop-active-filter { transition: none; }
   .store-category-gallery { scroll-behavior: auto; }
 }
+
+/* Shared brand geometry keeps the mark centered regardless of utility-link width. */
+.brand-mark { display: inline-flex; flex: none; width: 190px; max-width: 100%; align-items: center; line-height: 1; }
+.brand-mark-compact { width: 160px; }
+.brand-artwork { display: block; width: 100%; height: auto; overflow: hidden; }
+.store-header-grid { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 12px; min-height: 84px; padding-block: 14px; }
+.store-header-grid > button { justify-self: start; }
+.store-header-brand { justify-self: center; }
+.store-header-actions { justify-self: end; }
+.store-drawer-heading { position: sticky; top: -20px; z-index: 1; padding-top: 8px; background: var(--store-surface); }
+.store-navigation-drawer { animation: store-drawer-enter 180ms ease-out; padding-bottom: max(28px, env(safe-area-inset-bottom)); }
+.store-navigation-drawer .store-mobile-tool { min-width: 0; overflow-wrap: anywhere; }
+.store-navigation-drawer .store-mobile-link[aria-current="page"],
+.store-navigation-drawer .store-mobile-tool[aria-current="page"] { background: var(--store-panel); color: var(--store-accent); font-weight: 700; }
+.store-navigation-drawer .store-mobile-link { padding-inline: 12px; border-radius: 8px; }
+.store-drawer-search svg { flex-shrink: 0; }
+.store-hero-copy > div { min-width: 0; }
+.store-hero-heading { overflow-wrap: break-word; }
+.store-hero-product-caption { overflow-wrap: anywhere; }
+@keyframes store-drawer-enter { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+@media (max-width: 767px) {
+  .store-header-grid { min-height: 72px; gap: 8px; padding-block: 10px; }
+  .store-header-brand .brand-mark { width: clamp(116px, 23vw, 160px); }
+  .store-header-actions .store-account-icon { display: none; }
+  .store-hero-copy { padding: clamp(24px, 5vw, 40px); }
+}
+@media (prefers-reduced-motion: reduce) { .store-navigation-drawer { animation: none; } }

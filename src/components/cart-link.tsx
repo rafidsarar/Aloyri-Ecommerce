@@ -23,7 +23,7 @@ export function CartLink() {
   return (
     <Link
       href="/cart"
-      className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#713a35]/15 bg-white/70 transition hover:border-[#713a35]/30 hover:bg-white"
+      className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#713a35]/15 bg-white/70 transition hover:border-[#713a35]/30 hover:bg-white"
       aria-label={count > 0 ? `Cart with ${count} item${count === 1 ? "" : "s"}` : "Cart"}
     >
       <BagIcon />

@@ -44,7 +44,7 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
           menuDialogRef.current.querySelectorAll<HTMLElement>(
             'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])',
           ),
-        ).filter((element) => !element.hasAttribute("hidden"));
+        ).filter((element) => !element.hasAttribute("hidden") && element.getClientRects().length > 0);
 
         if (!focusable.length) return;
         const first = focusable[0];
@@ -77,7 +77,7 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
       </div> : null}
 
       <header className={`store-header top-0 z-40 border-b backdrop-blur-xl ${presentation.stickyHeader ? "sticky" : "relative"}`}>
-        <div className="shell grid min-h-[68px] min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1 py-2.5 sm:gap-3 xl:grid-cols-[auto_minmax(0,1fr)_auto]">
+        <div className="shell store-header-grid">
 
           <button
             ref={menuButtonRef}
@@ -91,13 +91,13 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
             <MenuIcon />
           </button>
 
-          <div className="justify-self-center"><BrandMark compact /></div>
+          <div className="store-header-brand"><BrandMark compact /></div>
 
-          <div className="flex min-w-0 items-center justify-end gap-1 sm:gap-2">
-            <Link href="/track-order" className="store-utility-link hidden rounded-full px-3 py-2 text-xs font-medium lg:block">Track order</Link>
+          <div className="store-header-actions flex min-w-0 items-center justify-end gap-1 sm:gap-2">
+            <Link href="/track-order" className="store-utility-link hidden rounded-full px-3 py-2 text-xs font-medium xl:block">Track order</Link>
             <Link href="/account" aria-current={current("/account") ? "page" : undefined} className="store-utility-link hidden rounded-full px-3 py-2 text-sm font-semibold sm:block">Account</Link>
             <Link href="/account" aria-label="Customer account and sign in"
-              className="store-icon-link inline-flex h-11 w-11 items-center justify-center rounded-full border sm:hidden"
+              className="store-account-icon store-icon-link inline-flex h-11 w-11 items-center justify-center rounded-full border sm:hidden"
               aria-current={current("/account") ? "page" : undefined}>
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"
                 strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -107,7 +107,7 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
             </Link>
             <Link
               href="/shop"
-              className="store-icon-link hidden h-11 w-11 items-center justify-center rounded-full border transition min-[380px]:inline-flex"
+              className="store-icon-link hidden h-11 w-11 items-center justify-center rounded-full border transition md:inline-flex"
               aria-label="Search products"
             >
               <SearchIcon />
@@ -123,14 +123,18 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
             onClick={closeMenu} className="absolute inset-0 bg-[#241512]/55 backdrop-blur-[3px]" />
           <div ref={menuDialogRef} id="mobile-navigation" role="dialog" aria-modal="true"
             aria-label="Store navigation menu"
-            className="store-mobile-nav absolute inset-y-0 left-0 flex w-[min(90vw,420px)] flex-col overflow-y-auto overscroll-contain border-r border-[#713a35]/10 px-5 pb-7 pt-5 shadow-2xl sm:px-7">
-            <div className="flex items-center justify-between gap-4 border-b border-[#713a35]/10 pb-5">
+            className="store-mobile-nav store-navigation-drawer absolute inset-y-0 left-0 flex w-[min(92vw,440px)] flex-col overflow-y-auto overscroll-contain border-r border-[#713a35]/10 px-5 pb-7 pt-5 shadow-2xl sm:px-7">
+            <div className="store-drawer-heading flex items-center justify-between gap-4 border-b border-[#713a35]/10 pb-5">
               <BrandMark compact />
               <button ref={closeButtonRef} type="button" onClick={closeMenu}
                 className="store-icon-link inline-flex h-11 w-11 items-center justify-center rounded-full border"
                 aria-label="Close menu"><CloseIcon /></button>
             </div>
-            <p className="mt-7 text-[10px] font-semibold uppercase tracking-[.22em] text-[#8d5f56]">Discover Aloyri</p>
+            <Link href="/shop" onClick={closeMenu}
+              className="store-drawer-search store-mobile-tool mt-5 flex min-h-12 items-center justify-between gap-3 rounded-xl px-4 text-sm font-semibold">
+              Search products and brands <SearchIcon />
+            </Link>
+            <p className="mt-6 text-[10px] font-semibold uppercase tracking-[.22em] text-[#8d5f56]">Discover Aloyri</p>
             <nav className="mt-3 flex flex-col" aria-label="Store navigation">
               {links.map(([label, href]) => (
                 <Link key={label} href={href} aria-current={current(href) ? "page" : undefined}
@@ -157,10 +161,6 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
                 <Link href="/shop?stock=in-stock" onClick={closeMenu} className="store-mobile-tool rounded-xl px-3 py-3 text-sm">Available now</Link>
               </div> : null}
             </div>
-            <Link href="/shop" onClick={closeMenu}
-              className="store-mobile-tool mt-6 flex min-h-12 items-center justify-between rounded-xl px-4 text-sm font-semibold">
-              Search products and brands <SearchIcon />
-            </Link>
             <nav aria-label="Customer tools" className="mt-4 grid grid-cols-2 gap-2">
               <Link href="/account" onClick={closeMenu} className="store-mobile-tool rounded-xl p-3 text-center text-sm font-semibold">My account</Link>
               <Link href="/track-order" onClick={closeMenu} className="store-mobile-tool rounded-xl p-3 text-center text-sm font-semibold">Track order</Link>
