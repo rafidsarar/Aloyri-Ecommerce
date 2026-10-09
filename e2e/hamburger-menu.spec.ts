@@ -27,8 +27,9 @@ test("desktop left drawer supports CRM categories, accordion, and backdrop dismi
   await categoryToggle.click();
   await expect(drawer.getByRole("link", { name: "Lip care" })).toBeVisible();
 
-  await expect(drawer.getByRole("link", { name: "My orders" })).toHaveAttribute("href", "/account#orders");
-  await expect(drawer.getByRole("link", { name: "My cart" })).toHaveAttribute("href", "/cart");
+  await expect(drawer.getByRole("navigation", { name: "Customer tools" })).toHaveCount(0);
+  await expect(drawer.getByRole("link", { name: "My orders" })).toHaveCount(0);
+  await expect(drawer.getByRole("link", { name: "My cart" })).toHaveCount(0);
   await page.keyboard.press("Escape");
   await expect(drawer).toHaveCount(0);
   await expect(opener).toBeFocused();
@@ -46,7 +47,7 @@ test("mobile drawer navigates from the left without horizontal overflow", async 
   await page.getByRole("button", { name: "Open menu" }).click();
   const drawer = page.getByRole("dialog", { name: "Store navigation menu" });
   await expect(drawer).toBeVisible();
-  await expect(drawer.getByRole("link", { name: "Track order" })).toBeVisible();
+  await expect(drawer.getByRole("link", { name: "Track order" })).toHaveCount(0);
   await expect(drawer.getByRole("link", { name: "Lip care" })).toBeVisible();
   await drawer.getByRole("link", { name: "Lip care" }).click();
   await expect(page).toHaveURL(/\/category\/lip-care/);

@@ -21,10 +21,17 @@ test("customer storefront keeps search, categories, account, cart and order trac
   await page.goto("/");
   await expect(page.getByRole("search", { name: "Search skincare products" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Shop by category" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Customer account and sign in" })).toBeVisible();
+  const accountButton = page.getByRole("button", { name: "Account menu" });
+  await expect(accountButton).toBeVisible();
+  await accountButton.click();
+  const accountMenu = page.getByRole("navigation", { name: "Account shortcuts" });
+  await expect(accountMenu.getByRole("link", { name: "My account" })).toHaveAttribute("href", "/account");
+  await expect(accountMenu.getByRole("link", { name: "Track order" })).toHaveAttribute("href", "/track-order");
+  await page.keyboard.press("Escape");
+  await expect(accountMenu).toHaveCount(0);
   await expect(page.getByRole("link", { name: /Cart/ }).first()).toBeVisible();
   await page.getByRole("button", { name: "Open menu" }).click();
-  await expect(page.getByRole("dialog", { name: "Navigation menu" }).getByRole("link", { name: "Track order" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Store navigation menu" }).getByRole("link", { name: "Track order" })).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 

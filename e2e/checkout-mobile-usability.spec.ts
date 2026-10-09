@@ -55,11 +55,18 @@ test("390px mobile cart allows accessible removal and preserves guest privacy", 
 test("narrow mobile navigation keeps search and account accessible", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 700 });
   await page.goto("/");
-  await expect(page.getByRole("link", { name: "Customer account and sign in" })).toBeVisible();
+  const accountButton = page.getByRole("button", { name: "Account menu" });
+  await expect(accountButton).toBeVisible();
+  await accountButton.click();
+  const accountMenu = page.getByRole("navigation", { name: "Account shortcuts" });
+  await expect(accountMenu.getByRole("link", { name: "My account" })).toHaveAttribute("href", "/account");
+  await expect(accountMenu.getByRole("link", { name: "Track order" })).toHaveAttribute("href", "/track-order");
+  await page.keyboard.press("Escape");
+  await expect(accountMenu).toHaveCount(0);
   await page.getByRole("button", { name: "Open menu" }).click();
   const drawer = page.getByRole("dialog", { name: "Store navigation menu" });
   await expect(drawer.getByRole("link", { name: "Search products and brands" })).toBeVisible();
-  await expect(drawer.getByRole("link", { name: "Track order" })).toBeVisible();
+  await expect(drawer.getByRole("link", { name: "Track order" })).toHaveCount(0);
   await drawer.getByRole("link", { name: "Search products and brands" }).click();
   await expect(page).toHaveURL(/\/shop/);
   await expect(page.getByRole("dialog", { name: "Store navigation menu" })).toHaveCount(0);

@@ -17,10 +17,27 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
   const { categories: crmCategories, products, synced } = useCatalog();
   const publicCategories = buildCategoryDirectory(crmCategories, products);
   const [open, setOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const accountRef = useRef<HTMLDivElement>(null);
   const [categoriesExpanded, setCategoriesExpanded] = useState(true);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const menuDialogRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onPointerDown = (event: PointerEvent) => {
+      if (accountRef.current && !accountRef.current.contains(event.target as Node)) setAccountOpen(false);
+    };
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setAccountOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onEscape);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onEscape);
+    };
+  }, []);
 
   function closeMenu() {
     setOpen(false);
@@ -92,25 +109,41 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
             <MenuIcon />
           </button>
 
-            <Link href="/account" aria-label="Customer account and sign in"
-              className="store-account-icon store-icon-link inline-flex h-11 w-11 items-center justify-center rounded-full border sm:hidden"
-              aria-current={current("/account") ? "page" : undefined}>
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"
-                strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <circle cx="12" cy="8" r="3.5" />
-                <path d="M5.5 20c0-3.3 2.7-6 6.5-6s6.5 2.7 6.5 6" />
-              </svg>
-            </Link>
           </div>
           <div className="store-header-brand"><BrandMark compact /></div>
 
           <div className="store-header-actions flex min-w-0 items-center justify-end gap-1 sm:gap-2">
-            <Link href="/track-order" className="store-utility-link hidden rounded-full px-3 py-2 text-xs font-medium xl:block">Track order</Link>
-            <Link href="/account" aria-current={current("/account") ? "page" : undefined} className="store-utility-link hidden rounded-full px-3 py-2 text-sm font-semibold sm:block">Account</Link>
+            <div ref={accountRef} className="relative">
+              <button type="button" aria-label="Account menu" aria-expanded={accountOpen} aria-controls="header-account-menu"
+                onClick={() => setAccountOpen(value => !value)}
+                className="store-utility-link inline-flex h-11 w-11 items-center justify-center rounded-full border border-[var(--store-border)] p-0 text-sm font-semibold sm:h-auto sm:w-auto sm:min-h-11 sm:gap-2 sm:border-0 sm:px-3 sm:py-2">
+                <span className="hidden sm:inline">Account</span>
+                <svg className="sm:hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="8" r="3.5" /><path d="M5.5 20c0-3.3 2.7-6 6.5-6s6.5 2.7 6.5 6" />
+                </svg>
+                <span aria-hidden="true" className="hidden text-xs sm:inline">{accountOpen ? "⌃" : "⌄"}</span>
+              </button>
+              {accountOpen ? (
+                <nav id="header-account-menu" aria-label="Account shortcuts"
+                  className="absolute right-0 top-full z-50 mt-2 w-52 rounded-2xl border border-[#713a35]/15 bg-[#fffaf7] p-2 shadow-xl">
+                  {[
+                    ["My account", "/account"],
+                    ["My orders", "/account#orders"],
+                    ["Track order", "/track-order"],
+                    ["My cart", "/cart"],
+                  ].map(([label, href]) => (
+                    <Link key={href} href={href} onClick={() => setAccountOpen(false)}
+                      className="block rounded-xl px-4 py-3 text-sm font-medium text-[#321f1c] transition hover:bg-[#f5e8e2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#713a35]">
+                      {label}
+                    </Link>
+                  ))}
+                </nav>
+              ) : null}
+            </div>
 
             <Link
               href="/shop"
-              className="store-icon-link hidden h-11 w-11 items-center justify-center rounded-full border transition min-[380px]:inline-flex"
+              className="store-icon-link hidden h-11 w-11 items-center justify-center rounded-full border transition sm:inline-flex"
               aria-label="Search products"
             >
               <SearchIcon />
@@ -164,12 +197,6 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
                 <Link href="/shop?stock=in-stock" onClick={closeMenu} className="store-mobile-tool rounded-xl px-3 py-3 text-sm">Available now</Link>
               </div> : null}
             </div>
-            <nav aria-label="Customer tools" className="mt-4 grid grid-cols-2 gap-2">
-              <Link href="/account" onClick={closeMenu} className="store-mobile-tool rounded-xl p-3 text-center text-sm font-semibold">My account</Link>
-              <Link href="/track-order" onClick={closeMenu} className="store-mobile-tool rounded-xl p-3 text-center text-sm font-semibold">Track order</Link>
-              <Link href="/account#orders" onClick={closeMenu} className="store-mobile-tool rounded-xl p-3 text-center text-sm font-semibold">My orders</Link>
-              <Link href="/cart" onClick={closeMenu} className="store-mobile-tool rounded-xl p-3 text-center text-sm font-semibold">My cart</Link>
-            </nav>
             <div className="mt-auto pt-7">
               <div className="rounded-2xl border border-[#713a35]/10 bg-[#f5e8e2] p-4">
                 <p className="text-xs font-semibold tracking-[.1em] text-[#713a35]">ALOYRI SKINCARE</p>

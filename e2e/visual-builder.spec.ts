@@ -86,7 +86,8 @@ test("visual builder release preserves customer store entry points", async ({ pa
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   await expect(page.getByRole("search", { name: "Search skincare products" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Customer account and sign in" })).toBeVisible();
+  await page.getByRole("button", { name: "Account menu" }).click();
+  await expect(page.getByRole("navigation", { name: "Account shortcuts" }).getByRole("link", { name: "My account" })).toHaveAttribute("href", "/account");
   await expect(page.getByRole("link", { name: /Cart/ }).first()).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
