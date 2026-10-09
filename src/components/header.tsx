@@ -67,8 +67,6 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
     };
   }, [open]);
 
-  useEffect(() => { setOpen(false); }, [pathname]);
-
   const current = (href: string) =>
     pathname === href || (href !== "/shop" && pathname.startsWith(href));
 
