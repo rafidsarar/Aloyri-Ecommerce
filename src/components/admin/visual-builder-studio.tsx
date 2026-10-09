@@ -79,13 +79,15 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
   const [device, setDevice] = useState<"mobile" | "tablet" | "desktop">("desktop");
   const [previewMode, setPreviewMode] = useState<"live" | "draft">("live");
   const draftFrame = useRef<HTMLIFrameElement>(null);
+  const publicFrame = useRef<HTMLIFrameElement>(null);
   const sendDraft = useCallback(() => draftFrame.current?.contentWindow?.postMessage({ type: "aloyri-builder-draft", layout, coreContent, selectedId }, window.location.origin), [layout, coreContent, selectedId]);
   useEffect(() => {
     const receiveReady = (event: MessageEvent) => {
-      if (event.origin !== window.location.origin || event.source !== draftFrame.current?.contentWindow) return;
+      if (event.origin !== window.location.origin) return;
+      if (event.source === publicFrame.current?.contentWindow && event.data?.type === "aloyri-builder-public-select" && ["header", "footer", "page"].includes(event.data.section)) setPublicSelection(event.data.section);
+      if (event.source !== draftFrame.current?.contentWindow) return;
       if (event.data?.type === "aloyri-builder-ready") sendDraft();
       if (event.data?.type === "aloyri-builder-select" && typeof event.data.id === "string" && layout.order.includes(event.data.id)) setSelectedId(event.data.id);
-      if (event.data?.type === "aloyri-builder-public-select" && ["header", "footer", "page"].includes(event.data.section)) setPublicSelection(event.data.section);
     };
     window.addEventListener("message", receiveReady);
     sendDraft();
@@ -250,7 +252,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
                 <Link className={secondaryButton} href={publicSelection === "page" && ["about", "shipping", "returns", "contact", "faq"].includes(pageKey) ? `/admin/pages/${pageKey}` : publicSelection === "page" ? "/admin/merchandising" : "/admin/settings"}>Edit selected existing feature ↗</Link>
                 <span className="text-black/50">Click an existing area in the preview to select it.</span>
               </div>}
-              {!isHomepage && <iframe title={`Saved ${pageKey} page preview`} src={(pageKey === "shipping" ? "/shipping-delivery" : pageKey === "returns" ? "/returns-refunds" : pageKey === "category" ? "/shop" : pageKey === "product" ? "/shop" : `/${pageKey}`) + "?builderPreview=1"} width={deviceWidths[device]} height={650} loading="lazy" className="mx-auto mb-3 block rounded-lg border border-black/10 bg-white" style={{ width: deviceWidths[device], maxWidth: "none" }} />}
+              {!isHomepage && <iframe ref={publicFrame} title={`Saved ${pageKey} page preview`} src={(pageKey === "shipping" ? "/shipping-delivery" : pageKey === "returns" ? "/returns-refunds" : pageKey === "category" ? "/shop" : pageKey === "product" ? "/shop" : `/${pageKey}`) + "?builderPreview=1"} width={deviceWidths[device]} height={650} loading="lazy" className="mx-auto mb-3 block rounded-lg border border-black/10 bg-white" style={{ width: deviceWidths[device], maxWidth: "none" }} />}
               {(!isHomepage || previewMode === "draft") && <div className="mx-auto min-h-56 overflow-hidden rounded-lg bg-[#fffaf8] shadow-sm" style={{ width: deviceWidths[device], maxWidth: "none" }}>
                 <div className="flex justify-between border-b border-black/10 bg-white px-5 py-3 text-xs font-semibold"><span>ALOYRI</span><span>Preview</span></div>
                 {layout.order.map(id => {
