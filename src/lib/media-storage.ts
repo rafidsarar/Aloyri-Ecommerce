@@ -18,14 +18,13 @@ export function mediaStorageConfigured() {
   return Boolean(url && (key || oidc));
 }
 
-function gatewayEndpoint(action: "upload" | "list" | "object", params: Record<string, string> = {}) {
+function gatewayUploadEndpoint() {
   const { url } = gateway();
   // Supabase Edge Functions route the invocation at /functions/v1/<slug>.
   // Use the function's action query rather than appending a subpath that
   // some gateways reject with HTTP 405.
   const endpoint = new URL(url);
-  if (action === "upload") endpoint.searchParams.set("action", action);
-  for (const [key, value] of Object.entries(params)) endpoint.searchParams.set(key, value);
+  endpoint.searchParams.set("action", "upload");
   return endpoint.toString();
 }
 
@@ -47,7 +46,7 @@ export async function putMediaObject(pathname: string, file: File) {
   form.set("path", pathname);
   form.set("file", file);
 
-  const response = await fetch(gatewayEndpoint("upload"), {
+  const response = await fetch(gatewayUploadEndpoint(), {
     method: "POST",
     headers: headers(),
     body: form,
@@ -60,10 +59,10 @@ export async function putMediaObject(pathname: string, file: File) {
 }
 
 export async function listMediaObjects(prefix: string): Promise<MediaObject[]> {
-  if (!mediaStorageConfigured()) return [];
+  const { url } = gateway(); if (!mediaStorageConfigured()) return [];
   const objects = new Map<string, MediaObject>(); const seen = new Set<string>(); let cursor = "";
   for (let page = 0; page < 100; page++) {
-    const response = await fetch(gatewayEndpoint("list", { prefix, ...(cursor ? { cursor } : {}) }), { headers: headers(), cache: "no-store", signal: AbortSignal.timeout(15_000) });
+    const response = await fetch(url + "/list?prefix=" + encodeURIComponent(prefix) + (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""), { headers: headers(), cache: "no-store", signal: AbortSignal.timeout(15_000) });
     if (!response.ok) throw new Error("Media listing failed (" + response.status + ").");
     const payload = await response.json() as { objects?: MediaObject[]; cursor?: string; nextCursor?: string; hasMore?: boolean };
     for (const item of payload.objects || []) if (typeof item.pathname === "string" && item.pathname.startsWith(prefix)) objects.set(item.pathname, { ...item, size: Number(item.size || 0) });
@@ -75,10 +74,11 @@ export async function listMediaObjects(prefix: string): Promise<MediaObject[]> {
 }
 
 export async function getMediaObject(pathname: string) {
+  const { url } = gateway();
   if (!mediaStorageConfigured()) return null;
 
   const response = await fetch(
-    gatewayEndpoint("object", { path: pathname }),
+    url + "/object?path=" + encodeURIComponent(pathname),
     {
       headers: headers(),
       cache: "no-store",
