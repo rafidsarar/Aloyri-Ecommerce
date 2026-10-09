@@ -3,17 +3,12 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ProductCard } from "@/components/product-card";
-import { ProductMedia } from "@/components/product-media";
-import { formatPrice } from "@/lib/catalog";
 import { categoryNamesFromCatalog, matchesCategory } from "@/lib/storefront-categories";
 import { useCatalog } from "@/components/catalog-provider";
 import { salePriceFor } from "@/lib/promotions";
 import { matchesSkinFocus, skinFocusOptions, type SkinFocus } from "@/lib/skin-focus";
 import { safeSearchTerm, trackStorefrontEvent } from "@/lib/analytics";
-import {
-  getSearchSuggestions,
-  productSearchScore,
-} from "@/lib/storefront-search";
+import { productSearchScore } from "@/lib/storefront-search";
 
 type SortKey =
   | "recommended"
@@ -41,7 +36,6 @@ export function ShopClient({
   initialSort = "recommended",
   searchSynonymGroups = [],
   categoryOrder = [],
-  popularSearches = [],
   lockCategory = false,
   merchandisingSortMode = "priority",
 }: {
@@ -66,55 +60,6 @@ export function ShopClient({
   const [stock, setStock] = useState<StockFilter>(initialStock);
   const [priceBand, setPriceBand] = useState<PriceFilter>(initialPriceBand);
   const [sort, setSort] = useState<SortKey>(initialSort);
-  const [searchFocused, setSearchFocused] = useState(false);
-  const [searchTab, setSearchTab] = useState<"all" | "products" | "categories">("all");
-  const [recentSearches, setRecentSearches] = useState<string[]>([]);
-  const searchRootRef = useRef<HTMLDivElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  function readRecentSearches() {
-    try {
-      const raw: unknown = JSON.parse(sessionStorage.getItem("aloyri-recent-searches") || "[]");
-      if (Array.isArray(raw)) setRecentSearches(raw.filter((v): v is string => typeof v === "string").slice(0, 5));
-    } catch { /* Browsing stays available if session storage is disabled. */ }
-  }
-  function rememberSearch(value: string) {
-    const term = value.trim().slice(0, 80);
-    if (!term) return;
-    const next = [term, ...recentSearches.filter(v => v.toLowerCase() !== term.toLowerCase())].slice(0, 5);
-    setRecentSearches(next);
-    try { sessionStorage.setItem("aloyri-recent-searches", JSON.stringify(next)); } catch { /* optional */ }
-  }
-  useEffect(() => {
-    if (!searchFocused) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") { event.preventDefault(); setSearchFocused(false); }
-    };
-    document.addEventListener("keydown", onEscape);
-    return () => { document.body.style.overflow = previousOverflow; document.removeEventListener("keydown", onEscape); };
-  }, [searchFocused]);
-  useEffect(() => {
-    const openFromHeader = () => setSearchFocused(true);
-    window.addEventListener("aloyri:open-shop-search", openFromHeader);
-    return () => window.removeEventListener("aloyri:open-shop-search", openFromHeader);
-  }, []);
-  useEffect(() => {
-    if (!synced) return;
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("search") !== "1") return;
-    // Keep initial search opt-in, even when the shop no longer displays a search field.
-    params.delete("search");
-    const next = params.toString();
-    window.history.replaceState(window.history.state, "", window.location.pathname + (next ? "?" + next : ""));
-    const frame = window.requestAnimationFrame(() => setSearchFocused(true));
-    return () => window.cancelAnimationFrame(frame);
-  }, [synced]);
-  useEffect(() => {
-    if (!searchFocused) return;
-    searchInputRef.current?.focus({ preventScroll: true });
-  }, [searchFocused]);
-
   const lastTrackedSearch = useRef("");
 
   const categories = useMemo(() => {
@@ -146,35 +91,6 @@ export function ShopClient({
     }
     return counts;
   }, [products, categories]);
-
-  const suggestions = useMemo(
-    () =>
-      getSearchSuggestions(
-        products.filter(
-          (product) =>
-            !(
-              product.merchandisingOutOfStockMode === "hide" &&
-              (product.availableStock ?? 0) <= 0
-            ) &&
-            (category === "All" || matchesCategory(product.category, category)),
-        ),
-        query,
-        5,
-        searchSynonymGroups,
-      ),
-    [products, category, query, searchSynonymGroups],
-  );
-  const trendingProducts = useMemo(() => products
-    .filter(product => !product.merchandisingHideFromSearch &&
-      (product.merchandisingOutOfStockMode !== "hide" || (product.availableStock ?? 0) > 0) &&
-      (product.featured || product.bestseller) &&
-      (category === "All" || matchesCategory(product.category, category)))
-    .slice(0, 4), [products, category]);
-  const hasSearchQuery = query.trim().length >= 2;
-  const searchCategoryMatches = categories.filter(name =>
-    !query.trim() || name.toLowerCase().includes(query.trim().toLowerCase())
-  ).slice(0, 8);
-
 
   const filtered = useMemo(() => {
     const hasQuery = query.trim().length > 0;
@@ -362,153 +278,6 @@ export function ShopClient({
 
   return (
     <>
-
-      {searchFocused ? (
-        <div ref={searchRootRef} className="fixed inset-0 z-[70]">
-          {searchFocused ? (
-            <button type="button" tabIndex={-1} aria-label="Close search overlay"
-              onClick={() => setSearchFocused(false)}
-              className="fixed inset-0 z-[65] cursor-default bg-[#1e1715]/45" />
-          ) : null}
-          <div className={searchFocused
-            ? "fixed inset-x-3 top-3 z-[70] mx-auto max-w-[1360px] rounded-xl border border-[#eee9e5] bg-[#f2f2f2] shadow-lg sm:inset-x-8 sm:top-5"
-            : "h-12 rounded-full border border-[#713a35]/14 bg-white"}>
-            <div className="flex min-h-12 min-w-0 items-center gap-2 px-3 sm:px-4">
-              <button type="button" aria-label="Search products" title="Search"
-                onClick={() => {
-                  if (searchFocused) { rememberSearch(query); setSearchFocused(false); }
-                  else searchInputRef.current?.focus();
-                }}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#514944] hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-2">
-                <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
-                  <circle cx="10.7" cy="10.7" r="6.3" /><path d="m16 16 4.3 4.3" />
-                </svg>
-              </button>
-              <label htmlFor="storefront-search" className="sr-only">Search skincare</label>
-              <input
-                id="storefront-search"
-                ref={searchInputRef}
-                role="combobox"
-                aria-haspopup="dialog"
-                aria-autocomplete="list"
-                aria-expanded={searchFocused}
-                aria-controls="storefront-search-panel"
-                autoComplete="off"
-                value={query}
-                onFocus={() => { readRecentSearches(); setSearchFocused(true); }}
-                onChange={(event) => setQuery(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Escape") { event.preventDefault(); setSearchFocused(false); }
-                  if (event.key === "Enter") { event.preventDefault(); rememberSearch(query); setSearchFocused(false); }
-                  if (event.key === "ArrowDown" && searchFocused && suggestions.length) {
-                    event.preventDefault();
-                    searchRootRef.current?.querySelector<HTMLAnchorElement>('[data-shop-search-option]')?.focus();
-                  }
-                }}
-                placeholder="Search"
-                className="h-12 min-w-0 flex-1 bg-transparent text-sm text-[#321f1c] outline-none placeholder:text-[#746f6c]/60"
-              />
-              {searchFocused ? (
-                <button type="button" aria-label="Close search" title="Close search"
-                  onClick={() => setSearchFocused(false)}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#514944] hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-2">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
-                    <path d="M5 5 19 19M19 5 5 19" />
-                  </svg>
-                </button>
-              ) : query ? (
-                <button type="button" aria-label="Clear search" onClick={() => setQuery("")}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#514944] hover:bg-black/5">
-                  <span aria-hidden="true">×</span>
-                </button>
-              ) : null}
-            </div>
-          </div>
-          {searchFocused ? (
-            <div id="storefront-search-panel" role="dialog" aria-label="Search discovery"
-              className="fixed inset-x-3 top-[76px] z-[70] mx-auto max-h-[min(68vh,490px)] max-w-[1360px] overflow-y-auto rounded-xl border border-[#eee9e5] bg-white p-3 shadow-xl sm:inset-x-8 sm:top-[88px] sm:p-4">
-              <div role="tablist" aria-label="Search suggestion categories" className="mb-3 flex gap-1 border-b border-[#713a35]/10 pb-2">
-                {(["all", "products", "categories"] as const).map(item => (
-                  <button key={item} type="button" role="tab" aria-selected={searchTab === item}
-                    onClick={() => setSearchTab(item)}
-                    className={"min-h-9 rounded-lg px-3 text-xs font-medium transition-colors " +
-                      (searchTab === item ? "bg-[#f5eeea] text-[#713a35]" : "text-[#786964] hover:bg-[#f5eeea]/60")}>
-                    {item === "all" ? "All" : item === "products" ? "Products" : "Categories"}
-                  </button>
-                ))}
-              </div>
-              {!hasSearchQuery && searchTab !== "categories" && recentSearches.length > 0 ? (
-                <section className="mb-4">
-                  <div className="mb-2 flex items-center justify-between">
-                    <h3 className="text-xs font-semibold text-[#321f1c]">Recent searches</h3>
-                    <button type="button" className="text-xs text-[#713a35] underline" onClick={() => {
-                      setRecentSearches([]);
-                      try { sessionStorage.removeItem("aloyri-recent-searches"); } catch { /* optional */ }
-                    }}>Clear</button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {recentSearches.map(term => (
-                      <button type="button" key={term} onClick={() => { setQuery(term); searchInputRef.current?.focus(); }}
-                        className="rounded-lg border border-[#713a35]/12 px-3 py-2 text-xs text-[#321f1c] hover:bg-[#f5eeea]">{term}</button>
-                    ))}
-                  </div>
-                </section>
-              ) : null}
-              {!hasSearchQuery && searchTab !== "categories" && popularSearches.length > 0 ? (
-                <section className="mb-4">
-                  <h3 className="mb-2 text-xs font-semibold text-[#321f1c]">Popular searches</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {popularSearches.slice(0, 6).map(term => (
-                      <button type="button" key={term} onClick={() => { setQuery(term); searchInputRef.current?.focus(); }}
-                        className="rounded-lg border border-[#713a35]/12 px-3 py-2 text-xs text-[#321f1c] hover:bg-[#f5eeea]">{term}</button>
-                    ))}
-                  </div>
-                </section>
-              ) : null}
-              {searchTab !== "categories" && (hasSearchQuery ? suggestions : trendingProducts).length > 0 ? (
-                <section className="mb-3">
-                  <h3 className="mb-2 px-1 text-xs font-semibold text-[#321f1c]">
-                    {hasSearchQuery ? "Matching products" : "Featured products"}
-                  </h3>
-                  <div role="listbox" aria-label="Search suggestions">
-                    {(hasSearchQuery ? suggestions : trendingProducts).map(product => (
-                      <Link key={product.id} href={"/product/" + product.slug}
-                        data-shop-search-option role="option" aria-selected="false"
-                        onClick={() => { rememberSearch(query); setSearchFocused(false); }}
-                        className="flex items-center gap-3 rounded-lg px-2 py-2 transition hover:bg-[#f9f2ee] focus:bg-[#f9f2ee] focus:outline-none">
-                        <ProductMedia product={product} className="h-10 w-10 shrink-0 rounded-md" sizes="40px" />
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm font-semibold text-[#321f1c]">{product.name}</span>
-                          <span className="block truncate text-xs text-[#786964]">{product.brand} · {product.category}</span>
-                        </span>
-                        <span className="shrink-0 text-xs font-semibold text-[#713a35]">{formatPrice(salePriceFor(product))}</span>
-                      </Link>
-                    ))}
-                  </div>
-                </section>
-              ) : null}
-              {searchTab !== "products" && searchCategoryMatches.length > 0 && !lockCategory ? (
-                <section className="mb-3">
-                  <h3 className="mb-2 px-1 text-xs font-semibold text-[#321f1c]">Categories</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {searchCategoryMatches.map(name => (
-                      <button type="button" key={name} onClick={() => { setCategory(name); setSearchFocused(false); }}
-                        className="rounded-lg border border-[#713a35]/12 px-3 py-2 text-xs text-[#321f1c] hover:bg-[#f5eeea]">{name}</button>
-                    ))}
-                  </div>
-                </section>
-              ) : null}
-              {hasSearchQuery && suggestions.length === 0 && searchCategoryMatches.length === 0 ? (
-                <p className="px-2 py-3 text-sm text-[#786964]">No quick matches. Try a different term or view all results.</p>
-              ) : null}
-              <button type="button" onClick={() => { rememberSearch(query); setSearchFocused(false); }}
-                className="w-full border-t border-[#713a35]/10 px-2 py-3 text-left text-xs font-semibold text-[#713a35] hover:bg-[#f9f2ee]">
-                {query.trim() ? "See all results for “" + query.trim() + "” →" : "Continue browsing skincare →"}
-              </button>
-            </div>
-          ) : null}
-        </div>
-      ) : null}
 
       <nav aria-label="Shop categories" className="shop-category-rail flex gap-2 overflow-x-auto py-4" tabIndex={0}>
         {!lockCategory
