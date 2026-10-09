@@ -55,7 +55,7 @@ test("catalog search and mobile navigation", async ({ page }) => {
   await mockCommerce(page);
   await page.goto("/shop");
   await expect(page.getByText("Refreshing Facial Wash")).toBeVisible();
-  await page.getByPlaceholder("Search products, brands, routines or textures").fill("Skin Aqua");
+  await page.getByRole("combobox",{name:"Search skincare"}).fill("Skin Aqua");
   await expect(
     page.getByRole("link", { name: /Skin Aqua Super Moisture UV Gel/i }),
   ).toBeVisible();
@@ -126,7 +126,7 @@ test("storefront structure keeps shopping and customer tools accessible on mobil
   await page.screenshot({path:testInfo.outputPath("shop-mobile.png"),fullPage:true});
   await page.getByRole("button",{name:"Open menu"}).click();
   const menu=page.getByRole("dialog",{name:"Store navigation menu"});
-  await expect(menu.getByRole("link",{name:"Search products and brands"})).toHaveAttribute("href","/shop");
+  await expect(menu.getByRole("link",{name:"Search products and brands"})).toHaveAttribute("href","/shop?search=1");
   await expect(menu.getByRole("navigation",{name:"Customer tools"})).toHaveCount(0);
   await menu.getByRole("button",{name:"Close menu"}).click();
   await page.getByRole("button",{name:"Account menu"}).click();

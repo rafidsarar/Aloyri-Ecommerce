@@ -206,7 +206,13 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
             </div>
 
             <Link
-              href="/shop"
+              href="/shop?search=1"
+              onClick={event => {
+                if (pathname === "/shop") {
+                  event.preventDefault();
+                  window.dispatchEvent(new Event("aloyri:open-shop-search"));
+                }
+              }}
               className="store-icon-link hidden h-11 w-11 items-center justify-center rounded-full border transition sm:inline-flex"
               aria-label="Search products"
             >
@@ -230,7 +236,13 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
                 className="store-icon-link inline-flex h-11 w-11 items-center justify-center rounded-full border"
                 aria-label="Close menu"><CloseIcon /></button>
             </div>
-            <Link href="/shop" onClick={closeMenu}
+            <Link href="/shop?search=1" onClick={event => {
+                if (pathname === "/shop") {
+                  event.preventDefault();
+                  setOpen(false);
+                  window.requestAnimationFrame(() => window.dispatchEvent(new Event("aloyri:open-shop-search")));
+                } else closeMenu();
+              }}
               className="store-drawer-search store-mobile-tool mt-5 flex min-h-12 items-center justify-between gap-3 rounded-xl px-4 text-sm font-semibold">
               Search products and brands <SearchIcon />
             </Link>
