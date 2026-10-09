@@ -79,8 +79,10 @@ export async function getMediaObject(pathname: string) {
   const { url } = gateway();
   if (!mediaStorageConfigured()) return null;
 
+  const endpoint = new URL(url);
+  endpoint.searchParams.set("path", pathname);
   const response = await fetch(
-    url + "/object?path=" + encodeURIComponent(pathname),
+    endpoint.toString(),
     {
       headers: headers(),
       cache: "no-store",
