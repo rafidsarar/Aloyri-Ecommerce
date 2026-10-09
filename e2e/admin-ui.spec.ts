@@ -65,6 +65,50 @@ test.describe("minimal admin interface", () => {
     await page.screenshot({ path: testInfo.outputPath("visual-builder-mobile.png"), fullPage: true });
   });
 
+  test("desktop preview fits its Admin canvas at native desktop breakpoints", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(`${base}/admin/builder`);
+    await expect(page.locator("[data-builder-preview-host]")).toBeVisible();
+    await expect.poll(async () => page.locator("[data-builder-preview-host]").evaluate(element => element.getBoundingClientRect().width)).toBeGreaterThan(300);
+    const initial = await page.evaluate(() => {
+      const host = document.querySelector<HTMLElement>("[data-builder-preview-host]")!;
+      const frame = host.querySelector<HTMLIFrameElement>("iframe")!;
+      return {
+        viewportWidth: frame.clientWidth,
+        visibleWidth: frame.getBoundingClientRect().width,
+        hostWidth: host.getBoundingClientRect().width,
+        hostRight: host.getBoundingClientRect().right,
+        frameRight: frame.getBoundingClientRect().right,
+        pageOverflow: document.documentElement.scrollWidth > innerWidth,
+      };
+    });
+    expect(initial.viewportWidth).toBe(1060);
+    expect(initial.visibleWidth).toBeLessThanOrEqual(initial.hostWidth + 2);
+    expect(initial.frameRight).toBeLessThanOrEqual(initial.hostRight + 2);
+    expect(initial.pageOverflow).toBe(false);
+
+    await page.getByRole("button", { name: "Focus preview" }).click();
+    await expect(page.locator(".builder-properties")).toBeHidden();
+    await expect.poll(() => page.locator("[data-builder-preview-host]").evaluate(element => element.clientWidth)).toBeGreaterThan(initial.hostWidth);
+    await page.getByRole("button", { name: "Show editing panels" }).click();
+    await expect(page.locator(".builder-properties")).toBeVisible();
+  });
+
+  test("tablet and mobile device previews stay inside the canvas", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`${base}/admin/builder`);
+    for (const [name, nativeWidth] of [["mobile", 390], ["tablet", 768], ["desktop", 1060]] as const) {
+      await page.getByRole("button", { name, exact: true }).click();
+      await expect.poll(async () => page.locator("[data-builder-preview-host] iframe").evaluate(frame => (frame as HTMLIFrameElement).clientWidth)).toBe(nativeWidth);
+      await expect.poll(async () => page.evaluate(() => {
+        const host = document.querySelector<HTMLElement>("[data-builder-preview-host]")!;
+        const frame = host.querySelector("iframe")!;
+        return frame.getBoundingClientRect().right <= host.getBoundingClientRect().right + 2;
+      })).toBe(true);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    }
+  });
+
   test("account sections keep orders, addresses and support in one responsive area",async({page},testInfo)=>{
     const account={email:"customer@example.test",displayName:"Preview customer",savedAddresses:[],savedProductIds:[],emailPreferences:{postDelivery:false,reviewRequest:false,reorderReminder:false}};
     await page.route("**/api/customer/post-purchase*",route=>route.fulfill({json:{account,orders:[{ok:true,phone:"01700000000",canRequestCancellation:false,canReportDeliveryIssue:false,canRequestReturn:false,order:{orderNumber:"WEB-PREVIEW-12345678",created:"2026-10-08",status:"Confirmed",total:829,items:[{name:"Cleanser",brand:"Simple",size:"150ml",qty:1,unitPrice:749}]}}],pagination:{page:1,pages:1,total:1},supportCases:[],productAlerts:[]}}));
