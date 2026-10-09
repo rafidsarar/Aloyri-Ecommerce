@@ -81,7 +81,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
   function redoCore() { if (!coreFuture.length || !coreContent) return; setCorePast(p => [...p, coreContent]); setCoreContent(coreFuture[0]); setCoreFuture(f => f.slice(1)); }
   const [selectedId, setSelectedId] = useState(layout.order[0] || "");
   const [view, setView] = useState<"canvas" | "advanced">(initialView);
-  const [device, setDevice] = useState<"mobile" | "tablet" | "desktop">("desktop");
+  const [device, setDevice] = useState<"mobile" | "tablet" | "desktop" | "wide">("desktop");
   const [previewMode, setPreviewMode] = useState<"live" | "draft">("live");
   const [focusPreview, setFocusPreview] = useState(false);
   const draftFrame = useRef<HTMLIFrameElement>(null);
@@ -177,7 +177,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
     if (block) change({ ...layout, blocks: layout.blocks.map(item => item.id === block.id ? { ...item, enabled: !item.enabled } : item) });
   }
 
-  const deviceWidths = { mobile: 390, tablet: 768, desktop: 1060 };
+  const deviceWidths = { mobile: 390, tablet: 768, desktop: 1060, wide: 1440 };
   return (
     <form action={saveVisualBuilder} className="space-y-4">
       <input type="hidden" name="layout" value={JSON.stringify(layout)} />
@@ -248,8 +248,8 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
               <div><h2 className="text-sm font-semibold">Storefront preview</h2><p className="text-xs text-black/55">{isHomepage ? previewMode === "live" ? "Actual storefront components with unsaved section order, visibility, text edits and custom blocks. Product and campaign data stays live." : "Unsaved section order and custom components; existing sections are represented by editable summaries." : "Existing page content appears in the preview above; custom components appear in the unsaved layout below. The existing page can be edited through its management screen."}</p></div>
               <div className="flex flex-wrap gap-1" role="group" aria-label="Design preview device">
-                {(["mobile", "tablet", "desktop"] as const).map(item => <button key={item} type="button" aria-pressed={device === item} onClick={() => setDevice(item)}
-                  className={`min-h-9 rounded-lg px-3 py-1 text-xs font-semibold ${device === item ? "bg-[#713a35] text-white" : "bg-[#f7f1ee] text-[#713a35]"}`}>{item}</button>)}
+                {(["mobile", "tablet", "desktop", "wide"] as const).map(item => <button key={item} type="button" aria-pressed={device === item} onClick={() => setDevice(item)}
+                  className={`min-h-9 rounded-lg px-3 py-1 text-xs font-semibold ${device === item ? "bg-[#713a35] text-white" : "bg-[#f7f1ee] text-[#713a35]"}`}>{item === "wide" ? "Full desktop" : item}</button>)}
               </div>
             </div>
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-black/10 bg-[#fbf8f6] px-3 py-2">
