@@ -461,7 +461,26 @@ export async function saveVisualBuilder(formData: FormData) {
       pageDraft = { eyebrow: readField("eyebrow", 120), title: readField("title", 180), intro: readField("intro", 1000), sectionTitles };
     } catch { redirect("/admin/builder?error=invalid"); }
   }
+  let siteDraft: { announcement?: string; footerDescription?: string } | null = null;
+  const rawSite = formData.get("siteContent");
+  if (rawSite !== null) {
+    try {
+      const edited = JSON.parse(String(rawSite)) as Record<string, unknown>;
+      const baseline = JSON.parse(String(formData.get("siteBaseline") || "{}")) as Record<string, unknown>;
+      if (!edited || typeof edited !== "object" || !baseline || typeof baseline !== "object") throw Error("Invalid site");
+      if (typeof edited.announcement !== "string" || edited.announcement.length > 180 ||
+          typeof edited.footerDescription !== "string" || edited.footerDescription.length > 600) throw Error("Invalid site fields");
+      const changes: { announcement?: string; footerDescription?: string } = {};
+      if (edited.announcement !== baseline.announcement) changes.announcement = edited.announcement;
+      if (edited.footerDescription !== baseline.footerDescription) changes.footerDescription = edited.footerDescription;
+      if (Object.keys(changes).length) {
+        await requireAdminPermission("settings.edit");
+        siteDraft = changes;
+      }
+    } catch { redirect("/admin/builder?error=invalid"); }
+  }
   await updateDraftStorefrontConfig(config => {
+    if (siteDraft) Object.assign(config.site, siteDraft);
     if (selected === "home") {
       const before = structuredClone(config.homepage.visualLayout);
       const beforeOrder = [...config.homepage.sectionOrder];
