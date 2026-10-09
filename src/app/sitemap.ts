@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
 import { mergeLiveCatalog, products as localProducts } from "@/lib/catalog";
+import { buildCategoryDirectory, matchesCategory } from "@/lib/storefront-categories";
 import { applyMerchandisingRules } from "@/lib/merchandising";
 import {
   effectiveSeoEntry,
@@ -21,6 +22,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ? undefined
     : new Date(config.updatedAt);
 
+  let crmCategories: string[] = [];
   let catalog = localProducts.map((product) => ({
     ...product,
     ...(config.products[product.id] || {}),
@@ -28,7 +30,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     const live = await fetchCrmCatalog();
-    if (live.ok && live.body.products.length > 0) {
+    if (live.ok) {
+      crmCategories = live.body.categories;
       catalog = mergeLiveCatalog(
         applyMerchandisingRules(
           applyStorefrontEditorial(live.body.products, config),
@@ -48,24 +51,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }> = [
     { path: "/", entry: config.seo.homepage, frequency: "daily", priority: 1 },
     { path: "/shop", entry: config.seo.shop, frequency: "daily", priority: 0.9 },
-    {
-      path: "/category/cleansers",
-      entry: config.seo.categories.cleansers,
-      frequency: "weekly",
-      priority: 0.75,
-    },
-    {
-      path: "/category/moisturizers",
-      entry: config.seo.categories.moisturizers,
-      frequency: "weekly",
-      priority: 0.75,
-    },
-    {
-      path: "/category/sunscreen",
-      entry: config.seo.categories.sunscreen,
-      frequency: "weekly",
-      priority: 0.75,
-    },
+    ...buildCategoryDirectory(crmCategories, catalog)
+      .filter(item => catalog.some(product => matchesCategory(product.category, item.name)))
+      .map(item => ({
+        path: item.href,
+        entry: item.slug === "cleansers" ? config.seo.categories.cleansers :
+          item.slug === "moisturizers" ? config.seo.categories.moisturizers :
+          item.slug === "sunscreen" ? config.seo.categories.sunscreen : {},
+        frequency: "weekly" as const,
+        priority: 0.75,
+      })),
     ...(
       Object.entries(publicPagePaths) as Array<[SeoPageKey, string]>
     ).map(([key, path]) => ({
