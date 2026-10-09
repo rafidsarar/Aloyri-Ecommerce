@@ -60,10 +60,11 @@ function freshBlock(kind: VisualBlockKind): VisualBlock {
   };
 }
 
-export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], initialCoreContent, advancedSettings, initialView = "canvas", initialPageContent }: { initialLayout: VisualLayout; pageKey: "home" | VisualPageKey; mediaPaths?: string[]; initialCoreContent?: CoreContent; advancedSettings?: ReactNode; initialView?: "canvas" | "advanced"; initialPageContent?: InfoPageContent }) {
+export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], initialCoreContent, advancedSettings, initialView = "canvas", initialPageContent, initialSiteContent }: { initialLayout: VisualLayout; pageKey: "home" | VisualPageKey; mediaPaths?: string[]; initialCoreContent?: CoreContent; advancedSettings?: ReactNode; initialView?: "canvas" | "advanced"; initialPageContent?: InfoPageContent; initialSiteContent?: { announcement: string; footerDescription: string } }) {
   const [{ past, current: layout, future }, dispatch] = useReducer(historyReducer, { past: [], current: initialLayout, future: [] });
   const [coreContent, setCoreContent] = useState<CoreContent | undefined>(initialCoreContent);
   const [pageContent, setPageContent] = useState<InfoPageContent | undefined>(initialPageContent);
+  const [siteContent, setSiteContent] = useState(initialSiteContent);
   const publicFrame = useRef<HTMLIFrameElement>(null);
   const [publicSelection, setPublicSelection] = useState<"header" | "footer" | "page">("page");
   const [initialCoreSnapshot] = useState(() => initialCoreContent ? JSON.stringify(initialCoreContent) : "");
@@ -96,8 +97,9 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
     return () => window.removeEventListener("message", receiveReady);
   }, [layout, sendDraft]);
   useEffect(() => {
-    publicFrame.current?.contentWindow?.postMessage({ type: "aloyri-builder-page-draft", content: pageContent }, window.location.origin);
-  }, [pageContent]);
+    publicFrame.current?.contentWindow?.postMessage({ type: "aloyri-builder-page-draft", content: pageContent, siteContent }, window.location.origin);
+    draftFrame.current?.contentWindow?.postMessage({ type: "aloyri-builder-site-draft", siteContent }, window.location.origin);
+  }, [pageContent, siteContent]);
   const [filter, setFilter] = useState("");
   const isHomepage = pageKey === "home";
   const selectedCustom = layout.blocks.find(block => customBlockId(block.id) === selectedId);
@@ -180,6 +182,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
       {isHomepage && coreContent && <input type="hidden" name="coreContent" value={JSON.stringify(coreContent)} />}
       {isHomepage && <input type="hidden" name="coreBaseline" value={initialCoreSnapshot} />}
       <input type="hidden" name="pageKey" value={pageKey} />
+      {siteContent && <input type="hidden" name="siteContent" value={JSON.stringify(siteContent)} />}
       {pageContent && <input type="hidden" name="pageContent" value={JSON.stringify(pageContent)} />}
       {isHomepage && advancedSettings && <input type="hidden" name="homepageControls" value="1" />}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-black/10 bg-white p-4">
@@ -252,6 +255,16 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
             </div>}
             <div className="overflow-x-auto rounded-xl bg-[#eee8e4] p-2 sm:p-4">
               {isHomepage && previewMode === "live" ? <iframe key={device} title={`Real storefront preview at ${deviceWidths[device]} pixels`} ref={draftFrame} src="/?builderPreview=1" onLoad={sendDraft} width={deviceWidths[device]} height={780} loading="lazy" className="mx-auto block rounded-lg border border-black/10 bg-white shadow-sm" style={{ width: deviceWidths[device], height: 780, maxWidth: "none" }} /> : null}
+              {siteContent && <div className="mb-3 space-y-3 rounded-xl border border-black/10 bg-white p-4" aria-label="Header and footer editor">
+                <p className="text-sm font-semibold">Existing header and footer content</p>
+                <label className="block text-xs font-semibold">Announcement text
+                  <input className={field + " mt-1"} maxLength={180} value={siteContent.announcement} onChange={event => setSiteContent(current => current ? { ...current, announcement: event.target.value } : current)} />
+                </label>
+                <label className="block text-xs font-semibold">Footer description
+                  <textarea className={field + " mt-1"} maxLength={600} rows={3} value={siteContent.footerDescription} onChange={event => setSiteContent(current => current ? { ...current, footerDescription: event.target.value } : current)} />
+                </label>
+                <Link href="/admin/settings" className="text-xs font-semibold text-[#713a35] underline">Edit navigation links and site appearance ↗</Link>
+              </div>}
               {pageContent && <div className="mb-3 space-y-3 rounded-xl border border-black/10 bg-white p-4" aria-label="Existing page text editor">
                 <p className="text-sm font-semibold">Edit existing {pageKey} page</p>
                 <p className="text-xs text-black/60">Changes appear in the page preview and are saved together with the layout.</p>
@@ -267,7 +280,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
                 <Link className={secondaryButton} href={publicSelection === "page" && ["about", "shipping", "returns", "contact", "faq"].includes(pageKey) ? `/admin/pages/${pageKey}` : publicSelection === "page" ? "/admin/merchandising" : "/admin/settings"}>Edit selected existing feature ↗</Link>
                 <span className="text-black/50">Click an existing area in the preview to select it.</span>
               </div>}
-              {!isHomepage && <iframe ref={publicFrame} onLoad={() => publicFrame.current?.contentWindow?.postMessage({ type: "aloyri-builder-page-draft", content: pageContent }, window.location.origin)} title={`Saved ${pageKey} page preview`} src={(pageKey === "shipping" ? "/shipping-delivery" : pageKey === "returns" ? "/returns-refunds" : pageKey === "category" ? "/shop" : pageKey === "product" ? "/shop" : `/${pageKey}`) + "?builderPreview=1"} width={deviceWidths[device]} height={650} loading="lazy" className="mx-auto mb-3 block rounded-lg border border-black/10 bg-white" style={{ width: deviceWidths[device], maxWidth: "none" }} />}
+              {!isHomepage && <iframe ref={publicFrame} onLoad={() => publicFrame.current?.contentWindow?.postMessage({ type: "aloyri-builder-page-draft", content: pageContent, siteContent }, window.location.origin)} title={`Saved ${pageKey} page preview`} src={(pageKey === "shipping" ? "/shipping-delivery" : pageKey === "returns" ? "/returns-refunds" : pageKey === "category" ? "/shop" : pageKey === "product" ? "/shop" : `/${pageKey}`) + "?builderPreview=1"} width={deviceWidths[device]} height={650} loading="lazy" className="mx-auto mb-3 block rounded-lg border border-black/10 bg-white" style={{ width: deviceWidths[device], maxWidth: "none" }} />}
               {(!isHomepage || previewMode === "draft") && <div className="mx-auto min-h-56 overflow-hidden rounded-lg bg-[#fffaf8] shadow-sm" style={{ width: deviceWidths[device], maxWidth: "none" }}>
                 <div className="flex justify-between border-b border-black/10 bg-white px-5 py-3 text-xs font-semibold"><span>ALOYRI</span><span>Preview</span></div>
                 {layout.order.map(id => {
