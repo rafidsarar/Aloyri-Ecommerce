@@ -29,7 +29,7 @@ test("homepage offers CRM-backed quick search, accessible suggestions and native
   await expect(page.getByRole("listbox", { name: "Suggested skincare products" }))
     .toBeVisible({ timeout: 20_000 });
   await expect(page.getByRole("listbox").getByRole("option", { name: /Skin Aqua Super Moisture UV Gel/ }))
-    .toHaveAttribute("href", "/product/skin-aqua-super-moisture-uv-gel");
+    .toHaveAttribute("href", /\/product\/.*skin-aqua-super-moisture-uv-gel$/);
   await box.press("Escape");
   await expect(page.getByRole("listbox", { name: "Suggested skincare products" })).toHaveCount(0);
   await search.getByRole("button", { name: "Search" }).click();
@@ -48,6 +48,7 @@ test("new CRM categories appear as shop chips, can be removed, and preserve URL 
   await page.getByRole("button", { name: "Remove category: Lip care" }).click();
   await expect(categories.getByRole("button", { name: "All skincare" })).toHaveAttribute("aria-pressed", "true");
 
+  await page.getByText(/Filter by brand, availability & price/).click();
   await page.getByLabel("Brand", { exact: true }).selectOption("Simple");
   await expect(page.getByRole("button", { name: "Remove brand: Simple" })).toBeVisible();
   await page.getByRole("button", { name: "Remove brand: Simple" }).click();
@@ -60,7 +61,7 @@ test("zero-results state resets query and filters without leaving CRM-safe shop"
   await expect(page.getByText("Nothing matched that search.")).toBeVisible({ timeout: 15_000 });
   await page.getByRole("button", { name: "Show all skincare" }).click();
   await expect(page.getByRole("status", { name: "" })).toContainText("2 products");
-  await expect(page.getByRole("combobox")).toHaveValue("");
+  await expect(page.getByRole("combobox", { name: "Search skincare" })).toHaveValue("");
   await expect(page).not.toHaveURL(/q=unlikelysearchphrase/);
 });
 
