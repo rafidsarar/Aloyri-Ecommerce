@@ -13,7 +13,7 @@ test.describe("homepage visual shopping", () => {
     const hrefs = await categoryLinks.evaluateAll(links => links.map(link => link.getAttribute("href")));
     expect(hrefs.length).toBeGreaterThan(0);
     expect(hrefs.every(href => typeof href === "string" && href.startsWith("/category/") && !href.includes(".."))).toBe(true);
-    await page.getByRole("search", { name: "Search skincare products" }).getByRole("searchbox").fill("sunscreen");
+    await page.getByRole("search", { name: "Search skincare products" }).getByRole("combobox").fill("sunscreen");
     await page.getByRole("search", { name: "Search skincare products" }).getByRole("button", { name: "Search" }).click();
     await expect(page).toHaveURL(/\/shop\?q=sunscreen/);
     await expect(page.getByRole("heading", { name: "Shop skincare." })).toBeVisible();
