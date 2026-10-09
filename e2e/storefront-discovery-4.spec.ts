@@ -125,7 +125,7 @@ test("shop search matches focused overlay reference while retaining CRM-backed d
   await expect(page).toHaveURL(/q=Skin(\+|%20)Aqua/);
   await page.getByRole("link", { name: "Search products" }).click();
   await expect(overlay).toBeVisible();
-  await page.getByRole("button", { name: "Close search" }).click();
+  await page.getByRole("button", { name: "Close search", exact: true }).click();
   await expect(overlay).toHaveCount(0);
 });
 
@@ -141,7 +141,7 @@ test("mobile hamburger search opens the same minimal shop overlay", async ({ pag
   await expect(page.getByRole("combobox", { name: "Search skincare" })).toBeFocused();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: "test-results/shop-search-mobile.png" });
-  await page.getByRole("button", { name: "Close search overlay" }).click();
+  await page.getByRole("button", { name: "Close search", exact: true }).click();
   await expect(overlay).toHaveCount(0);
 });
 
