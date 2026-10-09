@@ -140,9 +140,18 @@ test("homepage leads into categories and product details on desktop and mobile",
   await page.setViewportSize({width:390,height:844});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({path:testInfo.outputPath("home-mobile.png"),fullPage:true});
-  await page.getByRole("link",{name:/Cleansers/}).first().click();
+  const categories = page.locator('[aria-labelledby="shop-by-category"] a[href^="/category/"]');
+  await expect(categories.first()).toBeVisible();
+  const destination = await categories.first().getAttribute("href");
+  await categories.first().click();
+  await expect(page).toHaveURL(new RegExp((destination || "/category/").replace(/[-/\\^$*+?.()|[\]{}]/g, "\\  await page.getByRole("link",{name:/Cleansers/}).first().click();
   await expect(page).toHaveURL(/category\/cleansers/);
-  await page.getByRole("link",{name:/Refreshing Facial Wash/i}).click();
+  await page.getByRole("link",{name:/Refreshing Facial Wash/i}).click();")));
+  // Customer product links use the current live catalog, independently of
+  // which CRM category happens to be first in the homepage order.
+  await page.goto("/shop");
+  await expect(page.getByRole("link",{name:/Refreshing Facial Wash/i})).toBeVisible();
+  await page.getByRole("link",{name:/Refreshing Facial Wash/i}).first().click();
   await expect(page.getByRole("navigation",{name:"Product information"})).toBeVisible();
   await page.getByRole("link",{name:"Customer reviews",exact:true}).click();
   await expect(page).toHaveURL(/#reviews$/);
