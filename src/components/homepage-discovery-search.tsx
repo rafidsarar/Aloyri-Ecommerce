@@ -49,7 +49,7 @@ export function HomepageDiscoverySearch({
         <svg width="19" height="19" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6">
           <circle cx="10.8" cy="10.8" r="6.3" /><path d="m16 16 4.5 4.5" />
         </svg>
-        <input ref={inputRef} id="home-product-search" name="q" type="search"
+        <input ref={inputRef} id="home-product-search" name="q" type="text" inputMode="search" enterKeyHint="search"
           value={query} onChange={event => setQuery(event.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={event => {
