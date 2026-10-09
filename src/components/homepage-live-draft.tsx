@@ -11,6 +11,7 @@ export function HomepageLiveDraft({ sections, initialLayout }: { sections: CoreS
   const [layout, setLayout] = useState(initialLayout);
   const [content, setContent] = useState<Record<string, string>>({});
   const [selectedId, setSelectedId] = useState("");
+  const [siteContent, setSiteContent] = useState<{ announcement?: string; footerDescription?: string }>({});
   const active = true;
 
   useEffect(() => {
@@ -18,6 +19,10 @@ export function HomepageLiveDraft({ sections, initialLayout }: { sections: CoreS
     const onMessage = (event: MessageEvent) => {
       if (event.origin !== window.location.origin || event.source !== window.parent) return;
       const payload = event.data as DraftMessage;
+      if (event.data?.type === "aloyri-builder-site-draft") {
+        setSiteContent(event.data.siteContent && typeof event.data.siteContent === "object" ? event.data.siteContent : {});
+        return;
+      }
       if (payload?.type !== "aloyri-builder-draft" || !payload.layout || !Array.isArray(payload.layout.order) || !Array.isArray(payload.layout.blocks)) return;
       setLayout(payload.layout);
       setContent(payload.coreContent && typeof payload.coreContent === "object" ? payload.coreContent : {});
@@ -76,6 +81,13 @@ export function HomepageLiveDraft({ sections, initialLayout }: { sections: CoreS
       else element.textContent = element.getAttribute("data-builder-original") || "";
     }
   }, [active, content, layout]);
+
+  useEffect(() => {
+    const footer = document.querySelector(".store-footer-description");
+    if (footer && typeof siteContent.footerDescription === "string") footer.textContent = siteContent.footerDescription;
+    const announcement = document.querySelector("[data-storefront-announcement]");
+    if (announcement && typeof siteContent.announcement === "string") announcement.textContent = siteContent.announcement;
+  }, [siteContent]);
 
   const core = new Map(sections.map(section => [`core:${section.id}`, section.content]));
   return <div data-builder-live-draft={active ? "active" : undefined}>
