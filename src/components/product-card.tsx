@@ -27,8 +27,10 @@ export function ProductCard({
 }) {
   const { product: liveProduct, synced } = useCatalogProduct(fallback.id);
 
-  if (synced && !liveProduct) return null;
-  const product = liveProduct ?? fallback;
+  // CRM is authoritative for whether a product exists. Never render a stale
+  // editorial product as purchasable while sync is loading or unavailable.
+  if (!synced || !liveProduct) return null;
+  const product = liveProduct;
   const stockLabel = synced ? productStockLabel(product) : "Checking live stock";
   const salePrice = salePriceFor(product);
   const onSale = synced && hasSalePrice(product);
