@@ -23,9 +23,17 @@ test.describe("homepage visual shopping", () => {
     test(`homepage search and browse remain usable at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 800 });
       await page.goto("/");
-      await expect(page.getByRole("search", { name: "Search skincare products" })).toBeVisible();
-      await expect(page.getByRole("link", { name: "Available now" })).toHaveAttribute("href", "/shop?stock=in-stock");
+      const search = page.getByRole("search", { name: "Search skincare products" });
+      await expect(search).toBeVisible();
+      // The minimal search design keeps shortcuts inside the focused overlay.
+      await search.getByRole("combobox").focus();
+      const discovery = page.getByRole("listbox", { name: "Suggested skincare products" });
+      await expect(discovery).toBeVisible();
+      await expect(discovery.getByRole("link", { name: "Available now" })).toHaveAttribute("href", "/shop?stock=in-stock");
+      await expect(discovery.getByRole("link", { name: "Find my routine" })).toHaveAttribute("href", "/routine-finder");
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+      await search.getByRole("button", { name: "Close", exact: true }).click();
+      await expect(discovery).toHaveCount(0);
     });
   }
 });
