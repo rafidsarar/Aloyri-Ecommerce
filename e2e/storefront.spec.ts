@@ -71,9 +71,10 @@ test("guest can add products to cart but must sign up before checkout", async ({
   await page.goto("/shop");
   await page.getByRole("link", { name: /Refreshing Facial Wash/i }).click();
   await page.getByRole("button", { name: "Add to cart", exact: true }).first().click();
-  await page.getByRole("link", { name: /Cart/ }).first().click();
-  await expect(page.getByText("Refreshing Facial Wash", { exact: true }).first()).toBeVisible();
-  await page.getByRole("link", { name: /Checkout|Continue to checkout/i }).click();
+  await page.getByRole("button", { name: /^Cart with 1 item$/ }).click();
+  const drawer = page.getByRole("dialog", { name: "Shopping cart" });
+  await expect(drawer.getByText("Refreshing Facial Wash", { exact: true })).toBeVisible();
+  await drawer.getByRole("link", { name: "Proceed to checkout" }).click();
   await expect(page).toHaveURL(/\/account\/setup/);
   await expect(page.getByRole("heading", { name: "Your account, then checkout." })).toBeVisible();
   await expect(page.getByRole("link", { name: "Sign in with Google" })).toBeVisible();

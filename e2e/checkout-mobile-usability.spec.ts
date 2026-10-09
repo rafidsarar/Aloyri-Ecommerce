@@ -19,7 +19,9 @@ async function mockLiveCatalog(page: Page) {
 async function addProductAndOpenCart(page: Page) {
   await page.goto("/shop");
   await page.getByRole("button", { name: "Add Refreshing Facial Wash to cart" }).click();
-  await page.getByRole("link", { name: "Cart with 1 item" }).click();
+  await page.getByRole("button", { name: "Cart with 1 item" }).click();
+  await expect(page.getByRole("dialog", { name: "Shopping cart" })).toBeVisible();
+  await page.getByRole("link", { name: "View full cart" }).click();
   await expect(page.getByRole("heading", { name: "Cart." })).toBeVisible();
 }
 
@@ -35,7 +37,7 @@ test("320px mobile cart keeps prices and action inside viewport", async ({ page 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 
   await page.getByRole("button", { name: "Increase Refreshing Facial Wash quantity" }).click();
-  await expect(page.getByRole("link", { name: "Cart with 2 items" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Cart with 2 items" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await mobileAction.getByRole("link", { name: /Checkout/i }).click();
   await expect(page).toHaveURL(/\/account\/setup\?next=(?:%2F|\/)checkout/);
@@ -47,7 +49,7 @@ test("390px mobile cart allows accessible removal and preserves guest privacy", 
   await addProductAndOpenCart(page);
   await page.getByRole("button", { name: "Remove Refreshing Facial Wash from cart" }).click();
   await expect(page.getByText("Your cart is empty.")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Cart" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Cart" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(await page.evaluate(() => Object.keys(localStorage).filter(key => key.startsWith("aloyri_")))).toEqual([]);
 });

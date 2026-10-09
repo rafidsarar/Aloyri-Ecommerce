@@ -19,7 +19,7 @@ test.describe("storefront appearance and navigation", () => {
     const accountMenu = page.getByRole("navigation", { name: "Account shortcuts" });
     await expect(accountButton).toHaveAttribute("aria-expanded", "true");
     await expect(accountMenu.getByRole("link", { name: "My account" })).toHaveAttribute("href", "/account");
-    await expect(accountMenu.getByRole("link", { name: "My orders" })).toHaveAttribute("href", "/account#orders");
+    await expect(accountMenu.getByRole("link", { name: "My orders & returns" })).toHaveAttribute("href", "/account?section=orders");
     await expect(accountMenu.getByRole("link", { name: "Track order" })).toHaveAttribute("href", "/track-order");
     await expect(accountMenu.getByRole("link", { name: "My cart" })).toHaveAttribute("href", "/cart");
     await page.keyboard.press("Escape");
