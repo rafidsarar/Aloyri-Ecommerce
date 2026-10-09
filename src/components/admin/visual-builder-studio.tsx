@@ -183,6 +183,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
       {isHomepage && <input type="hidden" name="coreBaseline" value={initialCoreSnapshot} />}
       <input type="hidden" name="pageKey" value={pageKey} />
       {siteContent && <input type="hidden" name="siteContent" value={JSON.stringify(siteContent)} />}
+      {initialSiteContent && <input type="hidden" name="siteBaseline" value={JSON.stringify(initialSiteContent)} />}
       {pageContent && <input type="hidden" name="pageContent" value={JSON.stringify(pageContent)} />}
       {isHomepage && advancedSettings && <input type="hidden" name="homepageControls" value="1" />}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-black/10 bg-white p-4">
