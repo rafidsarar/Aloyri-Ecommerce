@@ -17,6 +17,7 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
   const { categories: crmCategories, products, synced } = useCatalog();
   const publicCategories = buildCategoryDirectory(crmCategories, products);
   const [open, setOpen] = useState(false);
+  const [categoriesExpanded, setCategoriesExpanded] = useState(true);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const menuDialogRef = useRef<HTMLDivElement>(null);
@@ -65,6 +66,8 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [open]);
+
+  useEffect(() => { setOpen(false); }, [pathname]);
 
   const current = (href: string) =>
     pathname === href || (href !== "/shop" && pathname.startsWith(href));
@@ -117,64 +120,61 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
       </header>
 
       {open ? (
-        <div
-          ref={menuDialogRef}
-          id="mobile-navigation"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Store navigation menu"
-          className="store-mobile-nav fixed inset-0 z-50 overflow-y-auto overscroll-contain p-4 pb-12 sm:p-6"
-        >
-          <div className="flex items-center justify-between">
-            <BrandMark />
-            <button
-              ref={closeButtonRef}
-              type="button"
-              onClick={closeMenu}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#713a35]/15"
-              aria-label="Close menu"
-            >
-              <CloseIcon />
-            </button>
-          </div>
-
-          <nav className="mt-8 flex flex-col" aria-label="Store navigation">
-            {links.map(([label, href]) => (
-              <Link
-                key={label}
-                href={href}
-                aria-current={current(href) ? "page" : undefined}
-                onClick={() => setOpen(false)}
-                className="store-mobile-link display border-b py-4 text-3xl"
-              >
-                {label}
-              </Link>
-            ))}
-          </nav>
-
-          <Link href="/shop" onClick={() => setOpen(false)}
-            className="store-mobile-tool mt-6 flex min-h-12 items-center justify-between rounded-2xl px-4 text-sm font-semibold">
-            Search skincare and brands <SearchIcon />
-          </Link>
-          <div className="store-discovery-strip mt-6 rounded-2xl p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[.18em]">Shop by category</p>
-            <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-              {synced && publicCategories.length
-                ? publicCategories.map(item => <Link key={item.slug} href={item.href} onClick={() => setOpen(false)}>{item.name}</Link>)
-                : <Link href="/shop" onClick={() => setOpen(false)}>Browse all categories</Link>}
-              <Link href="/shop?stock=in-stock" onClick={() => setOpen(false)}>Available now</Link>
+        <div className="fixed inset-0 z-50" role="presentation">
+          <button type="button" aria-label="Close navigation overlay"
+            onClick={closeMenu} className="absolute inset-0 bg-[#241512]/55 backdrop-blur-[3px]" />
+          <div ref={menuDialogRef} id="mobile-navigation" role="dialog" aria-modal="true"
+            aria-label="Store navigation menu"
+            className="store-mobile-nav absolute inset-y-0 left-0 flex w-[min(90vw,420px)] flex-col overflow-y-auto overscroll-contain border-r border-[#713a35]/10 px-5 pb-7 pt-5 shadow-2xl sm:px-7">
+            <div className="flex items-center justify-between gap-4 border-b border-[#713a35]/10 pb-5">
+              <BrandMark compact />
+              <button ref={closeButtonRef} type="button" onClick={closeMenu}
+                className="store-icon-link inline-flex h-11 w-11 items-center justify-center rounded-full border"
+                aria-label="Close menu"><CloseIcon /></button>
             </div>
-          </div>
-          <nav aria-label="Customer tools" className="mt-6 grid grid-cols-2 gap-3">
-            <Link href="/account" onClick={() => setOpen(false)} className="store-mobile-tool rounded-2xl p-4 text-sm font-semibold">My account</Link>
-            <Link href="/track-order" onClick={() => setOpen(false)} className="rounded-2xl bg-[#f5e8e2] p-4 text-sm font-semibold">Track order</Link>
-          </nav>
-
-          <div className="store-mobile-tool mt-8 rounded-3xl p-5">
-            <p className="text-xs uppercase tracking-[0.18em] text-[#8d5f56]">Aloyri edit</p>
-            <p className="mt-2 text-sm leading-6 text-[#321f1c]/62">
-              Discover skincare by category, explore our collections, and find your next routine.
-            </p>
+            <p className="mt-7 text-[10px] font-semibold uppercase tracking-[.22em] text-[#8d5f56]">Discover Aloyri</p>
+            <nav className="mt-3 flex flex-col" aria-label="Store navigation">
+              {links.map(([label, href]) => (
+                <Link key={label} href={href} aria-current={current(href) ? "page" : undefined}
+                  onClick={closeMenu}
+                  className="store-mobile-link flex min-h-12 items-center justify-between border-b py-3 text-[17px] font-medium transition hover:pl-2 hover:text-[#713a35]">
+                  <span>{label}</span><span aria-hidden="true" className="text-[#a77d73]">↗</span>
+                </Link>
+              ))}
+            </nav>
+            <div className="mt-7 border-b border-[#713a35]/10 pb-4">
+              <button type="button" onClick={() => setCategoriesExpanded(value => !value)}
+                aria-expanded={categoriesExpanded} aria-controls="drawer-categories"
+                className="flex w-full items-center justify-between py-2 text-left text-[11px] font-semibold uppercase tracking-[.17em]">
+                Shop by category <span aria-hidden="true" className="text-xl">{categoriesExpanded ? "−" : "+"}</span>
+              </button>
+              {categoriesExpanded ? <div id="drawer-categories" className="mt-3 grid grid-cols-2 gap-2">
+                {synced && publicCategories.length
+                  ? publicCategories.map(item => (
+                    <Link key={item.slug} href={item.href} onClick={closeMenu}
+                      aria-current={current(item.href) ? "page" : undefined}
+                      className="store-mobile-tool rounded-xl px-3 py-3 text-sm transition hover:brightness-95">{item.name}</Link>
+                  ))
+                  : <Link href="/shop" onClick={closeMenu} className="store-mobile-tool col-span-2 rounded-xl p-3 text-sm">Browse all categories</Link>}
+                <Link href="/shop?stock=in-stock" onClick={closeMenu} className="store-mobile-tool rounded-xl px-3 py-3 text-sm">Available now</Link>
+              </div> : null}
+            </div>
+            <Link href="/shop" onClick={closeMenu}
+              className="store-mobile-tool mt-6 flex min-h-12 items-center justify-between rounded-xl px-4 text-sm font-semibold">
+              Search products and brands <SearchIcon />
+            </Link>
+            <nav aria-label="Customer tools" className="mt-4 grid grid-cols-2 gap-2">
+              <Link href="/account" onClick={closeMenu} className="store-mobile-tool rounded-xl p-3 text-center text-sm font-semibold">My account</Link>
+              <Link href="/track-order" onClick={closeMenu} className="store-mobile-tool rounded-xl p-3 text-center text-sm font-semibold">Track order</Link>
+              <Link href="/account/orders" onClick={closeMenu} className="store-mobile-tool rounded-xl p-3 text-center text-sm font-semibold">My orders</Link>
+              <Link href="/cart" onClick={closeMenu} className="store-mobile-tool rounded-xl p-3 text-center text-sm font-semibold">My cart</Link>
+            </nav>
+            <div className="mt-auto pt-7">
+              <div className="rounded-2xl border border-[#713a35]/10 bg-[#f5e8e2] p-4">
+                <p className="text-xs font-semibold tracking-[.1em] text-[#713a35]">ALOYRI SKINCARE</p>
+                <p className="mt-2 text-sm leading-6 text-[#321f1c]/70">Find the right products for your everyday skincare routine.</p>
+              </div>
+            </div>
           </div>
         </div>
       ) : null}
