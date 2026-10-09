@@ -85,7 +85,7 @@ export function HomepageLiveDraft({ sections, initialLayout }: { sections: CoreS
   useEffect(() => {
     const footer = document.querySelector(".store-footer-description");
     if (footer && typeof siteContent.footerDescription === "string") footer.textContent = siteContent.footerDescription;
-    const announcement = document.querySelector("[data-storefront-announcement]");
+    const announcement = document.querySelector(".store-announcement");
     if (announcement && typeof siteContent.announcement === "string") announcement.textContent = siteContent.announcement;
   }, [siteContent]);
 
