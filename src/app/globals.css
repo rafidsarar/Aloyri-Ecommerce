@@ -656,7 +656,7 @@ body[data-storefront-theme="sand"] {
 .brand-mark-compact { width: 160px; }
 .brand-artwork { display: block; width: 100%; height: auto; overflow: hidden; }
 .store-header-grid { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 12px; min-height: 84px; padding-block: 14px; }
-.store-header-grid > button { justify-self: start; }
+.store-header-leading { justify-self: start; }
 .store-header-brand { justify-self: center; }
 .store-header-actions { justify-self: end; }
 .store-drawer-heading { position: sticky; top: -20px; z-index: 1; padding-top: 8px; background: var(--store-surface); }
@@ -672,8 +672,7 @@ body[data-storefront-theme="sand"] {
 @keyframes store-drawer-enter { from { transform: translateX(-100%); } to { transform: translateX(0); } }
 @media (max-width: 767px) {
   .store-header-grid { min-height: 72px; gap: 8px; padding-block: 10px; }
-  .store-header-brand .brand-mark { width: clamp(116px, 23vw, 160px); }
-  .store-header-actions .store-account-icon { display: none; }
+  .store-header-brand .brand-mark { width: min(116px, calc(100vw - 232px)); }
   .store-hero-copy { padding: clamp(24px, 5vw, 40px); }
 }
 @media (prefers-reduced-motion: reduce) { .store-navigation-drawer { animation: none; } }

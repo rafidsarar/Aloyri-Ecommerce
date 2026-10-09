@@ -79,6 +79,7 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
       <header className={`store-header top-0 z-40 border-b backdrop-blur-xl ${presentation.stickyHeader ? "sticky" : "relative"}`}>
         <div className="shell store-header-grid">
 
+          <div className="store-header-leading flex items-center gap-1">
           <button
             ref={menuButtonRef}
             type="button"
@@ -91,11 +92,6 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
             <MenuIcon />
           </button>
 
-          <div className="store-header-brand"><BrandMark compact /></div>
-
-          <div className="store-header-actions flex min-w-0 items-center justify-end gap-1 sm:gap-2">
-            <Link href="/track-order" className="store-utility-link hidden rounded-full px-3 py-2 text-xs font-medium xl:block">Track order</Link>
-            <Link href="/account" aria-current={current("/account") ? "page" : undefined} className="store-utility-link hidden rounded-full px-3 py-2 text-sm font-semibold sm:block">Account</Link>
             <Link href="/account" aria-label="Customer account and sign in"
               className="store-account-icon store-icon-link inline-flex h-11 w-11 items-center justify-center rounded-full border sm:hidden"
               aria-current={current("/account") ? "page" : undefined}>
@@ -105,9 +101,16 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
                 <path d="M5.5 20c0-3.3 2.7-6 6.5-6s6.5 2.7 6.5 6" />
               </svg>
             </Link>
+          </div>
+          <div className="store-header-brand"><BrandMark compact /></div>
+
+          <div className="store-header-actions flex min-w-0 items-center justify-end gap-1 sm:gap-2">
+            <Link href="/track-order" className="store-utility-link hidden rounded-full px-3 py-2 text-xs font-medium xl:block">Track order</Link>
+            <Link href="/account" aria-current={current("/account") ? "page" : undefined} className="store-utility-link hidden rounded-full px-3 py-2 text-sm font-semibold sm:block">Account</Link>
+
             <Link
               href="/shop"
-              className="store-icon-link hidden h-11 w-11 items-center justify-center rounded-full border transition md:inline-flex"
+              className="store-icon-link hidden h-11 w-11 items-center justify-center rounded-full border transition min-[380px]:inline-flex"
               aria-label="Search products"
             >
               <SearchIcon />
