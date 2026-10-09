@@ -48,8 +48,8 @@ test("storefront category menu and shop filters refresh when CRM adds a category
 
   await page.goto("/shop");
   await expect(page.getByRole("navigation", { name: "Shop categories" }).getByRole("button", { name: /Lip care/ })).toBeVisible({ timeout: 20_000 });
-  await page.getByRole("button", { name: /Lip care/ }).click();
-  await expect(page.getByRole("button", { name: /Lip care/ })).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("navigation", { name: "Shop categories" }).getByRole("button", { name: /Lip care/ }).click();
+  await expect(page.getByRole("navigation", { name: "Shop categories" }).getByRole("button", { name: /Lip care/ })).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("button", { name: "All skincare" }).click();
 
   categoryNames = [...categoryNames, "Hair & scalp"];
