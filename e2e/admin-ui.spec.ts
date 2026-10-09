@@ -124,10 +124,10 @@ test.describe("minimal admin interface", () => {
     await expect(page.getByRole("heading",{name:"Your orders"})).toBeVisible();
     await expect(page.getByText("WEB-PREVIEW-12345678")).toBeVisible();
     await page.screenshot({path:testInfo.outputPath("account-desktop.png"),fullPage:true});
-    await page.getByRole("button",{name:"Addresses",exact:true}).click();
+    await page.getByRole("navigation",{name:"Account sections"}).getByRole("button",{name:"Saved addresses",exact:true}).click();
     await expect(page.getByLabel("Recipient name")).toBeVisible();
     await expect(page.getByText("WEB-PREVIEW-12345678")).toHaveCount(0);
-    await page.getByRole("button",{name:"Support",exact:true}).click();
+    await page.getByRole("navigation",{name:"Account sections"}).getByRole("button",{name:"Customer care",exact:true}).click();
     await expect(page.getByRole("heading",{name:"Support & returns"})).toBeVisible();
     await page.setViewportSize({width:390,height:844});
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
