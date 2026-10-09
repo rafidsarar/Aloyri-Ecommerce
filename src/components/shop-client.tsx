@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ProductCard } from "@/components/product-card";
+import { categoryNamesFromCatalog, matchesCategory } from "@/lib/storefront-categories";
 import { useCatalog } from "@/components/catalog-provider";
 import { salePriceFor } from "@/lib/promotions";
 import { matchesSkinFocus, skinFocusOptions, type SkinFocus } from "@/lib/skin-focus";
@@ -55,7 +56,7 @@ export function ShopClient({
   lockCategory?: boolean;
   merchandisingSortMode?: "priority" | "featured";
 }) {
-  const { products, synced, refreshing, error, refresh } = useCatalog();
+  const { products, categories: crmCategories, synced, refreshing, error, refresh } = useCatalog();
   const [query, setQuery] = useState(initialQuery || "");
   const [category, setCategory] = useState(initialCategory || "All");
   const [brand, setBrand] = useState(initialBrand || "All");
@@ -67,16 +68,16 @@ export function ShopClient({
   const lastTrackedSearch = useRef("");
 
   const categories = useMemo(() => {
-    const order = new Map(
-      categoryOrder.map((item, index) => [item.toLowerCase(), index]),
+    const preferredOrder = new Map(
+      categoryOrder.map((item, index) => [item.trim().toLocaleLowerCase("en"), index]),
     );
-    return [...new Set(products.map((product) => product.category))].sort(
-      (a, b) =>
-        (order.get(a.toLowerCase()) ?? 10_000) -
-          (order.get(b.toLowerCase()) ?? 10_000) ||
-        a.localeCompare(b),
+    const entries = categoryNamesFromCatalog(crmCategories, products);
+    return entries.sort((a, b) =>
+      (preferredOrder.get(a.toLocaleLowerCase("en")) ?? 10_000) -
+      (preferredOrder.get(b.toLocaleLowerCase("en")) ?? 10_000) ||
+      crmCategories.indexOf(a) - crmCategories.indexOf(b)
     );
-  }, [products, categoryOrder]);
+  }, [products, crmCategories, categoryOrder]);
   const brands = useMemo(
     () => [...new Set(products.map((product) => product.brand))].sort(),
     [products],
@@ -90,10 +91,11 @@ export function ShopClient({
       ) {
         continue;
       }
-      counts.set(product.category, (counts.get(product.category) || 0) + 1);
+      const normalized = categories.find(item => matchesCategory(item, product.category)) || product.category;
+      counts.set(normalized, (counts.get(normalized) || 0) + 1);
     }
     return counts;
-  }, [products]);
+  }, [products, categories]);
 
   const suggestions = useMemo(
     () =>
@@ -104,7 +106,7 @@ export function ShopClient({
               product.merchandisingOutOfStockMode === "hide" &&
               (product.availableStock ?? 0) <= 0
             ) &&
-            (category === "All" || product.category === category),
+            (category === "All" || matchesCategory(product.category, category)),
         ),
         query,
         5,
@@ -125,7 +127,7 @@ export function ShopClient({
           return false;
         }
 
-        if (category !== "All" && product.category !== category) return false;
+        if (category !== "All" && !matchesCategory(product.category, category)) return false;
         if (brand !== "All" && product.brand !== brand) return false;
         if (!matchesSkinFocus(product, focus)) return false;
 
