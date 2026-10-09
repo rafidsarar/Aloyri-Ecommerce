@@ -205,19 +205,18 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
               ) : null}
             </div>
 
-            <Link
-              href="/shop?search=1"
-              onClick={event => {
-                if (pathname === "/shop") {
-                  event.preventDefault();
-                  window.dispatchEvent(new Event("aloyri:open-shop-search"));
-                }
+            <button type="button"
+              onClick={() => {
+                setAccountOpen(false);
+                window.dispatchEvent(new Event("aloyri:open-global-search"));
               }}
-              className="store-icon-link hidden h-11 w-11 items-center justify-center rounded-full border transition sm:inline-flex"
+              className="store-icon-link inline-flex h-10 w-10 items-center justify-center rounded-full border transition sm:h-11 sm:w-11"
               aria-label="Search products"
+              aria-haspopup="dialog"
+              aria-controls="global-storefront-search"
             >
               <SearchIcon />
-            </Link>
+            </button>
             <CartLink />
           </div>
         </div>
@@ -236,16 +235,15 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
                 className="store-icon-link inline-flex h-11 w-11 items-center justify-center rounded-full border"
                 aria-label="Close menu"><CloseIcon /></button>
             </div>
-            <Link href="/shop?search=1" onClick={event => {
-                if (pathname === "/shop") {
-                  event.preventDefault();
-                  setOpen(false);
-                  window.requestAnimationFrame(() => window.dispatchEvent(new Event("aloyri:open-shop-search")));
-                } else closeMenu();
+            <button type="button" onClick={() => {
+                setOpen(false);
+                window.requestAnimationFrame(() => window.dispatchEvent(new Event("aloyri:open-global-search")));
               }}
-              className="store-drawer-search store-mobile-tool mt-5 flex min-h-12 items-center justify-between gap-3 rounded-xl px-4 text-sm font-semibold">
+              className="store-drawer-search store-mobile-tool mt-5 flex min-h-12 w-full items-center justify-between gap-3 rounded-xl px-4 text-left text-sm font-semibold"
+              aria-haspopup="dialog"
+              aria-controls="global-storefront-search">
               Search products and brands <SearchIcon />
-            </Link>
+            </button>
             <p className="mt-6 text-[10px] font-semibold uppercase tracking-[.22em] text-[#8d5f56]">Discover Aloyri</p>
             <nav className="mt-3 flex flex-col" aria-label="Store navigation">
               {links.map(([label, href]) => (
