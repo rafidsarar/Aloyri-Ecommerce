@@ -89,25 +89,31 @@ export function ShopClient({
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") { event.preventDefault(); setSearchFocused(false); searchInputRef.current?.focus({preventScroll: true}); }
+      if (event.key === "Escape") { event.preventDefault(); setSearchFocused(false); }
     };
     document.addEventListener("keydown", onEscape);
     return () => { document.body.style.overflow = previousOverflow; document.removeEventListener("keydown", onEscape); };
   }, [searchFocused]);
   useEffect(() => {
-    const openFromHeader = () => searchInputRef.current?.focus({ preventScroll: true });
+    const openFromHeader = () => setSearchFocused(true);
     window.addEventListener("aloyri:open-shop-search", openFromHeader);
     return () => window.removeEventListener("aloyri:open-shop-search", openFromHeader);
   }, []);
   useEffect(() => {
-    if (!synced || !searchInputRef.current) return;
+    if (!synced) return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("search") !== "1") return;
-    searchInputRef.current.focus({ preventScroll: true });
+    // Keep initial search opt-in, even when the shop no longer displays a search field.
     params.delete("search");
     const next = params.toString();
     window.history.replaceState(window.history.state, "", window.location.pathname + (next ? "?" + next : ""));
+    const frame = window.requestAnimationFrame(() => setSearchFocused(true));
+    return () => window.cancelAnimationFrame(frame);
   }, [synced]);
+  useEffect(() => {
+    if (!searchFocused) return;
+    searchInputRef.current?.focus({ preventScroll: true });
+  }, [searchFocused]);
 
   const lastTrackedSearch = useRef("");
 
