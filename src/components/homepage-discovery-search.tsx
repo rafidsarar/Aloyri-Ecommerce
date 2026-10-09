@@ -72,9 +72,16 @@ export function HomepageDiscoverySearch({
     (p.merchandisingOutOfStockMode !== "hide" || (p.availableStock ?? 0) > 0)).slice(0, 4) : [];
 
   return (
-    <div ref={rootRef} className="relative min-w-0">
+    <div ref={rootRef} className={"relative min-w-0 " + (focused ? "z-[70]" : "")}>
+      {focused ? (
+        <button type="button" tabIndex={-1} aria-label="Close search overlay" onClick={() => setFocused(false)}
+          className="fixed inset-0 z-[-1] cursor-default bg-black/45" />
+      ) : null}
       <form action="/shop" method="get" role="search" aria-label="Search skincare products" onSubmit={() => remember(query)}
-        className="store-home-search flex min-w-0 items-center gap-2 rounded-full border px-3 py-1.5 shadow-none transition-colors focus-within:border-[var(--store-accent)] sm:px-4">
+        className={"store-home-search flex min-w-0 items-center gap-3 border px-4 py-2 shadow-none transition-all sm:px-5 " +
+          (focused
+            ? "fixed inset-x-3 top-3 z-10 mx-auto max-w-[1360px] rounded-xl border-transparent bg-[var(--store-surface)] shadow-sm sm:inset-x-8 sm:top-5"
+            : "rounded-full focus-within:border-[var(--store-accent)]")}>
         <label htmlFor="home-product-search" className="sr-only">Search products and brands</label>
         <svg width="19" height="19" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6">
           <circle cx="10.8" cy="10.8" r="6.3" /><path d="m16 16 4.5 4.5" />
@@ -99,12 +106,23 @@ export function HomepageDiscoverySearch({
           aria-controls="home-discovery-suggestions"
           placeholder={placeholder}
           className="min-w-0 flex-1 bg-transparent py-2 text-sm outline-none placeholder:opacity-65" />
-        <button type="submit" className="store-home-search-button min-h-9 shrink-0 rounded-full px-4 text-xs font-semibold sm:px-5 sm:text-sm">Search</button>
+        {focused ? (
+          <button type="button" aria-label="Close search" onClick={() => setFocused(false)}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--store-muted)] hover:bg-[var(--store-panel)] focus-visible:outline-2 focus-visible:outline-offset-2"
+            title="Close search">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+              <path d="M5 5 19 19M19 5 5 19" />
+            </svg>
+          </button>
+        ) : (
+          <button type="submit" className="store-home-search-button min-h-9 shrink-0 rounded-full px-4 text-xs font-semibold sm:px-5 sm:text-sm">Search</button>
+        )}
+        {focused ? <button type="submit" className="sr-only">Search</button> : null}
       </form>
 
       {showSuggestions ? (
         <div id="home-discovery-suggestions" role="listbox" aria-label="Suggested skincare products"
-          className="absolute inset-x-0 top-[calc(100%+6px)] z-50 max-h-[min(65vh,440px)] overflow-y-auto rounded-xl border border-[var(--store-border)] bg-[var(--store-surface)] p-3 text-[var(--store-ink)] shadow-lg sm:p-3">
+          className="fixed inset-x-3 top-[76px] z-10 mx-auto max-h-[min(65vh,440px)] max-w-[1360px] overflow-y-auto rounded-xl border border-[var(--store-border)] bg-[var(--store-surface)] p-3 text-[var(--store-ink)] shadow-lg sm:inset-x-8 sm:top-[88px]">
           <div role="tablist" aria-label="Search suggestion categories" className="mb-2 flex items-center gap-1 overflow-x-auto border-b border-[var(--store-border)] pb-2">
             {(["all", "products", "categories"] as const).map(item => (
               <button key={item} type="button" role="tab" aria-selected={tab === item} onClick={() => setTab(item)}
