@@ -19,13 +19,17 @@ test("desktop discovery opens on click and closes on Escape", async ({ page }) =
   await page.setViewportSize({ width: 1440, height: 900 });
   await mockCatalog(page);
   await page.goto("/");
-  const explore = page.getByRole("button", { name: /Explore/ });
-  await expect(explore).toBeVisible();
-  await explore.click();
-  await expect(explore).toHaveAttribute("aria-expanded", "true");
-  await expect(page.getByLabel("Explore skincare").getByRole("link", { name: "Cleanser" })).toHaveAttribute("href", "/category/cleansers");
+  const opener = page.getByRole("button", { name: "Open menu" });
+  await expect(opener).toBeVisible();
+  await opener.click();
+  await expect(opener).toHaveAttribute("aria-expanded", "true");
+  const drawer = page.getByRole("dialog", { name: "Store navigation menu" });
+  await expect(drawer.getByRole("link", { name: "Cleanser" })).toHaveAttribute("href", "/category/cleansers");
+  await expect(drawer.getByRole("link", { name: "Track order" })).toBeVisible();
   await page.keyboard.press("Escape");
-  await expect(explore).toHaveAttribute("aria-expanded", "false");
+  await expect(drawer).toHaveCount(0);
+  await expect(opener).toHaveAttribute("aria-expanded", "false");
+  await expect(opener).toBeFocused();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
@@ -64,10 +68,10 @@ test("mobile customer journey exposes finder and no horizontal overflow", async 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   await page.getByRole("button", { name: "Open menu" }).click();
-  const menu = page.getByRole("dialog", { name: "Navigation menu" });
+  const menu = page.getByRole("dialog", { name: "Store navigation menu" });
   await menu.getByRole("link", { name: "Routine finder" }).click();
   await expect(page).toHaveURL(/\/routine-finder/);
-  await expect(page.getByRole("dialog", { name: "Navigation menu" })).toHaveCount(0);
+  await expect(page.getByRole("dialog", { name: "Store navigation menu" })).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
