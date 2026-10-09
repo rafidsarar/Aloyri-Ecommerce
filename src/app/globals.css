@@ -489,3 +489,122 @@ body[data-storefront-theme="sand"] {
 .store-hero-align-center .store-hero-copy > div { justify-content: center; }
 .store-hero-align-center .store-hero-copy p { margin-inline: auto; }
 .store-hero-align-center .store-hero-heading { margin-inline: auto; }
+
+
+/* Ecommerce Admin workspace: compact navigation and a canvas-first design tool. */
+.admin-workspace { background: #f8f6f4; }
+.admin-header {
+  position: sticky;
+  top: 0;
+  z-index: 45;
+  min-height: 70px;
+  padding: .75rem clamp(1rem, 2vw, 2rem);
+  border-bottom: 1px solid #e8e0dc;
+  background: rgb(255 255 255 / .97);
+  box-shadow: 0 2px 12px rgb(52 32 27 / .025);
+  backdrop-filter: blur(14px);
+}
+.admin-brand { color: #3b2522; }
+.admin-brand-symbol {
+  display: grid;
+  place-items: center;
+  width: 37px;
+  height: 37px;
+  flex-shrink: 0;
+  border: 1px solid #7a4942;
+  border-radius: 12px;
+  background: #703b35;
+  color: #fff;
+  font-size: 17px;
+  font-weight: 700;
+}
+.admin-frame { max-width: 1740px; }
+.admin-workspace--wide .admin-frame { max-width: none; }
+.admin-main { min-width: 0; }
+.admin-page-heading { margin-bottom: 1.2rem; }
+.admin-page-heading .admin-page-eyebrow {
+  margin: 0 0 .35rem;
+  font-size: .63rem;
+  font-weight: 700;
+  letter-spacing: .15em;
+  line-height: 1.5;
+  text-transform: uppercase;
+  color: #926d65;
+}
+.admin-page-heading h1 { color: #30201e; }
+.admin-store-link {
+  border: 1px solid #e7ddd9;
+  background: #fffaf8;
+  color: #663c36;
+  font-weight: 600;
+}
+.admin-signout { color: #674b47; }
+.admin-signout:hover, .admin-store-link:hover { background: #f8efec; }
+.admin-sidebar { border-color: #ebe3df; }
+.admin-nav-search input { min-height: 42px; background: #fbfaf8; }
+.admin-nav-group > p { color: #977c75; letter-spacing: .08em; text-transform: uppercase; }
+.admin-nav-group a { transition: background .16s ease, color .16s ease; }
+.admin-nav-group a.is-active { box-shadow: inset 3px 0 0 #713a35; }
+.admin-main .admin-card { border-color: #e9e0dc; border-radius: 16px; box-shadow: 0 2px 7px rgb(56 35 30 / .02); }
+
+/* Wide, responsive visual editing workspace.
+ * The stage keeps a real desktop iframe width while BuilderPreviewViewport
+ * scales only its displayed pixels to fit this column. */
+.builder-workspace {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 1rem;
+}
+.builder-workspace > * { min-width: 0; }
+.builder-canvas { order: 1; }
+.builder-properties { order: 2; }
+.builder-library { order: 3; }
+.builder-preview, .builder-structure { min-width: 0; }
+.builder-workspace--focus .builder-properties,
+.builder-workspace--focus .builder-library { display: none; }
+.builder-workspace--focus .builder-canvas { grid-column: 1 / -1; }
+.builder-properties { overflow-wrap: anywhere; }
+@media (min-width: 1024px) {
+  .admin-workspace--wide .admin-frame { grid-template-columns: 204px minmax(0, 1fr); }
+  .admin-workspace--wide .admin-main { padding: 1.25rem 1.5rem 3rem; }
+  .admin-workspace--wide:has(.builder-workspace--focus) .admin-frame {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-workspace--wide:has(.builder-workspace--focus) .admin-sidebar { display: none; }
+}
+@media (min-width: 1280px) {
+  .builder-workspace:not(.builder-workspace--focus) {
+    grid-template-columns: minmax(0, 1fr) minmax(290px, 328px);
+  }
+  .builder-workspace:not(.builder-workspace--focus) .builder-canvas {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+  .builder-workspace:not(.builder-workspace--focus) .builder-properties {
+    grid-column: 2;
+    grid-row: 1;
+    position: sticky;
+    top: 88px;
+    max-height: calc(100dvh - 106px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .builder-workspace:not(.builder-workspace--focus) .builder-library {
+    grid-column: 2;
+    grid-row: 2;
+  }
+}
+@media (max-width: 767px) {
+  .admin-header { min-height: 62px; gap: .5rem; padding: .7rem .85rem; }
+  .admin-header > div { gap: .35rem; }
+  .admin-brand-symbol { height: 32px; width: 32px; font-size: 14px; }
+  .admin-store-link { padding: .4rem .5rem; }
+  .admin-signout { padding: .4rem .55rem; }
+  .admin-main { padding: 1rem .75rem 3rem; }
+  .builder-preview { padding: .75rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-nav-group a { transition: none; }
+}

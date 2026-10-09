@@ -20,13 +20,14 @@ export default async function VisualBuilderPage({
       username={admin.username}
       title="Aloyri Storefront Builder"
       subtitle="Edit existing homepage features, design new sections and manage page layouts in one workspace."
+      wide
     >
       {query.saved ? <AdminNotice>Storefront changes saved to the live website. <Link href="/" target="_blank" className="underline">Open website ↗</Link></AdminNotice> : null}
       {query.error ? <AdminNotice tone="warning">The design could not be saved. Check its content and try again.</AdminNotice> : null}
-      <div className="mb-5 grid gap-3 rounded-2xl border border-black/10 bg-white p-5 sm:grid-cols-[1fr_auto] sm:items-center">
+      <div className="mb-4 grid gap-3 rounded-2xl border border-black/10 bg-white p-4 shadow-sm sm:grid-cols-[1fr_auto] sm:items-center">
         <div>
           <p className="text-xs font-bold uppercase tracking-[.13em] text-[#713a35]">Website design studio</p>
-          <h2 className="mt-2 text-lg font-semibold">One place for your entire homepage.</h2>
+          <h2 className="mt-1 text-base font-semibold sm:text-lg">Edit the storefront in one place.</h2>
           <p className="mt-1 text-sm leading-6 text-black/60">Edit existing banners, product discovery, section visibility, layout, promotions, editorial copy and styling alongside drag-and-drop components. All homepage changes share one save action and version history.</p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -34,8 +35,8 @@ export default async function VisualBuilderPage({
           <Link href="/admin/media" className="inline-flex min-h-11 items-center rounded-xl border border-[#713a35]/20 px-4 py-2 text-xs font-semibold text-[#713a35]">Media library →</Link>
         </div>
       </div>
-      <nav aria-label="Choose page template" className="mb-5 flex flex-wrap gap-2 rounded-2xl border border-black/10 bg-white p-4">
-        {([{ key: "home", label: "Homepage" }, ...visualPageKeys.map(key => ({ key, label: visualPageNames[key] }))] as const).map(item => <Link key={item.key} href={"/admin/builder?page=" + item.key} aria-current={pageKey === item.key ? "page" : undefined} className={`inline-flex min-h-10 items-center rounded-full border px-4 py-2 text-xs font-semibold ${pageKey === item.key ? "border-[#713a35] bg-[#713a35] text-white" : "border-black/15 bg-[#fffaf8] text-[#713a35]"}`}>{item.label}</Link>)}
+      <nav aria-label="Choose page template" className="mb-4 flex flex-nowrap gap-2 overflow-x-auto rounded-2xl border border-black/10 bg-white p-3">
+        {([{ key: "home", label: "Homepage" }, ...visualPageKeys.map(key => ({ key, label: visualPageNames[key] }))] as const).map(item => <Link key={item.key} href={"/admin/builder?page=" + item.key} aria-current={pageKey === item.key ? "page" : undefined} className={`inline-flex min-h-10 shrink-0 items-center rounded-full border px-4 py-2 text-xs font-semibold ${pageKey === item.key ? "border-[#713a35] bg-[#713a35] text-white" : "border-black/15 bg-[#fffaf8] text-[#713a35]"}`}>{item.label}</Link>)}
       </nav>
       {pageKey !== "home" && <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-black/10 bg-white p-4">
         <div><p className="text-sm font-semibold">Existing page content and site navigation</p><p className="mt-1 text-xs text-black/60">Manage existing page text and structure without changing product, order or checkout functionality.</p></div>
