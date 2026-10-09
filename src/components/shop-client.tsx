@@ -100,13 +100,14 @@ export function ShopClient({
     return () => window.removeEventListener("aloyri:open-shop-search", openFromHeader);
   }, []);
   useEffect(() => {
+    if (!synced || !searchInputRef.current) return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("search") !== "1") return;
-    searchInputRef.current?.focus({ preventScroll: true });
+    searchInputRef.current.focus({ preventScroll: true });
     params.delete("search");
     const next = params.toString();
     window.history.replaceState(window.history.state, "", window.location.pathname + (next ? "?" + next : ""));
-  }, []);
+  }, [synced]);
 
   const lastTrackedSearch = useRef("");
 
