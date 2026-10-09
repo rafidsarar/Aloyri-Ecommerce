@@ -436,6 +436,31 @@ export async function saveVisualBuilder(formData: FormData) {
   const pageKey = text(formData, "pageKey", 24);
   const selected = pageKey === "home" ? "home" : visualPageKeys.includes(pageKey as VisualPageKey) ? pageKey as VisualPageKey : null;
   if (!selected) redirect("/admin/builder?error=invalid");
+  // Updating existing informational content requires its own page-edit permission.
+  // Visual layout permissions alone must not grant access to page content edits.
+  let pageDraft: { eyebrow: string; title: string; intro: string; sectionTitles: string[] } | null = null;
+  const rawPage = formData.get("pageContent");
+  if (rawPage !== null) {
+    if (!["about", "shipping", "returns", "contact"].includes(selected)) redirect("/admin/builder?error=invalid");
+    await requireAdminPermission("pages.edit");
+    try {
+      const value = JSON.parse(String(rawPage)) as Record<string, unknown>;
+      if (!value || typeof value !== "object" || Array.isArray(value) || !Array.isArray(value.sections)) throw Error("Invalid page");
+      const readField = (key: string, max: number) => {
+        const field = value[key];
+        if (typeof field !== "string" || field.length > max) throw Error("Invalid field");
+        return field;
+      };
+      const sectionTitles = value.sections.map((section: unknown) => {
+        if (!section || typeof section !== "object" || Array.isArray(section)) throw Error("Invalid section");
+        const title = (section as Record<string, unknown>).title;
+        if (typeof title !== "string" || title.length > 180) throw Error("Invalid heading");
+        return title;
+      });
+      if (sectionTitles.length > 12) throw Error("Too many sections");
+      pageDraft = { eyebrow: readField("eyebrow", 120), title: readField("title", 180), intro: readField("intro", 1000), sectionTitles };
+    } catch { redirect("/admin/builder?error=invalid"); }
+  }
   await updateDraftStorefrontConfig(config => {
     if (selected === "home") {
       const before = structuredClone(config.homepage.visualLayout);
@@ -506,6 +531,14 @@ export async function saveVisualBuilder(formData: FormData) {
       );
     } else {
       config.visualPages[selected] = normalizeVisualPageLayout(requested);
+      if (pageDraft && (selected === "about" || selected === "shipping" || selected === "returns" || selected === "contact")) {
+        const page = config.pages[selected];
+        if (page.sections.length !== pageDraft.sectionTitles.length) redirect("/admin/builder?error=invalid");
+        page.eyebrow = pageDraft.eyebrow;
+        page.title = pageDraft.title;
+        page.intro = pageDraft.intro;
+        page.sections = page.sections.map((section, index) => ({ ...section, title: pageDraft!.sectionTitles[index] }));
+      }
     }
     return config;
   }, {
