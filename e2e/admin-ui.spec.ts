@@ -70,6 +70,11 @@ test.describe("minimal admin interface", () => {
     await page.goto(`${base}/admin/builder`);
     await expect(page.locator("[data-builder-preview-host]")).toBeVisible();
     await expect.poll(async () => page.locator("[data-builder-preview-host]").evaluate(element => element.getBoundingClientRect().width)).toBeGreaterThan(300);
+    await expect.poll(() => page.evaluate(() => {
+      const host = document.querySelector<HTMLElement>("[data-builder-preview-host]")!;
+      const frame = host.querySelector("iframe")!;
+      return frame.getBoundingClientRect().right <= host.getBoundingClientRect().right + 2;
+    })).toBe(true);
     const initial = await page.evaluate(() => {
       const host = document.querySelector<HTMLElement>("[data-builder-preview-host]")!;
       const frame = host.querySelector<HTMLIFrameElement>("iframe")!;
