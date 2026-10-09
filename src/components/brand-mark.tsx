@@ -3,13 +3,16 @@ import Link from "next/link";
 export function BrandMark({
   compact = false,
   className = "",
+  onNavigate,
 }: {
   compact?: boolean;
   className?: string;
+  onNavigate?: () => void;
 }) {
   return (
     <Link
       href="/"
+      onClick={onNavigate}
       aria-label="Aloyri home"
       className={`inline-flex flex-col items-center leading-none ${className}`}
     >
