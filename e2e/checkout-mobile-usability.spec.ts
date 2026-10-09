@@ -67,11 +67,14 @@ test("narrow mobile navigation keeps search and account accessible", async ({ pa
   await expect(accountMenu).toHaveCount(0);
   await page.getByRole("button", { name: "Open menu" }).click();
   const drawer = page.getByRole("dialog", { name: "Store navigation menu" });
-  await expect(drawer.getByRole("link", { name: "Search products and brands" })).toBeVisible();
+  await expect(drawer.getByRole("button", { name: "Search products and brands" })).toBeVisible();
   await expect(drawer.getByRole("link", { name: "Track order" })).toHaveCount(0);
   await drawer.getByRole("link", { name: "Search products and brands" }).click();
-  await expect(page).toHaveURL(/\/shop/);
+  await expect(page).toHaveURL("/");
   await expect(page.getByRole("dialog", { name: "Store navigation menu" })).toHaveCount(0);
+  const search = page.getByRole("dialog", { name: "Search discovery" });
+  await expect(search).toBeVisible();
+  await search.getByRole("button", { name: "Close search" }).click();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
