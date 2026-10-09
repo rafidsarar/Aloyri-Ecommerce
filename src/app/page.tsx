@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Fragment, type ReactNode } from "react";
+import { HomepageLiveDraft } from "@/components/homepage-live-draft";
 import type { HomepageBlockId } from "@/lib/homepage-builder";
 import Image from "next/image";
 import Link from "next/link";
@@ -67,7 +68,8 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-export default async function Home() {
+export default async function Home({ searchParams }: { searchParams: Promise<{ builderPreview?: string }> }) {
+  const { builderPreview } = await searchParams;
   const [config, crm] = await Promise.all([
     readStorefrontConfig(),
     fetchCrmCatalog(),
@@ -629,7 +631,7 @@ export default async function Home() {
         properties={{ placementId: "homepage-hero", placementKind: "hero" }}
         context={{ placementId: "homepage-hero", placementKind: "hero" }}
       />
-      {home.visualLayout.order.map((entry) => {
+      {builderPreview === "1" ? <HomepageLiveDraft initialLayout={home.visualLayout} sections={Object.entries(blocks).map(([id, content]) => ({ id, content }))} /> : home.visualLayout.order.map((entry) => {
         if (entry.startsWith("core:")) {
           const id = entry.slice(5) as HomepageBlockId;
           if (home.visualLayout.hiddenCore.includes(id)) return null;

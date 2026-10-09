@@ -1,6 +1,6 @@
 "use client";
 
-import { useReducer, useState, type DragEvent, type ReactNode } from "react";
+import { useEffect, useReducer, useRef, useState, type DragEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { saveVisualBuilder } from "@/app/admin/actions";
 import { VisualBuilderBlock } from "@/components/visual-builder-block";
@@ -77,6 +77,17 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
   const [selectedId, setSelectedId] = useState(layout.order[0] || "");
   const [view, setView] = useState<"canvas" | "advanced">(initialView);
   const [device, setDevice] = useState<"mobile" | "tablet" | "desktop">("desktop");
+  const [previewMode, setPreviewMode] = useState<"live" | "draft">("live");
+  const draftFrame = useRef<HTMLIFrameElement>(null);
+  const sendDraft = () => draftFrame.current?.contentWindow?.postMessage({ type: "aloyri-builder-draft", layout, coreContent }, window.location.origin);
+  useEffect(() => {
+    const receiveReady = (event: MessageEvent) => {
+      if (event.origin === window.location.origin && event.source === draftFrame.current?.contentWindow && event.data?.type === "aloyri-builder-ready") sendDraft();
+    };
+    window.addEventListener("message", receiveReady);
+    sendDraft();
+    return () => window.removeEventListener("message", receiveReady);
+  }, [layout, coreContent]);
   const [filter, setFilter] = useState("");
   const isHomepage = pageKey === "home";
   const selectedCustom = layout.blocks.find(block => customBlockId(block.id) === selectedId);
@@ -218,14 +229,19 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
           </div>
           <div className="overflow-hidden rounded-2xl border border-black/10 bg-white p-3 sm:p-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <div><h2 className="text-sm font-semibold">Unsaved design preview</h2><p className="text-xs text-black/55">{isHomepage ? "Custom blocks render here; built-in sections are shown as placeholders." : "Page-specific blocks appear after the existing essential page content."}</p></div>
+              <div><h2 className="text-sm font-semibold">Storefront preview</h2><p className="text-xs text-black/55">{isHomepage ? previewMode === "live" ? "Actual storefront components with unsaved section order, visibility, text edits and custom blocks. Product and campaign data stays live." : "Unsaved section order and custom components; existing sections are represented by editable summaries." : "Page-specific blocks appear after the existing essential page content."}</p></div>
               <div className="flex flex-wrap gap-1" role="group" aria-label="Design preview device">
                 {(["mobile", "tablet", "desktop"] as const).map(item => <button key={item} type="button" aria-pressed={device === item} onClick={() => setDevice(item)}
                   className={`min-h-9 rounded-lg px-3 py-1 text-xs font-semibold ${device === item ? "bg-[#713a35] text-white" : "bg-[#f7f1ee] text-[#713a35]"}`}>{item}</button>)}
               </div>
             </div>
+            {isHomepage && <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label="Preview content mode">
+              <button type="button" aria-pressed={previewMode === "live"} onClick={() => setPreviewMode("live")} className={previewMode === "live" ? "min-h-10 rounded-lg bg-[#713a35] px-3 text-xs font-semibold text-white" : secondaryButton}>Interactive unsaved preview</button>
+              <button type="button" aria-pressed={previewMode === "draft"} onClick={() => setPreviewMode("draft")} className={previewMode === "draft" ? "min-h-10 rounded-lg bg-[#713a35] px-3 text-xs font-semibold text-white" : secondaryButton}>Unsaved layout & components</button>
+            </div>}
             <div className="overflow-x-auto rounded-xl bg-[#eee8e4] p-2 sm:p-4">
-              <div className="mx-auto min-h-56 overflow-hidden rounded-lg bg-[#fffaf8] shadow-sm" style={{ width: deviceWidths[device], maxWidth: "none" }}>
+              {isHomepage && previewMode === "live" ? <iframe key={device} title={`Real storefront preview at ${deviceWidths[device]} pixels`} ref={draftFrame} src="/?builderPreview=1" onLoad={sendDraft} width={deviceWidths[device]} height={780} loading="lazy" className="mx-auto block rounded-lg border border-black/10 bg-white shadow-sm" style={{ width: deviceWidths[device], height: 780, maxWidth: "none" }} /> : null}
+              {(!isHomepage || previewMode === "draft") && <div className="mx-auto min-h-56 overflow-hidden rounded-lg bg-[#fffaf8] shadow-sm" style={{ width: deviceWidths[device], maxWidth: "none" }}>
                 <div className="flex justify-between border-b border-black/10 bg-white px-5 py-3 text-xs font-semibold"><span>ALOYRI</span><span>Preview</span></div>
                 {layout.order.map(id => {
                   if (hidden(id)) return null;
@@ -233,9 +249,9 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
                   const block = layout.blocks.find(item => customBlockId(item.id) === id);
                   return block ? <VisualBuilderBlock key={id} block={block} /> : null;
                 })}
-              </div>
+              </div>}
             </div>
-            <p className="mt-3 text-xs text-black/55">Responsive controls are approximate in this editor. After saving, open the actual storefront to verify device rendering.</p>
+            <p className="mt-3 text-xs text-black/55">{isHomepage && previewMode === "live" ? "This preview uses the real storefront sections with your unsaved order, visibility and editable text. Advanced settings not yet represented here may require saving to appear." : "This is an approximate draft layout. Existing commerce sections are represented by summaries; switch to Real storefront sections to see their actual content."}</p>
           </div>
         </section>
         <aside className="min-w-0 self-start rounded-2xl border border-black/10 bg-white p-4 xl:sticky xl:top-5" aria-label="Selected component properties">

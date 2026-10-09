@@ -15,6 +15,7 @@ function PageViewTracker() {
   const previous = useRef("");
 
   useEffect(() => {
+    if (searchParams.get("builderPreview") === "1") return;
     const key = pathname + "?" + searchParams.toString();
     if (previous.current === key) return;
     previous.current = key;
@@ -47,7 +48,7 @@ export function AnalyticsViewTracker({
   const tracked = useRef(false);
 
   useEffect(() => {
-    if (tracked.current) return;
+    if (tracked.current || new URLSearchParams(window.location.search).get("builderPreview") === "1") return;
     tracked.current = true;
     trackStorefrontEvent(event, properties, context);
   }, [context, event, properties]);

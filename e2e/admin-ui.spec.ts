@@ -51,6 +51,7 @@ test.describe("minimal admin interface", () => {
   test("visual builder adds, edits, reorders and undoes components without saving", async ({ page }, testInfo) => {
     await page.goto(`${base}/admin/builder`);
     await expect(page.getByRole("heading", { name: "Visual Builder preview" })).toBeVisible();
+    await page.getByRole("button", { name: "Unsaved layout & components" }).click();
     await page.getByRole("button", { name: /Text & heading/ }).click();
     await page.getByRole("textbox", { name: "Heading", exact: true }).fill("Our Aloyri story");
     await expect(page.getByRole("heading", { name: "Our Aloyri story" })).toBeVisible();
