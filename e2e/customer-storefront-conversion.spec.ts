@@ -37,6 +37,7 @@ test.describe("customer storefront usability", () => {
     await expect(page.getByRole("link", { name: /Everyday SPF 50 Sunscreen/i })).toBeVisible();
     await expect(page.getByRole("link", { name: /Gentle Facial Cleanser/i })).toHaveCount(0);
     await page.getByRole("combobox", { name: "Search skincare" }).clear();
+    await page.getByRole("button", { name: "Close search", exact: true }).click();
     await page.getByText("Filter by brand, availability & price").click();
     await page.getByRole("combobox", { name: "Availability" }).selectOption("in-stock");
     await expect(page.getByText(/2 products/)).toBeVisible();
