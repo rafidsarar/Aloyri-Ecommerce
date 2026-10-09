@@ -19,13 +19,15 @@ test("desktop discovery opens on click and closes on Escape", async ({ page }) =
   await page.setViewportSize({ width: 1440, height: 900 });
   await mockCatalog(page);
   await page.goto("/");
-  const explore = page.getByRole("button", { name: /Explore/ });
-  await expect(explore).toBeVisible();
-  await explore.click();
-  await expect(explore).toHaveAttribute("aria-expanded", "true");
-  await expect(page.getByLabel("Explore skincare").getByRole("link", { name: "Cleanser" })).toHaveAttribute("href", "/category/cleansers");
+  const menu = page.getByRole("button", { name: "Open menu" });
+  await expect(menu).toBeVisible();
+  await menu.click();
+  await expect(menu).toHaveAttribute("aria-expanded", "true");
+  const drawer = page.getByRole("dialog", { name: "Navigation menu" });
+  await expect(drawer.getByRole("link", { name: "Cleanser" })).toHaveAttribute("href", "/category/cleansers");
   await page.keyboard.press("Escape");
-  await expect(explore).toHaveAttribute("aria-expanded", "false");
+  await expect(drawer).toHaveCount(0);
+  await expect(menu).toHaveAttribute("aria-expanded", "false");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
