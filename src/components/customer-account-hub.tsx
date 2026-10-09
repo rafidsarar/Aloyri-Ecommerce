@@ -187,7 +187,7 @@ export function CustomerAccountHub({
             <div>
               <p className="account-overline">My account</p>
               <h2 className="account-display display mt-1 text-2xl sm:text-3xl">
-                {selectedSection.label === "Preferences" ? "Profile & settings" : selectedSection.label}
+                {selectedSection.label}
               </h2>
             </div>
             <Link
