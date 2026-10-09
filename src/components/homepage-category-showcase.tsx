@@ -2,14 +2,18 @@ import Link from "next/link";
 import { ArrowIcon } from "@/components/icons";
 import { ProductMedia } from "@/components/product-media";
 import type { Product } from "@/lib/catalog";
+import { buildCategoryDirectory, matchesCategory } from "@/lib/storefront-categories";
 
-const categories = [
-  { key: "cleanser", category: "Cleanser", step: "01 / CLEANSE", title: "Cleansers", note: "A fresh start for every routine.", href: "/category/cleansers" },
-  { key: "moisturizer", category: "Moisturizer", step: "02 / HYDRATE", title: "Moisturizers", note: "Find the comfort and texture you love.", href: "/category/moisturizers" },
-  { key: "sunscreen", category: "Sunscreen", step: "03 / PROTECT", title: "Sunscreen", note: "Make everyday SPF effortless.", href: "/category/sunscreen" },
-] as const;
+const familiarCategories: Record<string, { style: string; note: string }> = {
+  cleanser: { style: "cleanser", note: "A fresh start for every routine." },
+  cleansers: { style: "cleanser", note: "A fresh start for every routine." },
+  moisturizer: { style: "moisturizer", note: "Find the comfort and texture you love." },
+  moisturizers: { style: "moisturizer", note: "Find the comfort and texture you love." },
+  sunscreen: { style: "sunscreen", note: "Make everyday SPF effortless." },
+};
 
-export function HomepageCategoryShowcase({ products, eyebrow, title, intro }: { products: Product[]; eyebrow: string; title: string; intro: string }) {
+export function HomepageCategoryShowcase({ products, categories, eyebrow, title, intro }: { products: Product[]; categories: string[]; eyebrow: string; title: string; intro: string }) {
+  const directory = buildCategoryDirectory(categories, products);
   return (
     <section className="shell py-9 md:py-14" aria-labelledby="shop-by-category">
       <div className="mb-7 flex flex-wrap items-end justify-between gap-4 md:mb-9">
@@ -22,16 +26,18 @@ export function HomepageCategoryShowcase({ products, eyebrow, title, intro }: { 
           View all skincare <ArrowIcon />
         </Link>
       </div>
-      <div className="grid gap-3 sm:grid-cols-3 md:gap-5">
-        {categories.map((item) => {
-          const photo = products.find((product) =>
-            product.category.toLowerCase() === item.category.toLowerCase() &&
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-5">
+        {directory.map((item, index) => {
+          const matching = products.filter(product => matchesCategory(product.category, item.name));
+          const photo = matching.find(product =>
             (product.availableStock ?? 0) > 0 &&
             product.merchandisingOutOfStockMode !== "hide"
           );
+          const familiar = familiarCategories[item.name.toLocaleLowerCase("en")];
+          const style = familiar?.style || (index % 3 === 0 ? "cleanser" : index % 3 === 1 ? "moisturizer" : "sunscreen");
           return (
-            <Link key={item.key} href={item.href} className={"store-category-visual store-category-visual-" + item.key + " group relative flex min-h-[290px] flex-col justify-between overflow-hidden rounded-[1.65rem] border p-5 sm:min-h-[330px] sm:p-6 lg:min-h-[370px] lg:p-8"}>
-              <span className="relative z-10 text-[10px] font-semibold tracking-[.21em]">{item.step}</span>
+            <Link key={item.slug} href={item.href} className={"store-category-visual store-category-visual-" + style + " group relative flex min-h-[290px] flex-col justify-between overflow-hidden rounded-[1.65rem] border p-5 sm:min-h-[330px] sm:p-6 lg:min-h-[370px] lg:p-8"}>
+              <span className="relative z-10 text-[10px] font-semibold tracking-[.21em]">{String(index + 1).padStart(2, "0")} / EXPLORE</span>
               {photo ? (
                 <div className="store-category-product pointer-events-none absolute right-[-6%] top-[13%] w-[74%] max-w-[330px] sm:right-[-12%] sm:top-[17%] lg:right-[-6%]">
                   <ProductMedia product={photo} sizes="(max-width: 640px) 65vw, (max-width: 1024px) 25vw, 310px" className="aspect-square rounded-full" />
@@ -40,8 +46,8 @@ export function HomepageCategoryShowcase({ products, eyebrow, title, intro }: { 
                 <div className="store-category-orbit pointer-events-none absolute right-[-20%] top-[15%] aspect-square w-[85%] rounded-full" aria-hidden="true" />
               )}
               <div className="relative z-10 mt-auto max-w-[75%] pt-32">
-                <h3 className="display text-[clamp(1.8rem,3vw,2.8rem)] leading-tight">{item.title}</h3>
-                <p className="mt-2 max-w-[13rem] text-xs leading-5 opacity-75 sm:text-sm">{item.note}</p>
+                <h3 className="display text-[clamp(1.8rem,3vw,2.8rem)] leading-tight">{item.name}</h3>
+                <p className="mt-2 max-w-[13rem] text-xs leading-5 opacity-75 sm:text-sm">{familiar?.note || (matching.length ? `Explore ${item.name.toLocaleLowerCase("en")} from Aloyri.` : "New category · products coming soon.")}</p>
                 <span className="mt-5 inline-flex h-10 w-10 items-center justify-center rounded-full border border-current/25 transition group-hover:translate-x-1" aria-hidden="true"><ArrowIcon /></span>
               </div>
             </Link>
