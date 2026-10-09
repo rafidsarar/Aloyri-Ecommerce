@@ -63,7 +63,7 @@ test("catalog search and mobile navigation", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   await page.getByRole("button", { name: "Open menu" }).click();
-  await expect(page.getByRole("dialog", { name: "Navigation menu" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Store navigation menu" })).toBeVisible();
 });
 
 test("guest can add products to cart but must sign up before checkout", async ({ page }) => {
@@ -124,11 +124,13 @@ test("storefront structure keeps shopping and customer tools accessible on mobil
   expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({path:testInfo.outputPath("shop-mobile.png"),fullPage:true});
   await page.getByRole("button",{name:"Open menu"}).click();
-  const menu=page.getByRole("dialog",{name:"Navigation menu"});
-  await expect(menu.getByRole("navigation",{name:"Customer tools"})).toBeVisible();
-  await menu.getByRole("link",{name:"My account",exact:true}).click();
+  const menu=page.getByRole("dialog",{name:"Store navigation menu"});
+  await expect(menu.getByRole("navigation",{name:"Customer tools"})).toHaveCount(0);
+  await menu.getByRole("button",{name:"Close menu"}).click();
+  await page.getByRole("button",{name:"Account menu"}).click();
+  await page.getByRole("navigation",{name:"Account shortcuts"}).getByRole("link",{name:"My account",exact:true}).click();
   await expect(page).toHaveURL(/account/);
-  await expect(page.getByRole("dialog",{name:"Navigation menu"})).toHaveCount(0);
+  await expect(page.getByRole("navigation",{name:"Account shortcuts"})).toHaveCount(0);
 });
 
 
