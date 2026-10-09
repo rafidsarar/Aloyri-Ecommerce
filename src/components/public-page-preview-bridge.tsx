@@ -18,8 +18,26 @@ export function PublicPagePreviewBridge() {
         section: part.matches("header") ? "header" : part.matches("footer") ? "footer" : "page",
       }, window.location.origin);
     };
+    const onMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin || event.source !== window.parent || event.data?.type !== "aloyri-builder-page-draft") return;
+      const content = event.data.content as { eyebrow?: string; title?: string; intro?: string; sections?: { title?: string }[] } | undefined;
+      if (!content) return;
+      const main = document.querySelector("main");
+      if (!main) return;
+      const heading = main.querySelector("h1");
+      const eyebrow = heading?.previousElementSibling;
+      const intro = heading?.nextElementSibling;
+      const update = (element: Element | null | undefined, value: unknown) => {
+        if (element && typeof value === "string") element.textContent = value;
+      };
+      update(heading, content.title);
+      update(eyebrow, content.eyebrow);
+      update(intro, content.intro);
+      main.querySelectorAll("[id^='care-section-'] h2").forEach((heading, index) => update(heading, content.sections?.[index]?.title));
+    };
+    window.addEventListener("message", onMessage);
     document.addEventListener("click", onClick, true);
-    return () => document.removeEventListener("click", onClick, true);
+    return () => { document.removeEventListener("click", onClick, true); window.removeEventListener("message", onMessage); };
   }, []);
   return null;
 }
