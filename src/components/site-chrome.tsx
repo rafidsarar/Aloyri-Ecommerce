@@ -10,6 +10,7 @@ import { CustomerDataCleanup } from "@/components/customer-data-cleanup";
 import { Footer } from "@/components/footer";
 import { PublicPagePreviewBridge } from "@/components/public-page-preview-bridge";
 import { Header } from "@/components/header";
+import { GlobalStorefrontSearch } from "@/components/global-storefront-search";
 
 export function SiteChrome({
   children,
@@ -17,12 +18,14 @@ export function SiteChrome({
   announcement,
   footerDescription,
   preview,
+  searchSynonymGroups = [],
 }: {
   children: React.ReactNode;
   presentation?: StorefrontPresentation;
   announcement: string;
   footerDescription: string;
   preview: boolean;
+  searchSynonymGroups?: string[][];
 }) {
   const pathname = usePathname();
 
@@ -52,6 +55,7 @@ export function SiteChrome({
         Skip to main content
       </a>
       <Header announcement={announcement} presentation={presentation} />
+      <GlobalStorefrontSearch key={pathname} synonymGroups={searchSynonymGroups} />
       <div id="main-content" tabIndex={-1}>
         {children}
       </div>
