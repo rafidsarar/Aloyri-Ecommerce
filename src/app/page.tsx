@@ -8,6 +8,7 @@ import { BrandMark } from "@/components/brand-mark";
 import { HomepagePromoBanners } from "@/components/homepage-promo-banners";
 import { VisualBuilderBlock } from "@/components/visual-builder-block";
 import { HomepageCategoryShowcase } from "@/components/homepage-category-showcase";
+import { HomepageDiscoverySearch } from "@/components/homepage-discovery-search";
 import { HomepageEditorialSections } from "@/components/homepage-editorial-sections";
 import { ArrowIcon } from "@/components/icons";
 import { ProductMedia } from "@/components/product-media";
@@ -210,17 +211,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
             <p className="store-home-muted mt-2 text-xs leading-5 sm:text-sm">{home.browseIntro}</p>
           </div>
           <div className="min-w-0">
-            <form action="/shop" method="get" role="search" aria-label="Search skincare products" className="store-home-search flex min-w-0 items-center gap-2 rounded-full border p-1.5 pl-4 sm:pl-5">
-              <label htmlFor="home-product-search" className="sr-only">Search products and brands</label>
-              <svg width="19" height="19" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="10.8" cy="10.8" r="6.3" /><path d="m16 16 4.5 4.5" /></svg>
-              <input id="home-product-search" name="q" type="search" placeholder={home.browsePlaceholder} className="min-w-0 flex-1 bg-transparent py-2 text-sm outline-none" />
-              <button type="submit" className="store-home-search-button min-h-11 shrink-0 rounded-full px-4 text-xs font-semibold sm:px-6 sm:text-sm">Search</button>
-            </form>
-            <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs">
-              <Link className="store-home-text-link" href="/shop?sort=bestseller">Bestsellers →</Link>
-              <Link className="store-home-text-link" href="/shop?stock=in-stock">Available now →</Link>
-              <Link className="store-home-text-link" href="/routine-finder">Find my routine →</Link>
-            </div>
+            <HomepageDiscoverySearch placeholder={home.browsePlaceholder} synonymGroups={config.merchandising.discovery.synonymGroups} />
           </div>
         </div>
       </section>}
