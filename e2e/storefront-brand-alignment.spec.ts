@@ -19,10 +19,17 @@ for (const width of [320, 390, 768, 1060, 1440]) {
     await page.getByRole("button", { name: "Open menu", exact: true }).click();
     const drawer = page.getByRole("dialog", { name: "Store navigation menu" });
     await expect(drawer.getByRole("link", { name: "Search products and brands" })).toBeVisible();
-    await expect(drawer.getByRole("link", { name: "My account", exact: true })).toBeVisible();
+    await expect(drawer.getByRole("link", { name: "My account", exact: true })).toHaveCount(0);
     expect(await drawer.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
     await page.keyboard.press("Escape");
     await expect(drawer).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Open menu", exact: true })).toBeFocused();
+    const accountButton = page.getByRole("button", { name: "Account menu" });
+    await expect(accountButton).toBeVisible();
+    await accountButton.click();
+    const menu = page.getByRole("navigation", { name: "Account shortcuts" });
+    await expect(menu.getByRole("link", { name: "My account", exact: true })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(menu).toHaveCount(0);
   });
 }
