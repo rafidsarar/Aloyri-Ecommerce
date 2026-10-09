@@ -101,7 +101,7 @@ export function HomepageDiscoverySearch({
       </form>
 
       {showSuggestions ? (
-        <div id="home-discovery-suggestions" aria-label="Search discovery suggestions"
+        <div id="home-discovery-suggestions" role="listbox" aria-label="Suggested skincare products"
           className="absolute inset-x-0 top-[calc(100%+8px)] z-50 max-h-[min(70vh,520px)] overflow-y-auto rounded-2xl border border-[var(--store-border)] bg-[var(--store-surface)] p-3 text-[var(--store-ink)] shadow-2xl sm:p-4">
           <div className="mb-3 flex items-center justify-between gap-3">
             <p className="text-xs font-semibold uppercase tracking-widest text-[var(--store-muted)]">{hasQuery ? "Find your match" : "Discover skincare"}</p>
@@ -132,7 +132,7 @@ export function HomepageDiscoverySearch({
             <section className="mb-3">
               <h3 className="px-2 pb-2 text-xs font-semibold">{hasQuery ? "Matching products" : "Featured products"}</h3>
               {(hasQuery ? suggestions : featured).map(product => (
-                <Link key={product.id} href={`/product/${product.slug}`} data-home-suggestion
+                <Link key={product.id} href={`/product/${product.slug}`} data-home-suggestion role="option" aria-selected="false"
                   onClick={() => { if (hasQuery) remember(query); setFocused(false); }}
                   className="flex items-center gap-3 rounded-xl px-2 py-2.5 transition hover:bg-[var(--store-panel)] focus:bg-[var(--store-panel)] focus:outline-none">
                   <ProductMedia product={product} className="h-12 w-12 shrink-0 rounded-lg" sizes="48px" />
