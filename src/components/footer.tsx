@@ -1,7 +1,13 @@
+"use client";
+
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
+import { useCatalog } from "@/components/catalog-provider";
+import { buildCategoryDirectory } from "@/lib/storefront-categories";
 
 export function Footer({ description }: { description: string }) {
+  const { products, categories, synced } = useCatalog();
+  const directory = buildCategoryDirectory(categories, products);
   return (
     <footer id="about" className="store-footer border-t">
       <div className="shell py-10 md:py-14">
@@ -32,9 +38,7 @@ export function Footer({ description }: { description: string }) {
               <Link href="/shop">All skincare</Link>
               <Link href="/shop?sort=bestseller">Bestsellers</Link>
               <Link href="/routine-finder">Routine finder</Link>
-              <Link href="/category/cleansers">Cleansers</Link>
-              <Link href="/category/moisturizers">Moisturizers</Link>
-              <Link href="/category/sunscreen">Sunscreen</Link>
+              {synced ? directory.map(category => <Link key={category.slug} href={category.href}>{category.name}</Link>) : null}
             </div>
           </div>
 
