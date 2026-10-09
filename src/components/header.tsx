@@ -128,7 +128,7 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
             className="store-mobile-nav absolute inset-y-0 left-0 flex w-[min(100vw,460px)] flex-col overflow-y-auto overscroll-contain border-r border-[#713a35]/10 px-5 pb-10 pt-5 shadow-2xl sm:px-8 sm:pt-7"
           >
           <div className="flex items-center justify-between gap-4 border-b border-[#713a35]/10 pb-5">
-            <BrandMark />
+            <BrandMark onNavigate={() => setOpen(false)} />
             <button
               ref={closeButtonRef}
               type="button"
