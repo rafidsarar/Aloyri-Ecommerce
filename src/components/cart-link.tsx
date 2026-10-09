@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { createPortal } from "react-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { BagIcon, CloseIcon, ArrowIcon } from "@/components/icons";
@@ -91,7 +92,7 @@ export function CartLink() {
         <BagIcon />
         {count > 0 ? <span aria-live="polite" className={`absolute -right-1 -top-1 min-w-5 rounded-full bg-[#713a35] px-1 text-center text-[10px] font-semibold leading-5 text-white transition-transform duration-300 ${changed ? "scale-125" : "scale-100"}`}>{count}</span> : null}
       </button>
-      {open ? (
+      {open && typeof document !== "undefined" ? createPortal((
         <div className="fixed inset-0 z-[100]" aria-label="Cart overlay">
           <button type="button" aria-label="Close cart overlay" onClick={() => setOpen(false)}
             className="absolute inset-0 h-full w-full bg-[#241512]/50 backdrop-blur-[2px]" />
@@ -139,7 +140,7 @@ export function CartLink() {
             </div> : null}
           </div>
         </div>
-      ) : null}
+      ), document.body) : null}
     </>
   );
 }

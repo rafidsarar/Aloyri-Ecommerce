@@ -61,10 +61,11 @@ test("guest quick-add from shop respects cart and login-required checkout", asyn
   const add = page.getByRole("button", { name: "Add Refreshing Facial Wash to cart" });
   await expect(add).toBeEnabled();
   await add.click();
-  await expect(page.getByRole("link", { name: "Cart with 1 item" })).toBeVisible();
-  await page.getByRole("link", { name: "Cart with 1 item" }).click();
-  await expect(page.getByText("Refreshing Facial Wash", { exact: true }).first()).toBeVisible();
-  await page.getByRole("link", { name: /Continue to checkout/ }).click();
+  await expect(page.getByRole("button", { name: "Cart with 1 item" })).toBeVisible();
+  await page.getByRole("button", { name: "Cart with 1 item" }).click();
+  const drawer = page.getByRole("dialog", { name: "Shopping cart" });
+  await expect(drawer.getByText("Refreshing Facial Wash", { exact: true })).toBeVisible();
+  await drawer.getByRole("link", { name: "Proceed to checkout" }).click();
   await expect(page).toHaveURL(/\/account\/setup/);
 });
 

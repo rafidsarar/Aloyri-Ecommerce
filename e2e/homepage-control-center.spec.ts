@@ -29,7 +29,7 @@ test("customer storefront keeps search, categories, account, cart and order trac
   await expect(accountMenu.getByRole("link", { name: "Track order" })).toHaveAttribute("href", "/track-order");
   await page.keyboard.press("Escape");
   await expect(accountMenu).toHaveCount(0);
-  await expect(page.getByRole("link", { name: /Cart/ }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Cart(?: with .*)?$/ }).first()).toBeVisible();
   await page.getByRole("button", { name: "Open menu" }).click();
   await expect(page.getByRole("dialog", { name: "Store navigation menu" }).getByRole("link", { name: "Track order" })).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

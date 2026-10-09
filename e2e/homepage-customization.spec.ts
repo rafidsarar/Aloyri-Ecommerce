@@ -12,5 +12,5 @@ test("customer-facing promotional content never replaces account or checkout lin
   await page.goto("/");
   await page.getByRole("button", { name: "Account menu" }).click();
   await expect(page.getByRole("navigation", { name: "Account shortcuts" }).getByRole("link", { name: "My account" })).toHaveAttribute("href", "/account");
-  await expect(page.getByRole("link", { name: /^Cart(?: with .*)?$/ }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Cart(?: with .*)?$/ }).first()).toBeVisible();
 });

@@ -18,7 +18,7 @@ test.describe("no-code storefront builder", () => {
   test("shopping remains accessible after the section builder", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 800 });
     await page.goto("/");
-    await expect(page.getByRole("link", { name: /^Cart(?: with .*)?$/ }).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Cart(?: with .*)?$/ }).first()).toBeVisible();
     await page.getByRole("button", { name: "Account menu" }).click();
     await expect(page.getByRole("navigation", { name: "Account shortcuts" }).getByRole("link", { name: "My account" })).toHaveAttribute("href", "/account");
   });
