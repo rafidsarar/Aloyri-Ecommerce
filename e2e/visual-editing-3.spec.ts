@@ -31,3 +31,26 @@ test("public page previews allow same-origin framing but protected pages still d
     expect(response.headers()["content-security-policy"], path).toContain("frame-ancestors 'none'");
   }
 });
+
+test("existing About page text previews without saving or changing customer content", async ({ page }) => {
+  await page.goto("/about");
+  const originalTitle = await page.locator("main h1").first().textContent();
+  await page.evaluate(() => {
+    const frame = document.createElement("iframe");
+    frame.title = "Editing About page";
+    frame.src = "/about?builderPreview=1";
+    document.body.appendChild(frame);
+  });
+  const preview = page.frameLocator('iframe[title="Editing About page"]');
+  await expect(preview.locator("main h1").first()).toBeVisible({ timeout: 30000 });
+  await expect.poll(async () => {
+    await page.evaluate(() => {
+      document.querySelector<HTMLIFrameElement>('iframe[title="Editing About page"]')?.contentWindow?.postMessage({
+        type: "aloyri-builder-page-draft",
+        content: { eyebrow: "PREVIEW", title: "Unsaved About headline", intro: "Not published", sections: [] },
+      }, window.location.origin);
+    });
+    return preview.locator("main h1").first().textContent();
+  }).toBe("Unsaved About headline");
+  await expect(page.locator("main h1").first()).toHaveText(originalTitle || "");
+});
