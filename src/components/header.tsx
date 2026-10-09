@@ -166,7 +166,7 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
             <nav aria-label="Customer tools" className="mt-4 grid grid-cols-2 gap-2">
               <Link href="/account" onClick={closeMenu} className="store-mobile-tool rounded-xl p-3 text-center text-sm font-semibold">My account</Link>
               <Link href="/track-order" onClick={closeMenu} className="store-mobile-tool rounded-xl p-3 text-center text-sm font-semibold">Track order</Link>
-              <Link href="/account/orders" onClick={closeMenu} className="store-mobile-tool rounded-xl p-3 text-center text-sm font-semibold">My orders</Link>
+              <Link href="/account#orders" onClick={closeMenu} className="store-mobile-tool rounded-xl p-3 text-center text-sm font-semibold">My orders</Link>
               <Link href="/cart" onClick={closeMenu} className="store-mobile-tool rounded-xl p-3 text-center text-sm font-semibold">My cart</Link>
             </nav>
             <div className="mt-auto pt-7">
