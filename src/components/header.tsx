@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { volatileStorage } from "@/lib/volatile-storage";
+import { writeSavedProductIds } from "@/lib/product-preferences";
 import { BrandMark } from "@/components/brand-mark";
 import { CartLink } from "@/components/cart-link";
 import { useCatalog } from "@/components/catalog-provider";
@@ -14,6 +17,10 @@ import { defaultPresentation, type StorefrontPresentation } from "@/lib/storefro
 export function Header({ announcement, presentation = defaultPresentation }: { announcement: string; presentation?: StorefrontPresentation }) {
   const links = presentation.navigation.map(item=>[item.label,item.href]);
   const pathname = usePathname();
+  const router = useRouter();
+  const [signedIn, setSignedIn] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState("");
   const { categories: crmCategories, products, synced } = useCatalog();
   const publicCategories = buildCategoryDirectory(crmCategories, products);
   const [open, setOpen] = useState(false);
@@ -38,6 +45,55 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
       document.removeEventListener("keydown", onEscape);
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const refresh = async () => {
+      try {
+        const response = await fetch("/api/customer-auth/status", { cache: "no-store", credentials: "same-origin" });
+        if (!response.ok) throw new Error("Session check failed");
+        const data: { authenticated?: boolean } = await response.json();
+        if (!cancelled) setSignedIn(data.authenticated === true);
+      } catch {
+        if (!cancelled) setSignedIn(false);
+      }
+    };
+    void refresh();
+    const onFocus = () => void refresh();
+    const onSignedOut = () => { setSignedIn(false); setAccountOpen(false); };
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("aloyri:customer-signed-out", onSignedOut);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("aloyri:customer-signed-out", onSignedOut);
+    };
+  }, [pathname]);
+
+  async function signOutFromHeader() {
+    if (signingOut) return;
+    setSigningOut(true);
+    setSignOutError("");
+    try {
+      const response = await fetch("/api/customer-auth/logout", {
+        method: "POST",
+        credentials: "same-origin",
+      });
+      if (!response.ok) throw new Error("Sign out failed");
+      volatileStorage.clear();
+      writeSavedProductIds([]);
+      window.dispatchEvent(new Event("aloyri:customer-signed-out"));
+      window.dispatchEvent(new Event("aloyri-cart-updated"));
+      setSignedIn(false);
+      setAccountOpen(false);
+      router.replace("/");
+      router.refresh();
+    } catch {
+      setSignOutError("Unable to sign out. Please try again.");
+    } finally {
+      setSigningOut(false);
+    }
+  }
 
   function closeMenu() {
     setOpen(false);
@@ -138,6 +194,13 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
                       {label}
                     </Link>
                   ))}
+                  {signedIn ? (
+                    <button type="button" onClick={() => void signOutFromHeader()} disabled={signingOut}
+                      className="mt-2 block w-full rounded-xl border-t border-[var(--store-border)] px-4 py-3 text-left text-sm font-semibold text-[var(--store-accent)] transition hover:bg-[var(--store-panel)] disabled:opacity-60">
+                      {signingOut ? "Signing out…" : "Sign out"}
+                    </button>
+                  ) : null}
+                  {signOutError ? <p role="alert" className="px-4 py-2 text-xs text-red-700">{signOutError}</p> : null}
                 </nav>
               ) : null}
             </div>
