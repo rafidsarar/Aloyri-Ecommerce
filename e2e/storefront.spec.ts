@@ -144,9 +144,7 @@ test("homepage leads into categories and product details on desktop and mobile",
   await expect(categories.first()).toBeVisible();
   const destination = await categories.first().getAttribute("href");
   await categories.first().click();
-  await expect(page).toHaveURL(new RegExp((destination || "/category/").replace(/[-/\\^$*+?.()|[\]{}]/g, "\\  await page.getByRole("link",{name:/Cleansers/}).first().click();
-  await expect(page).toHaveURL(/category\/cleansers/);
-  await page.getByRole("link",{name:/Refreshing Facial Wash/i}).click();")));
+  await expect.poll(() => new URL(page.url()).pathname).toBe(destination);
   // Customer product links use the current live catalog, independently of
   // which CRM category happens to be first in the homepage order.
   await page.goto("/shop");
