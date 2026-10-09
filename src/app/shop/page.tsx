@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { VisualPageSections } from "@/components/visual-page-sections";
-import Link from "next/link";
 import { shopSeoMetadata } from "@/lib/seo-manager";
 import { ShopClient } from "@/components/shop-client";
 import { readStorefrontConfig } from "@/lib/storefront-admin-store";
@@ -42,27 +41,18 @@ export default async function ShopPage({
 
   return (
     <>
-    <main className="shell py-12 md:py-16">
-      <div className="grid gap-4 border-b border-[#713a35]/10 pb-6 lg:grid-cols-[1fr_.7fr] lg:items-end">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/48">
-            Skincare essentials
-          </p>
-          <h1 className="display mt-3 text-4xl leading-tight sm:text-5xl">
-            Shop skincare.
-          </h1>
-        </div>
-        <p className="max-w-xl text-sm leading-7 text-[#321f1c]/52 lg:justify-self-end">
-          Find your next cleanser, moisturizer or sunscreen. Search below,
-          choose a category, or filter by brand, price and availability.
+    <main className="shell py-8 md:py-11">
+      <header className="border-b border-[#713a35]/10 pb-5 md:pb-6">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#713a35]/50">
+          The Aloyri collection
         </p>
-      </div>
-
-      <nav aria-label="Ways to shop" className="flex flex-wrap items-center gap-3 border-b border-[#713a35]/10 py-5">
-        <Link href="/routine-finder" className="store-discovery-button inline-flex min-h-11 items-center rounded-full px-5 text-xs font-semibold">Find your routine →</Link>
-        <Link href="/shop?sort=bestseller" className="store-discovery-accent inline-flex min-h-11 items-center rounded-full border border-[#713a35]/15 px-5 text-xs font-semibold">Shop bestsellers</Link>
-        <Link href="/shop?stock=in-stock" className="store-discovery-accent inline-flex min-h-11 items-center rounded-full border border-[#713a35]/15 px-5 text-xs font-semibold">Available now</Link>
-      </nav>
+        <h1 className="display mt-2 text-4xl leading-tight sm:text-5xl">
+          Shop skincare.
+        </h1>
+        <p className="mt-2 max-w-xl text-sm leading-6 text-[#321f1c]/55">
+          Discover your everyday skincare essentials.
+        </p>
+      </header>
 
       <ShopClient
         key={[query.category, query.q, query.brand, query.focus, query.stock, query.price, query.sort].join(":")}
