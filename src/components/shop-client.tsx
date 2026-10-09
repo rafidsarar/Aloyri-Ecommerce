@@ -65,6 +65,7 @@ export function ShopClient({
   const [priceBand, setPriceBand] = useState<PriceFilter>(initialPriceBand);
   const [sort, setSort] = useState<SortKey>(initialSort);
   const [searchFocused, setSearchFocused] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const lastTrackedSearch = useRef("");
 
   const categories = useMemo(() => {
@@ -308,6 +309,7 @@ export function ShopClient({
           </label>
           <input
             id="storefront-search"
+            ref={searchInputRef}
             role="combobox"
             aria-autocomplete="list"
             aria-expanded={searchFocused && suggestions.length > 0}
@@ -318,6 +320,13 @@ export function ShopClient({
               window.setTimeout(() => setSearchFocused(false), 120)
             }
             onChange={(event) => setQuery(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") setSearchFocused(false);
+              if (event.key === "ArrowDown" && searchFocused && suggestions.length) {
+                event.preventDefault();
+                searchInputRef.current?.parentElement?.querySelector<HTMLAnchorElement>('[role="option"]')?.focus();
+              }
+            }}
             placeholder="Search products, brands, routines or textures"
             className="h-12 w-full rounded-full border border-[#713a35]/14 bg-white px-5 pr-12 text-sm outline-none transition placeholder:text-[#321f1c]/35 focus:border-[#b9725f]/60"
           />
@@ -413,7 +422,7 @@ export function ShopClient({
         </div>
       </nav>
 
-      <div className="flex flex-wrap items-center gap-2 py-6">
+      <nav aria-label="Shop categories" className="shop-category-rail flex gap-2 overflow-x-auto py-5" tabIndex={0}>
         {!lockCategory
           ? ["All", ...categories].map((item) => {
               const active = category === item;
@@ -423,7 +432,7 @@ export function ShopClient({
                   type="button"
                   onClick={() => setCategory(item)}
                   aria-pressed={active}
-                  className={`rounded-full border px-4 py-2 text-xs font-medium transition ${
+                  className={`shrink-0 min-h-11 rounded-full border px-4 py-2 text-xs font-medium transition ${
                     active
                       ? "border-[#713a35] bg-[#713a35] text-white"
                       : "border-[#713a35]/12 bg-white/65 text-[#321f1c]/65 hover:border-[#713a35]/30"
@@ -450,12 +459,31 @@ export function ShopClient({
                 {initialCategory}
               </span>
             )}
-      </div>
+      </nav>
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <p role="status" className="text-sm text-[#796762]">{refreshing ? "Refreshing…" : `${filtered.length} ${filtered.length === 1 ? "product" : "products"}`}</p>
         {activeFilterCount > 0 ? <button type="button" onClick={clearFilters} className="min-h-11 rounded-full border border-[#713a35]/14 px-4 text-xs font-semibold text-[#713a35]">Clear {activeFilterCount} filters</button> : null}
       </div>
+      {query.trim() || activeFilterCount > 0 ? (
+        <div aria-label="Active shopping filters" className="mb-5 flex flex-wrap items-center gap-2" data-active-discovery-filters>
+          <span className="mr-1 text-[10px] font-semibold uppercase tracking-[.14em] text-[#713a35]/65">Your selection</span>
+          {query.trim() ? <button type="button" onClick={() => setQuery("")}
+            className="shop-active-filter rounded-full border px-3 py-2 text-xs" aria-label={`Remove search: ${query.trim()}`}>Search: {query.trim()} ×</button> : null}
+          {!lockCategory && category !== "All" ? <button type="button" onClick={() => setCategory("All")}
+            className="shop-active-filter rounded-full border px-3 py-2 text-xs" aria-label={`Remove category: ${category}`}>{category} ×</button> : null}
+          {brand !== "All" ? <button type="button" onClick={() => setBrand("All")}
+            className="shop-active-filter rounded-full border px-3 py-2 text-xs" aria-label={`Remove brand: ${brand}`}>Brand: {brand} ×</button> : null}
+          {focus !== "all" ? <button type="button" onClick={() => setFocus("all")}
+            className="shop-active-filter rounded-full border px-3 py-2 text-xs" aria-label="Remove skin focus">Focus: {focus} ×</button> : null}
+          {stock !== "all" ? <button type="button" onClick={() => setStock("all")}
+            className="shop-active-filter rounded-full border px-3 py-2 text-xs" aria-label="Remove availability filter">Availability: {stock === "in-stock" ? "In stock" : "Out of stock"} ×</button> : null}
+          {priceBand !== "all" ? <button type="button" onClick={() => setPriceBand("all")}
+            className="shop-active-filter rounded-full border px-3 py-2 text-xs" aria-label="Remove price filter">Price: {priceBand.replace("-", " ")} ×</button> : null}
+          <button type="button" onClick={() => { clearFilters(); setQuery(""); }}
+            className="min-h-10 rounded-full px-3 text-xs font-semibold text-[#713a35] underline underline-offset-4">Reset discovery</button>
+        </div>
+      ) : null}
       <details className="mb-7 rounded-2xl border border-[#713a35]/10 bg-white/55" open={brand !== "All" || stock !== "all" || priceBand !== "all" ? true : undefined}>
         <summary className="min-h-12 cursor-pointer px-5 py-4 text-sm font-semibold text-[#713a35]">Filter by brand, availability &amp; price{activeFilterCount > 0 ? ` · ${activeFilterCount} active` : ""}</summary>
         <div className="grid gap-3 px-4 pb-4 sm:grid-cols-3">
@@ -516,19 +544,20 @@ export function ShopClient({
         </div>
       ) : (
         <div className="rounded-[1.5rem] border border-[#713a35]/10 bg-white/60 px-6 py-20 text-center">
-          <p className="display text-3xl">Nothing matched that search.</p>
+          <p className="display text-3xl">{!query.trim() && category !== "All" && !products.some(product => matchesCategory(product.category, category))
+            ? "New arrivals coming soon." : "Nothing matched that search."}</p>
           <p className="mt-3 text-sm text-[#321f1c]/50">
-            Try another spelling, broaden the filters, or browse a different category.
+            Try another spelling, broaden the filters, or explore a different category.
           </p>
-          {activeFilterCount > 0 ? (
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="mt-6 rounded-full bg-[#713a35] px-5 py-3 text-sm font-semibold text-white"
-            >
-              Clear filters
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <button type="button" onClick={() => { clearFilters(); setQuery(""); }}
+              className="min-h-11 rounded-full bg-[#713a35] px-5 py-3 text-sm font-semibold text-white">
+              Show all skincare
             </button>
-          ) : null}
+            <Link href="/routine-finder" className="inline-flex min-h-11 items-center rounded-full border border-[#713a35]/20 px-5 py-3 text-sm font-semibold text-[#713a35]">
+              Find your routine
+            </Link>
+          </div>
         </div>
       )}
     </>

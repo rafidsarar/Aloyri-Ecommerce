@@ -608,3 +608,45 @@ body[data-storefront-theme="sand"] {
 @media (prefers-reduced-motion: reduce) {
   .admin-nav-group a { transition: none; }
 }
+
+
+/* Storefront Experience 4.0 — fluid CRM-led discovery */
+.store-category-gallery,
+.shop-category-rail {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(113 58 53 / .28) transparent;
+  overscroll-behavior-x: contain;
+  scroll-padding-inline: 1rem;
+}
+.store-category-gallery::-webkit-scrollbar,
+.shop-category-rail::-webkit-scrollbar { height: 5px; }
+.store-category-gallery::-webkit-scrollbar-thumb,
+.shop-category-rail::-webkit-scrollbar-thumb {
+  background: rgb(113 58 53 / .24);
+  border-radius: 9999px;
+}
+.shop-active-filter {
+  background: #fff6f2;
+  border-color: rgb(113 58 53 / .22);
+  color: #713a35;
+  transition: background .18s ease, border-color .18s ease;
+}
+.shop-active-filter:hover,
+.shop-active-filter:focus-visible {
+  background: #f4e1db;
+  border-color: rgb(113 58 53 / .50);
+}
+.store-home-search:focus-within {
+  border-color: rgb(113 58 53 / .50);
+  box-shadow: 0 0 0 3px rgb(113 58 53 / .07);
+}
+.store-category-visual:hover .store-category-product {
+  transform: translateY(-5px) scale(1.02);
+}
+.store-category-product { transition: transform .35s ease; }
+@media (prefers-reduced-motion: reduce) {
+  .store-category-visual,
+  .store-category-product,
+  .shop-active-filter { transition: none; }
+  .store-category-gallery { scroll-behavior: auto; }
+}
