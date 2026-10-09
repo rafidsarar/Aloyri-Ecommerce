@@ -79,3 +79,26 @@ for (const width of [320, 390, 768, 1440]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
 }
+
+
+test("homepage search dropdown offers categories, featured discovery and session-only recent searches", async ({ page }) => {
+  await mockCatalog(page);
+  await page.goto("/");
+  const input = page.getByRole("search", { name: "Search skincare products" }).getByRole("combobox");
+  await input.focus();
+  const dropdown = page.getByRole("listbox", { name: "Suggested skincare products" });
+  await expect(dropdown).toBeVisible();
+  await expect(dropdown.getByRole("tab", { name: "All" })).toHaveAttribute("aria-selected", "true");
+  await dropdown.getByRole("tab", { name: "Categories" }).click();
+  await expect(dropdown.getByRole("link", { name: /Sunscreen/ })).toBeVisible();
+  await dropdown.getByRole("tab", { name: "Products" }).click();
+  await input.fill("Skin Aqua");
+  await expect(dropdown.getByRole("option", { name: /Skin Aqua Super Moisture UV Gel/ })).toBeVisible();
+  await page.getByRole("search", { name: "Search skincare products" }).getByRole("button", { name: "Search" }).click();
+  await expect(page).toHaveURL(/\/shop\?q=Skin(\+|%20)Aqua/);
+  await page.goto("/");
+  await input.focus();
+  await expect(dropdown.getByRole("button", { name: "Skin Aqua" })).toBeVisible();
+  await dropdown.getByRole("button", { name: "Clear" }).click();
+  await expect(dropdown.getByRole("button", { name: "Skin Aqua" })).toHaveCount(0);
+});
