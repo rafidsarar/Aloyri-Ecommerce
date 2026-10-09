@@ -75,7 +75,7 @@ export function HomepageDiscoverySearch({
     <div ref={rootRef} className={"relative min-w-0 " + (focused ? "z-[70]" : "")}>
       {focused ? (
         <button type="button" tabIndex={-1} aria-label="Close search overlay" onClick={() => setFocused(false)}
-          className="fixed inset-0 z-[-1] cursor-default bg-black/45" />
+          className="fixed inset-0 z-0 cursor-default bg-black/45" />
       ) : null}
       <form action="/shop" method="get" role="search" aria-label="Search skincare products" onSubmit={() => remember(query)}
         className={"store-home-search flex min-w-0 items-center gap-3 border px-4 py-2 shadow-none transition-all sm:px-5 " +
@@ -83,9 +83,12 @@ export function HomepageDiscoverySearch({
             ? "fixed inset-x-3 top-3 z-10 mx-auto max-w-[1360px] rounded-xl border-transparent bg-[var(--store-surface)] shadow-sm sm:inset-x-8 sm:top-5"
             : "rounded-full focus-within:border-[var(--store-accent)]")}>
         <label htmlFor="home-product-search" className="sr-only">Search products and brands</label>
-        <svg width="19" height="19" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6">
-          <circle cx="10.8" cy="10.8" r="6.3" /><path d="m16 16 4.5 4.5" />
-        </svg>
+        <button type="submit" aria-label="Search" title="Search"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--store-ink)] transition hover:bg-[var(--store-panel)] focus-visible:outline-2 focus-visible:outline-offset-2">
+          <svg width="19" height="19" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6">
+            <circle cx="10.8" cy="10.8" r="6.3" /><path d="m16 16 4.5 4.5" />
+          </svg>
+        </button>
         <input ref={inputRef} id="home-product-search" name="q" type="text" inputMode="search" enterKeyHint="search"
           value={query} onChange={event => setQuery(event.target.value)}
           onFocus={() => { readRecentSearches(); setFocused(true); }}
@@ -107,17 +110,14 @@ export function HomepageDiscoverySearch({
           placeholder={placeholder}
           className="min-w-0 flex-1 bg-transparent py-2 text-sm outline-none placeholder:opacity-65" />
         {focused ? (
-          <button type="button" aria-label="Close search" onClick={() => setFocused(false)}
+          <button type="button" aria-label="Close" onClick={() => setFocused(false)}
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--store-muted)] hover:bg-[var(--store-panel)] focus-visible:outline-2 focus-visible:outline-offset-2"
-            title="Close search">
+            title="Close">
             <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
               <path d="M5 5 19 19M19 5 5 19" />
             </svg>
           </button>
-        ) : (
-          <button type="submit" className="store-home-search-button min-h-9 shrink-0 rounded-full px-4 text-xs font-semibold sm:px-5 sm:text-sm">Search</button>
-        )}
-        {focused ? <button type="submit" className="sr-only">Search</button> : null}
+        ) : null}
       </form>
 
       {showSuggestions ? (
@@ -178,8 +178,14 @@ export function HomepageDiscoverySearch({
               className="w-full border-t border-[var(--store-border)] px-2 pt-3 pb-1 text-left text-xs font-semibold text-[var(--store-accent)]">
               View all results for “{query.trim()}” →
             </button>
-          ) : <Link href="/shop?sort=bestseller" onClick={() => setFocused(false)}
-              className="block border-t border-[var(--store-border)] px-2 pt-3 pb-1 text-xs font-semibold text-[var(--store-accent)]">Explore bestsellers →</Link>}
+          ) : (
+            <nav aria-label="Quick shopping shortcuts"
+              className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-[var(--store-border)] px-2 pt-3 pb-1 text-xs font-semibold text-[var(--store-accent)]">
+              <Link href="/shop?sort=bestseller" onClick={() => setFocused(false)}>Bestsellers</Link>
+              <Link href="/shop?stock=in-stock" onClick={() => setFocused(false)}>Available now</Link>
+              <Link href="/routine-finder" onClick={() => setFocused(false)}>Find my routine</Link>
+            </nav>
+          )}
         </div>
       ) : null}
 
