@@ -210,7 +210,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
         <aside className="builder-library min-w-0 rounded-2xl border border-black/10 bg-white p-4" aria-label="Component library">
           <h2 className="text-sm font-semibold">Add components</h2>
           <p className="mb-4 mt-1 text-xs leading-5 text-black/55">Insert a reusable block after the selected section.</p>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-8">
+          <div className="grid grid-cols-2 gap-2">
             {visualComponentCatalog.map(item => <button key={item.kind} type="button" disabled={layout.blocks.length >= 32} onClick={() => add(item.kind)}
               title={item.description} className="min-h-12 rounded-xl border border-black/10 bg-[#faf7f5] px-3 py-2 text-left text-xs font-semibold hover:border-[#713a35]/40 disabled:opacity-40">
               <span className="mr-2 text-base text-[#713a35]" aria-hidden="true">＋</span>{item.name}
@@ -270,7 +270,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
                 <span className="text-black/50">Click an existing area in the preview to select it.</span>
               </div>}
               {!isHomepage && <BuilderPreviewViewport width={deviceWidths[device]} height={650}><iframe ref={publicFrame} onLoad={() => publicFrame.current?.contentWindow?.postMessage({ type: "aloyri-builder-page-draft", content: pageContent, siteContent }, window.location.origin)} title={`Saved ${pageKey} page preview`} src={(pageKey === "shipping" ? "/shipping-delivery" : pageKey === "returns" ? "/returns-refunds" : pageKey === "category" ? "/shop" : pageKey === "product" ? "/shop" : `/${pageKey}`) + "?builderPreview=1"} width={deviceWidths[device]} height={650} loading="lazy" className="block border-0 bg-white" style={{ width: deviceWidths[device], height: 650, maxWidth: "none" }} /></BuilderPreviewViewport>}
-              {(!isHomepage || previewMode === "draft") && <div className="mx-auto min-h-56 overflow-hidden rounded-lg bg-[#fffaf8] shadow-sm" style={{ width: deviceWidths[device], maxWidth: "none" }}>
+              {(!isHomepage || previewMode === "draft") && <div className="min-w-0 overflow-x-auto rounded-xl pb-2" aria-label="Unscaled layout mockup (scroll within this panel)"><div className="mx-auto min-h-56 overflow-hidden rounded-lg bg-[#fffaf8] shadow-sm" style={{ width: deviceWidths[device], maxWidth: "none" }}>
                 <div className="flex justify-between border-b border-black/10 bg-white px-5 py-3 text-xs font-semibold"><span>ALOYRI</span><span>Preview</span></div>
                 {layout.order.map(id => {
                   if (hidden(id)) return null;
@@ -278,7 +278,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
                   const block = layout.blocks.find(item => customBlockId(item.id) === id);
                   return block ? <VisualBuilderBlock key={id} block={block} /> : null;
                 })}
-              </div>}
+              </div></div>}
             </div>
             <p className="mt-3 text-xs text-black/55">{isHomepage && previewMode === "live" ? "This preview uses the real storefront sections with your unsaved order, visibility and editable text. Advanced settings not yet represented here may require saving to appear." : "This is an approximate draft layout. Existing commerce sections are represented by summaries; choose Interactive unsaved preview to see their actual content."}</p>
           </div>
