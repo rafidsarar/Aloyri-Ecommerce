@@ -137,14 +137,16 @@ test("shop opens floating search without losing the product-focused page", async
   await expect(modal).toHaveCount(0);
 });
 
-test("mobile hamburger and header search open the same floating overlay", async ({ page }) => {
+test("mobile search opens from header while hamburger stays navigation-only", async ({ page }) => {
   await mockCatalog(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/shop");
   await expect(page.getByRole("combobox", { name: "Search skincare" })).toHaveCount(0);
   await page.getByRole("button", { name: "Open menu" }).click();
   const menu = page.getByRole("dialog", { name: "Store navigation menu" });
-  await menu.getByRole("button", { name: "Search products and brands" }).click();
+  await expect(menu.getByRole("button", { name: "Search products and brands" })).toHaveCount(0);
+  await menu.getByRole("button", { name: "Close menu" }).click();
+  await page.getByRole("button", { name: "Search products", exact: true }).click();
   const overlay = page.getByRole("dialog", { name: "Search discovery" });
   await expect(overlay).toBeVisible();
   await expect(overlay.getByRole("combobox", { name: "Search skincare" })).toBeFocused();
@@ -154,7 +156,8 @@ test("mobile hamburger and header search open the same floating overlay", async 
   await page.getByRole("button", { name: "Close search", exact: true }).click();
   await expect(overlay).toHaveCount(0);
   await page.getByRole("button", { name: "Open menu" }).click();
-  await page.getByRole("dialog", { name: "Store navigation menu" }).getByRole("button", { name: "Search products and brands" }).click();
+  await page.getByRole("dialog", { name: "Store navigation menu" }).getByRole("button", { name: "Close menu" }).click();
+  await page.getByRole("button", { name: "Search products", exact: true }).click();
   await expect(overlay).toBeVisible();
 });
 
