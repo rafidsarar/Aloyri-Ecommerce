@@ -1,5 +1,5 @@
-import { normalizeHeroProductIds, normalizeHeroDiscountMode, normalizeHeroPromotionCode } from "@/lib/hero-banner-offers";
 "use server";
+import { normalizeHeroProductIds, normalizeHeroDiscountMode, normalizeHeroPromotionCode } from "@/lib/hero-banner-offers";
 
 import { normalizePresentation, safeNavigationHref } from "@/lib/storefront-presentation";
 import { normalizeHomepageOrder, safeHomepageImagePath } from "@/lib/homepage-builder";
