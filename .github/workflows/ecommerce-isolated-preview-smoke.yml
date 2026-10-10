@@ -30,7 +30,11 @@ jobs:
           check_get / 200
           check_get /shop 200
           check_get /checkout 307
-          check_get /admin/setup 200
+          # First-time setup is 200 before owner creation and 307 after the
+          # isolated test owner is configured. Both preserve the safety boundary.
+          setup_status=$(curl --max-time 30 --silent --show-error --output /tmp/ecommerce-setup --write-out '%{http_code}' "$BASE/admin/setup")
+          echo "/admin/setup: HTTP $setup_status (expected 200 or 307)"
+          [[ "$setup_status" = 200 || "$setup_status" = 307 ]]
           check_get /admin/builder 307
           check_get /admin/settings 307
           check_get /api/customer/post-purchase 401
