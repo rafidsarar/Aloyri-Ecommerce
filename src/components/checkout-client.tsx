@@ -38,6 +38,7 @@ import {
 import { formatPrice, getProductById } from "@/lib/catalog";
 import { getAnalyticsContext, trackStorefrontEvent } from "@/lib/analytics";
 import { salePriceFor, type PromotionQuote } from "@/lib/promotions";
+import { HERO_BANNER_CLAIM_KEY, readHeroBannerClaim, type HeroBannerClaim } from "@/lib/hero-banner-offers";
 
 export type CheckoutSavedAddress = {
   id: string;
@@ -249,6 +250,7 @@ export function CheckoutClient() {
   const [storeStatusError, setStoreStatusError] = useState(false);
   const [promotionCode, setPromotionCode] = useState("");
   const [appliedCode, setAppliedCode] = useState("");
+  const [heroBannerClaim, setHeroBannerClaim] = useState<HeroBannerClaim | null>(null);
   const [promotionQuote, setPromotionQuote] = useState<PromotionQuote | null>(null);
   const [quotedRequestKey, setQuotedRequestKey] = useState("");
   const [promotionLoading, setPromotionLoading] = useState(false);
@@ -306,8 +308,14 @@ export function CheckoutClient() {
     window.addEventListener("storage", syncCart);
 
     const initialize = window.setTimeout(() => {
-      setCartItems(readCart());
-
+      const initialCart = readCart();
+      setCartItems(initialCart);
+      const claimed = readHeroBannerClaim(volatileStorage.getItem(HERO_BANNER_CLAIM_KEY));
+      if (claimed && initialCart.some(item => claimed.productIds.includes(item.productId))) {
+        setHeroBannerClaim(claimed);
+        setAppliedCode(claimed.code);
+        setPromotionCode(claimed.code);
+      }
       try {
         const saved = volatileStorage.getItem(CHECKOUT_DRAFT_KEY);
         if (saved) {
@@ -529,6 +537,10 @@ export function CheckoutClient() {
           if (appliedCode && (!result.codeApplied || result.requestedCode?.trim().toUpperCase() !== appliedCode)) {
             throw new Error("This promotion cannot be redeemed for this order. Remove the code to continue.");
           }
+          if (heroBannerClaim?.code === appliedCode &&
+              (result.promotion?.kind !== "percentage" || result.promotion.value !== 5)) {
+            throw new Error("This banner needs a matching 5% CRM promotion. Remove the code to continue.");
+          }
           setPromotionQuote(result);
           setQuotedRequestKey(requestQuoteKey);
           setPromotionError("");
@@ -550,7 +562,7 @@ export function CheckoutClient() {
       window.clearTimeout(refreshQuote);
       controller.abort();
     };
-  }, [appliedCode, cartItems, catalogSynced, draft.deliveryZone, hasUnavailable, requestQuoteKey, quoteAttempt]);
+  }, [appliedCode, heroBannerClaim, cartItems, catalogSynced, draft.deliveryZone, hasUnavailable, requestQuoteKey, quoteAttempt]);
 
   function retryPromotionQuote() {
     setPromotionError("");
@@ -572,11 +584,17 @@ export function CheckoutClient() {
       return;
     }
     setPromotionCode(normalized);
+    if (heroBannerClaim && normalized !== heroBannerClaim.code) {
+      setHeroBannerClaim(null);
+      volatileStorage.removeItem(HERO_BANNER_CLAIM_KEY);
+    }
     setAppliedCode(normalized);
     retryPromotionQuote();
   }
 
   function removePromotionCode() {
+    setHeroBannerClaim(null);
+    volatileStorage.removeItem(HERO_BANNER_CLAIM_KEY);
     setAppliedCode("");
     setPromotionCode("");
     setQuotedRequestKey("");
@@ -1561,7 +1579,7 @@ export function CheckoutClient() {
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#713a35]/48">Promotion</p>
-                  <p className="mt-1 text-xs text-[#321f1c]/45">Add a code, or eligible automatic offers apply by themselves.</p>
+                  <p className="mt-1 text-xs text-[#321f1c]/45">{heroBannerClaim ? "Your banner’s 5% offer is verified by CRM before checkout." : "Add a code, or eligible automatic offers apply by themselves."}</p>
                 </div>
                 {promotionLoading ? <span className="text-[10px] uppercase tracking-[0.12em] text-[#321f1c]/38">Checking…</span> : null}
               </div>

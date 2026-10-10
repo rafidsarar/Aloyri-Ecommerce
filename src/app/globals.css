@@ -855,3 +855,25 @@ body[data-storefront-theme="sand"] {
   .store-campaign-track { scroll-behavior: auto; }
   .store-campaign-dot { transition: none; }
 }
+
+
+/* Product rotators nested inside individual compact hero banners. */
+.hero-offer-badge { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 7px; width: fit-content; border-radius: 999px; background: var(--store-accent); color: var(--store-on-accent); padding: 6px 11px; font-size: .72rem; font-weight: 800; letter-spacing: .03em; }
+.hero-offer-badge span { font-size: .62rem; font-weight: 500; letter-spacing: 0; opacity: .88; }
+.hero-products { position: relative; width: 100%; padding: 10px; background: color-mix(in srgb, var(--store-panel) 62%, transparent); }
+.hero-product-panel { animation: hero-product-enter 260ms ease-out; }
+.hero-product-photo { max-height: 175px; background: var(--store-surface); }
+.hero-product-nav { display: inline-grid; place-items: center; width: 32px; height: 32px; border: 1px solid var(--store-border); border-radius: 50%; background: var(--store-surface); color: var(--store-ink); }
+.hero-product-nav:hover, .hero-product-nav:focus-visible { border-color: var(--store-accent); color: var(--store-accent); }
+.store-campaign-slide .store-promo-visual:has(.hero-products) { display: flex; align-items: center; justify-content: center; }
+.store-campaign-slide .store-hero-art:has(.hero-products) { display: flex; align-items: center; justify-content: center; }
+.store-campaign-slide .store-hero-art:has(.hero-products) > div:first-child { display: none; }
+.store-campaign-slide .store-hero-art:has(.hero-products) > div:last-child { width: 100%; }
+@keyframes hero-product-enter { from { transform: translateX(10px); opacity: .6; } to { transform: translateX(0); opacity: 1; } }
+@media (max-width: 767px) {
+  .hero-products { padding: 8px; }
+  .hero-product-photo { max-height: 135px; }
+  .store-campaign-slide .store-promo-visual:has(.hero-products) { min-height: 250px; max-height: none; }
+  .store-campaign-slide .store-hero-art:has(.hero-products) { min-height: 275px; max-height: none; }
+}
+@media (prefers-reduced-motion: reduce) { .hero-product-panel { animation: none; } }

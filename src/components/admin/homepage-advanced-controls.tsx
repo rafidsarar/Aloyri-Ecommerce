@@ -1,3 +1,4 @@
+import { BannerProductPicker } from "@/components/admin/banner-product-picker";
 import Link from "next/link";
 import { HomepageSectionOrganizer } from "@/components/admin/homepage-section-organizer";
 import { StorefrontDevicePreview } from "@/components/admin/storefront-device-preview";
@@ -240,12 +241,30 @@ export async function HomepageAdvancedControls({ config }: { config: StorefrontC
           </div>
         </AdminCard>
 
+          <AdminCard>
+            <h3 className="text-base font-semibold">Main hero · product slider and 5% offer</h3>
+            <p className="mt-2 text-xs text-black/55">Rotate up to six products inside the main banner. Leave empty for the existing main product/image.</p>
+            <div className="mt-4"><BannerProductPicker name="heroProductIds" products={products} selected={home.heroProductIds} /></div>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <label className="grid gap-1.5 text-sm font-medium">Discount mode
+                <select name="heroDiscountMode" defaultValue={home.heroDiscountMode} className="min-h-11 rounded-xl border border-black/10 bg-white px-4">
+                  <option value="none">No discount</option>
+                  <option value="label">5% promotional label only</option>
+                  <option value="checkout">5% off at checkout</option>
+                </select>
+              </label>
+              <label className="grid gap-1.5 text-sm font-medium">Matching CRM 5% coupon code
+                <input name="heroPromotionCode" defaultValue={home.heroPromotionCode} maxLength={40} placeholder="CRM5OFF" className="min-h-11 rounded-xl border border-black/10 bg-white px-4" />
+              </label>
+            </div>
+            <p className="mt-2 text-xs text-black/55">Checkout mode requires an active CRM promotion with a percentage discount of exactly 5%, targeted to these products. CRM applies and validates it during order creation. Label-only never changes prices.</p>
+          </AdminCard>
         </div>
         <div id="home-banners" className="scroll-mt-24">
         <AdminCard>
           <h2 className="text-lg font-semibold">Promotional banners</h2>
           <p className="mt-2 text-xs leading-5 text-black/60">
-            Create up to four customer-facing banners. Save to update the live website immediately. Only safe internal shop and collection destinations are supported.
+            Configure up to four banners, each with its own sliding products and either a 5% label or a CRM-validated 5% discount at checkout.
           </p>
           <label className="mt-5 grid gap-2 text-sm font-medium">Banner placement
             <select name="promoPlacement" defaultValue={home.promoPlacement} className="min-h-11 rounded-xl border border-black/10 px-4">
@@ -306,6 +325,20 @@ export async function HomepageAdvancedControls({ config }: { config: StorefrontC
                         <option value="centered">Centered — compact promotion</option>
                       </select>
                     </label>
+                    <BannerProductPicker name={`${prefix}ProductIds`} products={products} selected={banner?.productIds || []} />
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <label className="grid gap-1.5 text-sm font-medium">Discount mode
+                        <select name={`${prefix}DiscountMode`} defaultValue={banner?.discountMode || "none"} className="min-h-11 rounded-xl border border-black/10 bg-white px-4">
+                          <option value="none">No discount</option>
+                          <option value="label">5% promotional label only</option>
+                          <option value="checkout">5% off at checkout</option>
+                        </select>
+                      </label>
+                      <label className="grid gap-1.5 text-sm font-medium">Matching CRM 5% coupon code
+                        <input name={`${prefix}PromotionCode`} defaultValue={banner?.promotionCode || ""} maxLength={40} placeholder="CRM5OFF" className="min-h-11 rounded-xl border border-black/10 bg-white px-4" />
+                      </label>
+                    </div>
+                    <p className="text-xs text-black/55">Checkout mode requires a matching active 5% CRM promotion targeted to these products. Label-only never reduces checkout prices.</p>
                   </div>
                 </fieldset>
               );
