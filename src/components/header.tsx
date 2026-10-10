@@ -15,7 +15,9 @@ import { CloseIcon, MenuIcon, SearchIcon } from "@/components/icons";
 import { defaultPresentation, type StorefrontPresentation } from "@/lib/storefront-presentation";
 
 export function Header({ announcement, presentation = defaultPresentation }: { announcement: string; presentation?: StorefrontPresentation }) {
-  const links = presentation.navigation.map(item=>[item.label,item.href]);
+  // Filter legacy, saved navigation so the removed Customer Care shortcut
+  // cannot reappear until its old settings are explicitly replaced.
+  const links = presentation.navigation.filter(item => item.href !== "/customer-care").map(item=>[item.label,item.href]);
   const pathname = usePathname();
   const router = useRouter();
   const [signedIn, setSignedIn] = useState(false);
@@ -30,6 +32,7 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const menuDialogRef = useRef<HTMLDivElement>(null);
+  const megaMenuRef = useRef<HTMLDetailsElement>(null);
 
   useEffect(() => {
     const onPointerDown = (event: PointerEvent) => {
@@ -140,6 +143,24 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
     };
   }, [open]);
 
+  useEffect(() => {
+    const closeOnOutside = (event: PointerEvent) => {
+      if (megaMenuRef.current && !megaMenuRef.current.contains(event.target as Node)) megaMenuRef.current.open = false;
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && megaMenuRef.current?.open) {
+        megaMenuRef.current.open = false;
+        megaMenuRef.current.querySelector("summary")?.focus();
+      }
+    };
+    document.addEventListener("pointerdown", closeOnOutside);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutside);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, []);
+
   const current = (href: string) =>
     pathname === href || (href !== "/shop" && pathname.startsWith(href));
 
@@ -210,16 +231,43 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
                 setAccountOpen(false);
                 window.dispatchEvent(new Event("aloyri:open-global-search"));
               }}
-              className="store-icon-link inline-flex h-10 w-10 items-center justify-center rounded-full border transition sm:h-11 sm:w-11"
+              className="store-icon-link inline-flex h-10 w-10 items-center justify-center rounded-full border transition sm:h-11 sm:w-11 xl:w-auto xl:gap-2 xl:px-4"
               aria-label="Search products"
               aria-haspopup="dialog"
               aria-controls="global-storefront-search"
             >
-              <SearchIcon />
+              <SearchIcon /><span className="hidden text-sm font-medium xl:inline">Search</span>
             </button>
             <CartLink />
           </div>
         </div>
+        <nav className="store-desktop-nav hidden lg:block" aria-label="Shop and discover">
+          <div className="shell flex min-h-12 items-center justify-center gap-1">
+            <details ref={megaMenuRef} className="store-mega-menu relative">
+              <summary className="store-desktop-nav-link flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-lg px-4 text-sm font-semibold">
+                Shop categories <span aria-hidden="true">⌄</span>
+              </summary>
+              <div className="store-mega-panel absolute left-0 top-full z-50 w-[min(760px,calc(100vw-3rem))] rounded-2xl border p-6 shadow-2xl">
+                <div className="mb-4 flex items-center justify-between gap-4 border-b border-[var(--store-border)] pb-4">
+                  <div><p className="text-[11px] font-semibold uppercase tracking-widest text-[var(--store-accent)]">Explore Aloyri</p>
+                    <p className="mt-1 text-lg font-semibold">Shop by category</p></div>
+                  <Link href="/shop" className="text-sm font-semibold text-[var(--store-accent)]">View all →</Link>
+                </div>
+                <div className="grid max-h-[55vh] grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3">
+                  {synced && publicCategories.length
+                    ? publicCategories.map(item => (
+                      <Link href={item.href} key={item.slug} className="rounded-lg px-3 py-3 text-sm transition hover:bg-[var(--store-panel)] focus-visible:outline-2 focus-visible:outline-[var(--store-accent)]">{item.name}</Link>
+                    ))
+                    : <Link href="/shop" className="rounded-lg px-3 py-3 text-sm">Browse all skincare</Link>}
+                </div>
+              </div>
+            </details>
+            {links.map(([label, href]) => (
+              <Link key={href} href={href} aria-current={current(href) ? "page" : undefined}
+                className="store-desktop-nav-link flex min-h-11 items-center rounded-lg px-4 text-sm font-medium">{label}</Link>
+            ))}
+          </div>
+        </nav>
       </header>
 
       {open ? (

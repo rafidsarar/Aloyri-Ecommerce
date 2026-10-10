@@ -114,6 +114,17 @@ export function normalizeVisualLayout(value: unknown, legacyOrder: HomepageBlock
       result.push(id);
     }
   }
+  // On core-only legacy homepages, insert new features alongside their natural
+  // anchors. Custom page layouts keep their original order and append new blocks,
+  // so editor-positioned sections never move unexpectedly during an upgrade.
+  if (!result.some(id => id.startsWith("custom:"))) {
+    for (const [newId, anchor] of [["core:trust", "core:hero"], ["core:brands", "core:categories"]]) {
+      if (!seen.has(newId) && result.includes(anchor) && valid.has(newId)) {
+        result.splice(result.indexOf(anchor) + 1, 0, newId);
+        seen.add(newId);
+      }
+    }
+  }
   for (const id of [...legacyOrder.map(coreBlockId), ...blocks.map(block => customBlockId(block.id))]) {
     if (!seen.has(id)) { seen.add(id); result.push(id); }
   }

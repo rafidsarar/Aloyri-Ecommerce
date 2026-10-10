@@ -1,7 +1,9 @@
 export const homepageBlocks = [
-  { id: "hero", label: "Main hero banner", group: "First impression" },
+  { id: "hero", label: "Main hero and promotional carousel", group: "First impression" },
+  { id: "trust", label: "Shopping benefits", group: "First impression" },
   { id: "browse", label: "Search and shopping shortcuts", group: "Discovery" },
   { id: "categories", label: "Category showcase", group: "Discovery" },
+  { id: "brands", label: "Shop by brand", group: "Discovery" },
   { id: "focus", label: "Shop by skincare focus", group: "Discovery" },
   { id: "routineFinder", label: "Routine finder", group: "Discovery" },
   { id: "editorialBeforeProducts", label: "Editorial before products", group: "Content" },

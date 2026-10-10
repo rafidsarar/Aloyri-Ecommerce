@@ -741,3 +741,41 @@ body[data-storefront-theme="sand"] {
   .account-quick-action { transition: none; }
   .account-quick-action:hover, .account-quick-action:focus-visible { transform: none; }
 }
+
+/* Aloyri discovery refresh: scoped to customer storefront, respecting the selected theme. */
+.store-desktop-nav { border-top: 1px solid var(--store-border); background: var(--store-surface); }
+.store-desktop-nav-link { color: var(--store-ink); transition: color .15s ease, background .15s ease; }
+.store-desktop-nav-link:hover, .store-desktop-nav-link:focus-visible, .store-desktop-nav-link[aria-current="page"] { color: var(--store-accent); background: var(--store-panel); }
+.store-mega-menu > summary::-webkit-details-marker { display: none; }
+.store-mega-menu[open] > summary { background: var(--store-panel); color: var(--store-accent); }
+.store-mega-panel { background: var(--store-surface); color: var(--store-ink); border-color: var(--store-border); }
+.store-campaign-carousel [hidden] { display: none !important; }
+.store-campaign-carousel .store-promo { min-height: 490px; }
+.store-campaign-carousel .store-promo-visual { min-height: 330px; }
+.store-campaign-dot { height: 8px; width: 8px; border-radius: 99px; background: var(--store-border); transition: width .15s ease, background .15s ease; }
+.store-campaign-dot.is-active { width: 28px; background: var(--store-accent); }
+.store-campaign-arrow { display: inline-grid; place-items: center; width: 40px; height: 40px; border: 1px solid var(--store-border); border-radius: 50%; color: var(--store-ink); background: var(--store-surface); }
+.store-campaign-arrow:hover, .store-campaign-arrow:focus-visible { border-color: var(--store-accent); color: var(--store-accent); }
+.store-benefits { border-color: var(--store-border); background: var(--store-surface); color: var(--store-ink); }
+.store-benefit + .store-benefit { border-top: 1px solid var(--store-border); }
+.store-benefit-spark { color: var(--store-accent); font-size: 16px; }
+.store-brand-tile { border-color: var(--store-border); background: var(--store-surface); transition: transform .18s ease, box-shadow .18s ease; }
+.store-brand-tile:hover { transform: translateY(-3px); box-shadow: 0 10px 24px color-mix(in srgb, var(--store-ink) 8%, transparent); }
+@media (min-width: 640px) and (max-width: 1023px) {
+  .store-benefit:nth-child(n) { border-top: 0; border-left: 1px solid var(--store-border); }
+  .store-benefit:nth-child(2n + 1) { border-left: 0; }
+  .store-benefit:nth-child(n + 3) { border-top: 1px solid var(--store-border); }
+}
+@media (min-width: 1024px) {
+  .store-benefit:nth-child(n) { border-top: 0; border-left: 1px solid var(--store-border); }
+  .store-benefit:first-child { border-left: 0; }
+  .store-header-grid { min-height: 76px; }
+}
+@media (max-width: 639px) {
+  .store-campaign-carousel .store-promo { min-height: 0; }
+  .store-campaign-carousel .store-promo-visual { min-height: 240px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .store-brand-tile, .store-campaign-dot, .store-desktop-nav-link { transition: none; }
+  .store-brand-tile:hover { transform: none; }
+}

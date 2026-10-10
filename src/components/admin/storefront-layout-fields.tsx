@@ -30,7 +30,7 @@ export function StorefrontLayoutFields({ value }: { value: StorefrontPresentatio
         <label className="grid gap-2 text-xs font-medium">Menu item {i+1} label<input name={`navLabel${i}`} defaultValue={value.navigation[i]?.label || ""} maxLength={30} className="min-h-11 w-full rounded-lg border border-black/10 bg-white px-3 text-sm" /></label>
         <label className="grid gap-2 text-xs font-medium">Menu item {i+1} destination<input name={`navHref${i}`} defaultValue={value.navigation[i]?.href || ""} maxLength={160} placeholder="/shop" className="min-h-11 w-full rounded-lg border border-black/10 bg-white px-3 text-sm" /></label>
       </div>)}</div>
-      <p className="mt-4 text-xs leading-6 text-black/60">Use /shop, /shop?sort=bestseller, /routine-finder, /category/cleansers, /category/moisturizers, /category/sunscreen, /collections/your-slug, /about, /customer-care, /contact, /faq, /shipping-delivery or /returns-refunds.</p>
+      <p className="mt-4 text-xs leading-6 text-black/60">Use /shop, /shop?sort=bestseller, /routine-finder, /category/cleansers, /category/moisturizers, /category/sunscreen, /collections/your-slug, /about, /contact, /faq, /shipping-delivery or /returns-refunds.</p>
     </section>
   </>;
 }
