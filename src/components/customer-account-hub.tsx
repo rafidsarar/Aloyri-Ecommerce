@@ -9,13 +9,14 @@ import { volatileStorage } from "@/lib/volatile-storage";
 import { writeSavedProductIds } from "@/lib/product-preferences";
 import { CustomerPostPurchaseCenter } from "@/components/customer-post-purchase-center";
 import { SavedProductsClient } from "@/components/saved-products-client";
+import { AccountSectionIcon } from "@/components/icons";
 
 const sections = [
-  { id: "orders", label: "Orders & returns", subtitle: "Purchases and tracking", icon: "▤" },
-  { id: "addresses", label: "Saved addresses", subtitle: "Delivery details", icon: "⌖" },
-  { id: "wishlist", label: "Wishlist", subtitle: "Products you love", icon: "♡" },
-  { id: "support", label: "Customer care", subtitle: "Help and returns", icon: "?" },
-  { id: "preferences", label: "Profile & settings", subtitle: "Personal details", icon: "⚙" },
+  { id: "orders", label: "Orders & returns", subtitle: "Purchases and tracking", icon: "orders" },
+  { id: "addresses", label: "Saved addresses", subtitle: "Delivery details", icon: "addresses" },
+  { id: "wishlist", label: "Wishlist", subtitle: "Products you love", icon: "wishlist" },
+  { id: "support", label: "Customer care", subtitle: "Help and returns", icon: "support" },
+  { id: "preferences", label: "Profile & settings", subtitle: "Personal details", icon: "preferences" },
 ] as const;
 
 export function CustomerAccountHub({
@@ -110,13 +111,13 @@ export function CustomerAccountHub({
       </div>
       <div className="mb-7 grid grid-cols-2 gap-3 sm:grid-cols-3">
         {[
-          { id: "orders", label: "Track orders", detail: "See order progress", icon: "↗" },
-          { id: "addresses", label: "My addresses", detail: "Manage delivery", icon: "⌖" },
-          { id: "support", label: "Get help", detail: "Returns and support", icon: "?" },
+          { id: "orders", label: "Track orders", detail: "See order progress", icon: "orders" },
+          { id: "addresses", label: "My addresses", detail: "Manage delivery", icon: "addresses" },
+          { id: "support", label: "Get help", detail: "Returns and support", icon: "support" },
         ].map((shortcut) => (
           <button key={shortcut.id} type="button" onClick={() => router.replace("/account?section=" + shortcut.id, { scroll: false })}
             className="account-quick-action group flex min-h-28 flex-col items-start justify-between gap-3 rounded-2xl border p-4 text-left transition sm:min-h-32 sm:p-5">
-            <span aria-hidden="true" className="account-quick-icon inline-flex h-9 w-9 items-center justify-center rounded-full text-lg">{shortcut.icon}</span>
+            <span aria-hidden="true" className="account-quick-icon inline-flex h-9 w-9 items-center justify-center rounded-full text-lg"><AccountSectionIcon section={shortcut.icon} /></span>
             <span className="block">
               <span className="block text-sm font-semibold">{shortcut.label}</span>
               <span className="account-muted mt-1 block text-xs">{shortcut.detail}</span>
@@ -163,7 +164,7 @@ export function CustomerAccountHub({
                   (section === item.id ? "is-active" : "")
                 }
               >
-                <span aria-hidden="true" className="account-nav-icon hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg lg:inline-flex">{item.icon}</span>
+                <span aria-hidden="true" className="account-nav-icon hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg lg:inline-flex"><AccountSectionIcon section={item.icon} /></span>
               <span className="min-w-0 flex-1">
                   <span className="block text-sm font-semibold">{item.label}</span>
                   <span className="account-section-caption mt-0.5 hidden text-[11px] lg:block">{item.subtitle}</span>
