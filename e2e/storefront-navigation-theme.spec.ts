@@ -5,11 +5,14 @@ test.describe("storefront appearance and navigation", () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/");
     await expect(page.locator("body")).toHaveAttribute("data-storefront-theme", /^(rose|sage|sand)$/);
+    const desktopNav = page.getByRole("navigation", { name: "Shop and discover" });
+    await expect(desktopNav).not.toContainText("Customer care");
     const opener = page.getByRole("button", { name: "Open menu" });
     await expect(opener).toBeVisible();
     await opener.click();
     const drawer = page.getByRole("dialog", { name: "Store navigation menu" });
     await expect(drawer.getByRole("navigation", { name: "Store navigation" }).getByRole("link", { name: "Shop all" })).toBeVisible();
+    await expect(drawer.getByRole("navigation", { name: "Store navigation" }).getByRole("link", { name: "Customer care" })).toHaveCount(0);
     await drawer.getByRole("button", { name: "Close menu" }).click();
     await expect(drawer).toHaveCount(0);
     await expect(page.locator(".store-header").getByRole("link", { name: "Track order" })).toHaveCount(0);
@@ -26,6 +29,7 @@ test.describe("storefront appearance and navigation", () => {
     await expect(accountMenu).toHaveCount(0);
     await expect(page.locator(".store-header")).toBeVisible();
     await expect(page.locator(".store-footer")).toBeVisible();
+    await expect(page.locator(".store-footer").getByRole("link", { name: "Customer care" })).toHaveAttribute("href", "/customer-care");
     const accent = await page.locator("body").evaluate((element) => getComputedStyle(element).getPropertyValue("--store-accent").trim());
     expect(accent).toMatch(/^#[0-9a-f]{6}$/i);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
@@ -37,6 +41,7 @@ test.describe("storefront appearance and navigation", () => {
     await page.getByRole("button", { name: "Open menu" }).click();
     const drawer = page.getByRole("dialog", { name: "Store navigation menu" });
     await expect(drawer.getByRole("navigation", { name: "Customer tools" })).toHaveCount(0);
+    await expect(drawer.getByRole("navigation", { name: "Store navigation" }).getByRole("link", { name: "Customer care" })).toHaveCount(0);
     await drawer.getByRole("button", { name: "Close menu" }).click();
     const accountButton = page.getByRole("button", { name: "Account menu" });
     await expect(accountButton).toBeVisible();

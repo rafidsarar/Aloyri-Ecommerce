@@ -15,12 +15,11 @@ export const defaultPresentation: StorefrontPresentation = {
     { label: "Shop all", href: "/shop" },
     { label: "Bestsellers", href: "/shop?sort=bestseller" },
     { label: "Routine finder", href: "/routine-finder" },
-    { label: "Customer care", href: "/customer-care" },
   ],
 };
 export function safeNavigationHref(value: unknown): string | null {
   if (typeof value !== "string" || value.length > 160) return null;
-  if (/^\/(?:shop|about|customer-care|routine-finder|faq|contact|shipping-delivery|returns-refunds)$/.test(value)) return value;
+  if (/^\/(?:shop|about|routine-finder|faq|contact|shipping-delivery|returns-refunds)$/.test(value)) return value;
   if (value === "/shop?sort=bestseller") return value;
   if (/^\/category\/[a-z0-9][a-z0-9-]{0,100}$/.test(value)) return value;
   if (/^\/collections\/[a-z0-9][a-z0-9-]{0,79}$/.test(value)) return value;

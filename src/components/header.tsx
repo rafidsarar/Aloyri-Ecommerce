@@ -15,7 +15,9 @@ import { CloseIcon, MenuIcon, SearchIcon } from "@/components/icons";
 import { defaultPresentation, type StorefrontPresentation } from "@/lib/storefront-presentation";
 
 export function Header({ announcement, presentation = defaultPresentation }: { announcement: string; presentation?: StorefrontPresentation }) {
-  const links = presentation.navigation.map(item=>[item.label,item.href]);
+  // Filter legacy, saved navigation so the removed Customer Care shortcut
+  // cannot reappear until its old settings are explicitly replaced.
+  const links = presentation.navigation.filter(item => item.href !== "/customer-care").map(item=>[item.label,item.href]);
   const pathname = usePathname();
   const router = useRouter();
   const [signedIn, setSignedIn] = useState(false);
