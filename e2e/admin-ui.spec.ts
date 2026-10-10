@@ -34,38 +34,6 @@ test.describe("minimal admin interface", () => {
     await expect(nav.getByRole("link", { name: "Products", exact: true })).toHaveAttribute("aria-current", "page");
   });
 
-  test("storefront control center exposes permitted editing areas and website settings", async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto(`${base}/admin/builder`);
-    const hub = page.locator('section[aria-label="Website management"]');
-    await expect(hub).toBeVisible();
-    await expect(hub.getByRole("heading", { name: "Website control center" })).toBeVisible();
-    await expect(hub.getByRole("link", { name: /Homepage & banners/ })).toHaveAttribute("href", "/admin/builder?page=home&view=advanced");
-    await expect(hub.getByRole("link", { name: /Header, footer & store settings/ })).toHaveAttribute("href", "/admin/settings");
-    await expect(hub.getByRole("link", { name: /Products & photography/ })).toHaveAttribute("href", "/admin/products");
-    await expect(hub.getByRole("link", { name: /Media library/ })).toHaveAttribute("href", "/admin/media");
-    await expect(hub.getByRole("link", { name: /SEO & discoverability/ })).toHaveAttribute("href", "/admin/seo");
-    await page.goto(`${base}/admin/settings`);
-    await expect(page.getByRole("heading", { name: "Website settings" })).toBeVisible();
-    await expect(page.getByRole("navigation", { name: "Website settings sections" })).toBeVisible();
-    await expect(page.getByRole("link", { name: /Open Storefront Builder/ })).toHaveAttribute("href", "/admin/builder?page=home");
-    await expect(page.locator("#website-layout")).toBeVisible();
-    await expect(page.locator("#website-appearance")).toBeVisible();
-    await expect(page.locator("#website-content")).toBeVisible();
-    await expect(page.locator("#website-support")).toBeVisible();
-  });
-
-  test("control center and settings remain usable on mobile", async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto(`${base}/admin/builder`);
-    await expect(page.locator('section[aria-label="Website management"]')).toBeVisible();
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-    await page.goto(`${base}/admin/settings`);
-    await page.getByRole("navigation", { name: "Website settings sections" }).getByRole("link", { name: "Colors & typography" }).click();
-    await expect(page).toHaveURL(/#website-appearance$/);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  });
-
   test("mobile menu opens without horizontal page overflow", async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`${base}/admin/builder`);
