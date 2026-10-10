@@ -126,13 +126,13 @@ export function GlobalStorefrontSearch({ synonymGroups = [] }: { synonymGroups?:
   return (
     <div className="fixed inset-0 z-[100] text-[var(--store-ink)]" data-global-search>
       <button type="button" tabIndex={-1} aria-label="Close search overlay" onClick={closeSearch}
-        className="absolute inset-0 h-full w-full cursor-default bg-[#211917]/50 backdrop-blur-[2px]" />
+        className="absolute inset-0 h-full w-full cursor-default bg-[#211917]/35 backdrop-blur-[1px]" />
       <div ref={dialogRef} id="global-storefront-search" role="dialog" aria-modal="true"
-        aria-label="Search discovery" className="absolute inset-x-3 top-3 mx-auto flex max-h-[calc(100dvh-1.5rem)] max-w-5xl flex-col sm:inset-x-8 sm:top-6 sm:max-h-[min(82dvh,730px)]">
+        aria-label="Search discovery" className="absolute inset-x-3 top-3 mx-auto flex max-h-[calc(100dvh-1.5rem)] max-w-3xl flex-col overflow-hidden rounded-2xl border border-[var(--store-border)] bg-[var(--store-surface)] shadow-[0_24px_80px_rgba(32,20,16,0.18)] sm:inset-x-8 sm:top-8 sm:max-h-[min(78dvh,650px)]">
         <form role="search" aria-label="Search skincare products" onSubmit={submitSearch}
-          className="flex min-h-14 shrink-0 items-center gap-2 rounded-xl border border-[var(--store-border)] bg-[var(--store-surface)] px-3 shadow-xl sm:px-5">
+          className="flex h-14 shrink-0 items-center gap-1 border-b border-[var(--store-border)] bg-[var(--store-surface)] px-3 sm:h-16 sm:px-5">
           <button type="submit" aria-label="Search all results" title="Search all results"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--store-ink)] hover:bg-[var(--store-panel)]">
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--store-muted)] transition hover:bg-[var(--store-panel)] hover:text-[var(--store-ink)]">
             <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
               <circle cx="10.7" cy="10.7" r="6.3" /><path d="m16 16 4.3 4.3" />
             </svg>
@@ -149,21 +149,21 @@ export function GlobalStorefrontSearch({ synonymGroups = [] }: { synonymGroups?:
               }
             }}
             placeholder="Search products and brands"
-            className="h-14 min-w-0 flex-1 bg-transparent text-sm text-[var(--store-ink)] outline-none placeholder:text-[var(--store-muted)]" />
+            className="h-12 min-w-0 flex-1 bg-transparent px-1 text-[15px] text-[var(--store-ink)] outline-none placeholder:text-[var(--store-muted)]" />
           {query ? <button type="button" aria-label="Clear query" onClick={() => { setQuery(""); inputRef.current?.focus(); }}
             className="rounded-full px-2 py-2 text-xs text-[var(--store-muted)] hover:bg-[var(--store-panel)]">Clear</button> : null}
           <button type="button" aria-label="Close search" onClick={closeSearch}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--store-ink)] hover:bg-[var(--store-panel)]">
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--store-muted)] transition hover:bg-[var(--store-panel)] hover:text-[var(--store-ink)]">
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="M5 5 19 19M19 5 5 19" /></svg>
           </button>
         </form>
         <div id="global-search-suggestions"
-          className="mt-2 min-h-0 overflow-y-auto overscroll-contain rounded-xl border border-[var(--store-border)] bg-[var(--store-surface)] p-3 shadow-2xl sm:p-5">
-          <div role="tablist" aria-label="Search suggestion categories" className="mb-4 flex items-center gap-1 border-b border-[var(--store-border)] pb-3">
+          className="min-h-0 overflow-y-auto overscroll-contain bg-[var(--store-surface)] px-3 pb-3 pt-1 sm:px-5 sm:pb-4">
+          <div role="tablist" aria-label="Search suggestion categories" className="mb-3 flex items-center gap-1 border-b border-[var(--store-border)] py-2">
             {(["all", "products", "categories"] as const).map(item => (
               <button key={item} type="button" role="tab" aria-selected={tab === item}
                 onClick={() => setTab(item)}
-                className={"min-h-9 rounded-lg px-4 text-xs font-semibold transition-colors " +
+                className={"min-h-8 rounded-md px-3 text-xs font-medium transition-colors " +
                   (tab === item ? "bg-[var(--store-panel)] text-[var(--store-ink)]" : "text-[var(--store-muted)] hover:bg-[var(--store-panel)]")}>
                 {item === "all" ? "All" : item === "products" ? "Products" : "Categories"}
               </button>
@@ -179,7 +179,7 @@ export function GlobalStorefrontSearch({ synonymGroups = [] }: { synonymGroups?:
           ) : (
             <>
               {!hasQuery && tab !== "categories" && recent.length > 0 ? (
-                <section className="mb-5">
+                <section className="mb-3">
                   <div className="mb-2 flex items-center justify-between">
                     <h3 className="text-xs font-semibold">Recent searches</h3>
                     <button type="button" onClick={() => {
@@ -189,37 +189,37 @@ export function GlobalStorefrontSearch({ synonymGroups = [] }: { synonymGroups?:
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {recent.map(term => <button type="button" key={term} onClick={() => { setQuery(term); inputRef.current?.focus(); }}
-                      className="rounded-lg border border-[var(--store-border)] px-3 py-2 text-xs hover:bg-[var(--store-panel)]">{term}</button>)}
+                      className="rounded-full border border-[var(--store-border)] px-3 py-1.5 text-xs hover:bg-[var(--store-panel)]">{term}</button>)}
                   </div>
                 </section>
               ) : null}
               {tab !== "categories" && resultProducts.length > 0 ? (
-                <section className="mb-4">
-                  <h3 className="px-2 pb-2 text-xs font-semibold">{hasQuery ? "Matching products" : "Discover products"}</h3>
+                <section className="mb-2">
+                  <h3 className="px-2 pb-1.5 text-[11px] font-medium uppercase tracking-wide text-[var(--store-muted)]">{hasQuery ? "Matching products" : "Discover products"}</h3>
                   <div role="listbox" aria-label="Search suggestions">
                     {resultProducts.map(product => (
                       <Link key={product.id} href={"/product/" + product.slug} role="option" aria-selected="false"
                         data-global-search-result
                         onClick={() => { saveRecent(query); setOpen(false); }}
-                        className="flex items-center gap-3 rounded-lg px-2 py-2.5 transition hover:bg-[var(--store-panel)] focus:bg-[var(--store-panel)] focus:outline-none">
-                        <ProductMedia product={product} className="h-11 w-11 shrink-0 rounded-md" sizes="44px" />
+                        className="flex items-center gap-3 rounded-lg px-2 py-2 transition hover:bg-[var(--store-panel)] focus:bg-[var(--store-panel)] focus:outline-none">
+                        <ProductMedia product={product} className="h-10 w-10 shrink-0 rounded-md" sizes="40px" />
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm font-semibold">{product.name}</span>
+                          <span className="block truncate text-sm font-medium">{product.name}</span>
                           <span className="block truncate text-xs text-[var(--store-muted)]">{product.brand} · {product.category}</span>
                         </span>
-                        <span className="shrink-0 text-xs font-semibold text-[var(--store-accent)]">{formatPrice(salePriceFor(product))}</span>
+                        <span className="shrink-0 text-xs font-medium text-[var(--store-accent)]">{formatPrice(salePriceFor(product))}</span>
                       </Link>
                     ))}
                   </div>
                 </section>
               ) : null}
               {tab !== "products" && matchingCategories.length > 0 ? (
-                <section className="mb-4">
-                  <h3 className="px-2 pb-2 text-xs font-semibold">Categories</h3>
+                <section className="mb-2">
+                  <h3 className="px-2 pb-1.5 text-[11px] font-medium uppercase tracking-wide text-[var(--store-muted)]">Categories</h3>
                   <div className="flex flex-wrap gap-2">
                     {matchingCategories.map(item => <Link key={item.slug} href={item.href}
                       onClick={() => setOpen(false)}
-                      className="rounded-lg border border-[var(--store-border)] px-3 py-2 text-xs font-medium hover:bg-[var(--store-panel)]">{item.name} ↗</Link>)}
+                      className="rounded-full border border-[var(--store-border)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--store-panel)]">{item.name} ↗</Link>)}
                   </div>
                 </section>
               ) : null}
@@ -228,7 +228,7 @@ export function GlobalStorefrontSearch({ synonymGroups = [] }: { synonymGroups?:
               ) : null}
             </>
           )}
-          <div className="flex flex-wrap items-center gap-4 border-t border-[var(--store-border)] px-2 pt-4 text-xs font-semibold text-[var(--store-accent)]">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[var(--store-border)] px-2 pt-3 text-xs font-medium text-[var(--store-accent)]">
             {query.trim() ? (
               <button type="button" onClick={() => {
                 saveRecent(query);
