@@ -9,13 +9,17 @@ import { hasAdminPermission, type AdminSession } from "@/lib/admin-auth";
 import type { StorefrontConfig } from "@/lib/storefront-admin-store";
 import type { WebsiteWorkspace } from "@/components/admin/website-workspace-navigation";
 import { listStorefrontMedia } from "@/lib/storefront-admin-store";
+import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
 
-export function WebsiteWorkspacePanels({ workspace, config, admin, media, contentKey }: {
+export async function WebsiteWorkspacePanels({ workspace, config, admin, media, contentKey, editKind, editId, query }: {
   workspace: Exclude<WebsiteWorkspace, "design">;
   config: StorefrontConfig;
   admin: Pick<AdminSession, "role" | "permissions">;
   media: Awaited<ReturnType<typeof listStorefrontMedia>>;
   contentKey: EditableWebsitePage;
+  editKind?: "campaign" | "collection";
+  editId?: string;
+  query?: { saved?: string; error?: string };
 }) {
   if (workspace === "settings") {
     return <section aria-label="Website settings workspace" className="space-y-5">
@@ -57,8 +61,9 @@ export function WebsiteWorkspacePanels({ workspace, config, admin, media, conten
     </section>;
   }
   if (workspace === "campaigns") {
+    const catalog = await fetchCrmCatalog();
     return <section aria-label="Campaigns and collections workspace">
-      <WebsiteMerchandisingPanel config={config} />
+      <WebsiteMerchandisingPanel config={config} catalog={catalog} canEdit={hasAdminPermission(admin, "merchandising.edit")} kind={editKind} id={editId} query={query} />
     </section>;
   }
   return <section aria-label="Website media workspace" className="space-y-4">
