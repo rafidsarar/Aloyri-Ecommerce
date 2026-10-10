@@ -30,6 +30,9 @@ test("homepage opens CRM-backed floating search without navigating until a resul
   await expect(page).toHaveURL("/");
   const input = modal.getByRole("combobox", { name: "Search skincare" });
   await expect(input).toBeFocused();
+  // Global keyboard focus must not draw the intrusive brown rectangle around this input.
+  await expect(input).toHaveCSS("outline-style", "none");
+  await expect(input).toHaveCSS("box-shadow", /inset/);
   await input.fill("Skin Aqua");
   await expect(modal.getByRole("listbox", { name: "Search suggestions" }).getByRole("option", { name: /Skin Aqua Super Moisture UV Gel/ }))
     .toHaveAttribute("href", /\/product\/.*skin-aqua-super-moisture-uv-gel$/);
