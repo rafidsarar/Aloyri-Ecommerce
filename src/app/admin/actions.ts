@@ -349,7 +349,6 @@ function applyHomepageControls(config: StorefrontConfig, formData: FormData) {
       categoriesEyebrow: text(formData, "categoriesEyebrow", 90),
       categoriesTitle: text(formData, "categoriesTitle", 140),
       categoriesIntro: text(formData, "categoriesIntro", 300),
-      featureChips: list(text(formData, "featureChips", 1000), 6, 80),
       ideaEyebrow: text(formData, "ideaEyebrow", 120),
       ideaHeadline: text(formData, "ideaHeadline", 180),
       ideaCopy: text(formData, "ideaCopy", 600),

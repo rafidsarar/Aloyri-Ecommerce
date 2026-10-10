@@ -444,11 +444,8 @@ export const defaultStorefrontConfig: StorefrontConfig = {
     categoriesIntro: "Start with a step in your routine, then explore the products that fit.",
     sectionOrder: [...defaultHomepageOrder],
     visualLayout: structuredClone(defaultVisualLayout),
-    featureChips: [
-      "Curated selection",
-      "BDT pricing",
-      "Bangladesh-first storefront",
-    ],
+    // Do not show manufactured selling points before the merchant provides real ones.
+    featureChips: [],
     ideaEyebrow: "The Aloyri idea",
     ideaHeadline: "Less noise. Better product choices.",
     ideaCopy:
@@ -824,11 +821,8 @@ function normalizeConfig(value: Partial<StorefrontConfig> | null): StorefrontCon
             }];
           })
         : [],
-      featureChips:
-        Array.isArray(value.homepage?.featureChips) &&
-        value.homepage.featureChips.length
-          ? value.homepage.featureChips.slice(0, 6)
-          : defaultStorefrontConfig.homepage.featureChips,
+      // Empty remains empty; saved legacy placeholders no longer reappear.
+      featureChips: [],
     },
     visualPages: Object.fromEntries(visualPageKeys.map(key => [key, normalizeVisualPageLayout(value.visualPages?.[key])])) as unknown as Record<VisualPageKey, VisualLayout>,
     pages: {

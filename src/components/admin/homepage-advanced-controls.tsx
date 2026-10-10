@@ -228,16 +228,7 @@ export async function HomepageAdvancedControls({ config }: { config: StorefrontC
                 Product identity, price and stock stay synced from CRM.
               </span>
             </label>
-            <label className="grid gap-1.5 text-sm font-medium">
-              Highlights
-              <textarea
-                name="featureChips"
-                defaultValue={home.featureChips.join("\n")}
-                rows={4}
-                className="rounded-xl border border-black/10 px-4 py-3"
-              />
-              <span className="text-xs font-normal text-black/40">One item per line.</span>
-            </label>
+
           </div>
         </AdminCard>
 

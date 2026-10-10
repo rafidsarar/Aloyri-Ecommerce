@@ -9,7 +9,6 @@ import { BrandMark } from "@/components/brand-mark";
 import { HomepagePromoBanners, activeHomepageBanners } from "@/components/homepage-promo-banners";
 import { HomepageHeroCarousel } from "@/components/homepage-hero-carousel";
 import { HomepageBrandShowcase } from "@/components/homepage-brand-showcase";
-import { HomepageTrustStrip } from "@/components/homepage-trust-strip";
 import { VisualBuilderBlock } from "@/components/visual-builder-block";
 import { HomepageCategoryShowcase } from "@/components/homepage-category-showcase";
 import { HomepageEditorialSections } from "@/components/homepage-editorial-sections";
@@ -179,11 +178,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
               </div>
             </div>
 
-            <div className="store-hero-features flex flex-wrap gap-x-6 gap-y-3 text-xs">
-              {home.featureChips.map((chip) => (
-                <span className="inline-flex items-center gap-2" key={chip}><span className="store-hero-check" aria-hidden="true">✓</span>{chip}</span>
-              ))}
-            </div>
+
           </div>
 
           <div className={`store-hero-art min-w-0 relative min-h-[280px] lg:min-h-[420px] p-6 sm:p-9 lg:p-12 ${config.presentation.showHeroImageOnMobile ? "" : "hidden lg:block"}`}>
@@ -241,7 +236,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
       </section>, ...carouselPromos.map((banner, index) => <HomepagePromoBanners key={index} banners={[banner]} compact products={catalogProducts} bannerOffset={index} />), ...evergreenSlides]} />}
       </>
     ),
-    trust: <HomepageTrustStrip benefits={home.featureChips} />,
     browse: null,
     categories: (
       <>
