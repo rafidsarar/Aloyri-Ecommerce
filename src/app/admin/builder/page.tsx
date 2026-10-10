@@ -5,7 +5,7 @@ import { WebsiteWorkspaceNavigation, workspaceAllowed, type WebsiteWorkspace } f
 import { WebsiteWorkspacePanels } from "@/components/admin/website-workspace-panels";
 import type { EditableWebsitePage } from "@/components/admin/website-page-editor";
 import { HomepageAdvancedControls } from "@/components/admin/homepage-advanced-controls";
-import { hasAdminPermission, requireAdminPermission } from "@/lib/admin-auth";
+import { requireAdminPermission } from "@/lib/admin-auth";
 import { listStorefrontMedia, readDraftStorefrontConfig } from "@/lib/storefront-admin-store";
 import { visualPageKeys, visualPageNames, type VisualPageKey } from "@/lib/visual-builder";
 
@@ -30,7 +30,7 @@ export default async function VisualBuilderPage({
     <AdminShell
       username={admin.username}
       title="Aloyri Storefront Builder"
-      subtitle="Edit existing homepage features, design new sections and manage page layouts in one workspace."
+      subtitle="Edit storefront design, settings, pages, campaigns and media in a consistent, permission-aware workspace."
       wide
     >
       {query.saved ? <AdminNotice>Storefront changes saved to the live website. <Link href="/" target="_blank" className="underline">Open website ↗</Link></AdminNotice> : null}
