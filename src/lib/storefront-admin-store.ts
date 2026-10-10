@@ -2,6 +2,7 @@ import { normalizeHeroProductIds, normalizeHeroDiscountMode, normalizeHeroPromot
 import "server-only";
 import { defaultVisualLayout, normalizeVisualLayout, normalizeVisualPageLayout, visualPageKeys, type VisualLayout, type VisualPageKey } from "@/lib/visual-builder";
 import { defaultHomepageOrder, normalizeHomepageOrder, safeHomepageImagePath, type HomepageBlockId } from "@/lib/homepage-builder";
+import { normalizeHomepageHighlights } from "@/lib/homepage-highlights";
 import { cache } from "react";
 import { revalidatePath } from "next/cache";
 import { defaultPresentation, normalizePresentation, type StorefrontPresentation } from "@/lib/storefront-presentation";
@@ -444,11 +445,8 @@ export const defaultStorefrontConfig: StorefrontConfig = {
     categoriesIntro: "Start with a step in your routine, then explore the products that fit.",
     sectionOrder: [...defaultHomepageOrder],
     visualLayout: structuredClone(defaultVisualLayout),
-    featureChips: [
-      "Curated selection",
-      "BDT pricing",
-      "Bangladesh-first storefront",
-    ],
+    // Do not show manufactured selling points before the merchant provides real ones.
+    featureChips: [],
     ideaEyebrow: "The Aloyri idea",
     ideaHeadline: "Less noise. Better product choices.",
     ideaCopy:
@@ -824,11 +822,8 @@ function normalizeConfig(value: Partial<StorefrontConfig> | null): StorefrontCon
             }];
           })
         : [],
-      featureChips:
-        Array.isArray(value.homepage?.featureChips) &&
-        value.homepage.featureChips.length
-          ? value.homepage.featureChips.slice(0, 6)
-          : defaultStorefrontConfig.homepage.featureChips,
+      // Empty remains empty; saved legacy placeholders no longer reappear.
+      featureChips: normalizeHomepageHighlights(value.homepage?.featureChips),
     },
     visualPages: Object.fromEntries(visualPageKeys.map(key => [key, normalizeVisualPageLayout(value.visualPages?.[key])])) as unknown as Record<VisualPageKey, VisualLayout>,
     pages: {
