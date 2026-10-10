@@ -12,7 +12,7 @@ import { visualPageKeys, visualPageNames, type VisualPageKey } from "@/lib/visua
 export default async function VisualBuilderPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string; error?: string; page?: string; view?: string; workspace?: string; content?: string; kind?: string; id?: string }>;
+  searchParams: Promise<{ saved?: string; deleted?: string; error?: string; page?: string; view?: string; workspace?: string; content?: string; kind?: string; id?: string }>;
 }) {
   const admin = await requireAdminPermission("homepage.view");
   const [config, query, media] = await Promise.all([readDraftStorefrontConfig(), searchParams, listStorefrontMedia()]);
@@ -33,7 +33,8 @@ export default async function VisualBuilderPage({
       subtitle="Edit storefront design, settings, pages, campaigns and media in a consistent, permission-aware workspace."
       wide
     >
-      {query.saved ? <AdminNotice>Storefront changes saved to the live website. <Link href="/" target="_blank" className="underline">Open website ↗</Link></AdminNotice> : null}
+      {query.saved ? <AdminNotice>{workspace === "campaigns" ? "Campaign or collection saved." : "Website changes saved."} <Link href="/" target="_blank" rel="noopener noreferrer" className="underline">Open website ↗</Link></AdminNotice> : null}
+      {query.deleted ? <AdminNotice>Campaign or collection deleted successfully.</AdminNotice> : null}
       {query.error ? <AdminNotice tone="warning">The design could not be saved. Check its content and try again.</AdminNotice> : null}
       <WebsiteWorkspaceNavigation admin={admin} selected={workspace} />
       {workspace === "design" ? <>
