@@ -228,17 +228,7 @@ export async function HomepageAdvancedControls({ config }: { config: StorefrontC
                 Product identity, price and stock stay synced from CRM.
               </span>
             </label>
-            <label className="grid gap-1.5 text-sm font-medium">
-              Optional verified shopping highlights
-              <textarea
-                name="featureChips"
-                defaultValue={home.featureChips.join("\n")}
-                rows={3}
-                placeholder="Leave empty to hide the highlights row"
-                className="rounded-xl border border-black/10 px-4 py-3"
-              />
-              <span className="text-xs font-normal text-black/50">Use only real, specific customer benefits you can verify. One per line; leave empty to keep the homepage product-focused.</span>
-            </label>
+
           </div>
         </AdminCard>
 
