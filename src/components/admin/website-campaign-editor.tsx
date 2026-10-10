@@ -374,6 +374,7 @@ export function WebsiteCampaignEditor({ id, query = {}, config, catalog, inBuild
 
       {!isNew ? (
         <form action={deleteCampaign} className="mt-5">
+          {inBuilder ? <input type="hidden" name="builderWorkspace" value="campaigns" /> : null}
           <input type="hidden" name="id" value={campaign!.id} />
           <AdminCard>
             <p className="text-sm font-semibold text-red-700">Delete campaign</p>
