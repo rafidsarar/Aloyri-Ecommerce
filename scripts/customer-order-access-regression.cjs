@@ -14,6 +14,7 @@ const tracked={orderNumber,created:'2026-10-08',status:'New',paymentMethod:'COD'
 const original=Module._load;
 Module._load=function(name,parent,isMain){
  if(name==='next/navigation')return {unstable_rethrow:()=>{},redirect:url=>{throw new Error('REDIRECT:'+url);}};
+ if(name==='@/lib/e2e-isolation')return {e2eCrmEndpointAllowed:()=>true,e2eMediaEndpointAllowed:()=>true};
  if(name==='@/lib/customer-auth')return {currentCustomerSession:async()=>session};
  if(name==='@/lib/order-tracking')return {fetchOrderTracking:async input=>{calls.push(input);return available?{ok:true,body:tracked}:{ok:false,body:{error:'Unavailable'}};}};
  if(name==='@/lib/crm-invoice-integration')return {fetchCrmOrderInvoice:async input=>{calls.push(input);return available?{ok:true,body:{pdf:Buffer.from('%PDF-1.7\nCRM Invoice')}}:{ok:false};}};
