@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { defaultHomepageOrder, normalizeHomepageOrder, safeHomepageImagePath } from "../src/lib/homepage-builder";
+import { normalizeHomepageHighlights } from "../src/lib/homepage-highlights";
 
 test("homepage section order ignores unknown blocks and duplicate IDs", () => {
   const order = normalizeHomepageOrder(["brandStory", "hero", "hero", "checkout", null, "products"]);
@@ -39,4 +40,27 @@ test("customer storefront keeps search, categories, account, cart and order trac
 test("homepage editor requires admin login", async ({ page }) => {
   await page.goto("/admin/homepage");
   await expect(page).not.toHaveURL(/\/admin\/homepage$/);
+});
+
+test("homepage suppresses hard-coded generic selling points but preserves real admin highlights", () => {
+  const generic = [
+    "Curated selection",
+    "BDT pricing",
+    "Bangladesh-first storefront",
+  ];
+  expect(normalizeHomepageHighlights(generic)).toEqual([]);
+  expect(normalizeHomepageHighlights(["", "  BDT PRICING  ", null])).toEqual([]);
+  expect(normalizeHomepageHighlights(["Ships via a named courier", "Free shipping on orders above ৳1,500"])).toEqual([
+    "Ships via a named courier",
+    "Free shipping on orders above ৳1,500",
+  ]);
+  expect(normalizeHomepageHighlights(undefined)).toEqual([]);
+});
+
+test("default homepage has no placeholder benefits bar between hero and categories", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByText("Bangladesh-first storefront")).toHaveCount(0);
+  await expect(page.getByText("Curated selection")).toHaveCount(0);
+  await expect(page.getByText("BDT pricing", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "Why shop Aloyri" })).toHaveCount(0);
 });
