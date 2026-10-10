@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { AdminNotice, AdminShell } from "@/components/admin/admin-shell";
 import { VisualBuilderStudio } from "@/components/admin/visual-builder-studio";
-import { WebsiteWorkspaceNavigation, workspaceAllowed, type WebsiteWorkspace } from "@/components/admin/website-workspace-navigation";
+import { WebsiteWorkspaceNavigation, type WebsiteWorkspace } from "@/components/admin/website-workspace-navigation";
 import { WebsiteWorkspacePanels } from "@/components/admin/website-workspace-panels";
 import type { EditableWebsitePage } from "@/components/admin/website-page-editor";
 import { HomepageAdvancedControls } from "@/components/admin/homepage-advanced-controls";
-import { requireAdminPermission } from "@/lib/admin-auth";
+import { requireAdminPermission, type AdminPermission } from "@/lib/admin-auth";
 import { listStorefrontMedia, readDraftStorefrontConfig } from "@/lib/storefront-admin-store";
 import { visualPageKeys, visualPageNames, type VisualPageKey } from "@/lib/visual-builder";
 
@@ -14,13 +14,21 @@ export default async function VisualBuilderPage({
 }: {
   searchParams: Promise<{ saved?: string; deleted?: string; error?: string; page?: string; view?: string; workspace?: string; content?: string; kind?: string; id?: string }>;
 }) {
-  const admin = await requireAdminPermission("homepage.view");
-  const [config, query, media] = await Promise.all([readDraftStorefrontConfig(), searchParams, listStorefrontMedia()]);
-
+  const query = await searchParams;
   const workspaceOptions: WebsiteWorkspace[] = ["design", "settings", "pages", "campaigns", "media"];
   const requested = workspaceOptions.includes(query.workspace as WebsiteWorkspace)
     ? query.workspace as WebsiteWorkspace : "design";
-  const workspace = workspaceAllowed(admin, requested) ? requested : "design";
+  const workspacePermissions: Record<WebsiteWorkspace, AdminPermission> = {
+    design: "homepage.view",
+    settings: "settings.view",
+    pages: "pages.view",
+    campaigns: "merchandising.view",
+    media: "media.view",
+  };
+  // Authorize the selected workspace before loading any page or media records.
+  const admin = await requireAdminPermission(workspacePermissions[requested]);
+  const [config, media] = await Promise.all([readDraftStorefrontConfig(), listStorefrontMedia()]);
+  const workspace = requested;
   const contentOptions: EditableWebsitePage[] = ["about", "shipping", "returns", "contact", "faq"];
   const contentKey = contentOptions.includes(query.content as EditableWebsitePage)
     ? query.content as EditableWebsitePage : "about";
