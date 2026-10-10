@@ -17,7 +17,7 @@ test("desktop category mega-menu follows the live catalog without replacing floa
   await expect(nav.getByRole("link", { name: "Lip care" })).toHaveAttribute("href", "/category/lip-care");
   await page.keyboard.press("Escape");
   await expect(nav.getByRole("link", { name: "Lip care" })).not.toBeVisible();
-  await page.getByRole("button", { name: "Search products" }).click();
+  await page.locator(".store-header").getByRole("button", { name: "Search products" }).click();
   await expect(page.getByRole("dialog", { name: "Search discovery" })).toBeVisible();
 });
 
