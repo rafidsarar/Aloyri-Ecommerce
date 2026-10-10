@@ -1,3 +1,5 @@
+import { volatileStorage } from "@/lib/volatile-storage";
+import { HERO_BANNER_CLAIM_KEY, claimOffer, type HeroBannerOffer } from "@/lib/hero-banner-offers";
 "use client";
 
 import { useState } from "react";
@@ -9,10 +11,12 @@ export function AddToCart({
   productId,
   compact = false,
   ariaLabel,
+  bannerOffer,
 }: {
   productId: string;
   compact?: boolean;
   ariaLabel?: string;
+  bannerOffer?: HeroBannerOffer;
 }) {
   const [added, setAdded] = useState(false);
   const { product, synced, error } = useCatalogProduct(productId);
@@ -34,6 +38,10 @@ export function AddToCart({
     }
 
     writeCart(items);
+    if (bannerOffer?.productIds.includes(productId)) {
+      const claim = claimOffer(bannerOffer);
+      if (claim) volatileStorage.setItem(HERO_BANNER_CLAIM_KEY, JSON.stringify(claim));
+    }
     trackStorefrontEvent("add_to_cart", { productId });
     setAdded(true);
     window.setTimeout(() => setAdded(false), 1500);
