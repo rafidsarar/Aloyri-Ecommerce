@@ -275,7 +275,9 @@ export async function deleteCollection(formData: FormData) {
     );
   }
 
-  redirect("/admin/merchandising/collections?deleted=1");
+  redirect(formData.get("builderWorkspace") === "campaigns"
+    ? "/admin/builder?workspace=campaigns&deleted=1"
+    : "/admin/merchandising/collections?deleted=1");
 }
 
 export async function saveCampaign(formData: FormData) {
@@ -430,7 +432,9 @@ export async function deleteCampaign(formData: FormData) {
     );
   }
 
-  redirect("/admin/merchandising/campaigns?deleted=1");
+  redirect(formData.get("builderWorkspace") === "campaigns"
+    ? "/admin/builder?workspace=campaigns&deleted=1"
+    : "/admin/merchandising/campaigns?deleted=1");
 }
 
 export async function saveProductMerchandising(formData: FormData) {
