@@ -195,3 +195,37 @@ test("shop prioritizes the catalog above the fold and tucks away advanced filter
   await page.getByLabel("Brand", { exact: true }).selectOption("Simple");
   await expect(page.getByRole("button", { name: "Remove brand: Simple" })).toBeVisible();
 });
+
+
+for (const width of [320, 390, 768, 1440]) {
+  test("floating search uses a compact, accessible layout at " + width + "px", async ({ page }) => {
+    await mockCatalog(page);
+    await page.setViewportSize({ width, height: 820 });
+    await page.goto("/");
+    await page.getByRole("search", { name: "Search skincare products" })
+      .getByRole("button", { name: "Search products and brands" }).click();
+
+    const modal = page.getByRole("dialog", { name: "Search discovery" });
+    const field = modal.getByRole("combobox", { name: "Search skincare" });
+    await expect(modal).toBeVisible();
+    await expect(field).toBeFocused();
+    const bounds = await modal.boundingBox();
+    expect(bounds).not.toBeNull();
+    expect(bounds!.x).toBeGreaterThanOrEqual(0);
+    expect(bounds!.width).toBeLessThanOrEqual(Math.min(width - 24, 822));
+    expect(bounds!.height).toBeLessThan(740);
+    expect(await field.evaluate(element => getComputedStyle(element).outlineStyle)).toBe("none");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+
+    await field.fill("Skin Aqua");
+    const suggestion = modal.getByRole("option", { name: /Skin Aqua Super Moisture UV Gel/ });
+    await expect(suggestion).toBeVisible();
+    await field.press("ArrowDown");
+    await expect(suggestion).toBeFocused();
+    await suggestion.press("ArrowUp");
+    await expect(field).toBeFocused();
+    await field.press("Escape");
+    await expect(modal).toHaveCount(0);
+    await expect(page).toHaveURL("/");
+  });
+}
