@@ -177,7 +177,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
     if (block) change({ ...layout, blocks: layout.blocks.map(item => item.id === block.id ? { ...item, enabled: !item.enabled } : item) });
   }
 
-  const deviceWidths = { mobile: 390, tablet: 768, desktop: 1060 };
+  const deviceWidths = { mobile: 390, tablet: 820, desktop: 1280 };
   return (
     <form action={saveVisualBuilder} className="space-y-4">
       <input type="hidden" name="layout" value={JSON.stringify(layout)} />
