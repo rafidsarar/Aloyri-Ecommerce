@@ -28,3 +28,9 @@ test.describe("Ecommerce certification connection isolation", () => {
     expect(e2eExternalEndpointAllowed(allowed, allowed + "/api", "1")).toBe(false);
   });
 });
+
+test("E2E readiness endpoint is hidden when certification mode is not enabled", async ({ request }) => {
+  test.skip(process.env.ALOYRI_E2E_MODE === "1" && process.env.VERCEL_ENV === "preview", "Active isolated certification preview.");
+  const response = await request.get("/api/e2e/readiness");
+  expect(response.status()).toBe(404);
+});
