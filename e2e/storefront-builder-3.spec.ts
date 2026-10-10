@@ -10,6 +10,13 @@ test.describe("no-code storefront builder", () => {
     });
   }
 
+  test("unauthed website control center and settings remain protected", async ({ page }) => {
+    await page.goto("/admin/builder");
+    await expect(page).not.toHaveURL(/\/admin\/builder$/);
+    await page.goto("/admin/settings");
+    await expect(page).not.toHaveURL(/\/admin\/settings$/);
+  });
+
   test("unpublished customization tools are protected", async ({ page }) => {
     await page.goto("/admin/preview-device");
     await expect(page).not.toHaveURL(/\/admin\/preview-device$/);
