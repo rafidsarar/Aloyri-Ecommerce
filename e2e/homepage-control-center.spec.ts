@@ -19,7 +19,8 @@ test("homepage media only accepts private library paths", () => {
 test("customer storefront keeps search, categories, account, cart and order tracking", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
-  await expect(page.getByRole("search", { name: "Search skincare products" })).toBeVisible();
+  await expect(page.getByRole("search", { name: "Search skincare products" })).toHaveCount(0);
+  await expect(page.locator(".store-header").getByRole("button", { name: "Search products" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Shop by category" })).toBeVisible();
   const accountButton = page.getByRole("button", { name: "Account menu" });
   await expect(accountButton).toBeVisible();

@@ -85,7 +85,8 @@ test("visual builder admin page requires authenticated permission", async ({ pag
 test("visual builder release preserves customer store entry points", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
-  await expect(page.getByRole("search", { name: "Search skincare products" })).toBeVisible();
+  await expect(page.getByRole("search", { name: "Search skincare products" })).toHaveCount(0);
+  await expect(page.locator(".store-header").getByRole("button", { name: "Search products" })).toBeVisible();
   await page.getByRole("button", { name: "Account menu" }).click();
   await expect(page.getByRole("navigation", { name: "Account shortcuts" }).getByRole("link", { name: "My account" })).toHaveAttribute("href", "/account");
   await expect(page.getByRole("button", { name: /^Cart(?: with .*)?$/ }).first()).toBeVisible();

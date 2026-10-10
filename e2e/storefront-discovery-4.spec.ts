@@ -22,9 +22,11 @@ test("homepage opens CRM-backed floating search without navigating until a resul
   await mockCatalog(page);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
-  const homeSearch = page.getByRole("search", { name: "Search skincare products" });
+  // Inline homepage search is intentionally absent; the global header search remains.
+  await expect(page.getByRole("search", { name: "Search skincare products" })).toHaveCount(0);
+  const homeSearch = page.locator(".store-header").getByRole("button", { name: "Search products" });
   await expect(homeSearch).toBeVisible();
-  await homeSearch.getByRole("button", { name: "Search products and brands" }).click();
+  await homeSearch.click();
   const modal = page.getByRole("dialog", { name: "Search discovery" });
   await expect(modal).toBeVisible();
   await expect(page).toHaveURL("/");
@@ -37,7 +39,7 @@ test("homepage opens CRM-backed floating search without navigating until a resul
   await input.press("Escape");
   await expect(modal).toHaveCount(0);
   await expect(page).toHaveURL("/");
-  await homeSearch.getByRole("button", { name: "Search products and brands" }).click();
+  await homeSearch.click();
   await modal.getByRole("combobox", { name: "Search skincare" }).fill("Skin Aqua");
   await modal.getByRole("button", { name: /View all results for/ }).click();
   await expect(page).toHaveURL(/\/shop\?q=Skin(\+|%20)Aqua/);
@@ -77,7 +79,7 @@ for (const width of [320, 390, 768, 1440]) {
     await mockCatalog(page);
     await page.setViewportSize({ width, height: 800 });
     await page.goto("/");
-    await expect(page.getByRole("search", { name: "Search skincare products" })).toBeVisible();
+    await expect(page.locator(".store-header").getByRole("button", { name: "Search products" })).toBeVisible();
     const gallery = page.getByLabel("Browse CRM skincare categories");
     await expect(gallery).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -91,7 +93,7 @@ for (const width of [320, 390, 768, 1440]) {
 test("floating search retains categories, product suggestions and session-only recent searches", async ({ page }) => {
   await mockCatalog(page);
   await page.goto("/");
-  await page.getByRole("search", { name: "Search skincare products" }).getByRole("button", { name: "Search products and brands" }).click();
+  await page.locator(".store-header").getByRole("button", { name: "Search products" }).click();
   const modal = page.getByRole("dialog", { name: "Search discovery" });
   const input = modal.getByRole("combobox", { name: "Search skincare" });
   await expect(modal.getByRole("tab", { name: "All" })).toHaveAttribute("aria-selected", "true");
