@@ -5,7 +5,10 @@ import type { HomepageBlockId } from "@/lib/homepage-builder";
 import Image from "next/image";
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
-import { HomepagePromoBanners } from "@/components/homepage-promo-banners";
+import { HomepagePromoBanners, activeHomepageBanners } from "@/components/homepage-promo-banners";
+import { HomepageHeroCarousel } from "@/components/homepage-hero-carousel";
+import { HomepageBrandShowcase } from "@/components/homepage-brand-showcase";
+import { HomepageTrustStrip } from "@/components/homepage-trust-strip";
 import { VisualBuilderBlock } from "@/components/visual-builder-block";
 import { HomepageCategoryShowcase } from "@/components/homepage-category-showcase";
 import { HomepageDiscoverySearch } from "@/components/homepage-discovery-search";
@@ -108,10 +111,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
     (section) => section.enabled,
   );
 
+  const carouselPromos = home.showHero && home.promoPlacement === "before-products"
+    ? activeHomepageBanners(home.promoBanners) : [];
+
   const blocks: Record<HomepageBlockId, ReactNode> = {
     hero: (
       <>
-      {home.showHero && <section className="shell pt-5 md:pt-8">
+      {home.showHero && <HomepageHeroCarousel slides={[<section key="intro" className="shell pt-5 md:pt-8">
         <div className={`store-hero store-hero-${home.heroStyle} store-hero-align-${home.heroAlignment} grid min-h-[490px] overflow-hidden rounded-[2rem] border ${home.heroLayout === "stacked" ? "grid-cols-1" : "lg:grid-cols-[1.03fr_.97fr]"}`}>
           <div className="store-hero-copy min-w-0 relative z-10 flex flex-col justify-between p-7 sm:p-10 lg:p-14">
             <div className="store-home-overline flex items-center gap-3">
@@ -198,9 +204,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
             </div>
           </div>
         </div>
-      </section>}
+      </section>, ...carouselPromos.map((banner, index) => <HomepagePromoBanners key={index} banners={[banner]} />)]} />}
       </>
     ),
+    trust: <HomepageTrustStrip benefits={home.featureChips} />,
     browse: (
       <>
       {home.showBrowse && <section className="shell pt-7 md:pt-9" aria-label="Find your skincare">
@@ -222,11 +229,12 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
       {home.showCategories ? <HomepageCategoryShowcase products={catalogProducts} categories={crm.ok ? crm.body.categories : []} eyebrow={home.categoriesEyebrow} title={home.categoriesTitle} intro={home.categoriesIntro} /> : null}
       </>
     ),
+    brands: <HomepageBrandShowcase products={crm.ok ? catalogProducts : []} />,
     focus: (
       <>
       {home.showFocus ? (
         <nav aria-label="Shop by skincare focus" className="shell flex flex-wrap items-center gap-2 pb-6">
-          <span className="store-discovery-muted mr-2 text-xs font-semibold">Explore by focus</span>
+          <span className="store-discovery-muted mr-2 text-xs font-semibold uppercase tracking-widest">Shop by skincare need</span>
           {[
             ["Hydration", "hydration"],
             ["Light textures", "lightweight"],
@@ -286,7 +294,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
     ),
     promoBeforeProducts: (
       <>
-      {home.promoPlacement === "before-products" ? <HomepagePromoBanners banners={home.promoBanners} /> : null}
+      {home.promoPlacement === "before-products" && !home.showHero ? <HomepagePromoBanners banners={home.promoBanners} /> : null}
       </>
     ),
     products: (

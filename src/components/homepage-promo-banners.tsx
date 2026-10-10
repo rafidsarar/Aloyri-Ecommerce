@@ -13,13 +13,15 @@ function inSchedule(startAt: string, endAt: string, now: number) {
 
 function serverTimestamp() { return Date.now(); }
 
+export function activeHomepageBanners(banners: StorefrontConfig["homepage"]["promoBanners"]) {
+  const now = serverTimestamp();
+  return banners.filter(banner => banner.enabled && banner.title.trim() && inSchedule(banner.startAt, banner.endAt, now));
+}
+
 export function HomepagePromoBanners({ banners }: {
   banners: StorefrontConfig["homepage"]["promoBanners"];
 }) {
-  const now = serverTimestamp();
-  const visible = banners.filter((banner) =>
-    banner.enabled && banner.title.trim() && inSchedule(banner.startAt, banner.endAt, now)
-  );
+  const visible = activeHomepageBanners(banners);
   if (!visible.length) return null;
 
   return (
