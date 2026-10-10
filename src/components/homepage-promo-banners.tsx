@@ -46,7 +46,7 @@ export function HomepagePromoBanners({ banners, compact = false, products = [], 
               </Link>
             ) : null}
           </div>
-          <div className={"store-promo-visual relative min-h-[220px] overflow-hidden sm:min-h-[280px] " + (banner.mobileLayout === "compact" ? "hidden sm:block" : "")}>
+          <div className={"store-promo-visual relative min-h-[220px] overflow-hidden sm:min-h-[280px] " + (banner.mobileLayout === "compact" && !banner.productIds.length ? "hidden sm:block" : "")}>
             {banner.productIds.length && products.some(product => banner.productIds.includes(product.id) && product.active !== false) ? (
               <HeroProductGallery
                 products={banner.productIds.flatMap(id => {
