@@ -22,12 +22,12 @@ export function WebsiteWorkspaceNavigation({ admin, selected }: {
 }) {
   return (
     <div className="mb-5 space-y-3">
-      <nav aria-label="Storefront Builder workspaces" className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+      <nav aria-label="Storefront Builder workspaces" className="flex snap-x gap-2 overflow-x-auto pb-2 lg:grid lg:grid-cols-5 lg:overflow-visible">
         {areas.filter(item => hasAdminPermission(admin, item.permission)).map(item => (
           <Link key={item.id} href={`/admin/builder?workspace=${item.id}`} aria-current={selected === item.id ? "page" : undefined}
-            className={`min-w-0 rounded-xl border px-3 py-3 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#713a35] ${selected === item.id ? "border-[#713a35] bg-[#713a35] text-white" : "border-black/10 bg-white text-[#432824] hover:border-[#713a35]/35"}`}>
+            className={`min-w-[150px] shrink-0 snap-start rounded-xl border px-3 py-3 transition lg:min-w-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#713a35] ${selected === item.id ? "border-[#713a35] bg-[#713a35] text-white" : "border-black/10 bg-white text-[#432824] hover:border-[#713a35]/35"}`}>
             <span className="block text-sm font-semibold">{item.label}</span>
-            <span className={`mt-1 block text-xs leading-5 ${selected === item.id ? "text-white/80" : "text-black/55"}`}>{item.description}</span>
+            <span className={`mt-1 hidden text-xs leading-5 lg:block ${selected === item.id ? "text-white/80" : "text-black/55"}`}>{item.description}</span>
           </Link>
         ))}
       </nav>
