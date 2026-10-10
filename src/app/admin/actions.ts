@@ -1,3 +1,4 @@
+import { normalizeHeroProductIds, normalizeHeroDiscountMode, normalizeHeroPromotionCode } from "@/lib/hero-banner-offers";
 "use server";
 
 import { normalizePresentation, safeNavigationHref } from "@/lib/storefront-presentation";
@@ -329,6 +330,9 @@ function applyHomepageControls(config: StorefrontConfig, formData: FormData) {
         config.homepage.secondaryHref,
       ),
       heroProductId: text(formData, "heroProductId", 120) || config.homepage.heroProductId,
+      heroProductIds: normalizeHeroProductIds(formData.getAll("heroProductIds")),
+      heroDiscountMode: normalizeHeroDiscountMode(formData.get("heroDiscountMode")),
+      heroPromotionCode: normalizeHeroPromotionCode(formData.get("heroPromotionCode")),
       heroImagePath: safeHomepageImagePath(text(formData, "heroImagePath", 200)),
       heroStyle: ["soft", "minimal", "contrast"].includes(text(formData, "heroStyle", 10))
         ? text(formData, "heroStyle", 10) as "soft" | "minimal" | "contrast"
@@ -369,6 +373,9 @@ function applyHomepageControls(config: StorefrontConfig, formData: FormData) {
           layout: formData.get(`${prefix}Layout`) === "centered" ? "centered" as const : "split" as const,
           mobileLayout: formData.get(`${prefix}MobileLayout`) === "compact" ? "compact" as const : "stacked" as const,
           imagePath: text(formData, `${prefix}ImagePath`, 200),
+          productIds: normalizeHeroProductIds(formData.getAll(`${prefix}ProductIds`)),
+          discountMode: normalizeHeroDiscountMode(formData.get(`${prefix}DiscountMode`)),
+          promotionCode: normalizeHeroPromotionCode(formData.get(`${prefix}PromotionCode`)),
           startAt: text(formData, `${prefix}StartAt`, 16),
           endAt: text(formData, `${prefix}EndAt`, 16),
         };
