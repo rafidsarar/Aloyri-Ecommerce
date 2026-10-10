@@ -1,3 +1,5 @@
+import { HeroProductGallery } from "@/components/hero-product-gallery";
+import type { Product } from "@/lib/catalog";
 import Image from "next/image";
 import Link from "next/link";
 import { storefrontMediaUrl, type StorefrontConfig } from "@/lib/storefront-admin-store";
@@ -18,9 +20,11 @@ export function activeHomepageBanners(banners: StorefrontConfig["homepage"]["pro
   return banners.filter(banner => banner.enabled && banner.title.trim() && inSchedule(banner.startAt, banner.endAt, now));
 }
 
-export function HomepagePromoBanners({ banners, compact = false }: {
+export function HomepagePromoBanners({ banners, compact = false, products = [], bannerOffset = 0 }: {
   banners: StorefrontConfig["homepage"]["promoBanners"];
   compact?: boolean;
+  products?: Product[];
+  bannerOffset?: number;
 }) {
   const visible = activeHomepageBanners(banners);
   if (!visible.length) return null;
@@ -31,6 +35,9 @@ export function HomepagePromoBanners({ banners, compact = false }: {
         <section key={index} className={"store-promo relative grid min-w-0 overflow-hidden rounded-[1.85rem] border " + (banner.layout === "centered" ? "store-promo-centered" : "store-promo-split")}>
           <div className="store-promo-copy relative z-10 flex min-w-0 flex-col items-start justify-center p-7 sm:p-10 lg:p-14">
             {banner.eyebrow ? <p className="store-home-overline">{banner.eyebrow}</p> : null}
+            {banner.discountMode === "label" ? <p className="hero-offer-badge mt-3">5% OFF <span>Banner label only</span></p> :
+              banner.discountMode === "checkout" && banner.promotionCode && banner.productIds.length ?
+                <p className="hero-offer-badge mt-3">5% OFF <span>Eligible products at checkout</span></p> : null}
             <h2 className="display mt-3 max-w-2xl text-[clamp(2rem,4vw,3.7rem)] leading-[1.06]">{banner.title}</h2>
             {banner.copy ? <p className="store-home-muted mt-5 max-w-xl text-sm leading-7 sm:text-base">{banner.copy}</p> : null}
             {banner.ctaHref && banner.ctaLabel ? (
@@ -40,7 +47,16 @@ export function HomepagePromoBanners({ banners, compact = false }: {
             ) : null}
           </div>
           <div className={"store-promo-visual relative min-h-[220px] overflow-hidden sm:min-h-[280px] " + (banner.mobileLayout === "compact" ? "hidden sm:block" : "")}>
-            {banner.imagePath ? (
+            {banner.productIds.length && products.some(product => banner.productIds.includes(product.id) && product.active !== false) ? (
+              <HeroProductGallery
+                products={banner.productIds.flatMap(id => {
+                  const product = products.find(value => value.id === id && value.active !== false);
+                  return product ? [product] : [];
+                })}
+                offer={{ bannerId: `promo-${bannerOffset + index}`, mode: banner.discountMode,
+                  promotionCode: banner.promotionCode, productIds: banner.productIds }}
+              />
+            ) : banner.imagePath ? (
               <Image
                 src={storefrontMediaUrl(banner.imagePath)}
                 alt={banner.title}
