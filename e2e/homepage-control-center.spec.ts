@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { defaultHomepageOrder, normalizeHomepageOrder, safeHomepageImagePath } from "../src/lib/homepage-builder";
+import { defaultHomepageOrder, homepageBlocks, normalizeHomepageOrder, safeHomepageImagePath } from "../src/lib/homepage-builder";
+import { normalizeVisualLayout } from "../src/lib/visual-builder";
 
 test("homepage section order ignores unknown blocks and duplicate IDs", () => {
   const order = normalizeHomepageOrder(["brandStory", "hero", "hero", "checkout", null, "products"]);
@@ -46,4 +47,17 @@ test("homepage omits the marketing benefits bar and hero highlights", async ({ p
   await expect(page.locator(".store-benefits, .store-benefit, .store-hero-features")).toHaveCount(0);
   await expect(page.getByRole("region", { name: "Why shop Aloyri" })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Shop by category" })).toBeVisible();
+});
+
+test("removed benefits block cannot return through a saved Storefront Builder layout", () => {
+  expect(defaultHomepageOrder).not.toContain("trust");
+  expect(homepageBlocks.map(section => section.label)).not.toContain("Shopping benefits");
+  const migrated = normalizeVisualLayout({
+    order: ["core:hero", "core:trust", "core:categories"],
+    hiddenCore: ["trust"],
+    blocks: [],
+  });
+  expect(migrated.order).not.toContain("core:trust");
+  expect(migrated.hiddenCore).not.toContain("trust");
+  expect(migrated.order).toContain("core:categories");
 });
