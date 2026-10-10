@@ -113,10 +113,33 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
   const carouselPromos = home.showHero && home.promoPlacement === "before-products"
     ? activeHomepageBanners(home.promoBanners) : [];
 
+  // When no promotional banners are configured, offer evergreen discovery cards
+  // rather than inventing prices, discounts, or stock claims.
+  const evergreenSlides: ReactNode[] = carouselPromos.length ? [] : [
+    <section key="bestsellers" className="store-campaign-editorial store-campaign-editorial-bestsellers">
+      <div className="store-campaign-editorial-copy">
+        <p className="store-home-overline">Explore Aloyri</p>
+        <h2 className="display store-campaign-editorial-title">Meet your next skincare favourite.</h2>
+        <p className="store-campaign-editorial-subtitle">Browse the products our community loves to discover.</p>
+        <Link href="/shop?sort=bestseller" className="store-campaign-editorial-link">Shop bestsellers <ArrowIcon /></Link>
+      </div>
+      <span className="store-campaign-editorial-mark" aria-hidden="true">A</span>
+    </section>,
+    <section key="routine" className="store-campaign-editorial store-campaign-editorial-routine">
+      <div className="store-campaign-editorial-copy">
+        <p className="store-home-overline">A little guidance</p>
+        <h2 className="display store-campaign-editorial-title">Your routine, made simpler.</h2>
+        <p className="store-campaign-editorial-subtitle">Find a starting point for everyday skincare.</p>
+        <Link href="/routine-finder" className="store-campaign-editorial-link">Find your routine <ArrowIcon /></Link>
+      </div>
+      <span className="store-campaign-editorial-mark" aria-hidden="true">A</span>
+    </section>,
+  ];
+
   const blocks: Record<HomepageBlockId, ReactNode> = {
     hero: (
       <>
-      {home.showHero && <HomepageHeroCarousel slides={[<section key="intro" className="shell pt-5 md:pt-8">
+      {home.showHero && <HomepageHeroCarousel slides={[<section key="intro" className="store-campaign-intro">
         <div className={`store-hero store-hero-${home.heroStyle} store-hero-align-${home.heroAlignment} grid min-h-[490px] overflow-hidden rounded-[2rem] border ${home.heroLayout === "stacked" ? "grid-cols-1" : "lg:grid-cols-[1.03fr_.97fr]"}`}>
           <div className="store-hero-copy min-w-0 relative z-10 flex flex-col justify-between p-7 sm:p-10 lg:p-14">
             <div className="store-home-overline flex items-center gap-3">
@@ -203,7 +226,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
             </div>
           </div>
         </div>
-      </section>, ...carouselPromos.map((banner, index) => <HomepagePromoBanners key={index} banners={[banner]} />)]} />}
+      </section>, ...carouselPromos.map((banner, index) => <HomepagePromoBanners key={index} banners={[banner]} compact />), ...evergreenSlides]} />}
       </>
     ),
     trust: <HomepageTrustStrip benefits={home.featureChips} />,

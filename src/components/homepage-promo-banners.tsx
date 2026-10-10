@@ -18,14 +18,15 @@ export function activeHomepageBanners(banners: StorefrontConfig["homepage"]["pro
   return banners.filter(banner => banner.enabled && banner.title.trim() && inSchedule(banner.startAt, banner.endAt, now));
 }
 
-export function HomepagePromoBanners({ banners }: {
+export function HomepagePromoBanners({ banners, compact = false }: {
   banners: StorefrontConfig["homepage"]["promoBanners"];
+  compact?: boolean;
 }) {
   const visible = activeHomepageBanners(banners);
   if (!visible.length) return null;
 
   return (
-    <div className="shell grid gap-5 py-8 md:py-12" aria-label="Storefront promotions">
+    <div className={compact ? "store-campaign-promo" : "shell grid gap-5 py-8 md:py-12"} aria-label="Storefront promotions">
       {visible.map((banner, index) => (
         <section key={index} className={"store-promo relative grid min-w-0 overflow-hidden rounded-[1.85rem] border " + (banner.layout === "centered" ? "store-promo-centered" : "store-promo-split")}>
           <div className="store-promo-copy relative z-10 flex min-w-0 flex-col items-start justify-center p-7 sm:p-10 lg:p-14">
