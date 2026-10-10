@@ -610,7 +610,9 @@ export async function saveSiteSettings(formData: FormData) {
     scope: "settings",
   });
 
-  redirect("/admin/settings?saved=1");
+  redirect(formData.get("builderWorkspace") === "settings"
+    ? "/admin/builder?workspace=settings&saved=1"
+    : "/admin/settings?saved=1");
 }
 
 export async function saveProductEditorial(formData: FormData) {
