@@ -294,7 +294,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
     ),
     promoBeforeProducts: (
       <>
-      {home.promoPlacement === "before-products" && !home.showHero ? <HomepagePromoBanners banners={home.promoBanners} /> : null}
+      {home.promoPlacement === "before-products" && (!home.showHero || home.visualLayout.hiddenCore.includes("hero")) ? <HomepagePromoBanners banners={home.promoBanners} /> : null}
       </>
     ),
     products: (
