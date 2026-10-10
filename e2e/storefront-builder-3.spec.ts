@@ -17,6 +17,21 @@ test.describe("no-code storefront builder", () => {
     await expect(page).not.toHaveURL(/\/admin\/settings$/);
   });
 
+  test("all unified Builder workspaces reject unauthenticated visits", async ({ page }) => {
+    for (const workspace of ["design", "settings", "pages", "campaigns", "media"]) {
+      await page.goto("/admin/builder?workspace=" + workspace);
+      expect(new URL(page.url()).pathname).not.toBe("/admin/builder");
+      await expect(page.getByRole("heading", { name: "Edit pages and FAQ" })).toHaveCount(0);
+    }
+  });
+
+  test("existing page, campaign and media editors keep their authentication", async ({ page }) => {
+    for (const route of ["/admin/pages/about", "/admin/pages/faq", "/admin/merchandising/campaigns", "/admin/media"]) {
+      await page.goto(route);
+      expect(new URL(page.url()).pathname).not.toBe(route);
+    }
+  });
+
   test("unpublished customization tools are protected", async ({ page }) => {
     await page.goto("/admin/preview-device");
     await expect(page).not.toHaveURL(/\/admin\/preview-device$/);
