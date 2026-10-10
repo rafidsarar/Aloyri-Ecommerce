@@ -37,7 +37,7 @@ test.describe("minimal admin interface", () => {
   test("storefront control center exposes permitted editing areas and website settings", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(`${base}/admin/builder`);
-    const hub = page.getByRole("region", { name: "Website management" });
+    const hub = page.locator('section[aria-label="Website management"]');
     await expect(hub).toBeVisible();
     await expect(hub.getByRole("heading", { name: "Website control center" })).toBeVisible();
     await expect(hub.getByRole("link", { name: /Homepage & banners/ })).toHaveAttribute("href", "/admin/builder?page=home&view=advanced");
@@ -58,7 +58,7 @@ test.describe("minimal admin interface", () => {
   test("control center and settings remain usable on mobile", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`${base}/admin/builder`);
-    await expect(page.getByRole("region", { name: "Website management" })).toBeVisible();
+    await expect(page.locator('section[aria-label="Website management"]')).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.goto(`${base}/admin/settings`);
     await page.getByRole("navigation", { name: "Website settings sections" }).getByRole("link", { name: "Colors & typography" }).click();
