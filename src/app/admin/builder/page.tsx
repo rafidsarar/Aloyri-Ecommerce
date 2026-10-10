@@ -35,6 +35,13 @@ export default async function VisualBuilderPage({
           <Link href="/admin/media" className="inline-flex min-h-11 items-center rounded-xl border border-[#713a35]/20 px-4 py-2 text-xs font-semibold text-[#713a35]">Media library →</Link>
         </div>
       </div>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#713a35]/15 bg-[#fff7f3] p-4">
+        <div>
+          <p className="text-sm font-semibold">Edit your storefront with live context</p>
+          <p className="mt-1 text-xs leading-5 text-black/60">Use the visual canvas below for page layout. Choose a management area for website settings, product content or campaigns without leaving the Builder workspace.</p>
+        </div>
+        <Link href="/" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 items-center rounded-xl bg-[#713a35] px-4 py-2 text-xs font-semibold text-white">View live website ↗</Link>
+      </div>
       <section aria-label="Website management" className="mb-5 rounded-2xl border border-black/10 bg-white p-4 sm:p-5">
         <div className="mb-4">
           <h2 className="text-base font-semibold">Website control center</h2>
