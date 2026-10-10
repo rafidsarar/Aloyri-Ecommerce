@@ -1,3 +1,4 @@
+import { HeroProductGallery } from "@/components/hero-product-gallery";
 import type { Metadata } from "next";
 import { Fragment, type ReactNode } from "react";
 import { HomepageLiveDraft } from "@/components/homepage-live-draft";
@@ -110,6 +111,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
     (section) => section.enabled,
   );
 
+  const heroGalleryProducts = home.heroProductIds.flatMap(id => {
+    const product = catalogProducts.find(candidate => candidate.id === id && candidate.active !== false);
+    return product ? [product] : [];
+  });
   const carouselPromos = home.showHero && home.promoPlacement === "before-products"
     ? activeHomepageBanners(home.promoBanners) : [];
 
@@ -148,6 +153,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
             </div>
 
             <div className="max-w-2xl py-8 lg:py-10">
+              {home.heroDiscountMode === "label" ? <p className="hero-offer-badge mb-3">5% OFF <span>Banner label only</span></p> :
+                home.heroDiscountMode === "checkout" && home.heroPromotionCode && heroGalleryProducts.length ?
+                <p className="hero-offer-badge mb-3">5% OFF <span>Eligible products at checkout</span></p> : null}
               <h1 className="store-hero-heading display max-w-[13ch] text-[clamp(2.25rem,4.8vw,5rem)] leading-[1.02]">
                 {home.headline}
               </h1>
@@ -182,7 +190,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_18%,rgba(255,255,255,.85),transparent_36%)]" />
             <div className="relative mx-auto flex h-full max-w-[580px] items-center">
               <div className="relative w-full">
-                {home.heroImagePath ? (
+                {heroGalleryProducts.length ? (
+                  <HeroProductGallery products={heroGalleryProducts}
+                    offer={{ bannerId: "main", mode: home.heroDiscountMode,
+                      promotionCode: home.heroPromotionCode, productIds: home.heroProductIds }} />
+                ) : home.heroImagePath ? (
                   <div className="relative aspect-square max-h-[440px] overflow-hidden rounded-[2rem] soft-shadow">
                     <Image src={storefrontMediaUrl(home.heroImagePath)} alt={home.headline || "Aloyri homepage banner"} fill priority sizes="(max-width: 1024px) 90vw, 600px" className="object-cover" />
                   </div>
@@ -194,7 +206,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
                   className="store-hero-product aspect-square max-h-[440px] rounded-[2rem] soft-shadow"
                 />
                 )}
-                {!home.heroImagePath && <div className="store-hero-product-caption absolute -bottom-5 left-5 right-5 rounded-[1.35rem] border border-white/70 bg-white/90 p-5 shadow-xl backdrop-blur-md sm:left-8 sm:right-8">
+                {!home.heroImagePath && !heroGalleryProducts.length && <div className="store-hero-product-caption absolute -bottom-5 left-5 right-5 rounded-[1.35rem] border border-white/70 bg-white/90 p-5 shadow-xl backdrop-blur-md sm:left-8 sm:right-8">
                   <div className="flex min-w-0 items-end justify-between gap-4">
                     <div>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#713a35]/50">
@@ -226,7 +238,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
             </div>
           </div>
         </div>
-      </section>, ...carouselPromos.map((banner, index) => <HomepagePromoBanners key={index} banners={[banner]} compact />), ...evergreenSlides]} />}
+      </section>, ...carouselPromos.map((banner, index) => <HomepagePromoBanners key={index} banners={[banner]} compact products={catalogProducts} bannerOffset={index} />), ...evergreenSlides]} />}
       </>
     ),
     trust: <HomepageTrustStrip benefits={home.featureChips} />,
@@ -301,7 +313,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
     ),
     promoBeforeProducts: (
       <>
-      {home.promoPlacement === "before-products" && (!home.showHero || home.visualLayout.hiddenCore.includes("hero")) ? <HomepagePromoBanners banners={home.promoBanners} /> : null}
+      {home.promoPlacement === "before-products" && (!home.showHero || home.visualLayout.hiddenCore.includes("hero")) ? <HomepagePromoBanners banners={home.promoBanners} products={catalogProducts} /> : null}
       </>
     ),
     products: (
