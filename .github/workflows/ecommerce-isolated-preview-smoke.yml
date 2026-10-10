@@ -29,7 +29,7 @@ jobs:
           }
           check_get / 200
           check_get /shop 200
-          check_get /checkout 200
+          check_get /checkout 307
           check_get /admin/setup 200
           check_get /admin/builder 307
           check_get /admin/settings 307
