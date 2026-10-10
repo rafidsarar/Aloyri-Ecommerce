@@ -1,14 +1,24 @@
 import Image from "next/image";
+import { uploadBuilderMedia } from "@/app/admin/actions";
+import { AdminSubmitButton } from "@/components/admin/admin-submit-button";
 import { AdminCard } from "@/components/admin/admin-shell";
 import { listStorefrontMedia, storefrontMediaUrl } from "@/lib/storefront-admin-store";
 
 type Media = Awaited<ReturnType<typeof listStorefrontMedia>>;
 
 /** Shared, read-only media browser. Uploads remain in authorized editors. */
-export function WebsiteMediaLibrary({ media }: { media: Media }) {
+export function WebsiteMediaLibrary({ media, canUpload = false }: { media: Media; canUpload?: boolean }) {
   return (
     <div className="space-y-4">
-      <p className="text-sm leading-6 text-black/60">Browse images already saved to the website media library. Campaign, banner and product editors keep their existing uploads and save actions.</p>
+      <p className="text-sm leading-6 text-black/60">Use the same media library across Banner, Product and Campaign editors. Uploads here do not modify CRM images or inventory.</p>
+      {canUpload ? <form action={uploadBuilderMedia} className="flex flex-wrap items-end gap-3 rounded-xl border border-black/10 bg-white p-4">
+        <label className="flex min-w-0 flex-1 flex-col gap-2 text-sm font-semibold">
+          Add an image (JPG, PNG or WebP; up to 5 MB)
+          <input name="image" type="file" accept="image/jpeg,image/png,image/webp" required
+            className="min-h-11 min-w-0 rounded-lg border border-black/10 p-2 text-xs font-normal" />
+        </label>
+        <AdminSubmitButton pendingLabel="Uploading…">Upload to library</AdminSubmitButton>
+      </form> : null}
       <AdminCard>
         {media.length ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
