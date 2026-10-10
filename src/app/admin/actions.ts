@@ -723,7 +723,9 @@ export async function saveInfoPage(formData: FormData) {
     target: pageKey,
   });
 
-  redirect("/admin/pages/" + pageKey + "?saved=1");
+  redirect(formData.get("builderWorkspace") === "pages"
+    ? "/admin/builder?workspace=pages&content=" + pageKey + "&saved=1"
+    : "/admin/pages/" + pageKey + "?saved=1");
 }
 
 export async function saveFaq(formData: FormData) {
@@ -755,5 +757,7 @@ export async function saveFaq(formData: FormData) {
     target: "faq",
   });
 
-  redirect("/admin/pages/faq?saved=1");
+  redirect(formData.get("builderWorkspace") === "pages"
+    ? "/admin/builder?workspace=pages&content=faq&saved=1"
+    : "/admin/pages/faq?saved=1");
 }
