@@ -230,11 +230,9 @@ export async function saveCollection(formData: FormData) {
     );
   }
 
-  redirect(
-    "/admin/merchandising/collections/" +
-      encodeURIComponent(id) +
-      "?saved=1",
-  );
+  redirect(formData.get("builderWorkspace") === "campaigns"
+    ? "/admin/builder?workspace=campaigns&kind=collection&id=" + encodeURIComponent(id) + "&saved=1"
+    : "/admin/merchandising/collections/" + encodeURIComponent(id) + "?saved=1");
 }
 
 export async function deleteCollection(formData: FormData) {
@@ -391,11 +389,9 @@ export async function saveCampaign(formData: FormData) {
     );
   }
 
-  redirect(
-    "/admin/merchandising/campaigns/" +
-      encodeURIComponent(id) +
-      "?saved=1",
-  );
+  redirect(formData.get("builderWorkspace") === "campaigns"
+    ? "/admin/builder?workspace=campaigns&kind=campaign&id=" + encodeURIComponent(id) + "&saved=1"
+    : "/admin/merchandising/campaigns/" + encodeURIComponent(id) + "?saved=1");
 }
 
 export async function deleteCampaign(formData: FormData) {
