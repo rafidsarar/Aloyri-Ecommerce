@@ -557,7 +557,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
     ),
     promoAfterProducts: (
       <>
-      {home.promoPlacement === "after-products" ? <HomepagePromoBanners banners={home.promoBanners} /> : null}
+      {home.promoPlacement === "after-products" ? <HomepagePromoBanners banners={home.promoBanners} products={catalogProducts} /> : null}
       </>
     ),
     routineSteps: (
