@@ -1,6 +1,6 @@
+"use client";
 import { volatileStorage } from "@/lib/volatile-storage";
 import { HERO_BANNER_CLAIM_KEY, claimOffer, type HeroBannerOffer } from "@/lib/hero-banner-offers";
-"use client";
 
 import { useState } from "react";
 import { useCatalogProduct } from "@/components/catalog-provider";
