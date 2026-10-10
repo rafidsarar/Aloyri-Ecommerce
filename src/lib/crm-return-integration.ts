@@ -1,3 +1,4 @@
+import { e2eCrmEndpointAllowed } from "@/lib/e2e-isolation";
 import { unstable_rethrow } from "next/navigation";
 const enc = new TextEncoder();
 
@@ -47,7 +48,7 @@ export async function submitCrmReturnRequest(input: ReturnRequestInput) {
   const secret = process.env.CRM_INTEGRATION_SECRET;
   const protectionBypass = process.env.CRM_VERCEL_BYPASS_SECRET;
 
-  if (!baseUrl || !integrationId || !secret) {
+  if (!baseUrl || !integrationId || !secret || !e2eCrmEndpointAllowed(baseUrl)) {
     return {
       ok: false as const,
       status: 503,

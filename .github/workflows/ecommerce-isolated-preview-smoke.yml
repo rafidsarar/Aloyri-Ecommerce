@@ -1,0 +1,50 @@
+name: Isolated Ecommerce Preview Smoke
+
+on:
+  push:
+    branches:
+      - feature/unified-storefront-control-center-20261010
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  isolated-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Read-only storefront and fail-closed API checks
+        env:
+          BASE: https://aloyri-ecommerce-dbwagxs7f-aloyritechteam.vercel.app
+        shell: bash
+        run: |
+          set -euo pipefail
+          check_get() {
+            local route="$1" expected="$2"
+            local status
+            status=$(curl --max-time 30 --retry 2 --retry-delay 2 --silent --show-error --output /tmp/ecommerce-response --write-out '%{http_code}' "$BASE$route")
+            echo "$route: HTTP $status (expected $expected)"
+            test "$status" = "$expected"
+          }
+          check_get / 200
+          check_get /shop 200
+          check_get /checkout 307
+          # First-time setup is 200 before owner creation and 307 after the
+          # isolated test owner is configured. Both preserve the safety boundary.
+          setup_status=$(curl --max-time 30 --silent --show-error --output /tmp/ecommerce-setup --write-out '%{http_code}' "$BASE/admin/setup")
+          echo "/admin/setup: HTTP $setup_status (expected 200 or 307)"
+          [[ "$setup_status" = 200 || "$setup_status" = 307 ]]
+          check_get /admin/builder 307
+          check_get /admin/settings 307
+          check_get /api/customer/post-purchase 401
+          check_get /api/customer/security 401
+          check_get /api/catalog 503
+          grep -Eq '"code":"CATALOG_NOT_CONFIGURED"|"code":"CATALOG_UNAVAILABLE"' /tmp/ecommerce-response
+          status=$(curl --max-time 30 --silent --show-error --output /tmp/ecommerce-order --write-out '%{http_code}' -X POST -H 'content-type: application/json' \
+            --data '{"externalOrderId":"E2E-SAFETY-NO-WRITE-20261010","customer":{"name":"E2E Safety","phone":"01712345678","address":"Test only, no real order","district":"Dhaka","area":"Test"},"items":[{"productId":"e2e-nonexistent","qty":1}],"deliveryZone":"inside-dhaka","paymentMethod":"COD"}' \
+            "$BASE/api/orders")
+          echo "POST /api/orders: HTTP $status (expected 503)"
+          test "$status" = 503
+          grep -q '"code":"ORDERING_NOT_CONFIGURED"' /tmp/ecommerce-order
+          echo 'PASS: Isolated Preview storefront, Admin privacy, CRM fail-closed, order write disabled'

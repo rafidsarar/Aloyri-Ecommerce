@@ -1,3 +1,4 @@
+import { e2eMediaEndpointAllowed } from "@/lib/e2e-isolation";
 import "server-only";
 
 export type MediaObject = {
@@ -15,7 +16,7 @@ function gateway() {
 
 export function mediaStorageConfigured() {
   const { url, key, oidc } = gateway();
-  return Boolean(url && (key || oidc));
+  return Boolean(url && (key || oidc) && e2eMediaEndpointAllowed(url));
 }
 
 function gatewayUploadEndpoint() {
