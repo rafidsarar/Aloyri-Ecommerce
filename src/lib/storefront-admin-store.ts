@@ -2,7 +2,6 @@ import { normalizeHeroProductIds, normalizeHeroDiscountMode, normalizeHeroPromot
 import "server-only";
 import { defaultVisualLayout, normalizeVisualLayout, normalizeVisualPageLayout, visualPageKeys, type VisualLayout, type VisualPageKey } from "@/lib/visual-builder";
 import { defaultHomepageOrder, normalizeHomepageOrder, safeHomepageImagePath, type HomepageBlockId } from "@/lib/homepage-builder";
-import { normalizeHomepageHighlights } from "@/lib/homepage-highlights";
 import { cache } from "react";
 import { revalidatePath } from "next/cache";
 import { defaultPresentation, normalizePresentation, type StorefrontPresentation } from "@/lib/storefront-presentation";
@@ -823,7 +822,7 @@ function normalizeConfig(value: Partial<StorefrontConfig> | null): StorefrontCon
           })
         : [],
       // Empty remains empty; saved legacy placeholders no longer reappear.
-      featureChips: normalizeHomepageHighlights(value.homepage?.featureChips),
+      featureChips: [],
     },
     visualPages: Object.fromEntries(visualPageKeys.map(key => [key, normalizeVisualPageLayout(value.visualPages?.[key])])) as unknown as Record<VisualPageKey, VisualLayout>,
     pages: {
