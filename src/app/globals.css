@@ -683,6 +683,14 @@ body[data-storefront-theme="sand"] {
   .store-header-brand .brand-mark { width: min(116px, calc(100vw - 232px)); }
   .store-hero-copy { padding: clamp(24px, 5vw, 40px); }
 }
+/* At narrow phone widths, three header controls should not cover the centered logo.
+   Search is now in the header instead of the hamburger drawer. */
+@media (max-width: 420px) {
+  .store-header-actions { gap: 0; }
+  .store-header-actions > button,
+  .store-header-actions > div > button { width: 32px; height: 36px; }
+}
+
 @media (prefers-reduced-motion: reduce) { .store-navigation-drawer { animation: none; } }
 
 @keyframes aloyri-cart-enter {

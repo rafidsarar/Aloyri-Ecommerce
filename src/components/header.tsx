@@ -210,7 +210,7 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
                 setAccountOpen(false);
                 window.dispatchEvent(new Event("aloyri:open-global-search"));
               }}
-              className="store-icon-link hidden h-11 w-11 items-center justify-center rounded-full border transition sm:inline-flex"
+              className="store-icon-link inline-flex h-10 w-10 items-center justify-center rounded-full border transition sm:h-11 sm:w-11"
               aria-label="Search products"
               aria-haspopup="dialog"
               aria-controls="global-storefront-search"
@@ -228,54 +228,45 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
             onClick={closeMenu} className="absolute inset-0 bg-[#241512]/55 backdrop-blur-[3px]" />
           <div ref={menuDialogRef} id="mobile-navigation" role="dialog" aria-modal="true"
             aria-label="Store navigation menu"
-            className="store-mobile-nav store-navigation-drawer absolute inset-y-0 left-0 flex w-[min(92vw,440px)] flex-col overflow-y-auto overscroll-contain border-r border-[#713a35]/10 px-5 pb-7 pt-5 shadow-2xl sm:px-7">
-            <div className="store-drawer-heading flex items-center justify-between gap-4 border-b border-[var(--store-border)] pb-5">
+            className="store-mobile-nav store-navigation-drawer absolute inset-y-0 left-0 flex w-[min(88vw,390px)] flex-col overflow-y-auto overscroll-contain border-r border-[var(--store-border)] px-5 pb-7 pt-4 shadow-xl sm:px-6">
+            <div className="store-drawer-heading flex items-center justify-between gap-4 border-b border-[var(--store-border)] pb-4">
               <BrandMark compact />
               <button ref={closeButtonRef} type="button" onClick={closeMenu}
                 className="store-icon-link inline-flex h-11 w-11 items-center justify-center rounded-full border"
                 aria-label="Close menu"><CloseIcon /></button>
             </div>
-            <button type="button" onClick={() => {
-                setOpen(false);
-                window.requestAnimationFrame(() => window.dispatchEvent(new Event("aloyri:open-global-search")));
-              }}
-              className="store-drawer-search store-mobile-tool mt-5 flex min-h-12 w-full items-center justify-between gap-3 rounded-xl px-4 text-left text-sm font-semibold"
-              aria-haspopup="dialog"
-              aria-controls="global-storefront-search">
-              Search products and brands <SearchIcon />
-            </button>
-            <p className="mt-6 text-[10px] font-semibold uppercase tracking-[.22em] text-[#8d5f56]">Discover Aloyri</p>
+            <p className="mt-6 px-2 text-[10px] font-semibold uppercase tracking-[.18em] text-[var(--store-muted)]">Explore</p>
             <nav className="mt-3 flex flex-col" aria-label="Store navigation">
               {links.map(([label, href]) => (
                 <Link key={label} href={href} aria-current={current(href) ? "page" : undefined}
                   onClick={closeMenu}
-                  className="store-mobile-link flex min-h-12 items-center justify-between border-b py-3 text-[17px] font-medium transition hover:pl-2 hover:text-[var(--store-accent)]">
-                  <span>{label}</span><span aria-hidden="true" className="text-[#a77d73]">↗</span>
+                  className="store-mobile-link flex min-h-12 items-center justify-between border-b py-3 text-[15px] font-medium transition hover:bg-[var(--store-panel)] hover:text-[var(--store-accent)]">
+                  <span>{label}</span><span aria-hidden="true" className="text-[var(--store-muted)]">›</span>
                 </Link>
               ))}
             </nav>
-            <div className="mt-7 border-b border-[var(--store-border)] pb-4">
+            <div className="mt-6 border-b border-[var(--store-border)] pb-4">
               <button type="button" onClick={() => setCategoriesExpanded(value => !value)}
                 aria-expanded={categoriesExpanded} aria-controls="drawer-categories"
-                className="flex w-full items-center justify-between py-2 text-left text-[11px] font-semibold uppercase tracking-[.17em]">
-                Shop by category <span aria-hidden="true" className="text-xl">{categoriesExpanded ? "−" : "+"}</span>
+                className="flex min-h-11 w-full items-center justify-between rounded-lg px-2 py-2 text-left text-[11px] font-semibold uppercase tracking-[.14em] transition hover:bg-[var(--store-panel)]">
+                Shop by category <span aria-hidden="true" className="text-lg font-normal text-[var(--store-muted)]">{categoriesExpanded ? "−" : "+"}</span>
               </button>
-              {categoriesExpanded ? <div id="drawer-categories" className="mt-3 grid grid-cols-2 gap-2">
+              {categoriesExpanded ? <div id="drawer-categories" className="mt-2 grid grid-cols-2 gap-2">
                 {synced && publicCategories.length
                   ? publicCategories.map(item => (
                     <Link key={item.slug} href={item.href} onClick={closeMenu}
                       aria-current={current(item.href) ? "page" : undefined}
-                      className="store-mobile-tool rounded-xl px-3 py-3 text-sm transition hover:brightness-95">{item.name}</Link>
+                      className="store-mobile-tool rounded-lg px-3 py-2.5 text-[13px] transition hover:brightness-95">{item.name}</Link>
                   ))
-                  : <Link href="/shop" onClick={closeMenu} className="store-mobile-tool col-span-2 rounded-xl p-3 text-sm">Browse all categories</Link>}
-                <Link href="/shop?stock=in-stock" onClick={closeMenu} className="store-mobile-tool rounded-xl px-3 py-3 text-sm">Available now</Link>
+                  : <Link href="/shop" onClick={closeMenu} className="store-mobile-tool col-span-2 rounded-lg p-3 text-[13px]">Browse all categories</Link>}
+                <Link href="/shop?stock=in-stock" onClick={closeMenu} className="store-mobile-tool rounded-lg px-3 py-2.5 text-[13px]">Available now</Link>
               </div> : null}
             </div>
-            <div className="mt-auto pt-7">
-              <div className="rounded-2xl border border-[var(--store-border)] bg-[var(--store-panel)] p-4">
-                <p className="text-xs font-semibold tracking-[.1em] text-[var(--store-accent)]">ALOYRI SKINCARE</p>
-                <p className="mt-2 text-sm leading-6 text-[var(--store-muted)]">Find the right products for your everyday skincare routine.</p>
-              </div>
+            <div className="mt-auto pt-6">
+              <Link href="/shop" onClick={closeMenu}
+                className="flex min-h-11 items-center justify-between rounded-lg bg-[var(--store-panel)] px-4 py-3 text-sm font-medium text-[var(--store-ink)] transition hover:text-[var(--store-accent)]">
+                Browse all products <span aria-hidden="true">→</span>
+              </Link>
             </div>
           </div>
         </div>

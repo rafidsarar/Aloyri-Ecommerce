@@ -123,12 +123,13 @@ test("storefront structure keeps shopping and customer tools accessible on mobil
   await expect(page.getByRole("link",{name:/Skin Aqua Super Moisture UV Gel/i})).toBeVisible();
   await page.screenshot({path:testInfo.outputPath("shop-desktop.png"),fullPage:true});
   await page.setViewportSize({width:390,height:844});
-  await expect(page.getByRole("button",{name:"Search products",exact:true})).toBeHidden();
+  await expect(page.getByRole("button",{name:"Search products",exact:true})).toBeVisible();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({path:testInfo.outputPath("shop-mobile.png"),fullPage:true});
   await page.getByRole("button",{name:"Open menu"}).click();
   const menu=page.getByRole("dialog",{name:"Store navigation menu"});
-  await expect(menu.getByRole("button",{name:"Search products and brands"})).toBeVisible();
+  await expect(menu.getByRole("button",{name:"Search products and brands"})).toHaveCount(0);
+  await expect(menu.getByRole("link",{name:"Browse all products"})).toBeVisible();
   await expect(menu.getByRole("navigation",{name:"Customer tools"})).toHaveCount(0);
   await menu.getByRole("button",{name:"Close menu"}).click();
   await page.getByRole("button",{name:"Account menu"}).click();

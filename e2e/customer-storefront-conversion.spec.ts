@@ -34,7 +34,10 @@ test.describe("customer storefront usability", () => {
     await mockCatalog(page);
     await page.goto("/shop");
     await page.getByRole("button", { name: "Open menu" }).click();
-    await page.getByRole("dialog", { name: "Store navigation menu" }).getByRole("button", { name: "Search products and brands" }).click();
+    const drawer = page.getByRole("dialog", { name: "Store navigation menu" });
+    await expect(drawer.getByRole("button", { name: "Search products and brands" })).toHaveCount(0);
+    await drawer.getByRole("button", { name: "Close menu" }).click();
+    await page.getByRole("button", { name: "Search products", exact: true }).click();
     const modal = page.getByRole("dialog", { name: "Search discovery" });
     await modal.getByRole("combobox", { name: "Search skincare" }).fill("sunscreen");
     await expect(modal.getByRole("option", { name: /Everyday SPF 50 Sunscreen/i })).toBeVisible();
