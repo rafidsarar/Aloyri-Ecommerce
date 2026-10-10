@@ -20,14 +20,30 @@ export default async function AdminSettingsPage({
   return (
     <AdminShell
       username={admin.username}
-      title="Store settings"
-      subtitle="Customer-facing website settings live here. Commerce-critical price, stock and order controls remain in CRM."
+      title="Website settings"
+      subtitle="Clear, grouped controls for your website identity, appearance, footer and customer contact information."
     >
       {saved ? <AdminNotice>Changes saved live. <Link href="/admin/history" className="underline">Version history →</Link></AdminNotice> : null}
       {error ? <AdminNotice tone="neutral">{error}</AdminNotice> : null}
 
+      <div className="mb-5 rounded-2xl border border-[#713a35]/15 bg-[#fff7f3] p-5">
+        <p className="text-xs font-bold uppercase tracking-[.12em] text-[#713a35]">Storefront control center</p>
+        <h2 className="mt-2 text-lg font-semibold">Manage your website from the Storefront Builder</h2>
+        <p className="mt-2 text-sm leading-6 text-black/60">These website-wide settings use their own Save button so changes to your header, footer and contact details never overwrite an unfinished homepage design.</p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Link href="/admin/builder?page=home" className="rounded-xl bg-[#713a35] px-4 py-3 text-sm font-semibold text-white">Open Storefront Builder →</Link>
+          <Link href="/admin/builder?page=home&view=advanced" className="rounded-xl border border-[#713a35]/20 px-4 py-3 text-sm font-semibold text-[#713a35]">Homepage banners & offers →</Link>
+        </div>
+      </div>
+      <nav aria-label="Website settings sections" className="mb-5 flex flex-wrap gap-2 text-xs font-semibold">
+        <a href="#website-layout" className="rounded-full border border-black/10 px-3 py-2">Header & navigation</a>
+        <a href="#website-appearance" className="rounded-full border border-black/10 px-3 py-2">Colors</a>
+        <a href="#website-content" className="rounded-full border border-black/10 px-3 py-2">Announcement & footer</a>
+        <a href="#website-support" className="rounded-full border border-black/10 px-3 py-2">Customer contact</a>
+      </nav>
       <form action={saveSiteSettings} className="grid gap-5">
-        <StorefrontLayoutFields value={config.presentation} />
+        <div id="website-layout" className="scroll-mt-24"><StorefrontLayoutFields value={config.presentation} /></div>
+        <div id="website-appearance" className="scroll-mt-24">
         <AdminCard>
           <h2 className="mb-3 text-sm font-semibold">Storefront appearance</h2>
           <p className="mb-4 text-xs text-black/60">Choose a color theme. Save to update your live website.</p>
@@ -39,6 +55,8 @@ export default async function AdminSettingsPage({
             </select>
           </label>
         </AdminCard>
+        </div>
+        <div id="website-content" className="scroll-mt-24">
         <AdminCard>
           <div className="grid gap-4">
             <label className="grid gap-1.5 text-sm font-medium">
@@ -51,7 +69,9 @@ export default async function AdminSettingsPage({
             </label>
           </div>
         </AdminCard>
+        </div>
 
+        <div id="website-support" className="scroll-mt-24">
         <AdminCard>
           <p className="text-sm font-semibold">Customer support details</p>
           <p className="mt-1 text-xs leading-5 text-black/45">
@@ -72,6 +92,7 @@ export default async function AdminSettingsPage({
             </label>
           </div>
         </AdminCard>
+        </div>
 
         <AdminNotice tone="neutral">
           Delivery pricing, ordering enable/disable state and payment method availability are still operational settings tied to the CRM/order bridge and are intentionally not editable here.
