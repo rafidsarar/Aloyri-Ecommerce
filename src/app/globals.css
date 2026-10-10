@@ -47,6 +47,13 @@ textarea {
   outline-offset: 3px;
 }
 
+/* The floating search auto-focuses its input: keep focus clear without a heavy rectangular ring. */
+#global-search-input:focus-visible {
+  outline: none;
+  outline-offset: 0;
+  box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--store-muted) 32%, transparent);
+}
+
 .skip-link {
   position: fixed;
   left: 1rem;
