@@ -47,6 +47,14 @@ textarea {
   outline-offset: 3px;
 }
 
+/* The floating search autofocuses its text field. Keep focus visible without
+   drawing the site's large global outline around the entire input. */
+#global-search-input:focus-visible {
+  outline: none;
+  box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--store-accent) 40%, transparent);
+}
+
+
 .skip-link {
   position: fixed;
   left: 1rem;
