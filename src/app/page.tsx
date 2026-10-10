@@ -236,7 +236,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
       </section>, ...carouselPromos.map((banner, index) => <HomepagePromoBanners key={index} banners={[banner]} compact products={catalogProducts} bannerOffset={index} />), ...evergreenSlides]} />}
       </>
     ),
-    trust: null,
     browse: null,
     categories: (
       <>
