@@ -72,6 +72,6 @@ export async function WebsiteWorkspacePanels({ workspace, config, admin, media, 
       <p className="mt-1 text-sm text-black/60">Browse real website photography and reuse it from existing banner, product and campaign editors.</p>
       {hasAdminPermission(admin, "products.view") ? <Link className="mt-3 inline-flex rounded-lg border border-black/15 px-3 py-2 text-xs font-semibold" href="/admin/products">Edit product images →</Link> : null}
     </div>
-    <WebsiteMediaLibrary media={media} />
+    <WebsiteMediaLibrary media={media} canUpload={hasAdminPermission(admin, "media.edit")} />
   </section>;
 }
