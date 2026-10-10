@@ -41,10 +41,9 @@ test("homepage editor requires admin login", async ({ page }) => {
   await expect(page).not.toHaveURL(/\/admin\/homepage$/);
 });
 
-test("default homepage has no placeholder benefits bar between hero and categories", async ({ page }) => {
+test("homepage omits the marketing benefits bar and hero highlights", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByText("Bangladesh-first storefront")).toHaveCount(0);
-  await expect(page.getByText("Curated selection")).toHaveCount(0);
-  await expect(page.getByText("BDT pricing", { exact: true })).toHaveCount(0);
+  await expect(page.locator(".store-benefits, .store-benefit, .store-hero-features")).toHaveCount(0);
   await expect(page.getByRole("region", { name: "Why shop Aloyri" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Shop by category" })).toBeVisible();
 });
