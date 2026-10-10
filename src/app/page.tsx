@@ -11,7 +11,6 @@ import { HomepageBrandShowcase } from "@/components/homepage-brand-showcase";
 import { HomepageTrustStrip } from "@/components/homepage-trust-strip";
 import { VisualBuilderBlock } from "@/components/visual-builder-block";
 import { HomepageCategoryShowcase } from "@/components/homepage-category-showcase";
-import { HomepageDiscoverySearch } from "@/components/homepage-discovery-search";
 import { HomepageEditorialSections } from "@/components/homepage-editorial-sections";
 import { ArrowIcon } from "@/components/icons";
 import { ProductMedia } from "@/components/product-media";
@@ -208,22 +207,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
       </>
     ),
     trust: <HomepageTrustStrip benefits={home.featureChips} />,
-    browse: (
-      <>
-      {home.showBrowse && <section className="shell pt-7 md:pt-9" aria-label="Find your skincare">
-        <div className="store-home-browse grid gap-5 rounded-[1.5rem] border p-5 sm:p-6 lg:grid-cols-[.85fr_1.15fr] lg:items-center lg:gap-8 lg:px-8">
-          <div>
-            <p className="store-home-overline">{home.browseEyebrow}</p>
-            <h2 className="display mt-2 text-2xl leading-tight sm:text-3xl">{home.browseTitle}</h2>
-            <p className="store-home-muted mt-2 text-xs leading-5 sm:text-sm">{home.browseIntro}</p>
-          </div>
-          <div className="min-w-0">
-            <HomepageDiscoverySearch placeholder={home.browsePlaceholder} synonymGroups={config.merchandising.discovery.synonymGroups} />
-          </div>
-        </div>
-      </section>}
-      </>
-    ),
+    browse: null,
     categories: (
       <>
       {home.showCategories ? <HomepageCategoryShowcase products={catalogProducts} categories={crm.ok ? crm.body.categories : []} eyebrow={home.categoriesEyebrow} title={home.categoriesTitle} intro={home.categoriesIntro} /> : null}
