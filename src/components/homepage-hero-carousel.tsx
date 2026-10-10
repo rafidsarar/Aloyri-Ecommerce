@@ -44,8 +44,10 @@ export function HomepageHeroCarousel({ slides }: { slides: ReactNode[] }) {
     const first = cards[0];
     if (!first) return;
     const closest = cards.reduce((best, card, index) => {
-      const position = card.offsetLeft - first.offsetLeft - track.scrollLeft;
-      const previous = cards[best].offsetLeft - first.offsetLeft - track.scrollLeft;
+      // The final card cannot always snap flush-left when a neighboring card
+      // is visible. Compare card centers with the viewport center instead.
+      const position = card.offsetLeft - first.offsetLeft - track.scrollLeft + card.offsetWidth / 2 - track.clientWidth / 2;
+      const previous = cards[best].offsetLeft - first.offsetLeft - track.scrollLeft + cards[best].offsetWidth / 2 - track.clientWidth / 2;
       return Math.abs(position) < Math.abs(previous) ? index : best;
     }, 0);
     setActive(current => current === closest ? current : closest);
