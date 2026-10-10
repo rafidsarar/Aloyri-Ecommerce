@@ -27,6 +27,7 @@ import {
   readDraftStorefrontConfig,
   updateDraftStorefrontConfig,
   uploadStorefrontMedia,
+  writeAdminAuditEvent,
   type InfoPageContent,
   type ProductEditorial,
   type StorefrontConfig,
@@ -613,6 +614,27 @@ export async function saveSiteSettings(formData: FormData) {
   redirect(formData.get("builderWorkspace") === "settings"
     ? "/admin/builder?workspace=settings&saved=1"
     : "/admin/settings?saved=1");
+}
+
+export async function uploadBuilderMedia(formData: FormData) {
+  const admin = await requireAdminPermission("media.edit");
+  const file = formData.get("image");
+  if (!(file instanceof File) || !file.size) {
+    redirect("/admin/builder?workspace=media&error=image-required");
+  }
+  let pathname: string;
+  try {
+    // Central validation is shared with the existing product and campaign uploads.
+    pathname = await uploadStorefrontMedia(file);
+  } catch (error) {
+    redirect("/admin/builder?workspace=media&error=" + encodeURIComponent(errorMessage(error)));
+  }
+  await writeAdminAuditEvent(admin.username, "media.uploaded", "Image added using unified Storefront Builder.", {
+    scope: "media",
+    target: pathname,
+  });
+  revalidatePath("/admin/builder");
+  redirect("/admin/builder?workspace=media&saved=1");
 }
 
 export async function saveProductEditorial(formData: FormData) {
