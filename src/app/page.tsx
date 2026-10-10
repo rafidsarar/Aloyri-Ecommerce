@@ -179,11 +179,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
               </div>
             </div>
 
-            <div className="store-hero-features flex flex-wrap gap-x-6 gap-y-3 text-xs">
-              {home.featureChips.map((chip) => (
-                <span className="inline-flex items-center gap-2" key={chip}><span className="store-hero-check" aria-hidden="true">✓</span>{chip}</span>
-              ))}
-            </div>
+            {home.featureChips.length > 0 ? (
+              <div className="store-hero-features flex flex-wrap gap-x-6 gap-y-3 text-xs">
+                {home.featureChips.map((chip) => (
+                  <span className="inline-flex items-center gap-2" key={chip}><span className="store-hero-check" aria-hidden="true">✓</span>{chip}</span>
+                ))}
+              </div>
+            ) : null}
           </div>
 
           <div className={`store-hero-art min-w-0 relative min-h-[280px] lg:min-h-[420px] p-6 sm:p-9 lg:p-12 ${config.presentation.showHeroImageOnMobile ? "" : "hidden lg:block"}`}>
