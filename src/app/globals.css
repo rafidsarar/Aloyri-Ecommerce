@@ -725,3 +725,19 @@ body[data-storefront-theme="sand"] {
   .account-quick-action { transition: none; }
   .account-quick-action:hover, .account-quick-action:focus-visible { transform: none; }
 }
+
+
+/* Floating product search: one gentle focus treatment instead of a second
+   browser outline around the input inside its parent surface. */
+.global-store-search-input:focus,
+.global-store-search-input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+.global-store-search-form:focus-within {
+  box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--store-accent) 35%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .global-store-search-dialog *, .global-store-search-dialog *::before,
+  .global-store-search-dialog *::after { transition-duration: 0.01ms; }
+}
