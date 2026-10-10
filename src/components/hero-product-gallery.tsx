@@ -7,7 +7,7 @@ import { AddToCart } from "@/components/add-to-cart";
 import { volatileStorage } from "@/lib/volatile-storage";
 import { HERO_BANNER_CLAIM_KEY, claimOffer, type HeroBannerOffer } from "@/lib/hero-banner-offers";
 import type { Product } from "@/lib/catalog";
-import { formatPrice } from "@/lib/format";
+import { formatPrice } from "@/lib/catalog";
 
 export function HeroProductGallery({ products, offer }: { products: Product[]; offer: HeroBannerOffer }) {
   const [active, setActive] = useState(0);
