@@ -2,7 +2,7 @@ import Link from "next/link";
 import { AdminNotice, AdminShell } from "@/components/admin/admin-shell";
 import { VisualBuilderStudio } from "@/components/admin/visual-builder-studio";
 import { HomepageAdvancedControls } from "@/components/admin/homepage-advanced-controls";
-import { requireAdminPermission } from "@/lib/admin-auth";
+import { hasAdminPermission, requireAdminPermission } from "@/lib/admin-auth";
 import { listStorefrontMedia, readDraftStorefrontConfig } from "@/lib/storefront-admin-store";
 import { visualPageKeys, visualPageNames, type VisualPageKey } from "@/lib/visual-builder";
 
@@ -35,6 +35,35 @@ export default async function VisualBuilderPage({
           <Link href="/admin/media" className="inline-flex min-h-11 items-center rounded-xl border border-[#713a35]/20 px-4 py-2 text-xs font-semibold text-[#713a35]">Media library →</Link>
         </div>
       </div>
+      <section aria-label="Website management" className="mb-5 rounded-2xl border border-black/10 bg-white p-4 sm:p-5">
+        <div className="mb-4">
+          <h2 className="text-base font-semibold">Website control center</h2>
+          <p className="mt-1 text-sm text-black/60">Choose what to manage. Existing editing tools remain available with their own save actions and access permissions.</p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {([
+            ["Homepage & banners", "Hero sliders, featured products, 5% offers and homepage sections", "/admin/builder?page=home&view=advanced", "homepage.view"],
+            ["Header, footer & store settings", "Navigation, colors, announcements and support details", "/admin/settings", "settings.view"],
+            ["Products & photography", "Website product content, images and product presentation", "/admin/products", "products.view"],
+            ["Pages & policies", "About, contact, shipping, returns and FAQ", "/admin/pages", "pages.view"],
+            ["Campaigns & collections", "Merchandising, featured collections and promotional campaigns", "/admin/merchandising", "merchandising.view"],
+            ["SEO & discoverability", "Metadata, redirects and search presentation", "/admin/seo", "seo.view"],
+            ["Media library", "Manage reusable website images and assets", "/admin/media", "homepage.view"],
+            ["Analytics", "Visitor and conversion insights", "/admin/analytics", "analytics.view"],
+            ["Customer service", "Customer inquiries and return requests", "/admin/customer-service", "support.view"],
+            ["Orders & delivery", "Website fulfillment and courier operations", "/admin/delivery", "analytics.view"],
+            ["Payments & refunds", "COD settlement and refund visibility", "/admin/payments", "analytics.view"],
+            ["Versions & recovery", "History and restore of website changes", "/admin/history", "publishing.view"],
+            ["Operational health", "Website health and backups", "/admin/operations", "health.view"],
+          ] as const).filter(([, , , permission]) => hasAdminPermission(admin, permission)).map(([name, detail, href]) => (
+            <Link key={href} href={href} className="group rounded-xl border border-black/10 bg-[#fffaf8] p-4 transition hover:border-[#713a35]/40 hover:bg-[#fff2ed] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#713a35]">
+              <span className="block text-sm font-semibold text-[#432824]">{name} <span aria-hidden="true" className="float-right transition group-hover:translate-x-1">→</span></span>
+              <span className="mt-2 block text-xs leading-5 text-black/60">{detail}</span>
+            </Link>
+          ))}
+        </div>
+        <p className="mt-4 text-xs text-black/50">CRM remains the source of truth for inventory, prices and order accounting. Staff only see tools permitted for their role.</p>
+      </section>
       <nav aria-label="Choose page template" className="mb-4 flex flex-nowrap gap-2 overflow-x-auto rounded-2xl border border-black/10 bg-white p-3">
         {([{ key: "home", label: "Homepage" }, ...visualPageKeys.map(key => ({ key, label: visualPageNames[key] }))] as const).map(item => <Link key={item.key} href={"/admin/builder?page=" + item.key} aria-current={pageKey === item.key ? "page" : undefined} className={`inline-flex min-h-10 shrink-0 items-center rounded-full border px-4 py-2 text-xs font-semibold ${pageKey === item.key ? "border-[#713a35] bg-[#713a35] text-white" : "border-black/15 bg-[#fffaf8] text-[#713a35]"}`}>{item.label}</Link>)}
       </nav>
