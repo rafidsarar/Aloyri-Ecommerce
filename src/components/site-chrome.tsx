@@ -1,7 +1,7 @@
 "use client";
 
-import type { CSSProperties } from "react";
-import { defaultPresentation, type StorefrontPresentation } from "@/lib/storefront-presentation";
+import { useEffect, useState, type CSSProperties } from "react";
+import { normalizePresentation, defaultPresentation, type StorefrontPresentation } from "@/lib/storefront-presentation";
 import { usePathname } from "next/navigation";
 import { CatalogProvider } from "@/components/catalog-provider";
 import { StorefrontAnalyticsTracker } from "@/components/storefront-analytics-tracker";
@@ -29,15 +29,29 @@ export function SiteChrome({
 }) {
   const pathname = usePathname();
 
+  const [draft,setDraft]=useState<{presentation?:StorefrontPresentation;announcement?:string;footerDescription?:string} | null>(null);
+  useEffect(()=>{
+    if(window.parent===window || new URLSearchParams(window.location.search).get("builderPreview")!=="1")return;
+    function receive(event:MessageEvent) {
+      if(event.origin!==window.location.origin || event.source!==window.parent || !["aloyri-builder-site-draft","aloyri-builder-page-draft"].includes(event.data?.type))return;
+      const value=event.data;
+      setDraft({presentation:value.presentation?normalizePresentation(value.presentation):undefined,announcement:typeof value.siteContent?.announcement==="string"?value.siteContent.announcement:undefined,footerDescription:typeof value.siteContent?.footerDescription==="string"?value.siteContent.footerDescription:undefined});
+      if(["rose","sage","sand"].includes(value.appearance)) document.body.dataset.storefrontTheme=value.appearance;
+    }
+    window.addEventListener("message",receive);
+    return ()=>window.removeEventListener("message",receive);
+  },[]);
+  const displayPresentation=draft?.presentation || presentation;
+
   if (pathname.startsWith("/admin")) {
     return <>{children}</>;
   }
 
   return (
     <CatalogProvider>
-      <div data-storefront-columns={presentation.desktopColumns} style={{"--storefront-width": presentation.contentWidth === "comfortable" ? "1200px" : "1440px"} as CSSProperties}>
+      <div data-storefront-columns={displayPresentation.desktopColumns} style={{"--storefront-width": displayPresentation.contentWidth === "comfortable" ? "1200px" : "1440px"} as CSSProperties}>
       <CustomerDataCleanup />
-      {pathname !== "/" && <PublicPagePreviewBridge />}
+      <PublicPagePreviewBridge />
       {!preview ? <StorefrontAnalyticsTracker /> : null}
       {!preview ? <PerformanceReporter /> : null}
       {preview ? (
@@ -54,12 +68,12 @@ export function SiteChrome({
       <a href="#main-content" className="skip-link">
         Skip to main content
       </a>
-      <Header announcement={announcement} presentation={presentation} />
+      <Header announcement={draft?.announcement ?? announcement} presentation={displayPresentation} />
       <GlobalStorefrontSearch key={pathname} synonymGroups={searchSynonymGroups} />
       <div id="main-content" tabIndex={-1}>
         {children}
       </div>
-      <Footer description={footerDescription} />
+      <Footer description={draft?.footerDescription ?? footerDescription} />
       </div>
     </CatalogProvider>
   );

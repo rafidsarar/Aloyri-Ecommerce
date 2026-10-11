@@ -10,7 +10,7 @@ export function PublicPagePreviewBridge() {
       const target = event.target;
       if (!(target instanceof Element)) return;
       const part = target.closest("header, footer, main, [aria-label='Additional page content']");
-      if (!part) return;
+      if (!part || (part.matches("main") && document.querySelector("[data-builder-live-draft]"))) return;
       event.preventDefault();
       event.stopPropagation();
       window.parent.postMessage({
@@ -19,7 +19,7 @@ export function PublicPagePreviewBridge() {
       }, window.location.origin);
     };
     const onMessage = (event: MessageEvent) => {
-      if (event.origin !== window.location.origin || event.source !== window.parent || event.data?.type !== "aloyri-builder-page-draft") return;
+      if (event.origin !== window.location.origin || event.source !== window.parent || !["aloyri-builder-page-draft","aloyri-builder-site-draft"].includes(event.data?.type)) return;
       const site = event.data.siteContent as { announcement?: string; footerDescription?: string } | undefined;
       if (site) {
         const footer = document.querySelector(".store-footer-description");
@@ -30,7 +30,7 @@ export function PublicPagePreviewBridge() {
       const content = event.data.content as { eyebrow?: string; title?: string; intro?: string; sections?: { title?: string }[] } | undefined;
       if (!content) return;
       const main = document.querySelector("main");
-      if (!main) return;
+      if (!main || main.hasAttribute("data-builder-page-content")) return;
       const heading = main.querySelector("h1");
       const eyebrow = heading?.previousElementSibling;
       const intro = heading?.nextElementSibling;

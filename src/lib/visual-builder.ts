@@ -35,7 +35,7 @@ export type VisualBlock = {
 };
 export type VisualLayout = { order: string[]; blocks: VisualBlock[]; hiddenCore: HomepageBlockId[] };
 
-export const visualPageKeys = ["about", "shipping", "returns", "contact", "faq", "shop", "category", "product"] as const;
+export const visualPageKeys = ["about", "shipping", "returns", "contact", "faq", "privacy", "terms", "shop", "category", "product"] as const;
 export type VisualPageKey = (typeof visualPageKeys)[number];
 export const visualPageNames: Record<VisualPageKey, string> = {
   about: "About page",
@@ -43,6 +43,8 @@ export const visualPageNames: Record<VisualPageKey, string> = {
   returns: "Returns & refunds",
   contact: "Contact",
   faq: "FAQ",
+  privacy: "Privacy policy",
+  terms: "Terms & conditions",
   shop: "Shop",
   category: "Category pages",
   product: "Product pages",
