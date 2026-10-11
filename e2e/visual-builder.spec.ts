@@ -92,3 +92,12 @@ test("visual builder release preserves customer store entry points", async ({ pa
   await expect(page.getByRole("button", { name: /^Cart(?: with .*)?$/ }).first()).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
+
+for (const path of ["/privacy", "/terms"]) {
+  test(`Policy preview supports same-origin framing: ${path}`, async ({request}) => {
+    const response=await request.get(path+"?builderPreview=1");
+    expect(response.status()).toBe(200);
+    expect(response.headers()["x-frame-options"]).toBe("SAMEORIGIN");
+    expect(response.headers()["content-security-policy"]).toContain("frame-ancestors 'self'");
+  });
+}

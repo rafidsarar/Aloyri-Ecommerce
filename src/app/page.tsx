@@ -185,14 +185,14 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_18%,rgba(255,255,255,.85),transparent_36%)]" />
             <div className="relative mx-auto flex h-full max-w-[580px] items-center">
               <div className="relative w-full">
-                {heroGalleryProducts.length ? (
-                  <HeroProductGallery products={heroGalleryProducts}
-                    offer={{ bannerId: "main", mode: home.heroDiscountMode,
-                      promotionCode: home.heroPromotionCode, productIds: home.heroProductIds }} />
-                ) : home.heroImagePath ? (
+                {home.heroImagePath ? (
                   <div className="relative aspect-square max-h-[440px] overflow-hidden rounded-[2rem] soft-shadow">
                     <Image src={storefrontMediaUrl(home.heroImagePath)} alt={home.headline || "Aloyri homepage banner"} fill priority sizes="(max-width: 1024px) 90vw, 600px" className="object-cover" />
                   </div>
+                ) : heroGalleryProducts.length ? (
+                  <HeroProductGallery products={heroGalleryProducts}
+                    offer={{ bannerId: "main", mode: home.heroDiscountMode,
+                      promotionCode: home.heroPromotionCode, productIds: home.heroProductIds }} />
                 ) : (
                 <ProductMedia
                   product={heroProduct}

@@ -12,6 +12,7 @@ export function InlineMediaUpload({onUploaded}:{onUploaded:(path:string)=>void})
   async function upload() {
     const file=input.current?.files?.[0];
     if(!file) {setFailed(true);setMessage("Choose an image first.");return;}
+    if(file.size>4*1024*1024){setFailed(true);setMessage("Use JPG, PNG or WebP images up to 4 MB.");return;}
     setPending(true);setMessage("");setFailed(false);
     try {
       const data=new FormData();data.set("image",file);
@@ -22,7 +23,8 @@ export function InlineMediaUpload({onUploaded}:{onUploaded:(path:string)=>void})
     finally {setPending(false);}
   }
   return <details className="rounded-xl border border-black/10 p-3"><summary className="cursor-pointer text-sm font-semibold">Upload an image</summary><div className="mt-3 space-y-3">
-    <label className="block text-xs font-semibold">New website image<input ref={input} type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={pending} className="mt-2 block w-full text-xs"/></label>
+    <p className="text-xs text-black/60">JPG, PNG or WebP, up to 4 MB.</p>
+    <label className="block text-xs font-semibold">New website image<input ref={input} type="file" accept="image/jpeg,image/png,image/webp" disabled={pending} className="mt-2 block w-full text-xs"/></label>
     <button type="button" disabled={pending} onClick={upload} className="min-h-11 rounded-lg border border-black/15 px-3 text-xs font-semibold disabled:opacity-40">{pending?"Uploading…":"Upload image here"}</button>
     {message && <p role={failed?"alert":"status"} className="break-words text-xs">{message}</p>}
   </div></details>;

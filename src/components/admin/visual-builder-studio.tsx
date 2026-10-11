@@ -103,7 +103,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
       if (event.source === publicFrame.current?.contentWindow && event.data?.type === "aloyri-builder-public-ready") publicFrame.current?.contentWindow?.postMessage({type:"aloyri-builder-page-draft",content:pageContent,faqContent,siteContent,presentation:presentationDraft,appearance:appearanceDraft},window.location.origin);
       if (event.source !== draftFrame.current?.contentWindow) return;
       if (event.data?.type === "aloyri-builder-ready") sendDraft();
-      if (event.data?.type === "aloyri-builder-select" && typeof event.data.id === "string" && layout.order.includes(event.data.id)) { setSelectedId(event.data.id); setPropertiesTab("section"); }
+      if (event.data?.type === "aloyri-builder-select" && typeof event.data.id === "string" && layout.order.includes(event.data.id)) { setSelectedId(event.data.id); setPropertiesTab("section"); setView("advanced"); }
     };
     window.addEventListener("message", receiveReady);
     sendDraft();
@@ -199,6 +199,13 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
     }
   }, [coreContent]);
 
+  useEffect(() => {
+    if (!selectedCore || view !== "advanced") return;
+    const ids: Partial<Record<HomepageBlockId,string>> = {hero:"home-hero",browse:"home-discovery",categories:"home-discovery",routineFinder:"home-discovery",brandStory:"home-story",promoBeforeProducts:"home-banners",promoAfterProducts:"home-banners",editorialBeforeProducts:"home-editorial",editorialAfterProducts:"home-editorial",editorialBeforeStory:"home-editorial",products:"home-products"};
+    const details=formRef.current?.querySelector<HTMLDetailsElement>("#"+(ids[selectedCore] || "home-layout"));
+    if(details)details.open=true;
+  }, [selectedCore,view]);
+
   const deviceWidths = { mobile: 390, tablet: 820, desktop: 1280 };
   return (
     <form ref={formRef} action={saveVisualBuilder} className="space-y-4" onChange={event => {
@@ -271,7 +278,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
                 return <li key={id} draggable onDragStart={event => event.dataTransfer.setData("text/plain", id)} onDragOver={event => event.preventDefault()} onDrop={event => drop(event, id)}
                   className={`flex min-w-0 items-center gap-2 rounded-xl border p-2 ${selectedId === id ? "border-[#713a35] bg-[#f8eee9]" : "border-black/10 bg-white"}`}>
                   <span className="cursor-grab px-1 text-black/40" title="Drag to reorder" aria-hidden="true">⠿</span>
-                  <button type="button" onClick={() => setSelectedId(id)} aria-pressed={selectedId === id}
+                  <button type="button" onClick={() => {setSelectedId(id);setPropertiesTab("section");if(id.startsWith("core:"))setView("advanced");}} aria-pressed={selectedId === id}
                     className="min-w-0 flex-1 text-left focus-visible:rounded focus-visible:outline-2">
                     <span className="block truncate text-xs font-semibold">{name(id)}</span>
                     <span className="text-[11px] text-black/50">{core ? "Built-in commerce section" : componentName(layout.blocks.find(block => customBlockId(block.id) === id)!.kind)} · {hidden(id) ? "Hidden" : "Visible"}</span>
@@ -345,26 +352,26 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
               {faqContent && <PreviewFaqProperties content={faqContent} onChange={setFaqContent} />}
           {selectedCore ? <>
             <p className="mt-3 font-semibold">{sections.get(selectedId)}</p>
-            {coreContent ? <><p className="mt-2 text-xs leading-5 text-black/60">Edit the existing section here. The storefront retains its working features and CRM data.</p>{selectedCore === "hero" && <div className="mt-4 space-y-3"><label className="block text-xs font-semibold">Small label<input aria-label="Small label" value={coreContent.eyebrow} maxLength={600} onChange={event => editCore("eyebrow", event.target.value)} className={field + " mt-1"} /></label>
-<label className="block text-xs font-semibold">Main heading<input aria-label="Main heading" value={coreContent.headline} maxLength={600} onChange={event => editCore("headline", event.target.value)} className={field + " mt-1"} /></label>
-<label className="block text-xs font-semibold">Description<input aria-label="Description" value={coreContent.intro} maxLength={600} onChange={event => editCore("intro", event.target.value)} className={field + " mt-1"} /></label>
-<label className="block text-xs font-semibold">Primary button<input aria-label="Primary button" value={coreContent.primaryLabel} maxLength={600} onChange={event => editCore("primaryLabel", event.target.value)} className={field + " mt-1"} /></label>
+            {coreContent ? <><p className="mt-2 text-xs leading-5 text-black/60">Edit the existing section here. The storefront retains its working features and CRM data.</p>{selectedCore === "hero" && <div className="mt-4 space-y-3"><label className="block text-xs font-semibold">Small label<input aria-label="Small label" value={coreContent.eyebrow} maxLength={120} onChange={event => editCore("eyebrow", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Main heading<input aria-label="Main heading" value={coreContent.headline} maxLength={180} onChange={event => editCore("headline", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Description<input aria-label="Description" value={coreContent.intro} maxLength={1200} onChange={event => editCore("intro", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Primary button<input aria-label="Primary button" value={coreContent.primaryLabel} maxLength={80} onChange={event => editCore("primaryLabel", event.target.value)} className={field + " mt-1"} /></label>
 <label className="block text-xs font-semibold">Primary destination<input aria-label="Primary destination" value={coreContent.primaryHref} maxLength={200} onChange={event => editCore("primaryHref", event.target.value)} className={field + " mt-1"} /></label>
-<label className="block text-xs font-semibold">Secondary button<input aria-label="Secondary button" value={coreContent.secondaryLabel} maxLength={600} onChange={event => editCore("secondaryLabel", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Secondary button<input aria-label="Secondary button" value={coreContent.secondaryLabel} maxLength={80} onChange={event => editCore("secondaryLabel", event.target.value)} className={field + " mt-1"} /></label>
 <label className="block text-xs font-semibold">Secondary destination<input aria-label="Secondary destination" value={coreContent.secondaryHref} maxLength={200} onChange={event => editCore("secondaryHref", event.target.value)} className={field + " mt-1"} /></label>
 <label className="block text-xs font-semibold">Image path<input aria-label="Image path" value={coreContent.heroImagePath} maxLength={200} onChange={event => editCore("heroImagePath", event.target.value)} className={field + " mt-1"} /></label><label className="block text-xs font-semibold">Hero style<select value={coreContent.heroStyle} onChange={event => editCore("heroStyle", event.target.value as CoreContent["heroStyle"])} className={field + " mt-1"}><option value="soft">Soft</option><option value="minimal">Minimal</option><option value="contrast">Contrast</option></select></label><label className="block text-xs font-semibold">Layout<select value={coreContent.heroLayout} onChange={event => editCore("heroLayout", event.target.value as CoreContent["heroLayout"])} className={field + " mt-1"}><option value="split">Split</option><option value="stacked">Stacked</option></select></label></div>}
-{selectedCore === "browse" && <div className="mt-4 space-y-3"><label className="block text-xs font-semibold">Small label<input aria-label="Small label" value={coreContent.browseEyebrow} maxLength={600} onChange={event => editCore("browseEyebrow", event.target.value)} className={field + " mt-1"} /></label>
-<label className="block text-xs font-semibold">Heading<input aria-label="Heading" value={coreContent.browseTitle} maxLength={600} onChange={event => editCore("browseTitle", event.target.value)} className={field + " mt-1"} /></label>
+{selectedCore === "browse" && <div className="mt-4 space-y-3"><label className="block text-xs font-semibold">Small label<input aria-label="Small label" value={coreContent.browseEyebrow} maxLength={90} onChange={event => editCore("browseEyebrow", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Heading<input aria-label="Heading" value={coreContent.browseTitle} maxLength={140} onChange={event => editCore("browseTitle", event.target.value)} className={field + " mt-1"} /></label>
 <label className="block text-xs font-semibold">Description<input aria-label="Description" value={coreContent.browseIntro} maxLength={600} onChange={event => editCore("browseIntro", event.target.value)} className={field + " mt-1"} /></label>
-<label className="block text-xs font-semibold">Search placeholder<input aria-label="Search placeholder" value={coreContent.browsePlaceholder} maxLength={600} onChange={event => editCore("browsePlaceholder", event.target.value)} className={field + " mt-1"} /></label></div>}
-{selectedCore === "categories" && <div className="mt-4 space-y-3"><label className="block text-xs font-semibold">Small label<input aria-label="Small label" value={coreContent.categoriesEyebrow} maxLength={600} onChange={event => editCore("categoriesEyebrow", event.target.value)} className={field + " mt-1"} /></label>
-<label className="block text-xs font-semibold">Heading<input aria-label="Heading" value={coreContent.categoriesTitle} maxLength={600} onChange={event => editCore("categoriesTitle", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Search placeholder<input aria-label="Search placeholder" value={coreContent.browsePlaceholder} maxLength={100} onChange={event => editCore("browsePlaceholder", event.target.value)} className={field + " mt-1"} /></label></div>}
+{selectedCore === "categories" && <div className="mt-4 space-y-3"><label className="block text-xs font-semibold">Small label<input aria-label="Small label" value={coreContent.categoriesEyebrow} maxLength={90} onChange={event => editCore("categoriesEyebrow", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Heading<input aria-label="Heading" value={coreContent.categoriesTitle} maxLength={140} onChange={event => editCore("categoriesTitle", event.target.value)} className={field + " mt-1"} /></label>
 <label className="block text-xs font-semibold">Description<input aria-label="Description" value={coreContent.categoriesIntro} maxLength={600} onChange={event => editCore("categoriesIntro", event.target.value)} className={field + " mt-1"} /></label></div>}
-{selectedCore === "routineFinder" && <div className="mt-4 space-y-3"><label className="block text-xs font-semibold">Heading<input aria-label="Heading" value={coreContent.routineFinderHeadline} maxLength={600} onChange={event => editCore("routineFinderHeadline", event.target.value)} className={field + " mt-1"} /></label>
-<label className="block text-xs font-semibold">Description<input aria-label="Description" value={coreContent.routineFinderIntro} maxLength={600} onChange={event => editCore("routineFinderIntro", event.target.value)} className={field + " mt-1"} /></label></div>}
-{selectedCore === "brandStory" && <div className="mt-4 space-y-3"><label className="block text-xs font-semibold">Small label<input aria-label="Small label" value={coreContent.ideaEyebrow} maxLength={600} onChange={event => editCore("ideaEyebrow", event.target.value)} className={field + " mt-1"} /></label>
-<label className="block text-xs font-semibold">Heading<input aria-label="Heading" value={coreContent.ideaHeadline} maxLength={600} onChange={event => editCore("ideaHeadline", event.target.value)} className={field + " mt-1"} /></label>
-<label className="block text-xs font-semibold">Description<input aria-label="Description" value={coreContent.ideaCopy} maxLength={600} onChange={event => editCore("ideaCopy", event.target.value)} className={field + " mt-1"} /></label></div>}</> : <p className="mt-2 text-xs text-black/60">Use the complete section controls below.</p>}
+{selectedCore === "routineFinder" && <div className="mt-4 space-y-3"><label className="block text-xs font-semibold">Heading<input aria-label="Heading" value={coreContent.routineFinderHeadline} maxLength={180} onChange={event => editCore("routineFinderHeadline", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Description<input aria-label="Description" value={coreContent.routineFinderIntro} maxLength={1200} onChange={event => editCore("routineFinderIntro", event.target.value)} className={field + " mt-1"} /></label></div>}
+{selectedCore === "brandStory" && <div className="mt-4 space-y-3"><label className="block text-xs font-semibold">Small label<input aria-label="Small label" value={coreContent.ideaEyebrow} maxLength={90} onChange={event => editCore("ideaEyebrow", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Heading<input aria-label="Heading" value={coreContent.ideaHeadline} maxLength={180} onChange={event => editCore("ideaHeadline", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Description<input aria-label="Description" value={coreContent.ideaCopy} maxLength={1200} onChange={event => editCore("ideaCopy", event.target.value)} className={field + " mt-1"} /></label></div>}</> : <p className="mt-2 text-xs text-black/60">Use the complete section controls below.</p>}
             <label className="mt-4 flex items-center gap-2 text-sm"><input type="checkbox" checked={!layout.hiddenCore.includes(selectedCore)} onChange={() => toggleCore(selectedCore)} /> Show section</label>
             {advancedSettings && <button type="button" onClick={() => {
               setView("advanced");

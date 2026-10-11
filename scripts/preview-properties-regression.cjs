@@ -48,5 +48,6 @@ async function save(data){await assert.rejects(actions.saveVisualBuilder(data),e
  saved=null;data.set('navHref0','https://evil.test');await assert.rejects(actions.saveVisualBuilder(data),/REDIRECT:\/admin\/builder/);assert.equal(saved,null);
  allow=false;await assert.rejects(actions.saveVisualBuilder(form('about',{pageContent:JSON.stringify(page)})),/\/admin\/login/);await assert.rejects(actions.uploadPreviewMedia(new FormData()),/\/admin\/login/);
  allow=true;const image=new FormData();image.set('image',new File(['fixture'],'banner.webp',{type:'image/webp'}));assert.deepEqual(await actions.uploadPreviewMedia(image),{ok:true,pathname:'media/fixture-upload.webp'});assert.ok(permissions.includes('media.edit'));
+ const large=new FormData();large.set('image',new File([new Uint8Array(4*1024*1024+1)],'large.webp',{type:'image/webp'}));assert.deepEqual(await actions.uploadPreviewMedia(large),{ok:false,error:'Use images up to 4 MB.'});
  console.log('Preview Properties: complete pages/FAQ, campaign references, navigation, atomic save boundary, validation, permissions and inline media PASS');
 })().catch(error=>{console.error(error);process.exitCode=1;});

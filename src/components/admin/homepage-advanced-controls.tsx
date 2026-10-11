@@ -41,7 +41,7 @@ export async function HomepageAdvancedControls({ config, inProperties = false }:
             </label>
             <label className="grid gap-1.5 text-sm font-medium">
               Headline
-              <textarea name="headline" defaultValue={home.headline} rows={3} maxLength={180} className="rounded-xl border border-black/10 px-4 py-3" />
+              <textarea aria-label="Main banner headline" name="headline" defaultValue={home.headline} rows={3} maxLength={180} className="rounded-xl border border-black/10 px-4 py-3" />
             </label>
             <label className="grid gap-1.5 text-sm font-medium">
               Introduction

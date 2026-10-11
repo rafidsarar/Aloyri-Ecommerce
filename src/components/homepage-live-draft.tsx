@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { VisualBuilderBlock } from "@/components/visual-builder-block";
+import { safeHomepageImagePath } from "@/lib/homepage-builder";
 import type { VisualLayout } from "@/lib/visual-builder";
 
 type DraftMessage = { type: "aloyri-builder-draft"; layout: VisualLayout; coreContent?: Record<string, string>; selectedId?: string };
@@ -81,6 +82,32 @@ export function HomepageLiveDraft({ sections, initialLayout }: { sections: CoreS
       else element.textContent = element.getAttribute("data-builder-original") || "";
     }
   }, [active, content, layout]);
+
+  useEffect(() => {
+    const hero=document.querySelector<HTMLElement>("[data-builder-core='hero'] .store-hero");
+    if (!hero) return;
+    if (["soft","minimal","contrast"].includes(content.heroStyle)) {
+      hero.classList.remove("store-hero-soft","store-hero-minimal","store-hero-contrast");hero.classList.add("store-hero-"+content.heroStyle);
+    }
+    if (["left","center"].includes(content.heroAlignment)) {
+      hero.classList.remove("store-hero-align-left","store-hero-align-center");hero.classList.add("store-hero-align-"+content.heroAlignment);
+    }
+    if (["split","stacked"].includes(content.heroLayout)) {
+      hero.classList.toggle("grid-cols-1",content.heroLayout==="stacked");hero.classList.toggle("lg:grid-cols-[1.03fr_.97fr]",content.heroLayout==="split");
+    }
+    const art=hero.querySelector<HTMLElement>(".store-hero-art");
+    if (!art) return;
+    const path=safeHomepageImagePath(content.heroImagePath);
+    let image=art.querySelector<HTMLImageElement>("[data-builder-image]");
+    if(path) {
+      for(const child of Array.from(art.children))if(child instanceof HTMLElement && !child.hasAttribute("data-builder-image")){if(!child.hasAttribute("data-builder-display"))child.dataset.builderDisplay=child.style.display;child.style.display="none";}
+      if(!image) {image=document.createElement("img");image.dataset.builderImage="true";image.className="relative mx-auto aspect-square w-full max-w-[440px] rounded-[2rem] object-cover";art.append(image);}
+      image.src="/api/storefront-media/"+path.replace(/^media\//,"");image.alt=content.headline || "Draft homepage image";
+    } else {
+      image?.remove();
+      for(const child of Array.from(art.children))if(child instanceof HTMLElement && child.hasAttribute("data-builder-display"))child.style.display=child.dataset.builderDisplay || "";
+    }
+  }, [content,layout]);
 
   useEffect(() => {
     const footer = document.querySelector(".store-footer-description");

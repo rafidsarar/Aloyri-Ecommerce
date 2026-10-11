@@ -648,6 +648,7 @@ export async function uploadPreviewMedia(formData: FormData): Promise<{ok:true;p
   const admin = await requireAdminPermission("media.edit");
   const file = formData.get("image");
   if (!(file instanceof File) || !file.size) return {ok:false,error:"Choose an image first."};
+  if (file.size > 4 * 1024 * 1024) return {ok:false,error:"Use images up to 4 MB."};
   let pathname: string;
   try { pathname = await uploadStorefrontMedia(file); }
   catch (error) { return {ok:false,error:errorMessage(error)}; }
