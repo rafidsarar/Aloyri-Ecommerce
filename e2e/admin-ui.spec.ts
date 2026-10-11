@@ -434,7 +434,7 @@ test.describe('Owner administration editing safeguards', () => {
     await page.getByRole('button',{name:'+ Add section',exact:true}).click();
     const added = list.locator('article').last();
     await added.getByLabel('Section title',{exact:true}).fill('Our promise');
-    await added.getByLabel('Paragraphs',{exact:true}).fill('First paragraph.\nSecond paragraph.');
+    await added.locator('textarea[name$="_paragraphs"]').fill('First paragraph.\nSecond paragraph.');
     await added.getByRole('button',{name:/Move section .* up/}).click();
     await list.locator('article').first().getByRole('button',{name:'Remove section 1',exact:true}).click();
     const values = await page.locator('form').evaluate(form => Array.from(new FormData(form as HTMLFormElement).entries()));
