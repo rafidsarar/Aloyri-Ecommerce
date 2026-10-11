@@ -489,7 +489,7 @@ test.describe('Owner administration editing safeguards', () => {
     await properties.getByRole('button',{name:'All section properties'}).click();
     await expect(properties.getByLabel('Main banner headline',{exact:true})).toBeVisible();
     await properties.getByLabel('Main banner headline',{exact:true}).fill('Puja homepage headline');
-    await expect(properties.getByLabel('Main heading',{exact:true})).toHaveValue('Puja homepage headline');
+    expect(JSON.parse(await page.locator('input[name="coreContent"]').inputValue()).headline).toBe('Puja homepage headline');
     await properties.getByRole('button',{name:'Header, footer & website'}).click();
     await properties.locator('#website-layout > summary').click();
     await properties.getByLabel('Menu item 1 label',{exact:true}).fill('Discover');
@@ -556,7 +556,7 @@ test.describe('Owner administration editing safeguards', () => {
     await properties.getByLabel('New website image').setInputFiles({name:'banner.webp',mimeType:'image/webp',buffer:Buffer.from('fixture')});
     await properties.getByRole('button',{name:'Upload image here'}).click();
     await expect(properties.getByRole('status').filter({hasText:'Image uploaded.'})).toBeVisible();
-    await expect(properties.getByLabel('Image path',{exact:true})).toHaveValue('media/fixture-upload.webp');
+    await expect(properties.locator('select[name="heroImagePath"]')).toHaveValue('media/fixture-upload.webp');
     const frame=page.frameLocator('iframe[title="Real storefront preview at 1280 pixels"]');
     await expect(frame.locator('[data-builder-image]')).toHaveAttribute('src','/api/storefront-media/fixture-upload.webp');
     await expect(page).toHaveURL(`${base}/admin/preview-properties`);

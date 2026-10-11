@@ -90,7 +90,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
   function undoCore() { if (!corePast.length || !coreContent) return; setCoreFuture(f => [coreContent, ...f]); setCoreContent(corePast[corePast.length - 1]); setCorePast(p => p.slice(0, -1)); }
   function redoCore() { if (!coreFuture.length || !coreContent) return; setCorePast(p => [...p, coreContent]); setCoreContent(coreFuture[0]); setCoreFuture(f => f.slice(1)); }
   const [selectedId, setSelectedId] = useState(layout.order[0] || "");
-  const [view, setView] = useState<"canvas" | "advanced">(initialView);
+  const [view, setView] = useState<"canvas" | "advanced">(advancedSettings ? "advanced" : initialView);
   const [device, setDevice] = useState<"mobile" | "tablet" | "desktop">("desktop");
   const [previewMode, setPreviewMode] = useState<"live" | "draft">("live");
   const [focusPreview, setFocusPreview] = useState(false);
@@ -352,7 +352,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
               {faqContent && <PreviewFaqProperties content={faqContent} onChange={setFaqContent} />}
           {selectedCore ? <>
             <p className="mt-3 font-semibold">{sections.get(selectedId)}</p>
-            {coreContent ? <><p className="mt-2 text-xs leading-5 text-black/60">Edit the existing section here. The storefront retains its working features and CRM data.</p>{selectedCore === "hero" && <div className="mt-4 space-y-3"><label className="block text-xs font-semibold">Small label<input aria-label="Small label" value={coreContent.eyebrow} maxLength={120} onChange={event => editCore("eyebrow", event.target.value)} className={field + " mt-1"} /></label>
+            {coreContent && !advancedSettings ? <><p className="mt-2 text-xs leading-5 text-black/60">Edit the existing section here. The storefront retains its working features and CRM data.</p>{selectedCore === "hero" && <div className="mt-4 space-y-3"><label className="block text-xs font-semibold">Small label<input aria-label="Small label" value={coreContent.eyebrow} maxLength={120} onChange={event => editCore("eyebrow", event.target.value)} className={field + " mt-1"} /></label>
 <label className="block text-xs font-semibold">Main heading<input aria-label="Main heading" value={coreContent.headline} maxLength={180} onChange={event => editCore("headline", event.target.value)} className={field + " mt-1"} /></label>
 <label className="block text-xs font-semibold">Description<input aria-label="Description" value={coreContent.intro} maxLength={1200} onChange={event => editCore("intro", event.target.value)} className={field + " mt-1"} /></label>
 <label className="block text-xs font-semibold">Primary button<input aria-label="Primary button" value={coreContent.primaryLabel} maxLength={80} onChange={event => editCore("primaryLabel", event.target.value)} className={field + " mt-1"} /></label>
