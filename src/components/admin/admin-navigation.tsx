@@ -11,7 +11,10 @@ export function AdminNavigation({ items }: { items: AdminNavItem[] }) {
   const [open, setOpen] = useState(false);
   const filtered = items.filter(item => `${item.label} ${item.group}`.toLowerCase().includes(query.trim().toLowerCase()));
   const groups = [...new Set(filtered.map(item => item.group))];
-  const current = items.find(item => item.href === pathname) || items.find(item => item.href !== "/admin" && pathname.startsWith(item.href + "/"));
+  const sectionPath = pathname.startsWith("/admin/pages") || pathname === "/admin/media" || pathname === "/admin/homepage" ? "/admin/builder"
+    : ["/admin/reviews", "/admin/delivery", "/admin/payments"].includes(pathname) ? "/admin/customer-service"
+    : ["/admin/security", "/admin/history", "/admin/audit", "/admin/operations"].includes(pathname) || pathname.startsWith("/admin/seo") ? "/admin/settings" : pathname;
+  const current = items.find(item => item.href === sectionPath) || items.find(item => item.href !== "/admin" && sectionPath.startsWith(item.href + "/"));
   return <>
     <button type="button" className="admin-menu-toggle" aria-expanded={open} aria-controls="admin-sections" onClick={() => setOpen(value => !value)}>
       <span>{current?.label || "Admin sections"}</span><span>{open ? "Close menu" : "Browse sections"}</span>
@@ -22,7 +25,7 @@ export function AdminNavigation({ items }: { items: AdminNavItem[] }) {
         {groups.map(group => <div className="admin-nav-group" key={group}>
           <p>{group}</p>
           {filtered.filter(item => item.group === group).map(item => {
-            const active = item.href === "/admin" ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + "/");
+            const active = item.href === "/admin" ? sectionPath === item.href : sectionPath === item.href || sectionPath.startsWith(item.href + "/");
             return <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} className={active ? "is-active" : ""} onClick={() => { setOpen(false); setQuery(""); }}>{item.label}</Link>;
           })}
         </div>)}

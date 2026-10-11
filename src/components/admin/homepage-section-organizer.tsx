@@ -8,6 +8,7 @@ export function HomepageSectionOrganizer({ initialOrder }: { initialOrder: Homep
   function move(index: number, direction: -1 | 1) {
     const other = index + direction;
     if (other < 0 || other >= order.length) return;
+    document.getElementById("admin-content")?.dispatchEvent(new Event("admin:dirty", { bubbles: true }));
     setOrder((current) => {
       const next = [...current];
       [next[index], next[other]] = [next[other], next[index]];
@@ -20,7 +21,7 @@ export function HomepageSectionOrganizer({ initialOrder }: { initialOrder: Homep
       <input type="hidden" name="sectionOrder" value={JSON.stringify(order)} />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs leading-5 text-black/60">Use the arrows to rearrange the entire homepage. Hidden sections retain their positions for later use.</p>
-        <button type="button" onClick={() => setOrder([...defaultHomepageOrder])} className="min-h-10 rounded-lg border border-black/15 bg-white px-4 text-xs font-semibold">Restore standard order</button>
+        <button type="button" onClick={() => { setOrder([...defaultHomepageOrder]); document.getElementById("admin-content")?.dispatchEvent(new Event("admin:dirty", { bubbles: true })); }} className="min-h-10 rounded-lg border border-black/15 bg-white px-4 text-xs font-semibold">Restore standard order</button>
       </div>
       <ol className="grid gap-2 sm:grid-cols-2">
         {order.map((id, index) => {

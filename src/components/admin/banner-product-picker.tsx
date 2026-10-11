@@ -11,6 +11,7 @@ export function BannerProductPicker({ name, products, selected }: { name: string
     (product.brand + " " + product.name + " " + product.id).toLowerCase().includes(query.trim().toLowerCase())
   ).slice(0, 40), [products, query]);
   function toggle(id: string) {
+    document.getElementById("admin-content")?.dispatchEvent(new Event("admin:dirty", { bubbles: true }));
     setIds(old => old.includes(id) ? old.filter(value => value !== id) : old.length < MAX_HERO_PRODUCTS ? [...old, id] : old);
   }
   return <div className="rounded-2xl border border-black/10 bg-white p-4">

@@ -1,10 +1,11 @@
-import { BannerProductPicker } from "@/components/admin/banner-product-picker";
 import Link from "next/link";
+import { MediaImagePicker } from "@/components/admin/media-image-picker";
+import { BannerProductPicker } from "@/components/admin/banner-product-picker";
 import { HomepageSectionOrganizer } from "@/components/admin/homepage-section-organizer";
 import { StorefrontDevicePreview } from "@/components/admin/storefront-device-preview";
 import { AdminCard } from "@/components/admin/admin-shell";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
-import type { StorefrontConfig } from "@/lib/storefront-admin-store";
+import { readStorefrontMediaLibrary, type StorefrontConfig } from "@/lib/storefront-admin-store";
 
 /**
  * All legacy homepage controls rendered inside the Visual Builder's ONE save form.
@@ -12,7 +13,8 @@ import type { StorefrontConfig } from "@/lib/storefront-admin-store";
  * advanced homepage fields and visual canvas changes atomically.
  */
 export async function HomepageAdvancedControls({ config }: { config: StorefrontConfig }) {
-  const catalog = await fetchCrmCatalog();
+  const [catalog, { media, unavailable }] = await Promise.all([fetchCrmCatalog(), readStorefrontMediaLibrary()]);
+  const mediaPaths = media.map(item => item.pathname);
   const home = config.homepage;
   const products = catalog.ok ? catalog.body.products : [];
   const heroProductId = products.some(product => product.id === home.heroProductId)
@@ -21,29 +23,6 @@ export async function HomepageAdvancedControls({ config }: { config: StorefrontC
 
   return (
     <div className="space-y-5" aria-label="Existing homepage feature settings">
-      <div className="mb-5 rounded-2xl border border-black/10 bg-white p-5 sm:p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-widest text-[#713a35]">Storefront design & content</p>
-            <h2 className="mt-2 text-xl font-semibold tracking-tight sm:text-2xl">Make your homepage your own.</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-black/60">All existing banners, layout options, campaigns, editorial sections and brand story settings are available here. The canvas editor is another view of this same workspace.</p>
-          </div>
-          <Link href="/" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center rounded-xl bg-[#713a35] px-5 text-sm font-semibold text-white">Open storefront ↗</Link>
-        </div>
-        <nav aria-label="Homepage editor sections" className="mt-5 flex flex-wrap gap-2">
-          {[
-            ["Layout & order", "#home-order"],
-            ["Look & visibility", "#home-layout"],
-            ["Main banner", "#home-hero"],
-            ["Discovery", "#home-discovery"],
-            ["Campaign banners", "#home-banners"],
-            ["Editorial", "#home-editorial"],
-            ["Brand story", "#home-story"],
-          ].map(([label, href]) => (
-            <a key={href} href={href} className="inline-flex min-h-10 items-center rounded-full border border-black/10 bg-[#f9f7f5] px-4 text-xs font-semibold text-[#713a35] hover:border-[#713a35]/40">{label}</a>
-          ))}
-        </nav>
-      </div>
       <details className="mb-5 overflow-hidden rounded-2xl border border-black/10 bg-white">
         <summary className="cursor-pointer px-5 py-4 text-sm font-semibold">Preview live homepage on mobile, tablet or desktop <span className="text-black/40">↓</span></summary>
         <div className="border-t border-black/10 p-4 sm:p-6">
@@ -51,102 +30,9 @@ export async function HomepageAdvancedControls({ config }: { config: StorefrontC
           <p className="mt-2 text-xs text-black/60">Preview shows the current live page. Save changes and refresh the preview to see your update.</p>
         </div>
       </details>
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Link href="/admin/merchandising" className="rounded-xl border border-black/10 bg-white p-4 text-sm font-semibold hover:border-[#713a35]/40 focus-visible:outline-2 focus-visible:outline-offset-2">
-          Arrange homepage sections <span aria-hidden="true">→</span>
-          <span className="mt-1 block text-xs font-normal text-black/60">Show, hide and reorder product collections and campaigns.</span>
-        </Link>
-        <Link href="/admin/settings" className="rounded-xl border border-black/10 bg-white p-4 text-sm font-semibold hover:border-[#713a35]/40 focus-visible:outline-2 focus-visible:outline-offset-2">
-          Website appearance & settings <span aria-hidden="true">→</span>
-          <span className="mt-1 block text-xs font-normal text-black/60">Manage site-wide branding and storefront information.</span>
-        </Link>
-        <Link href="/admin/media" className="rounded-xl border border-black/10 bg-white p-4 text-sm font-semibold hover:border-[#713a35]/40 focus-visible:outline-2 focus-visible:outline-offset-2">
-          Media library <span aria-hidden="true">→</span>
-          <span className="mt-1 block text-xs font-normal text-black/60">Upload homepage photos and campaign artwork for your banners.</span>
-        </Link>
-      </div>
-
       <div className="grid gap-5">
 
-        <div id="home-order" className="scroll-mt-24">
-          <AdminCard>
-            <h2 className="text-lg font-semibold">Section layout & order</h2>
-            <p className="mt-1 mb-5 text-xs text-black/60">Use the arrows to decide what customers see first. Product groups retain their own order in Sections & Merchandising.</p>
-            <HomepageSectionOrganizer initialOrder={home.sectionOrder} />
-          </AdminCard>
-        </div>
-        <div id="home-layout" className="scroll-mt-24">
-        <AdminCard>
-          <h2 className="mb-4 text-lg font-semibold">Appearance & section visibility</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showHero" defaultChecked={home.showHero} /> Show main banner</label>
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showBrowse" defaultChecked={home.showBrowse} /> Show search & quick links</label>
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showFocus" defaultChecked={home.showFocus} /> Show skincare focus links</label>
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showRoutineFinder" defaultChecked={home.showRoutineFinder} /> Show guided routine finder</label>
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showRoutineSteps" defaultChecked={home.showRoutineSteps} /> Show three-step routine on homepage</label>
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showRoutine" defaultChecked={config.presentation.showRoutine} /> Enable routine-section layout</label>
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showHeroImageOnMobile" defaultChecked={config.presentation.showHeroImageOnMobile} /> Show hero image on phones</label>
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showCategories" defaultChecked={home.showCategories} /> Show category shortcuts</label>
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showBrandStory" defaultChecked={home.showBrandStory} /> Show brand story</label>
-            <label className="grid gap-1 text-sm font-medium">Banner layout
-              <select name="heroLayout" defaultValue={home.heroLayout} className="rounded-xl border border-black/10 px-4 py-3">
-                <option value="split">Split — text beside product</option>
-                <option value="stacked">Stacked — text above product</option>
-              </select>
-            </label>
-          </div>
-          <div className="mt-5 grid gap-4 border-t border-black/10 pt-5 sm:grid-cols-3">
-            <label className="grid gap-1.5 text-sm font-medium">Color palette
-              <select name="appearance" defaultValue={config.site.appearance} className="min-h-11 rounded-xl border border-black/10 px-4 py-3">
-                <option value="rose">Rose — Aloyri signature</option>
-                <option value="sage">Sage — botanical</option>
-                <option value="sand">Sand — warm neutral</option>
-              </select>
-            </label>
-            <label className="grid gap-1.5 text-sm font-medium">Content width
-              <select name="contentWidth" defaultValue={config.presentation.contentWidth} className="min-h-11 rounded-xl border border-black/10 px-4 py-3">
-                <option value="wide">Wide</option><option value="comfortable">Comfortable</option>
-              </select>
-            </label>
-            <label className="grid gap-1.5 text-sm font-medium">Desktop product columns
-              <select name="desktopColumns" defaultValue={config.presentation.desktopColumns} className="min-h-11 rounded-xl border border-black/10 px-4 py-3">
-                <option value="3">Three — larger product images</option><option value="4">Four — more products visible</option>
-              </select>
-            </label>
-          </div>
-        </AdminCard>
-        </div>
-        <div id="home-discovery" className="scroll-mt-24">
-        <AdminCard>
-          <h2 className="mb-4 text-lg font-semibold">Search & shopping discovery</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="grid gap-1.5 text-sm font-medium">Search section label<input name="browseEyebrow" defaultValue={home.browseEyebrow} maxLength={90} className="min-h-11 rounded-xl border border-black/10 px-4" /></label>
-            <label className="grid gap-1.5 text-sm font-medium">Search headline<input name="browseTitle" defaultValue={home.browseTitle} maxLength={140} className="min-h-11 rounded-xl border border-black/10 px-4" /></label>
-            <label className="grid gap-1.5 text-sm font-medium">Search placeholder<input name="browsePlaceholder" defaultValue={home.browsePlaceholder} maxLength={100} className="min-h-11 rounded-xl border border-black/10 px-4" /></label>
-            <label className="grid gap-1.5 text-sm font-medium">Search intro<textarea name="browseIntro" defaultValue={home.browseIntro} maxLength={300} rows={2} className="rounded-xl border border-black/10 px-4 py-3" /></label>
-          </div>
-          <h3 className="mt-6 border-t border-black/10 pt-5 text-sm font-semibold">Category showcase</h3>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <label className="grid gap-1.5 text-sm font-medium">Category label<input name="categoriesEyebrow" defaultValue={home.categoriesEyebrow} maxLength={90} className="min-h-11 rounded-xl border border-black/10 px-4" /></label>
-            <label className="grid gap-1.5 text-sm font-medium">Category headline<input name="categoriesTitle" defaultValue={home.categoriesTitle} maxLength={140} className="min-h-11 rounded-xl border border-black/10 px-4" /></label>
-            <label className="grid gap-1.5 text-sm font-medium sm:col-span-2">Category description<textarea name="categoriesIntro" defaultValue={home.categoriesIntro} maxLength={300} rows={2} className="rounded-xl border border-black/10 px-4 py-3" /></label>
-          </div>
-          <p className="mt-3 text-xs text-black/50">Category photos and availability use your CRM-synced products.</p>
-        </AdminCard>
-        <AdminCard>
-          <h2 className="mb-4 text-sm font-semibold">Guided shopping feature</h2>
-          <p className="mb-4 text-xs text-black/60">Edit the routine finder introduction on the homepage. The finder uses your live catalog and does not save quiz answers.</p>
-          <div className="grid gap-4">
-            <label className="grid gap-1.5 text-sm font-medium">Section headline
-              <input name="routineFinderHeadline" defaultValue={home.routineFinderHeadline} maxLength={140} className="rounded-xl border border-black/10 px-4 py-3" />
-            </label>
-            <label className="grid gap-1.5 text-sm font-medium">Section description
-              <textarea name="routineFinderIntro" defaultValue={home.routineFinderIntro} rows={3} maxLength={420} className="rounded-xl border border-black/10 px-4 py-3" />
-            </label>
-          </div>
-        </AdminCard>
-        </div>
-        <div id="home-hero" className="scroll-mt-24">
+        <details id="home-hero" name="homepage-section" className="admin-editor-section" open><summary>Main banner</summary>
         <AdminCard>
           <h2 className="mb-4 text-lg font-semibold">Main banner</h2>
           <div className="grid gap-4">
@@ -178,8 +64,8 @@ export async function HomepageAdvancedControls({ config }: { config: StorefrontC
               </select>
             </label>
             <label className="grid gap-1.5 text-sm font-medium sm:col-span-2">Custom banner image from Media Library
-              <input name="heroImagePath" defaultValue={home.heroImagePath} maxLength={200} placeholder="media/homepage-hero.webp" className="min-h-11 rounded-xl border border-black/10 px-4" />
-              <span className="text-xs font-normal text-black/50">Optional. Leave empty to display the featured product. Upload images under <Link href="/admin/media" className="underline">Media</Link> and paste the media path here.</span>
+              <MediaImagePicker name="heroImagePath" value={home.heroImagePath} paths={mediaPaths} unavailable={unavailable} />
+              <span className="text-xs font-normal text-black/50">Optional. Leave empty to display the featured product. Upload images under <Link href="/admin/media" className="underline">Media</Link> then choose an image here.</span>
             </label>
           </div>
         </AdminCard>
@@ -250,8 +136,87 @@ export async function HomepageAdvancedControls({ config }: { config: StorefrontC
             </div>
             <p className="mt-2 text-xs text-black/55">Checkout mode requires an active CRM promotion with a percentage discount of exactly 5%, targeted to these products. CRM applies and validates it during order creation. Label-only never changes prices.</p>
           </AdminCard>
-        </div>
-        <div id="home-banners" className="scroll-mt-24">
+        </details>
+<details id="home-order" name="homepage-section" className="admin-editor-section"><summary>Section order</summary>
+          <AdminCard>
+            <h2 className="text-lg font-semibold">Section layout & order</h2>
+            <p className="mt-1 mb-5 text-xs text-black/60">Use the arrows to decide what customers see first. Product groups retain their own order in Sections & Merchandising.</p>
+            <HomepageSectionOrganizer initialOrder={home.sectionOrder} />
+          </AdminCard>
+        </details>
+        <details id="home-layout" name="homepage-section" className="admin-editor-section"><summary>Colors, layout & visibility</summary>
+        <AdminCard>
+          <h2 className="mb-4 text-lg font-semibold">Appearance & section visibility</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showHero" defaultChecked={home.showHero} /> Show main banner</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showBrowse" defaultChecked={home.showBrowse} /> Show search & quick links</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showFocus" defaultChecked={home.showFocus} /> Show skincare focus links</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showRoutineFinder" defaultChecked={home.showRoutineFinder} /> Show guided routine finder</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showRoutineSteps" defaultChecked={home.showRoutineSteps} /> Show three-step routine on homepage</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showRoutine" defaultChecked={config.presentation.showRoutine} /> Enable routine-section layout</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showHeroImageOnMobile" defaultChecked={config.presentation.showHeroImageOnMobile} /> Show hero image on phones</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showCategories" defaultChecked={home.showCategories} /> Show category shortcuts</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showBrandStory" defaultChecked={home.showBrandStory} /> Show brand story</label>
+            <label className="grid gap-1 text-sm font-medium">Banner layout
+              <select name="heroLayout" defaultValue={home.heroLayout} className="rounded-xl border border-black/10 px-4 py-3">
+                <option value="split">Split — text beside product</option>
+                <option value="stacked">Stacked — text above product</option>
+              </select>
+            </label>
+          </div>
+          <div className="mt-5 grid gap-4 border-t border-black/10 pt-5 sm:grid-cols-3">
+            <label className="grid gap-1.5 text-sm font-medium">Color palette
+              <select name="appearance" defaultValue={config.site.appearance} className="min-h-11 rounded-xl border border-black/10 px-4 py-3">
+                <option value="rose">Rose — Aloyri signature</option>
+                <option value="sage">Sage — botanical</option>
+                <option value="sand">Sand — warm neutral</option>
+              </select>
+            </label>
+            <label className="grid gap-1.5 text-sm font-medium">Content width
+              <select name="contentWidth" defaultValue={config.presentation.contentWidth} className="min-h-11 rounded-xl border border-black/10 px-4 py-3">
+                <option value="wide">Wide</option><option value="comfortable">Comfortable</option>
+              </select>
+            </label>
+            <label className="grid gap-1.5 text-sm font-medium">Desktop product columns
+              <select name="desktopColumns" defaultValue={config.presentation.desktopColumns} className="min-h-11 rounded-xl border border-black/10 px-4 py-3">
+                <option value="3">Three — larger product images</option><option value="4">Four — more products visible</option>
+              </select>
+            </label>
+          </div>
+        </AdminCard>
+        </details>
+        <details id="home-discovery" name="homepage-section" className="admin-editor-section"><summary>Search, categories & routine finder</summary>
+        <AdminCard>
+          <h2 className="mb-4 text-lg font-semibold">Search & shopping discovery</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="grid gap-1.5 text-sm font-medium">Search section label<input name="browseEyebrow" defaultValue={home.browseEyebrow} maxLength={90} className="min-h-11 rounded-xl border border-black/10 px-4" /></label>
+            <label className="grid gap-1.5 text-sm font-medium">Search headline<input name="browseTitle" defaultValue={home.browseTitle} maxLength={140} className="min-h-11 rounded-xl border border-black/10 px-4" /></label>
+            <label className="grid gap-1.5 text-sm font-medium">Search placeholder<input name="browsePlaceholder" defaultValue={home.browsePlaceholder} maxLength={100} className="min-h-11 rounded-xl border border-black/10 px-4" /></label>
+            <label className="grid gap-1.5 text-sm font-medium">Search intro<textarea name="browseIntro" defaultValue={home.browseIntro} maxLength={300} rows={2} className="rounded-xl border border-black/10 px-4 py-3" /></label>
+          </div>
+          <h3 className="mt-6 border-t border-black/10 pt-5 text-sm font-semibold">Category showcase</h3>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <label className="grid gap-1.5 text-sm font-medium">Category label<input name="categoriesEyebrow" defaultValue={home.categoriesEyebrow} maxLength={90} className="min-h-11 rounded-xl border border-black/10 px-4" /></label>
+            <label className="grid gap-1.5 text-sm font-medium">Category headline<input name="categoriesTitle" defaultValue={home.categoriesTitle} maxLength={140} className="min-h-11 rounded-xl border border-black/10 px-4" /></label>
+            <label className="grid gap-1.5 text-sm font-medium sm:col-span-2">Category description<textarea name="categoriesIntro" defaultValue={home.categoriesIntro} maxLength={300} rows={2} className="rounded-xl border border-black/10 px-4 py-3" /></label>
+          </div>
+          <p className="mt-3 text-xs text-black/50">Category photos and availability use your CRM-synced products.</p>
+        </AdminCard>
+        <AdminCard>
+          <h2 className="mb-4 text-sm font-semibold">Guided shopping feature</h2>
+          <p className="mb-4 text-xs text-black/60">Edit the routine finder introduction on the homepage. The finder uses your live catalog and does not save quiz answers.</p>
+          <div className="grid gap-4">
+            <label className="grid gap-1.5 text-sm font-medium">Section headline
+              <input name="routineFinderHeadline" defaultValue={home.routineFinderHeadline} maxLength={140} className="rounded-xl border border-black/10 px-4 py-3" />
+            </label>
+            <label className="grid gap-1.5 text-sm font-medium">Section description
+              <textarea name="routineFinderIntro" defaultValue={home.routineFinderIntro} rows={3} maxLength={420} className="rounded-xl border border-black/10 px-4 py-3" />
+            </label>
+          </div>
+        </AdminCard>
+        </details>
+
+        <details id="home-banners" name="homepage-section" className="admin-editor-section"><summary>Promotional banners</summary>
         <AdminCard>
           <h2 className="text-lg font-semibold">Promotional banners</h2>
           <p className="mt-2 text-xs leading-5 text-black/60">
@@ -294,8 +259,8 @@ export async function HomepageAdvancedControls({ config }: { config: StorefrontC
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <label className="grid gap-1.5 text-sm font-medium">Image from Media Library
-                        <input name={`${prefix}ImagePath`} defaultValue={banner?.imagePath || ""} maxLength={200} placeholder="media/banner.webp" className="min-h-11 min-w-0 rounded-xl border border-black/10 bg-white px-4" />
-                        <span className="text-xs font-normal text-black/50">Upload under Admin → Media, then paste its media path.</span>
+                        <MediaImagePicker name={`${prefix}ImagePath`} value={banner?.imagePath || ""} paths={mediaPaths} unavailable={unavailable} />
+                        <span className="text-xs font-normal text-black/50">Upload in Images, then select your image here.</span>
                       </label>
                       <label className="grid gap-1.5 text-sm font-medium">Mobile layout
                         <select name={`${prefix}MobileLayout`} defaultValue={banner?.mobileLayout || "stacked"} className="min-h-11 rounded-xl border border-black/10 bg-white px-4">
@@ -337,8 +302,8 @@ export async function HomepageAdvancedControls({ config }: { config: StorefrontC
           </div>
         </AdminCard>
 
-        </div>
-        <div id="home-editorial" className="scroll-mt-24">
+        </details>
+        <details id="home-editorial" name="homepage-section" className="admin-editor-section"><summary>Editorial sections</summary>
         <AdminCard>
           <h2 className="text-lg font-semibold">Visual section builder</h2>
           <p className="mt-2 text-xs leading-5 text-black/60">Add up to six editorial sections. Choose a type and position, then save to update the live website. Position groups are rendered in the order shown here.</p>
@@ -390,8 +355,8 @@ export async function HomepageAdvancedControls({ config }: { config: StorefrontC
           </div>
         </AdminCard>
 
-        </div>
-        <div id="home-story" className="scroll-mt-24">
+        </details>
+        <details id="home-story" name="homepage-section" className="admin-editor-section"><summary>Brand story</summary>
         <AdminCard>
           <p className="text-lg font-semibold">Brand story</p>
           <div className="mt-4 grid gap-4">
@@ -410,7 +375,7 @@ export async function HomepageAdvancedControls({ config }: { config: StorefrontC
           </div>
         </AdminCard>
 
-        </div>
+        </details>
 
       </div>
     </div>

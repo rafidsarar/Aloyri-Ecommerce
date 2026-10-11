@@ -13,7 +13,7 @@ fs.writeFileSync(path.join(temp, 'tsconfig.json'), JSON.stringify({ compilerOpti
 fs.writeFileSync(path.join(temp, 'next.config.js'), `module.exports = { turbopack: { root: ${JSON.stringify(temp)} }, allowedDevOrigins: ['127.0.0.1'], images: { unoptimized: true } };`);
 fs.copyFileSync(path.join(root, 'postcss.config.mjs'), path.join(temp, 'postcss.config.mjs'));
 fs.copyFileSync(path.join(root, 'src/app/globals.css'), path.join(temp, 'app/globals.css'));
-for (const file of ['admin-navigation.tsx', 'admin-submit-button.tsx', 'admin-edit-guard.tsx']) fs.copyFileSync(path.join(root, 'src/components/admin', file), path.join(temp, 'components/admin', file));
+for (const file of ['admin-navigation.tsx', 'admin-submit-button.tsx', 'admin-edit-guard.tsx', 'admin-section-links.tsx', 'editable-content-list.tsx']) fs.copyFileSync(path.join(root, 'src/components/admin', file), path.join(temp, 'components/admin', file));
 // Only this disposable fixture substitutes auth; production components remain protected.
 let shell = fs.readFileSync(path.join(root, 'src/components/admin/admin-shell.tsx'), 'utf8');
 shell = shell.replace('import { logoutAdmin } from "@/app/admin/actions";', 'import { logoutAdmin } from "@/fixture-actions";');
@@ -44,11 +44,26 @@ fs.writeFileSync(path.join(temp,'app/admin/settings/page.tsx'),`import {AdminShe
 // replacing only the server save action in this disposable test application.
 for (const file of ['visual-builder-studio.tsx', 'builder-preview-viewport.tsx']) fs.copyFileSync(path.join(root, 'src/components/admin', file), path.join(temp, 'components/admin', file));
 fs.copyFileSync(path.join(root,'src/components/visual-builder-block.tsx'),path.join(temp,'components/visual-builder-block.tsx'));
-for (const file of ['visual-builder.ts','homepage-builder.ts']) fs.copyFileSync(path.join(root,'src/lib',file),path.join(temp,'lib',file));
+for (const file of ['visual-builder.ts','homepage-builder.ts','recommendations.ts']) fs.copyFileSync(path.join(root,'src/lib',file),path.join(temp,'lib',file));
 fs.mkdirSync(path.join(temp,'app/admin/builder'),{recursive:true});
 fs.writeFileSync(path.join(temp,'app/admin/actions.ts'), '"use server"; export async function saveVisualBuilder(_formData: FormData) {}');
 fs.writeFileSync(path.join(temp,'app/admin/builder/page.tsx'),
   'import {AdminShell} from "@/components/admin/admin-shell"; import {VisualBuilderStudio} from "@/components/admin/visual-builder-studio"; import {defaultVisualLayout} from "@/lib/visual-builder"; export default function Page(){return <AdminShell username="preview" title="Visual Builder preview" subtitle="Disposable UI fixture"><VisualBuilderStudio pageKey="home" initialLayout={defaultVisualLayout}/></AdminShell>}');
+
+// Production page/FAQ editors and simple homepage, isolated from live records.
+for(const file of ['website-page-editor.tsx','simple-homepage-editor.tsx','homepage-advanced-controls.tsx','homepage-section-organizer.tsx','banner-product-picker.tsx','media-image-picker.tsx','storefront-device-preview.tsx']) fs.copyFileSync(path.join(root,'src/components/admin',file),path.join(temp,'components/admin',file));
+const storeSource = fs.readFileSync(path.join(root,'src/lib/storefront-admin-store.ts'),'utf8');
+const defaults = storeSource.slice(storeSource.indexOf('export type ContentSection'),storeSource.indexOf('const PUBLISHED_CONFIG_PATH'));
+fs.writeFileSync(path.join(temp,'lib/storefront-admin-store.ts'),
+  'import {defaultPresentation} from "@/lib/storefront-presentation"; import {defaultHomepageOrder} from "@/lib/homepage-builder"; import {defaultVisualLayout,visualPageKeys} from "@/lib/visual-builder"; import {defaultRecommendationConfig} from "@/lib/recommendations";\n'+defaults+'\nexport async function readStorefrontMediaLibrary(){return {media:[{pathname:"media/fixture-banner.webp"}],unavailable:false}}');
+fs.writeFileSync(path.join(temp,'lib/crm-catalog-integration.ts'),'export async function fetchCrmCatalog(){return {ok:true,body:{products:[{id:"fixture-product",name:"Fixture cleanser",brand:"Aloyri",availableStock:10}]}}}');
+fs.writeFileSync(path.join(temp,'app/admin/actions.ts'),'"use server"; export async function saveVisualBuilder(_formData: FormData) {} export async function saveFaq(_formData:FormData) {} export async function saveInfoPage(_formData:FormData) {}');
+for(const key of ['faq','about']) {
+  fs.mkdirSync(path.join(temp,'app/admin/pages',key),{recursive:true});
+  fs.writeFileSync(path.join(temp,'app/admin/pages',key,'page.tsx'),'import {AdminShell} from "@/components/admin/admin-shell"; import {WebsitePageEditor} from "@/components/admin/website-page-editor"; import {defaultStorefrontConfig} from "@/lib/storefront-admin-store"; export default function Page(){return <AdminShell username="preview" title="Edit '+key+'" subtitle="Isolated content editor"><WebsitePageEditor config={defaultStorefrontConfig} page="'+key+'"/></AdminShell>}');
+}
+fs.mkdirSync(path.join(temp,'app/admin/website'),{recursive:true});
+fs.writeFileSync(path.join(temp,'app/admin/website/page.tsx'),'import {AdminShell} from "@/components/admin/admin-shell"; import {SimpleHomepageEditor} from "@/components/admin/simple-homepage-editor"; import {defaultStorefrontConfig} from "@/lib/storefront-admin-store"; export default function Page(){return <AdminShell username="preview" title="Edit your website" subtitle="Isolated homepage editor"><SimpleHomepageEditor config={defaultStorefrontConfig}/></AdminShell>}');
 
 // Isolated checkout renderer: uses the real client component but a disposable
 // Next.js app and mocked HTTP endpoints. Never bypasses production authentication.
