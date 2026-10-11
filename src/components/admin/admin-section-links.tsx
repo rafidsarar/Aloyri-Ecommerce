@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const settings = [
-  ["Website settings", "/admin/settings"], ["SEO", "/admin/seo"],
+  ["Website settings", "/admin/settings"], ["Google & search", "/admin/seo"],
   ["Security", "/admin/security"], ["History & restore", "/admin/history"],
   ["Activity", "/admin/audit"], ["Health & backups", "/admin/operations"],
 ] as const;

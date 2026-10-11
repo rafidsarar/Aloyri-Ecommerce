@@ -93,7 +93,7 @@ export async function HomepageAdvancedControls({ config }: { config: StorefrontC
         <AdminCard>
           <div className="grid gap-4 lg:grid-cols-2">
             <label className="grid gap-1.5 text-sm font-medium">
-              Hero product
+              Banner product
               <select name="heroProductId" defaultValue={heroProductId} className="rounded-xl border border-black/10 px-4 py-3">
                 {products.map((product) => (
                   <option key={product.id} value={product.id}>
@@ -145,7 +145,7 @@ export async function HomepageAdvancedControls({ config }: { config: StorefrontC
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showRoutineFinder" defaultChecked={home.showRoutineFinder} /> Show guided routine finder</label>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showRoutineSteps" defaultChecked={home.showRoutineSteps} /> Show three-step routine on homepage</label>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showRoutine" defaultChecked={config.presentation.showRoutine} /> Enable routine-section layout</label>
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showHeroImageOnMobile" defaultChecked={config.presentation.showHeroImageOnMobile} /> Show hero image on phones</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showHeroImageOnMobile" defaultChecked={config.presentation.showHeroImageOnMobile} /> Show banner image on phones</label>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showCategories" defaultChecked={home.showCategories} /> Show category shortcuts</label>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showBrandStory" defaultChecked={home.showBrandStory} /> Show brand story</label>
             <label className="grid gap-1 text-sm font-medium">Banner layout
