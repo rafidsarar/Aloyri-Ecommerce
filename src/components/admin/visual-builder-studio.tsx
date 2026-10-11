@@ -64,7 +64,7 @@ function freshBlock(kind: VisualBlockKind): VisualBlock {
   };
 }
 
-export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], initialCoreContent, advancedSettings, initialView = "canvas", initialPageContent, initialSiteContent, siteSettings, initialFaqContent, merchandisingSettings, initialPresentation }: { initialLayout: VisualLayout; pageKey: "home" | VisualPageKey; mediaPaths?: string[]; initialCoreContent?: CoreContent; advancedSettings?: ReactNode; initialView?: "canvas" | "advanced"; initialPageContent?: InfoPageContent; initialSiteContent?: { announcement: string; footerDescription: string }; siteSettings?: ReactNode; initialFaqContent?: StorefrontConfig["faq"]; merchandisingSettings?: ReactNode; initialPresentation?: StorefrontPresentation }) {
+export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], initialCoreContent, advancedSettings, initialView = "canvas", initialPageContent, initialSiteContent, siteSettings, initialFaqContent, merchandisingSettings, initialPresentation, initialVersion }: { initialLayout: VisualLayout; pageKey: "home" | VisualPageKey; mediaPaths?: string[]; initialCoreContent?: CoreContent; advancedSettings?: ReactNode; initialView?: "canvas" | "advanced"; initialPageContent?: InfoPageContent; initialSiteContent?: { announcement: string; footerDescription: string }; siteSettings?: ReactNode; initialFaqContent?: StorefrontConfig["faq"]; merchandisingSettings?: ReactNode; initialPresentation?: StorefrontPresentation; initialVersion?: string }) {
   const [{ past, current: layout, future }, dispatch] = useReducer(historyReducer, { past: [], current: initialLayout, future: [] });
   const [coreContent, setCoreContent] = useState<CoreContent | undefined>(initialCoreContent);
   const [pageContent, setPageContent] = useState<InfoPageContent | undefined>(initialPageContent);
@@ -229,6 +229,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
         change({...layout,hiddenCore:target.checked?layout.hiddenCore.filter(item=>item!==id):[...new Set([...layout.hiddenCore,id])]});
       }
     }}>
+      {initialVersion && <input type="hidden" name="storefrontVersion" value={initialVersion} />}
       <input type="hidden" name="editorView" value="layout" />
       {siteSettings && <input type="hidden" name="settingsControls" value="1" />}
       {faqContent && <input type="hidden" name="faqContent" value={JSON.stringify(faqContent)} />}

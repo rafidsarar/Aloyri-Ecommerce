@@ -497,7 +497,7 @@ test.describe('Owner administration editing safeguards', () => {
     await properties.getByRole('button',{name:'Selected section',exact:true}).click();
     await expect(properties.getByLabel('Main banner headline',{exact:true})).toHaveValue('Puja homepage headline');
     const data=await page.locator('#admin-content form').evaluate(form=>Object.fromEntries(new FormData(form as HTMLFormElement)));
-    expect(data.navLabel0).toBe('Discover');expect(data.headline).toBe('Puja homepage headline');expect(data.settingsControls).toBe('1');
+    expect(data.navLabel0).toBe('Discover');expect(data.headline).toBe('Puja homepage headline');expect(data.settingsControls).toBe('1');expect(data.storefrontVersion).toBe('fixture-content-version');
     await expect(properties.locator('a[href="/admin/settings"],a[href="/admin/pages/about"],a[href="/admin/media"],a[href="/admin/merchandising"]')).toHaveCount(0);
     await expect(page.locator('[data-builder-preview-host]')).toBeVisible();
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
