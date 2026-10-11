@@ -594,6 +594,7 @@ export async function saveVisualBuilder(formData: FormData) {
     target: selected,
     detail: "Visual website layout updated live.",
   });
+  if (formData.get("homepageEditor") === "1") redirect("/admin/homepage?saved=1");
   redirect("/admin/builder?" + (formData.get("editorView") === "layout" ? "view=layout&" : "") + "page=" + selected + "&saved=1");
 }
 
@@ -663,26 +664,27 @@ export async function uploadBuilderMedia(formData: FormData) {
   const admin = await requireAdminPermission("media.edit");
   const file = formData.get("image");
   if (!(file instanceof File) || !file.size) {
-    redirect("/admin/builder?workspace=media&error=image-required");
+    redirect("/admin/media?error=image-required");
   }
+  if(file.size>4*1024*1024)redirect("/admin/media?error="+encodeURIComponent("Use images up to 4 MB."));
   let pathname: string;
   try {
     // Central validation is shared with the existing product and campaign uploads.
     pathname = await uploadStorefrontMedia(file);
   } catch (error) {
-    redirect("/admin/builder?workspace=media&error=" + encodeURIComponent(errorMessage(error)));
+    redirect("/admin/media?error=" + encodeURIComponent(errorMessage(error)));
   }
   let auditWarning = false;
   try {
-    await writeAdminAuditEvent(admin.username, "media.uploaded", "Image added using unified Storefront Builder.", {
+    await writeAdminAuditEvent(admin.username, "media.uploaded", "Image added to the website image library.", {
       scope: "media", target: pathname,
     });
   } catch (error) {
     console.error("Image uploaded but its audit record could not be saved", error);
     auditWarning = true;
   }
-  revalidatePath("/admin/builder");
-  redirect("/admin/builder?workspace=media&saved=1" + (auditWarning ? "&warning=audit" : ""));
+  revalidatePath("/admin/media");
+  redirect("/admin/media?saved=1" + (auditWarning ? "&warning=audit" : ""));
 }
 
 export async function saveProductEditorial(formData: FormData) {
@@ -750,6 +752,15 @@ export async function saveProductEditorial(formData: FormData) {
 
 const pageKeys = new Set(["about", "shipping", "returns", "contact", "privacy", "terms"]);
 
+function additionalPageLayout(formData: FormData, destination: string) {
+  if(!formData.has("layout"))return undefined;
+  try {
+    const value=JSON.parse(text(formData,"layout",50000));
+    if(!value || typeof value!=="object" || !Array.isArray(value.order) || !Array.isArray(value.blocks))throw new Error("Invalid content");
+    return normalizeVisualPageLayout(value);
+  } catch {redirect(destination+"?error=invalid-content");}
+}
+
 export async function saveInfoPage(formData: FormData) {
   const admin = await requireAdminPermission("pages.edit");
 
@@ -760,6 +771,7 @@ export async function saveInfoPage(formData: FormData) {
     12,
     Math.max(0, Number(text(formData, "sectionCount", 3)) || 0),
   );
+  const extraLayout=additionalPageLayout(formData,"/admin/pages/"+pageKey);
   const sections: InfoPageContent["sections"] = [];
 
   for (let index = 0; index < sectionCount; index += 1) {
@@ -780,6 +792,7 @@ export async function saveInfoPage(formData: FormData) {
   }
 
   await saveAdminStorefront(formData, (config) => {
+    if(extraLayout)config.visualPages[pageKey as keyof typeof config.pages]=extraLayout;
     config.pages[pageKey as keyof typeof config.pages] = {
       eyebrow: text(formData, "eyebrow", 120),
       title: text(formData, "title", 180),
@@ -807,6 +820,7 @@ export async function saveFaq(formData: FormData) {
     30,
     Math.max(0, Number(text(formData, "itemCount", 3)) || 0),
   );
+  const extraLayout=additionalPageLayout(formData,"/admin/pages/faq");
   const items: { question: string; answer: string }[] = [];
   for (let index = 0; index < count; index += 1) {
     const question = text(formData, `item_${index}_question`, 400);
@@ -815,6 +829,7 @@ export async function saveFaq(formData: FormData) {
   }
 
   await saveAdminStorefront(formData, (config) => {
+    if(extraLayout)config.visualPages.faq=extraLayout;
     config.faq = {
       eyebrow: text(formData, "eyebrow", 120),
       title: text(formData, "title", 180),

@@ -49,5 +49,11 @@ async function save(data){await assert.rejects(actions.saveVisualBuilder(data),e
  allow=false;await assert.rejects(actions.saveVisualBuilder(form('about',{pageContent:JSON.stringify(page)})),/\/admin\/login/);await assert.rejects(actions.uploadPreviewMedia(new FormData()),/\/admin\/login/);
  allow=true;const image=new FormData();image.set('image',new File(['fixture'],'banner.webp',{type:'image/webp'}));assert.deepEqual(await actions.uploadPreviewMedia(image),{ok:true,pathname:'media/fixture-upload.webp'});assert.ok(permissions.includes('media.edit'));
  const large=new FormData();large.set('image',new File([new Uint8Array(4*1024*1024+1)],'large.webp',{type:'image/webp'}));assert.deepEqual(await actions.uploadPreviewMedia(large),{ok:false,error:'Use images up to 4 MB.'});
+ const content=form('privacy',{eyebrow:'Privacy',title:'Updated privacy',intro:'Direct editing',sectionCount:'1',section_0_title:'Your privacy',section_0_paragraphs:'Full policy paragraph',section_0_bullets:'Full policy bullet'});
+ await assert.rejects(actions.saveInfoPage(content),error=>error.url==='/admin/pages/privacy?saved=1');assert.equal(saved.pages.privacy.sections[0].paragraphs[0],'Full policy paragraph');assert.ok(Array.isArray(saved.visualPages.privacy.blocks));
+ const question=form('faq',{eyebrow:'Help',title:'Questions',intro:'Answers',itemCount:'1',item_0_question:'Direct question?',item_0_answer:'Direct answer.'});
+ await assert.rejects(actions.saveFaq(question),error=>error.url==='/admin/pages/faq?saved=1');assert.equal(saved.faq.items[0].answer,'Direct answer.');
+ saved=null;content.set('layout','{"blocks":false}');await assert.rejects(actions.saveInfoPage(content),/invalid-content/);assert.equal(saved,null);
+ const direct=form('home',{homepageEditor:'1'});await assert.rejects(actions.saveVisualBuilder(direct),error=>error.url==='/admin/homepage?saved=1');
  console.log('Preview Properties: complete pages/FAQ, campaign references, navigation, atomic save boundary, validation, permissions and inline media PASS');
 })().catch(error=>{console.error(error);process.exitCode=1;});

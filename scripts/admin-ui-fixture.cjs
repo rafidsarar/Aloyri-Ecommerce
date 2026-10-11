@@ -13,7 +13,7 @@ fs.writeFileSync(path.join(temp, 'tsconfig.json'), JSON.stringify({ compilerOpti
 fs.writeFileSync(path.join(temp, 'next.config.js'), `module.exports = { turbopack: { root: ${JSON.stringify(temp)} }, allowedDevOrigins: ['127.0.0.1'], images: { unoptimized: true } };`);
 fs.copyFileSync(path.join(root, 'postcss.config.mjs'), path.join(temp, 'postcss.config.mjs'));
 fs.copyFileSync(path.join(root, 'src/app/globals.css'), path.join(temp, 'app/globals.css'));
-for (const file of ['admin-navigation.tsx', 'admin-submit-button.tsx', 'admin-edit-guard.tsx', 'admin-section-links.tsx', 'editable-content-list.tsx']) fs.copyFileSync(path.join(root, 'src/components/admin', file), path.join(temp, 'components/admin', file));
+for (const file of ['admin-navigation.tsx', 'admin-submit-button.tsx', 'admin-edit-guard.tsx', 'admin-section-links.tsx', 'editable-content-list.tsx', 'additional-content-editor.tsx', 'owner-dashboard.tsx']) fs.copyFileSync(path.join(root, 'src/components/admin', file), path.join(temp, 'components/admin', file));
 // Only this disposable fixture substitutes auth; production components remain protected.
 let shell = fs.readFileSync(path.join(root, 'src/components/admin/admin-shell.tsx'), 'utf8');
 shell = shell.replace('import { logoutAdmin } from "@/app/admin/actions";', 'import { logoutAdmin } from "@/fixture-actions";');
@@ -79,6 +79,8 @@ for(const key of ['about','privacy','terms','faq']){fs.mkdirSync(path.join(temp,
 fs.copyFileSync(path.join(root,'src/components/homepage-live-draft.tsx'),path.join(temp,'components/homepage-live-draft.tsx'));
 fs.writeFileSync(path.join(temp,'app/page.tsx'),`import {HomepageLiveDraft} from "@/components/homepage-live-draft";import {PublicPagePreviewBridge} from "@/components/public-page-preview-bridge";import {defaultVisualLayout} from "@/lib/visual-builder";export default function Page(){return <><header><p className="store-announcement">Preview announcement</p></header><main><HomepageLiveDraft initialLayout={defaultVisualLayout} sections={[{id:'hero',content:<div className="store-hero store-hero-soft store-hero-align-left grid grid-cols-1"><h1 className="store-hero-heading">Homepage preview</h1><div className="store-hero-art"><p>Product gallery</p></div></div>}]}/></main><footer><p className="store-footer-description">Preview footer</p></footer><PublicPagePreviewBridge/></>}`);
 
+fs.mkdirSync(path.join(temp,'app/admin/dashboard'),{recursive:true});
+fs.writeFileSync(path.join(temp,'app/admin/dashboard/page.tsx'),'import {AdminShell} from "@/components/admin/admin-shell";import {OwnerDashboard} from "@/components/admin/owner-dashboard";import {defaultStorefrontConfig} from "@/lib/storefront-admin-store";export default function Page(){return <AdminShell username="preview" title="Dashboard" subtitle="Manage your website, one task at a time."><OwnerDashboard config={defaultStorefrontConfig} productCount={9}/></AdminShell>}');
 // Isolated checkout renderer: uses the real client component but a disposable
 // Next.js app and mocked HTTP endpoints. Never bypasses production authentication.
 fs.mkdirSync(path.join(temp, 'app/test-cart'), {recursive:true});

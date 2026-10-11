@@ -1,7 +1,6 @@
 import { MediaImagePicker } from "@/components/admin/media-image-picker";
 import { BannerProductPicker } from "@/components/admin/banner-product-picker";
 import { HomepageSectionOrganizer } from "@/components/admin/homepage-section-organizer";
-import { StorefrontDevicePreview } from "@/components/admin/storefront-device-preview";
 import { AdminCard } from "@/components/admin/admin-shell";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
 import { readStorefrontMediaLibrary, type StorefrontConfig } from "@/lib/storefront-admin-store";
@@ -11,7 +10,7 @@ import { readStorefrontMediaLibrary, type StorefrontConfig } from "@/lib/storefr
  * Do not add a nested form or save button here: the unified action persists both
  * advanced homepage fields and visual canvas changes atomically.
  */
-export async function HomepageAdvancedControls({ config, inProperties = false }: { config: StorefrontConfig; inProperties?: boolean }) {
+export async function HomepageAdvancedControls({ config }: { config: StorefrontConfig; inProperties?: boolean }) {
   const [catalog, { media, unavailable }] = await Promise.all([fetchCrmCatalog(), readStorefrontMediaLibrary()]);
   const mediaPaths = media.map(item => item.pathname);
   const home = config.homepage;
@@ -22,13 +21,6 @@ export async function HomepageAdvancedControls({ config, inProperties = false }:
 
   return (
     <div className="space-y-5" aria-label="Existing homepage feature settings">
-      {!inProperties && <details className="mb-5 overflow-hidden rounded-2xl border border-black/10 bg-white">
-        <summary className="cursor-pointer px-5 py-4 text-sm font-semibold">Preview live homepage on mobile, tablet or desktop <span className="text-black/40">↓</span></summary>
-        <div className="border-t border-black/10 p-4 sm:p-6">
-          <StorefrontDevicePreview />
-          <p className="mt-2 text-xs text-black/60">Preview shows the current live page. Save changes and refresh the preview to see your update.</p>
-        </div>
-      </details>}
       <div className="grid gap-5">
 
         <details id="home-hero" name="homepage-section" className="admin-editor-section" open><summary>Main banner</summary>

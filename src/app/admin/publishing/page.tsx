@@ -1,5 +1,3 @@
 import { redirect } from "next/navigation";
-
-export default function LegacyPublishingPage() {
-  redirect("/admin/history");
-}
+import { requireAdminPermission } from "@/lib/admin-auth";
+export default async function PreviousPublishing(){await requireAdminPermission("publishing.view");redirect("/admin/history");}

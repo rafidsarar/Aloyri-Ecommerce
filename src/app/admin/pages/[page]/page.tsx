@@ -11,7 +11,7 @@ export default async function AdminContentPage({
   searchParams,
 }: {
   params: Promise<{ page: string }>;
-  searchParams: Promise<{ saved?: string }>;
+  searchParams: Promise<{ saved?: string; error?: string }>;
 }) {
   const admin = await requireAdminPermission("pages.view");
   const [{ page }, query, config] = await Promise.all([params, searchParams, readDraftStorefrontConfig()]);
@@ -20,6 +20,7 @@ export default async function AdminContentPage({
   return (
     <AdminShell username={admin.username} title={title} subtitle="Edit customer-facing website content without changing CRM operations.">
       {query.saved ? <AdminNotice>Page content saved live.</AdminNotice> : null}
+      {query.error && <AdminNotice tone="warning">The content could not be saved. Check the fields and try again.</AdminNotice>}
       <WebsitePageEditor config={config} page={page as EditableWebsitePage} />
     </AdminShell>
   );

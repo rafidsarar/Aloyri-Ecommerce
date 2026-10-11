@@ -13,7 +13,7 @@ export function WebsiteMediaLibrary({ media, unavailable = false, canUpload = fa
       <p className="text-sm leading-6 text-black/60">Use the same media library across Banner, Product and Campaign editors. Uploads here do not modify CRM images or inventory.</p>
       {canUpload ? <form action={uploadBuilderMedia} className="flex flex-wrap items-end gap-3 rounded-xl border border-black/10 bg-white p-4">
         <label className="flex min-w-0 flex-1 flex-col gap-2 text-sm font-semibold">
-          Add an image (JPG, PNG or WebP; up to 5 MB)
+          Add an image (JPG, PNG or WebP; up to 4 MB)
           <input name="image" type="file" accept="image/jpeg,image/png,image/webp" required
             className="min-h-11 min-w-0 rounded-lg border border-black/10 p-2 text-xs font-normal" />
         </label>
