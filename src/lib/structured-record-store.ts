@@ -3,6 +3,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
 
 const restoreScope = new AsyncLocalStorage<boolean>();
 const recordVersions = new AsyncLocalStorage<Map<string, number | null>>();
+const pendingRecords = new AsyncLocalStorage<Map<string, unknown>>();
 class RecordConflict extends Error {}
 export async function withRecordRetry<T>(operation: () => Promise<T>): Promise<T> {
   if (recordVersions.getStore()) return operation();
@@ -11,6 +12,50 @@ export async function withRecordRetry<T>(operation: () => Promise<T>): Promise<T
     catch (error) { if (!(error instanceof RecordConflict) || attempt === 7) throw error; }
   }
   throw new RecordConflict("RECORD_CONFLICT");
+}
+
+/** Commit related private records together, retrying optimistic conflicts. */
+export async function withAtomicRecordMutation<T>(operation: () => Promise<T>): Promise<T> {
+  if (pendingRecords.getStore()) return operation();
+  return withRecordRetry(() => pendingRecords.run(new Map(), async () => {
+    const result = await operation();
+    const pending = pendingRecords.getStore()!;
+    if (!pending.size) return result;
+    await ensureSchema();
+    const sql = sqlClient()!;
+    const namespace = currentRecordNamespace();
+    const versions = recordVersions.getStore()!;
+    const queries = [...pending].map(([pathname, value]) => {
+      const payload = JSON.stringify(value);
+      const key = namespace + ":" + pathname;
+      const revision = versions.get(key);
+      if (versions.has(key) && revision !== null) {
+        // A zero row count aborts the entire transaction, including history/audit.
+        return sql`WITH changed AS (
+          UPDATE ecommerce_records SET payload = ${payload}::jsonb, revision = revision + 1, updated_at = NOW()
+          WHERE namespace = ${namespace} AND pathname = ${pathname} AND revision = ${revision}
+          RETURNING revision
+        ) SELECT 1 / COUNT(*)::integer AS committed FROM changed`;
+      }
+      if (versions.has(key)) {
+        return sql`WITH changed AS (
+          INSERT INTO ecommerce_records (namespace, pathname, payload, source, imported_from_blob, created_at, updated_at)
+          VALUES (${namespace}, ${pathname}, ${payload}::jsonb, 'app', false, NOW(), NOW())
+          ON CONFLICT (namespace, pathname) DO NOTHING RETURNING revision
+        ) SELECT 1 / COUNT(*)::integer AS committed FROM changed`;
+      }
+      return sql`INSERT INTO ecommerce_records (namespace, pathname, payload, source, imported_from_blob, created_at, updated_at)
+        VALUES (${namespace}, ${pathname}, ${payload}::jsonb, 'app', false, NOW(), NOW())
+        ON CONFLICT (namespace, pathname) DO UPDATE SET payload = EXCLUDED.payload, revision = ecommerce_records.revision + 1, updated_at = NOW()`;
+    });
+    try {
+      await sql.transaction(queries);
+    } catch (error) {
+      if ((error as { code?: string }).code === "22012") throw new RecordConflict("RECORD_CONFLICT");
+      throw error;
+    }
+    return result;
+  }));
 }
 
 
@@ -157,6 +202,7 @@ async function readDatabaseJson<T>(
   pathname: string,
   namespace = currentRecordNamespace(),
 ): Promise<T | null> {
+  if (pendingRecords.getStore()?.has(pathname)) return structuredClone(pendingRecords.getStore()!.get(pathname)) as T;
   if (!structuredDatastoreConfigured()) return null;
   await ensureSchema();
   const sql = sqlClient()!;
@@ -181,6 +227,10 @@ async function writeDatabaseJson(
   } = {},
 ) {
   if (process.env.ALOYRI_MAINTENANCE_ENABLED === "1" && !restoreScope.getStore()) throw new Error("MAINTENANCE_MODE");
+  if (pendingRecords.getStore()) {
+    pendingRecords.getStore()!.set(pathname, structuredClone(value));
+    return;
+  }
   await ensureSchema();
   const sql = sqlClient()!;
   const namespace = options.namespace || currentRecordNamespace();

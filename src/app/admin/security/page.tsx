@@ -126,9 +126,8 @@ export default async function AdminSecurityPage({
             <div>
               <p className="text-sm font-semibold">Owner recovery codes</p>
               <p className="mt-1 max-w-2xl text-xs leading-5 text-black/45">
-                One-time recovery codes are owner-only. Staff password recovery
-                is handled by an authorized staff manager, which also revokes
-                the staff member’s previous sessions.
+                Keep these one-time codes private. Each code can recover your
+                Owner account once and invalidates older sessions.
               </p>
             </div>
             <span className="rounded-full bg-[#f2e8e4] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[.12em] text-[#713a35]">
@@ -139,16 +138,7 @@ export default async function AdminSecurityPage({
             <RecoveryCodeGenerator />
           </div>
         </AdminCard>
-      ) : (
-        <AdminCard className="mt-5">
-          <p className="text-sm font-semibold">Staff account recovery</p>
-          <p className="mt-2 text-xs leading-5 text-black/45">
-            Staff accounts do not receive reusable owner recovery codes. Ask an
-            authorized staff manager to issue a temporary password; all older
-            sessions are revoked automatically.
-          </p>
-        </AdminCard>
-      )}
+      ) : null}
     </AdminShell>
   );
 }

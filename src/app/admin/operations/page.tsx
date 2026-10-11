@@ -76,7 +76,7 @@ export default async function OperationsPage({
     <AdminShell
       username={admin.username}
       title="Operational health"
-      subtitle="Read-only checks across the storefront datastore, CRM catalog/order bridge, analytics, staff directory and current runtime. Configuration backups cover drafts; operational backups cover website-owned records. CRM remains the authority for stock, prices and order fulfillment."
+      subtitle="Read-only checks across the storefront datastore, CRM catalog/order bridge, analytics, Owner access and current runtime. Configuration backups cover drafts; operational backups cover website-owned records. CRM remains the authority for stock, prices and order fulfillment."
     >
       {query.recoveryVerified ? <AdminNotice>{query.recoveryVerified}</AdminNotice> : null}
       {query.healthRun ? <AdminNotice>Health snapshot saved.</AdminNotice> : null}
@@ -85,7 +85,7 @@ export default async function OperationsPage({
       {query.backupCreated ? <AdminNotice>Private Ecommerce Admin backup created.</AdminNotice> : null}
       {query.backupRestored ? (
         <AdminNotice>
-          Backup restored to Draft only. Review it in Publishing before anything goes live.
+          Backup recovered into recovery storage. The live website has not been changed.
         </AdminNotice>
       ) : null}
       {query.error ? <AdminNotice tone="warning">{query.error}</AdminNotice> : null}
@@ -163,7 +163,7 @@ export default async function OperationsPage({
             <div>
               <p className="text-sm font-semibold">Website configuration backups</p>
               <p className="mt-1 max-w-3xl text-xs leading-5 text-black/45">
-                Includes Published/Draft content, SEO, campaigns, collections, merchandising and staff role/permission metadata. Credential hashes, recovery codes, session secrets and CRM data are excluded.
+                Includes Published/Draft content, SEO, campaigns, collections, merchandising and Owner account metadata. Credential hashes, recovery codes, session secrets and CRM data are excluded.
               </p>
             </div>
             {canExportBackup ? (

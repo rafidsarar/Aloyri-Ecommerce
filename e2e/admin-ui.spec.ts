@@ -360,3 +360,41 @@ test.describe("minimal admin interface", () => {
   });
 
 });
+
+test.describe('Owner administration editing safeguards', () => {
+  let fixture: ChildProcess;
+  let base: string;
+  test.beforeAll(async ({}, testInfo) => {
+    testInfo.setTimeout(120_000);
+    base = `http://127.0.0.1:${3300 + testInfo.workerIndex}`;
+    fixture = spawn(process.execPath, ['scripts/admin-ui-fixture.cjs', String(3300 + testInfo.workerIndex)], {stdio:'pipe'});
+    let logs = ''; fixture.stdout?.on('data', data => {logs += data;}); fixture.stderr?.on('data', data => {logs += data;});
+    await expect.poll(async () => {
+      if (fixture.exitCode !== null) throw new Error(logs);
+      try {return (await fetch(`${base}/admin/builder`)).status;} catch {return 0;}
+    }, {timeout:100_000}).toBe(200);
+  });
+  test.afterAll(() => fixture?.kill('SIGTERM'));
+  test('Owner navigation omits Team; forms retain their opening version and warn on unsaved navigation', async ({page}) => {
+    await page.goto(`${base}/admin/settings`);
+    await expect(page.getByRole('navigation', {name:'Admin navigation'}).getByRole('link',{name:'Team',exact:true})).toHaveCount(0);
+    const token = page.locator('form input[name="storefrontVersion"]');
+    await expect(token).toHaveValue('2026-10-11T00:00:00.000Z');
+    const control = page.locator('form select').first();
+    const value = await control.inputValue();
+    const options = await control.locator('option').evaluateAll(nodes => nodes.map(node => (node as HTMLOptionElement).value));
+    await control.selectOption(options.find(option => option !== value)!);
+    await expect(page.getByRole('status').filter({hasText:'Unsaved changes'})).toBeVisible();
+    page.once('dialog', dialog => dialog.dismiss());
+    await page.getByRole('navigation',{name:'Admin navigation'}).getByRole('link',{name:'Overview',exact:true}).click();
+    await expect(page).toHaveURL(`${base}/admin/settings`);
+    page.once('dialog', dialog => dialog.accept());
+    await page.getByRole('navigation',{name:'Admin navigation'}).getByRole('link',{name:'Storefront Builder',exact:true}).click();
+    await expect(page).toHaveURL(`${base}/admin/builder`);
+  });
+  test('Visual layout changes display the unsaved indicator', async ({page}) => {
+    await page.goto(`${base}/admin/builder`);
+    await page.getByRole('button',{name:/Text & heading/}).click();
+    await expect(page.getByRole('status').filter({hasText:'Unsaved changes'})).toBeVisible();
+  });
+});

@@ -107,7 +107,10 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
   const selectedCustom = layout.blocks.find(block => customBlockId(block.id) === selectedId);
   const selectedCore = selectedId.startsWith("core:") ? selectedId.slice(5) as HomepageBlockId : null;
 
-  function change(next: VisualLayout) { dispatch({ type: "change", next }); }
+  function change(next: VisualLayout) {
+    document.getElementById("admin-content")?.dispatchEvent(new Event("admin:dirty"));
+    dispatch({ type: "change", next });
+  }
   function add(kind: VisualBlockKind) {
     if (layout.blocks.length >= 32) return;
     const block = freshBlock(kind);

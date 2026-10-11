@@ -33,9 +33,9 @@ export default async function SeoRedirectsPage({
     <AdminShell
       username={admin.username}
       title="Redirect manager"
-      subtitle="Manage versioned website redirects in Draft. Protected admin, checkout, cart, tracking and API routes cannot be used as redirect sources."
+      subtitle="Manage versioned website redirects. Changes go live when saved. Protected admin, checkout, cart, tracking and API routes cannot be used as redirect sources."
     >
-      {query.saved ? <AdminNotice>Redirect draft saved.</AdminNotice> : null}
+      {query.saved ? <AdminNotice>Redirect saved to the live website.</AdminNotice> : null}
       {query.error ? <AdminNotice tone="warning">{query.error}</AdminNotice> : null}
 
       <form action={saveRedirects} className="grid gap-5">
@@ -100,7 +100,7 @@ export default async function SeoRedirectsPage({
 
         <div className="flex justify-end">
           <button className="rounded-xl bg-[#713a35] px-6 py-3.5 text-sm font-semibold text-white">
-            Save redirect draft
+            Save redirects
           </button>
         </div>
       </form>

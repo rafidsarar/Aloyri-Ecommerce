@@ -52,7 +52,7 @@ export default async function SeoPagesPage() {
     <AdminShell
       username={admin.username}
       title="Page & category SEO"
-      subtitle="Edit discoverability metadata in Draft. Transactional pages such as cart, checkout, order confirmation, tracking and returns requests remain permanently noindex."
+      subtitle="Edit discoverability metadata. Changes go live when saved. Transactional pages such as cart, checkout, order confirmation, tracking and returns requests remain permanently noindex."
     >
       <AdminCard>
         <div className="divide-y divide-black/7">

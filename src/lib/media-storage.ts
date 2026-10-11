@@ -64,17 +64,20 @@ export async function listMediaObjects(prefix: string): Promise<MediaObject[]> {
   const { url } = gateway(); if (!mediaStorageConfigured()) return [];
   const objects = new Map<string, MediaObject>(); const seen = new Set<string>(); let cursor = "";
   for (let page = 0; page < 100; page++) {
-    let response = await fetch(url + "/list?prefix=" + encodeURIComponent(prefix) + (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""), { headers: headers(), cache: "no-store", signal: AbortSignal.timeout(15_000) });
-    // Supabase Edge Function subpath routing can return 404 or 405.
-    // Fall back to the gateway's supported action=list contract.
-    if ((response.status === 404 || response.status === 405) && !cursor) {
-      const endpoint = new URL(url);
-      endpoint.searchParams.set("action", "list");
-      endpoint.searchParams.set("prefix", prefix);
-      response = await fetch(endpoint.toString(), { headers: headers(), cache: "no-store", signal: AbortSignal.timeout(15_000) });
-      if (!response.ok) throw new Error("Media listing failed (" + response.status + ").");
-      const items = await response.json() as Array<{ name: string; metadata?: { size?: number }; updated_at?: string; created_at?: string }>;
-      if (!Array.isArray(items)) throw new Error("MEDIA_LIST_INVALID");
+    const endpoint = new URL(url);
+    endpoint.searchParams.set("action", "list");
+    endpoint.searchParams.set("pagination", "1");
+    endpoint.searchParams.set("prefix", prefix);
+    if (cursor) endpoint.searchParams.set("cursor", cursor);
+    let response = await fetch(endpoint.toString(), { headers: headers(), cache: "no-store", signal: AbortSignal.timeout(15_000) });
+    // Retain compatibility with standalone gateways that only expose /list.
+    if (response.status === 404 || response.status === 405) {
+      response = await fetch(url + "/list?prefix=" + encodeURIComponent(prefix) + (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""), { headers: headers(), cache: "no-store", signal: AbortSignal.timeout(15_000) });
+    }
+    if (!response.ok) throw new Error("Media listing failed (" + response.status + ").");
+    const payload = await response.json();
+    if (Array.isArray(payload)) {
+      const items = payload as Array<{ name: string; metadata?: { size?: number }; updated_at?: string; created_at?: string }>;
       if (items.length >= 100) throw new Error("MEDIA_PAGINATION_INCOMPLETE");
       return items.filter(item => typeof item.name === "string").map(item => ({
         pathname: prefix + item.name,
@@ -82,8 +85,7 @@ export async function listMediaObjects(prefix: string): Promise<MediaObject[]> {
         uploadedAt: item.updated_at || item.created_at,
       }));
     }
-    if (!response.ok) throw new Error("Media listing failed (" + response.status + ").");
-    const payload = await response.json() as { objects?: MediaObject[]; cursor?: string; nextCursor?: string; hasMore?: boolean };
+    if (!payload || !Array.isArray(payload.objects)) throw new Error("MEDIA_LIST_INVALID");
     for (const item of payload.objects || []) if (typeof item.pathname === "string" && item.pathname.startsWith(prefix)) objects.set(item.pathname, { ...item, size: Number(item.size || 0) });
     const next = payload.nextCursor || (payload.hasMore ? payload.cursor : "");
     if (!next) { if (payload.hasMore) throw new Error("MEDIA_PAGINATION_INCOMPLETE"); return [...objects.values()]; }

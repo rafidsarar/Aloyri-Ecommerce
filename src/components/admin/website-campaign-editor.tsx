@@ -61,7 +61,7 @@ export function WebsiteCampaignEditor({ id, query = {}, config, catalog, inBuild
 
   return (
     <div className="space-y-5">
-      {query.saved ? <AdminNotice>Campaign draft saved.</AdminNotice> : null}
+      {query.saved ? <AdminNotice>Campaign saved to the live website.</AdminNotice> : null}
       {query.error ? <AdminNotice tone="warning">{query.error}</AdminNotice> : null}
       {!catalog.ok ? (
         <AdminNotice tone="warning">
@@ -259,9 +259,9 @@ export function WebsiteCampaignEditor({ id, query = {}, config, catalog, inBuild
           <AdminCard>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold">Saved draft preview</p>
+                <p className="text-sm font-semibold">Saved campaign preview</p>
                 <p className="mt-1 text-xs text-black/45">
-                  This preview reflects the last saved Draft values, not unsaved form changes.
+                  This preview reflects the last saved values, not unsaved form changes.
                 </p>
               </div>
               <span className="rounded-full bg-[#f2e8e4] px-3 py-1 text-[10px] font-semibold uppercase tracking-[.12em] text-[#713a35]">
@@ -367,7 +367,7 @@ export function WebsiteCampaignEditor({ id, query = {}, config, catalog, inBuild
 
         <div className="flex justify-end">
           <button className="rounded-xl bg-[#713a35] px-6 py-3.5 text-sm font-semibold text-white">
-            Save campaign draft
+            Save campaign
           </button>
         </div>
       </form>
@@ -382,7 +382,7 @@ export function WebsiteCampaignEditor({ id, query = {}, config, catalog, inBuild
               Deletion is blocked while a homepage section references this campaign.
             </p>
             <button className="mt-4 rounded-xl border border-red-200 bg-red-50 px-5 py-3 text-sm font-semibold text-red-700">
-              Delete from draft
+              Delete
             </button>
           </AdminCard>
         </form>

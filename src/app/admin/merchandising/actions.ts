@@ -1,10 +1,10 @@
 "use server";
+import { saveAdminStorefront } from "@/lib/admin-save";
 
 import { redirect } from "next/navigation";
 import { requireAdminPermission } from "@/lib/admin-auth";
 import { safeInternalPath } from "@/lib/seo-manager";
 import {
-  updateDraftStorefrontConfig,
   uploadStorefrontMedia,
   type HomepageMerchandisingSection,
   type HomepageMerchandisingSectionKind,
@@ -176,7 +176,7 @@ export async function saveCollection(formData: FormData) {
       ogImagePath = await uploadStorefrontMedia(ogFile);
     }
 
-    await updateDraftStorefrontConfig((config) => {
+    await saveAdminStorefront(formData, (config) => {
       const existing = config.merchandising.collections.find(
         (collection) => collection.id === id,
       );
@@ -217,6 +217,7 @@ export async function saveCollection(formData: FormData) {
       return config;
     }, {
       actor: admin.username,
+    expectedUpdatedAt: text(formData, "storefrontVersion", 80) || undefined,
       action: "merchandising.collection_saved",
       scope: "merchandising",
       target: id,
@@ -240,7 +241,7 @@ export async function deleteCollection(formData: FormData) {
   const id = text(formData, "id", 64);
 
   try {
-    await updateDraftStorefrontConfig((config) => {
+    await saveAdminStorefront(formData, (config) => {
       const referencedByCampaign = config.merchandising.campaigns.some(
         (campaign) => campaign.collectionId === id,
       );
@@ -262,6 +263,7 @@ export async function deleteCollection(formData: FormData) {
       return config;
     }, {
       actor: admin.username,
+    expectedUpdatedAt: text(formData, "storefrontVersion", 80) || undefined,
       action: "merchandising.collection_deleted",
       scope: "merchandising",
       target: id,
@@ -326,7 +328,7 @@ export async function saveCampaign(formData: FormData) {
       ? (campaignOosRaw as MerchandisingCampaign["outOfStockMode"])
       : "inherit";
 
-    await updateDraftStorefrontConfig((config) => {
+    await saveAdminStorefront(formData, (config) => {
       if (
         collectionId &&
         !config.merchandising.collections.some(
@@ -378,6 +380,7 @@ export async function saveCampaign(formData: FormData) {
       return config;
     }, {
       actor: admin.username,
+    expectedUpdatedAt: text(formData, "storefrontVersion", 80) || undefined,
       action: "merchandising.campaign_saved",
       scope: "merchandising",
       target: id,
@@ -401,7 +404,7 @@ export async function deleteCampaign(formData: FormData) {
   const id = text(formData, "id", 64);
 
   try {
-    await updateDraftStorefrontConfig((config) => {
+    await saveAdminStorefront(formData, (config) => {
       if (
         config.merchandising.homepageSections.some(
           (section) =>
@@ -419,6 +422,7 @@ export async function deleteCampaign(formData: FormData) {
       return config;
     }, {
       actor: admin.username,
+    expectedUpdatedAt: text(formData, "storefrontVersion", 80) || undefined,
       action: "merchandising.campaign_deleted",
       scope: "merchandising",
       target: id,
@@ -444,7 +448,7 @@ export async function saveProductMerchandising(formData: FormData) {
     .map((item) => item.trim())
     .filter((id) => /^[A-Za-z0-9][A-Za-z0-9_-]{0,119}$/.test(id));
 
-  await updateDraftStorefrontConfig((config) => {
+  await saveAdminStorefront(formData, (config) => {
     const rules: Record<string, ProductMerchandisingRule> = {
       ...config.merchandising.productRules,
     };
@@ -495,6 +499,7 @@ export async function saveProductMerchandising(formData: FormData) {
     return config;
   }, {
     actor: admin.username,
+    expectedUpdatedAt: text(formData, "storefrontVersion", 80) || undefined,
     action: "merchandising.product_rules_updated",
     scope: "merchandising",
     target: "product-rules",
@@ -533,7 +538,7 @@ export async function saveDiscoveryMerchandising(formData: FormData) {
       .filter(Boolean),
   )].slice(0, 20);
 
-  await updateDraftStorefrontConfig((config) => {
+  await saveAdminStorefront(formData, (config) => {
     config.merchandising.discovery = {
       synonymGroups,
       categoryOrder,
@@ -542,6 +547,7 @@ export async function saveDiscoveryMerchandising(formData: FormData) {
     return config;
   }, {
     actor: admin.username,
+    expectedUpdatedAt: text(formData, "storefrontVersion", 80) || undefined,
     action: "merchandising.discovery_updated",
     scope: "merchandising",
     target: "discovery",
@@ -581,7 +587,7 @@ export async function saveRecommendationMerchandising(formData: FormData) {
       ? fallbackRaw
       : "category-and-routine";
 
-  await updateDraftStorefrontConfig((config) => {
+  await saveAdminStorefront(formData, (config) => {
     const rules: typeof config.merchandising.recommendations.rules = {};
 
     for (const id of ids) {
@@ -615,6 +621,7 @@ export async function saveRecommendationMerchandising(formData: FormData) {
     return config;
   }, {
     actor: admin.username,
+    expectedUpdatedAt: text(formData, "storefrontVersion", 80) || undefined,
     action: "merchandising.recommendations_updated",
     scope: "merchandising",
     target: "recommendations",
@@ -705,7 +712,7 @@ export async function saveHomepageMerchandising(formData: FormData) {
       : "priority";
 
   try {
-    await updateDraftStorefrontConfig((config) => {
+    await saveAdminStorefront(formData, (config) => {
       const heroProductId = text(formData, "heroProductId", 120);
       if (heroProductId) config.homepage.heroProductId = heroProductId;
 
@@ -740,6 +747,7 @@ export async function saveHomepageMerchandising(formData: FormData) {
       return config;
     }, {
       actor: admin.username,
+    expectedUpdatedAt: text(formData, "storefrontVersion", 80) || undefined,
       action: "merchandising.homepage_updated",
       scope: "merchandising",
       target: "homepage",

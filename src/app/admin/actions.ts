@@ -1,4 +1,5 @@
 "use server";
+import { saveAdminStorefront } from "@/lib/admin-save";
 import { normalizeHeroProductIds, normalizeHeroDiscountMode, normalizeHeroPromotionCode } from "@/lib/hero-banner-offers";
 
 import { normalizePresentation, safeNavigationHref } from "@/lib/storefront-presentation";
@@ -25,7 +26,6 @@ import { rateAllowed } from "@/lib/request-rate-limit";
 import {
   restoreStorefrontVersionToDraft,
   readDraftStorefrontConfig,
-  updateDraftStorefrontConfig,
   uploadStorefrontMedia,
   writeAdminAuditEvent,
   type InfoPageContent,
@@ -55,14 +55,6 @@ function safeHref(value: string, fallback: string) {
   return fallback;
 }
 
-function safePreviewPath(value: string) {
-  const path = value.trim();
-  if (/^\/[A-Za-z0-9/_?=&.#%-]*$/.test(path) && !path.startsWith("//")) {
-    return path;
-  }
-  return "/";
-}
-
 async function requestIp() {
   const incoming = await headers();
   return (
@@ -86,26 +78,6 @@ async function setSession(username: string) {
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Something went wrong.";
-}
-
-function revalidatePublishedStorefront() {
-  revalidatePath("/", "layout");
-  revalidatePath("/");
-  revalidatePath("/shop");
-  revalidatePath("/category/[category]", "page");
-  revalidatePath("/collections/[slug]", "page");
-  revalidatePath("/about");
-  revalidatePath("/faq");
-  revalidatePath("/contact");
-  revalidatePath("/shipping-delivery");
-  revalidatePath("/returns-refunds");
-  revalidatePath("/customer-care");
-  revalidatePath("/privacy");
-  revalidatePath("/terms");
-  revalidatePath("/product/[slug]", "page");
-  revalidatePath("/sitemap.xml");
-  revalidatePath("/robots.txt");
-  revalidatePath("/api/catalog");
 }
 
 export async function setupAdminOwner(formData: FormData) {
@@ -287,7 +259,7 @@ export async function restoreVersionToDraftAction(formData: FormData) {
   if (admin.role !== "owner") redirect("/admin?forbidden=1");
   const versionId = text(formData, "versionId", 64);
   try {
-    await restoreStorefrontVersionToDraft(admin.username, versionId);
+    await restoreStorefrontVersionToDraft(admin.username, versionId, text(formData, "storefrontVersion", 80) || undefined);
   } catch (error) {
     redirect(
       "/admin/history?error=" + encodeURIComponent(errorMessage(error)),
@@ -418,8 +390,9 @@ function applyHomepageControls(config: StorefrontConfig, formData: FormData) {
 
 export async function saveHomepage(formData: FormData) {
   const admin = await requireAdminPermission("homepage.edit");
-  await updateDraftStorefrontConfig(config => applyHomepageControls(config, formData), {
+  await saveAdminStorefront(formData, config => applyHomepageControls(config, formData), {
     actor: admin.username,
+    expectedUpdatedAt: text(formData, "storefrontVersion", 80) || undefined,
     action: "content.homepage_updated",
     scope: "homepage",
   });
@@ -486,7 +459,7 @@ export async function saveVisualBuilder(formData: FormData) {
       }
     } catch { redirect("/admin/builder?error=invalid"); }
   }
-  await updateDraftStorefrontConfig(config => {
+  await saveAdminStorefront(formData, config => {
     if (siteDraft) Object.assign(config.site, siteDraft);
     if (selected === "home") {
       const before = structuredClone(config.homepage.visualLayout);
@@ -569,6 +542,7 @@ export async function saveVisualBuilder(formData: FormData) {
     return config;
   }, {
     actor: admin.username,
+    expectedUpdatedAt: text(formData, "storefrontVersion", 80) || undefined,
     action: "homepage.visual_builder_saved",
     scope: "homepage",
     target: selected,
@@ -584,7 +558,7 @@ export async function saveSiteSettings(formData: FormData) {
     if ((label || href) && (!label || !safeNavigationHref(href))) redirect("/admin/settings?error="+encodeURIComponent(`Menu item ${i+1} needs a label and a valid storefront destination.`));
   }
 
-  await updateDraftStorefrontConfig((config) => {
+  await saveAdminStorefront(formData, (config) => {
     config.presentation = normalizePresentation({
       contentWidth: text(formData,"contentWidth",20),
       desktopColumns: Number(formData.get("desktopColumns")),
@@ -607,6 +581,7 @@ export async function saveSiteSettings(formData: FormData) {
     return config;
   }, {
     actor: admin.username,
+    expectedUpdatedAt: text(formData, "storefrontVersion", 80) || undefined,
     action: "settings.updated",
     scope: "settings",
   });
@@ -629,12 +604,17 @@ export async function uploadBuilderMedia(formData: FormData) {
   } catch (error) {
     redirect("/admin/builder?workspace=media&error=" + encodeURIComponent(errorMessage(error)));
   }
-  await writeAdminAuditEvent(admin.username, "media.uploaded", "Image added using unified Storefront Builder.", {
-    scope: "media",
-    target: pathname,
-  });
+  let auditWarning = false;
+  try {
+    await writeAdminAuditEvent(admin.username, "media.uploaded", "Image added using unified Storefront Builder.", {
+      scope: "media", target: pathname,
+    });
+  } catch (error) {
+    console.error("Image uploaded but its audit record could not be saved", error);
+    auditWarning = true;
+  }
   revalidatePath("/admin/builder");
-  redirect("/admin/builder?workspace=media&saved=1");
+  redirect("/admin/builder?workspace=media&saved=1" + (auditWarning ? "&warning=audit" : ""));
 }
 
 export async function saveProductEditorial(formData: FormData) {
@@ -684,11 +664,12 @@ export async function saveProductEditorial(formData: FormData) {
     ...(mediaPath ? { mediaPath } : {}),
   };
 
-  await updateDraftStorefrontConfig((config) => {
+  await saveAdminStorefront(formData, (config) => {
     config.products[productId] = editorial;
     return config;
   }, {
     actor: admin.username,
+    expectedUpdatedAt: text(formData, "storefrontVersion", 80) || undefined,
     action: "product.editorial_updated",
     scope: "products",
     target: productId,
@@ -730,7 +711,7 @@ export async function saveInfoPage(formData: FormData) {
     }
   }
 
-  await updateDraftStorefrontConfig((config) => {
+  await saveAdminStorefront(formData, (config) => {
     config.pages[pageKey as keyof typeof config.pages] = {
       eyebrow: text(formData, "eyebrow", 120),
       title: text(formData, "title", 180),
@@ -740,6 +721,7 @@ export async function saveInfoPage(formData: FormData) {
     return config;
   }, {
     actor: admin.username,
+    expectedUpdatedAt: text(formData, "storefrontVersion", 80) || undefined,
     action: "content.page_updated",
     scope: "pages",
     target: pageKey,
@@ -764,7 +746,7 @@ export async function saveFaq(formData: FormData) {
     if (question && answer) items.push({ question, answer });
   }
 
-  await updateDraftStorefrontConfig((config) => {
+  await saveAdminStorefront(formData, (config) => {
     config.faq = {
       eyebrow: text(formData, "eyebrow", 120),
       title: text(formData, "title", 180),
@@ -774,6 +756,7 @@ export async function saveFaq(formData: FormData) {
     return config;
   }, {
     actor: admin.username,
+    expectedUpdatedAt: text(formData, "storefrontVersion", 80) || undefined,
     action: "content.faq_updated",
     scope: "pages",
     target: "faq",
