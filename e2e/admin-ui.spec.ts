@@ -441,6 +441,20 @@ test.describe('Owner administration editing safeguards', () => {
     expect(values).toContainEqual(expect.arrayContaining(['Our promise']));
     expect(values).toContainEqual(expect.arrayContaining(['First paragraph.\nSecond paragraph.']));
   });
+  test('Settings groups preserve header values while editing contact and announcement', async ({page}) => {
+    await page.goto(`${base}/admin/store-settings`);
+    await expect(page.locator('#website-content')).toHaveAttribute('open','');
+    const originalColumns = await page.locator('select[name="desktopColumns"]').inputValue();
+    await page.getByLabel('Announcement bar',{exact:true}).fill('A fresh store announcement');
+    await page.locator('#website-support > summary').click();
+    await page.getByLabel('Support email',{exact:true}).fill('owner@example.com');
+    const submitted = await page.locator('form').evaluate(form => Object.fromEntries(new FormData(form as HTMLFormElement)));
+    expect(submitted.announcement).toBe('A fresh store announcement');
+    expect(submitted.supportEmail).toBe('owner@example.com');
+    expect(submitted.desktopColumns).toBe(originalColumns);
+    await expect(page.locator('#website-content')).not.toHaveAttribute('open','');
+    await expect(page.getByRole('button',{name:'Save changes',exact:true})).toBeVisible();
+  });
   test('Seven main sections keep security and operational tools accessible under Settings', async ({page}) => {
     await page.goto(`${base}/admin/settings`);
     await expect(page.getByRole('navigation',{name:'Admin navigation'}).getByRole('link')).toHaveCount(7);

@@ -51,19 +51,22 @@ fs.writeFileSync(path.join(temp,'app/admin/builder/page.tsx'),
   'import {AdminShell} from "@/components/admin/admin-shell"; import {VisualBuilderStudio} from "@/components/admin/visual-builder-studio"; import {defaultVisualLayout} from "@/lib/visual-builder"; export default function Page(){return <AdminShell username="preview" title="Visual Builder preview" subtitle="Disposable UI fixture"><VisualBuilderStudio pageKey="home" initialLayout={defaultVisualLayout}/></AdminShell>}');
 
 // Production page/FAQ editors and simple homepage, isolated from live records.
-for(const file of ['website-page-editor.tsx','simple-homepage-editor.tsx','homepage-advanced-controls.tsx','homepage-section-organizer.tsx','banner-product-picker.tsx','media-image-picker.tsx','storefront-device-preview.tsx']) fs.copyFileSync(path.join(root,'src/components/admin',file),path.join(temp,'components/admin',file));
+for(const file of ['website-settings-editor.tsx','website-page-editor.tsx','simple-homepage-editor.tsx','homepage-advanced-controls.tsx','homepage-section-organizer.tsx','banner-product-picker.tsx','media-image-picker.tsx','storefront-device-preview.tsx']) fs.copyFileSync(path.join(root,'src/components/admin',file),path.join(temp,'components/admin',file));
 const storeSource = fs.readFileSync(path.join(root,'src/lib/storefront-admin-store.ts'),'utf8');
 const defaults = storeSource.slice(storeSource.indexOf('export type ContentSection'),storeSource.indexOf('const PUBLISHED_CONFIG_PATH'));
 fs.writeFileSync(path.join(temp,'lib/storefront-admin-store.ts'),
   'import {defaultPresentation} from "@/lib/storefront-presentation"; import {defaultHomepageOrder} from "@/lib/homepage-builder"; import {defaultVisualLayout,visualPageKeys} from "@/lib/visual-builder"; import {defaultRecommendationConfig} from "@/lib/recommendations";\n'+defaults+'\nexport async function readStorefrontMediaLibrary(){return {media:[{pathname:"media/fixture-banner.webp"}],unavailable:false}}');
 fs.writeFileSync(path.join(temp,'lib/crm-catalog-integration.ts'),'export async function fetchCrmCatalog(){return {ok:true,body:{products:[{id:"fixture-product",name:"Fixture cleanser",brand:"Aloyri",availableStock:10}]}}}');
-fs.writeFileSync(path.join(temp,'app/admin/actions.ts'),'"use server"; export async function saveVisualBuilder(_formData: FormData) {} export async function saveFaq(_formData:FormData) {} export async function saveInfoPage(_formData:FormData) {}');
+fs.writeFileSync(path.join(temp,'app/admin/actions.ts'),'"use server"; export async function saveVisualBuilder(_formData: FormData) {} export async function saveFaq(_formData:FormData) {} export async function saveInfoPage(_formData:FormData) {} export async function saveSiteSettings(_formData:FormData) {}');
 for(const key of ['faq','about']) {
   fs.mkdirSync(path.join(temp,'app/admin/pages',key),{recursive:true});
   fs.writeFileSync(path.join(temp,'app/admin/pages',key,'page.tsx'),'import {AdminShell} from "@/components/admin/admin-shell"; import {WebsitePageEditor} from "@/components/admin/website-page-editor"; import {defaultStorefrontConfig} from "@/lib/storefront-admin-store"; export default function Page(){return <AdminShell username="preview" title="Edit '+key+'" subtitle="Isolated content editor"><WebsitePageEditor config={defaultStorefrontConfig} page="'+key+'"/></AdminShell>}');
 }
 fs.mkdirSync(path.join(temp,'app/admin/website'),{recursive:true});
 fs.writeFileSync(path.join(temp,'app/admin/website/page.tsx'),'import {AdminShell} from "@/components/admin/admin-shell"; import {SimpleHomepageEditor} from "@/components/admin/simple-homepage-editor"; import {defaultStorefrontConfig} from "@/lib/storefront-admin-store"; export default function Page(){return <AdminShell username="preview" title="Edit your website" subtitle="Isolated homepage editor"><SimpleHomepageEditor config={defaultStorefrontConfig}/></AdminShell>}');
+
+fs.mkdirSync(path.join(temp,'app/admin/store-settings'),{recursive:true});
+fs.writeFileSync(path.join(temp,'app/admin/store-settings/page.tsx'),'import {AdminShell} from "@/components/admin/admin-shell"; import {WebsiteSettingsEditor} from "@/components/admin/website-settings-editor"; import {defaultStorefrontConfig} from "@/lib/storefront-admin-store"; export default function Page(){return <AdminShell username="preview" title="Store settings" subtitle="Isolated settings editor"><WebsiteSettingsEditor config={defaultStorefrontConfig}/></AdminShell>}');
 
 // Isolated checkout renderer: uses the real client component but a disposable
 // Next.js app and mocked HTTP endpoints. Never bypasses production authentication.

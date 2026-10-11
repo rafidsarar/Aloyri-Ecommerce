@@ -11,16 +11,10 @@ import type { StorefrontConfig } from "@/lib/storefront-admin-store";
 export function WebsiteSettingsEditor({ config, inBuilder = false }: { config: StorefrontConfig; inBuilder?: boolean }) {
   return (
     <div className="space-y-5">
-      <nav aria-label="Website settings sections" className="mb-5 flex flex-wrap gap-2 text-xs font-semibold">
-        <a href="#website-layout" className="rounded-full border border-black/10 px-3 py-2">Header & navigation</a>
-        <a href="#website-appearance" className="rounded-full border border-black/10 px-3 py-2">Colors & typography</a>
-        <a href="#website-content" className="rounded-full border border-black/10 px-3 py-2">Announcement & footer</a>
-        <a href="#website-support" className="rounded-full border border-black/10 px-3 py-2">Customer contact</a>
-      </nav>
       <form action={saveSiteSettings} className="grid gap-5">
         {inBuilder ? <input type="hidden" name="builderWorkspace" value="settings" /> : null}
-        <div id="website-layout"><StorefrontLayoutFields value={config.presentation} /></div>
-        <div id="website-appearance"><AdminCard>
+        <details id="website-layout" name="website-setting" className="admin-editor-section"><summary>Header, navigation & product layout</summary><div className="p-5"><StorefrontLayoutFields value={config.presentation} /></div></details>
+        <details id="website-appearance" name="website-setting" className="admin-editor-section"><summary>Color theme</summary><AdminCard>
           <h2 className="mb-3 text-sm font-semibold">Storefront appearance</h2>
           <p className="mb-4 text-xs text-black/60">Choose a color theme. Save to update your live website.</p>
           <label className="grid gap-2 text-sm font-medium">Color theme
@@ -30,8 +24,8 @@ export function WebsiteSettingsEditor({ config, inBuilder = false }: { config: S
               <option value="sand">Sand — warm neutral</option>
             </select>
           </label>
-        </AdminCard></div>
-        <div id="website-content"><AdminCard>
+        </AdminCard></details>
+        <details id="website-content" name="website-setting" className="admin-editor-section" open><summary>Announcement & footer</summary><AdminCard>
           <div className="grid gap-4">
             <label className="grid gap-1.5 text-sm font-medium">
               Announcement bar
@@ -42,9 +36,9 @@ export function WebsiteSettingsEditor({ config, inBuilder = false }: { config: S
               <textarea name="footerDescription" defaultValue={config.site.footerDescription} rows={4} maxLength={600} className="rounded-xl border border-black/10 px-4 py-3" />
             </label>
           </div>
-        </AdminCard></div>
+        </AdminCard></details>
 
-        <div id="website-support"><AdminCard>
+        <details id="website-support" name="website-setting" className="admin-editor-section"><summary>Customer contact</summary><AdminCard>
           <p className="text-sm font-semibold">Customer support details</p>
           <p className="mt-1 text-xs leading-5 text-black/45">
             Leave fields blank until you want them shown publicly.
@@ -63,10 +57,10 @@ export function WebsiteSettingsEditor({ config, inBuilder = false }: { config: S
               <input name="supportHours" defaultValue={config.site.supportHours} maxLength={200} className="rounded-xl border border-black/10 px-4 py-3" />
             </label>
           </div>
-        </AdminCard></div>
+        </AdminCard></details>
 
         <AdminNotice tone="neutral">
-          Delivery pricing, ordering enable/disable state and payment method availability are still operational settings tied to the CRM/order bridge and are intentionally not editable here.
+          Delivery prices, payment methods and order availability are managed in CRM.
         </AdminNotice>
 
         <div className="admin-save-bar"><p className="text-xs text-black/60">Saving updates the live storefront. You can restore an earlier version from Version History.</p><AdminSubmitButton pendingLabel="Saving…">Save changes</AdminSubmitButton></div>
