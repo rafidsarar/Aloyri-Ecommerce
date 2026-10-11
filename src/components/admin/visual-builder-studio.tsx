@@ -47,12 +47,12 @@ function freshBlock(kind: VisualBlockKind): VisualBlock {
     kind,
     enabled: true,
     eyebrow: "",
-    title: kind === "faq" ? "Questions, answered" : kind === "quote" ? "From our community" : kind === "cta" ? "Discover your next favorite" : kind === "features" ? "Why shop with Aloyri" : kind === "image" ? "A little more about Aloyri" : kind === "text" ? "Your story starts here" : "",
+    title: kind === "faq" ? "Questions, answered" : kind === "quote" ? "From our community" : kind === "cta" ? "Discover your next favorite" : kind === "image" ? "A little more about Aloyri" : kind === "text" ? "Your story starts here" : "",
     body: kind === "text" || kind === "cta" || kind === "image" ? "Add your own message in the properties panel." : "",
     ctaLabel: kind === "cta" ? "Browse the edit" : "",
     ctaHref: kind === "cta" ? "/shop" : "",
     imagePath: "",
-    items: kind === "features" ? ["Thoughtfully selected skincare", "Clear product information", "Bangladesh delivery"] : kind === "faq" ? ["How do I place an order?|Choose your products and sign in to complete checkout."] : kind === "quote" ? ["Add an authentic quotation here."] : [],
+    items: kind === "faq" ? ["How do I place an order?|Choose your products and sign in to complete checkout."] : kind === "quote" ? ["Add an authentic quotation here."] : [],
     align: "left",
     tone: kind === "cta" ? "rose" : "light",
     spacing: "regular",
@@ -177,7 +177,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
     if (block) change({ ...layout, blocks: layout.blocks.map(item => item.id === block.id ? { ...item, enabled: !item.enabled } : item) });
   }
 
-  const deviceWidths = { mobile: 390, tablet: 768, desktop: 1060 };
+  const deviceWidths = { mobile: 390, tablet: 820, desktop: 1280 };
   return (
     <form action={saveVisualBuilder} className="space-y-4">
       <input type="hidden" name="layout" value={JSON.stringify(layout)} />
@@ -211,7 +211,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
           <h2 className="text-sm font-semibold">Add components</h2>
           <p className="mb-4 mt-1 text-xs leading-5 text-black/55">Insert a reusable block after the selected section.</p>
           <div className="grid grid-cols-2 gap-2">
-            {visualComponentCatalog.map(item => <button key={item.kind} type="button" disabled={layout.blocks.length >= 32} onClick={() => add(item.kind)}
+            {visualComponentCatalog.filter(item => item.kind !== "features").map(item => <button key={item.kind} type="button" disabled={layout.blocks.length >= 32} onClick={() => add(item.kind)}
               title={item.description} className="min-h-12 rounded-xl border border-black/10 bg-[#faf7f5] px-3 py-2 text-left text-xs font-semibold hover:border-[#713a35]/40 disabled:opacity-40">
               <span className="mr-2 text-base text-[#713a35]" aria-hidden="true">＋</span>{item.name}
             </button>)}

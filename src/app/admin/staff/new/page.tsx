@@ -6,7 +6,8 @@ import {
   AdminNotice,
   AdminShell,
 } from "@/components/admin/admin-shell";
-import { requireAdminPermission } from "@/lib/admin-auth";
+import { StaffRolePermissions } from "@/components/admin/staff-role-permissions";
+import { ADMIN_PERMISSIONS, ROLE_TEMPLATES, requireAdminPermission } from "@/lib/admin-auth";
 
 export default async function NewStaffPage({
   searchParams,
@@ -68,11 +69,12 @@ export default async function NewStaffPage({
         <AdminCard>
           <p className="text-sm font-semibold">Role permissions</p>
           <p className="mt-1 text-xs leading-5 text-black/45">
-            The new account starts with the selected role template. After
-            creation, open the account to customize individual permissions.
+            The new account starts with the selected role template. Customize
+            individual permissions below before creating the account.
             Overview and self-security access are always retained so a staff
             member can sign in and manage their own password safely.
           </p>
+          <StaffRolePermissions templates={ROLE_TEMPLATES} permissions={[...ADMIN_PERMISSIONS]} />
         </AdminCard>
 
         <div className="flex justify-end">

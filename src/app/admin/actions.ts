@@ -27,6 +27,7 @@ import {
   readDraftStorefrontConfig,
   updateDraftStorefrontConfig,
   uploadStorefrontMedia,
+  writeAdminAuditEvent,
   type InfoPageContent,
   type ProductEditorial,
   type StorefrontConfig,
@@ -610,7 +611,30 @@ export async function saveSiteSettings(formData: FormData) {
     scope: "settings",
   });
 
-  redirect("/admin/settings?saved=1");
+  redirect(formData.get("builderWorkspace") === "settings"
+    ? "/admin/builder?workspace=settings&saved=1"
+    : "/admin/settings?saved=1");
+}
+
+export async function uploadBuilderMedia(formData: FormData) {
+  const admin = await requireAdminPermission("media.edit");
+  const file = formData.get("image");
+  if (!(file instanceof File) || !file.size) {
+    redirect("/admin/builder?workspace=media&error=image-required");
+  }
+  let pathname: string;
+  try {
+    // Central validation is shared with the existing product and campaign uploads.
+    pathname = await uploadStorefrontMedia(file);
+  } catch (error) {
+    redirect("/admin/builder?workspace=media&error=" + encodeURIComponent(errorMessage(error)));
+  }
+  await writeAdminAuditEvent(admin.username, "media.uploaded", "Image added using unified Storefront Builder.", {
+    scope: "media",
+    target: pathname,
+  });
+  revalidatePath("/admin/builder");
+  redirect("/admin/builder?workspace=media&saved=1");
 }
 
 export async function saveProductEditorial(formData: FormData) {
@@ -721,7 +745,9 @@ export async function saveInfoPage(formData: FormData) {
     target: pageKey,
   });
 
-  redirect("/admin/pages/" + pageKey + "?saved=1");
+  redirect(formData.get("builderWorkspace") === "pages"
+    ? "/admin/builder?workspace=pages&content=" + pageKey + "&saved=1"
+    : "/admin/pages/" + pageKey + "?saved=1");
 }
 
 export async function saveFaq(formData: FormData) {
@@ -753,5 +779,7 @@ export async function saveFaq(formData: FormData) {
     target: "faq",
   });
 
-  redirect("/admin/pages/faq?saved=1");
+  redirect(formData.get("builderWorkspace") === "pages"
+    ? "/admin/builder?workspace=pages&content=faq&saved=1"
+    : "/admin/pages/faq?saved=1");
 }
