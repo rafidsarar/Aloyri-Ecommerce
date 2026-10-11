@@ -56,6 +56,17 @@ async function check(name,fn){await fn();passed++;console.log('PASS '+name);}
   await publishing.saveStorefrontConfig(updated);
   assert.equal((await publishing.readPublishedStorefrontConfig()).homepage.headline,'Immediate live fixture');
  });
+ await check('Privacy and Terms retain legacy defaults and support live saves',async()=>{
+  const before=await publishing.readPublishedStorefrontConfig();
+  assert.ok(before.pages.privacy.sections.length);assert.ok(before.pages.terms.sections.length);
+  const legacy=structuredClone(before);delete legacy.pages.privacy;delete legacy.pages.terms;
+  await store.writeStructuredJson('admin/storefront-config.json',legacy);
+  const restoredDefaults=await publishing.readPublishedStorefrontConfig();
+  assert.equal(restoredDefaults.pages.privacy.title,publishing.defaultStorefrontConfig.pages.privacy.title);
+  await publishing.updateDraftStorefrontConfig(config=>{config.pages.privacy.title='Owner privacy title';config.pages.terms.sections=[{title:'Owner terms section',paragraphs:['Saved terms text'],bullets:[]}];return config;},{actor:'fixture-owner',action:'policy.updated',scope:'pages'});
+  const saved=await publishing.readPublishedStorefrontConfig();
+  assert.equal(saved.pages.privacy.title,'Owner privacy title');assert.equal(saved.pages.terms.sections[0].paragraphs[0],'Saved terms text');
+ });
  await check('presentation edits are available immediately in published config',async()=>{
   const current=await publishing.readPublishedStorefrontConfig();
   const updated=structuredClone(current);

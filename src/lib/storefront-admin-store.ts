@@ -1,5 +1,6 @@
 import { normalizeHeroProductIds, normalizeHeroDiscountMode, normalizeHeroPromotionCode } from "@/lib/hero-banner-offers";
 import "server-only";
+import { defaultPrivacyContent, defaultTermsContent } from "@/lib/default-policy-content";
 import { defaultVisualLayout, normalizeVisualLayout, normalizeVisualPageLayout, visualPageKeys, type VisualLayout, type VisualPageKey } from "@/lib/visual-builder";
 import { defaultHomepageOrder, normalizeHomepageOrder, safeHomepageImagePath, type HomepageBlockId } from "@/lib/homepage-builder";
 import { cache } from "react";
@@ -233,6 +234,8 @@ export type StorefrontConfig = {
   };
   visualPages: Record<VisualPageKey, VisualLayout>;
   pages: {
+    privacy: InfoPageContent;
+    terms: InfoPageContent;
     about: InfoPageContent;
     shipping: InfoPageContent;
     returns: InfoPageContent;
@@ -464,6 +467,8 @@ export const defaultStorefrontConfig: StorefrontConfig = {
   },
   visualPages: Object.fromEntries(visualPageKeys.map(key => [key, { order: [], blocks: [], hiddenCore: [] }])) as unknown as Record<VisualPageKey, VisualLayout>,
   pages: {
+    privacy: defaultPrivacyContent,
+    terms: defaultTermsContent,
     about: {
       eyebrow: "About Aloyri",
       title: "A calmer way to shop skincare.",
@@ -827,6 +832,8 @@ function normalizeConfig(value: Partial<StorefrontConfig> | null): StorefrontCon
     },
     visualPages: Object.fromEntries(visualPageKeys.map(key => [key, normalizeVisualPageLayout(value.visualPages?.[key])])) as unknown as Record<VisualPageKey, VisualLayout>,
     pages: {
+      privacy: { ...defaultPrivacyContent, ...(value.pages?.privacy || {}) },
+      terms: { ...defaultTermsContent, ...(value.pages?.terms || {}) },
       about: {
         ...defaultStorefrontConfig.pages.about,
         ...(value.pages?.about || {}),

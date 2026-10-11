@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdminSectionLinks } from "@/components/admin/admin-section-links";
 import { AdminEditGuard } from "@/components/admin/admin-edit-guard";
 import { readStorefrontConfig } from "@/lib/storefront-admin-store";
 import { AdminNavigation } from "@/components/admin/admin-navigation";
@@ -15,23 +16,13 @@ const nav: Array<{
   permission: AdminPermission;
   group: string;
 }> = [
-  { group: "Workspace", label: "Overview", href: "/admin", permission: "dashboard.view" },
-  { group: "Storefront", label: "Storefront Builder", href: "/admin/builder", permission: "homepage.view" },
-  { group: "Storefront", label: "Products", href: "/admin/products", permission: "products.view" },
-  { group: "Orders & service", label: "Reviews", href: "/admin/reviews", permission: "products.view" },
-  { group: "Storefront", label: "Pages & FAQ", href: "/admin/pages", permission: "pages.view" },
-  { group: "Storefront", label: "Media", href: "/admin/media", permission: "media.view" },
-  { group: "Growth", label: "Sections & Merchandising", href: "/admin/merchandising", permission: "merchandising.view" },
-  { group: "Growth", label: "Analytics", href: "/admin/analytics", permission: "analytics.view" },
-  { group: "Orders & service", label: "Payments", href: "/admin/payments", permission: "analytics.view" },
-  { group: "Orders & service", label: "Delivery", href: "/admin/delivery", permission: "analytics.view" },
-  { group: "Orders & service", label: "Customer Service", href: "/admin/customer-service", permission: "support.view" },
-  { group: "Growth", label: "SEO", href: "/admin/seo", permission: "seo.view" },
-  { group: "Storefront", label: "Version History", href: "/admin/history", permission: "publishing.view" },
-  { group: "Administration", label: "Audit", href: "/admin/audit", permission: "audit.view" },
-  { group: "Administration", label: "Operations", href: "/admin/operations", permission: "health.view" },
-  { group: "Administration", label: "Security", href: "/admin/security", permission: "security.self" },
-  { group: "Administration", label: "Appearance & Settings", href: "/admin/settings", permission: "settings.view" },
+  { group: "Your store", label: "Overview", href: "/admin", permission: "dashboard.view" },
+  { group: "Your store", label: "Website", href: "/admin/builder", permission: "homepage.view" },
+  { group: "Your store", label: "Products", href: "/admin/products", permission: "products.view" },
+  { group: "Your store", label: "Campaigns & collections", href: "/admin/merchandising", permission: "merchandising.view" },
+  { group: "Your store", label: "Customer care", href: "/admin/customer-service", permission: "support.view" },
+  { group: "Your store", label: "Analytics", href: "/admin/analytics", permission: "analytics.view" },
+  { group: "Your store", label: "Settings", href: "/admin/settings", permission: "settings.view" },
 ];
 
 export async function AdminShell({
@@ -70,11 +61,12 @@ export async function AdminShell({
         <aside className="admin-sidebar"><AdminNavigation items={visibleNav} /></aside>
         <main id="admin-content" tabIndex={-1} className="admin-main min-w-0">
           <div className="admin-page-heading">
-            <p className="admin-page-eyebrow">{wide ? "Storefront / Design workspace" : "Ecommerce / Workspace"}</p>
+            <p className="admin-page-eyebrow">Owner dashboard</p>
             <h1>{title}</h1>
             <p>{subtitle}</p>
           </div>
           <AdminEditGuard key={config.updatedAt} version={config.updatedAt} />
+          <AdminSectionLinks />
           {children}
         </main>
       </div>

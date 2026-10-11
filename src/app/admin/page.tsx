@@ -36,8 +36,8 @@ export default async function AdminOverviewPage({
   return (
     <AdminShell
       username={admin.username}
-      title="Overview"
-      subtitle="Manage your storefront, review customer operations and save website updates instantly."
+      title="Your store, at a glance"
+      subtitle="Welcome back. Choose a task below to update your store."
     >
       {query.forbidden ? (
         <AdminNotice tone="warning">
@@ -99,18 +99,12 @@ export default async function AdminOverviewPage({
           <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {(
               [
-                ["Storefront Builder", "Edit homepage features, visual layouts, banners and content together", "/admin/builder", "homepage.view"],
-                ["Product content", "Descriptions, badges, guidance and photography", "/admin/products", "products.view"],
-                ["Customer pages", "About, shipping, returns, contact and FAQ", "/admin/pages", "pages.view"],
-                ["Store settings", "Announcement, footer and support details", "/admin/settings", "settings.view"],
-                ["Merchandising", "Campaigns, collections, badges and product ordering", "/admin/merchandising", "merchandising.view"],
-                ["Analytics", "Conversion funnel, attribution and storefront intelligence", "/admin/analytics", "analytics.view"],
-                ["SEO", "Search metadata, social previews, sitemap and redirects", "/admin/seo", "seo.view"],
-                ["Version History", "Automatic live updates and restore", "/admin/history", "publishing.view"],
-                ["Customer service", "Review support and return requests", "/admin/customer-service", "support.view"],
-                ["Delivery", "Track shipments and delivery exceptions", "/admin/delivery", "analytics.view"],
-                ["Operations", "Health checks and website configuration backups", "/admin/operations", "health.view"],
-                ["Payments", "Review COD settlements and refunds", "/admin/payments", "analytics.view"],
+                ["Edit website", "Homepage, pages, FAQ, images and store appearance", "/admin/builder", "homepage.view"],
+                ["Edit products", "Descriptions, images, badges and skincare guidance", "/admin/products", "products.view"],
+                ["Campaigns & collections", "Create promotions and organize your products", "/admin/merchandising", "merchandising.view"],
+                ["Customer care", "Support, returns, reviews and delivery", "/admin/customer-service", "support.view"],
+                ["Store performance", "Sales, traffic and shopping insights", "/admin/analytics", "analytics.view"],
+                ["Settings", "Contact details, navigation, SEO and account security", "/admin/settings", "settings.view"],
               ] satisfies Array<[string, string, string, AdminPermission]>
             )
               .filter(([, , , permission]) =>

@@ -4,7 +4,7 @@ import { WebsitePageEditor, type EditableWebsitePage } from "@/components/admin/
 import { requireAdminPermission } from "@/lib/admin-auth";
 import { readDraftStorefrontConfig } from "@/lib/storefront-admin-store";
 
-const editablePages = new Set<EditableWebsitePage>(["about", "shipping", "returns", "contact", "faq"]);
+const editablePages = new Set<EditableWebsitePage>(["about", "shipping", "returns", "contact", "faq", "privacy", "terms"]);
 
 export default async function AdminContentPage({
   params,

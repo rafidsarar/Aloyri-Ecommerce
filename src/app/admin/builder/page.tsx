@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AdminNotice, AdminShell } from "@/components/admin/admin-shell";
+import { SimpleHomepageEditor } from "@/components/admin/simple-homepage-editor";
 import { VisualBuilderStudio } from "@/components/admin/visual-builder-studio";
 import { WebsiteWorkspaceNavigation, type WebsiteWorkspace } from "@/components/admin/website-workspace-navigation";
 import { WebsiteWorkspacePanels } from "@/components/admin/website-workspace-panels";
@@ -27,9 +28,9 @@ export default async function VisualBuilderPage({
   };
   // Authorize the selected workspace before loading any page or media records.
   const admin = await requireAdminPermission(workspacePermissions[requested]);
-  const [config, { media, unavailable }] = await Promise.all([readDraftStorefrontConfig(), readStorefrontMediaLibrary()]);
+  const [config, { media, unavailable }] = await Promise.all([readDraftStorefrontConfig(), requested === "media" || (requested === "design" && (query.view === "layout" || (query.page && query.page !== "home"))) ? readStorefrontMediaLibrary() : Promise.resolve({ media: [], unavailable: false })]);
   const workspace = requested;
-  const contentOptions: EditableWebsitePage[] = ["about", "shipping", "returns", "contact", "faq"];
+  const contentOptions: EditableWebsitePage[] = ["about", "shipping", "returns", "contact", "faq", "privacy", "terms"];
   const contentKey = contentOptions.includes(query.content as EditableWebsitePage)
     ? query.content as EditableWebsitePage : "about";
   const pageKey = query.page === "home" || !query.page ? "home" : visualPageKeys.includes(query.page as VisualPageKey) ? query.page as VisualPageKey : "home";
@@ -37,8 +38,8 @@ export default async function VisualBuilderPage({
   return (
     <AdminShell
       username={admin.username}
-      title="Aloyri Storefront Builder"
-      subtitle="Edit storefront design, settings, pages, campaigns and media in a consistent, Owner-only workspace."
+      title="Edit your website"
+      subtitle="Choose what you want to change, edit the fields and save. Your changes appear on the website immediately."
       wide
     >
       {query.saved ? <AdminNotice>{workspace === "media" ? "Image uploaded." : workspace === "campaigns" ? "Campaign or collection saved." : "Website changes saved."} <Link href="/" target="_blank" rel="noopener noreferrer" className="underline">Open website ↗</Link></AdminNotice> : null}
@@ -46,23 +47,24 @@ export default async function VisualBuilderPage({
       {query.deleted ? <AdminNotice>Campaign or collection deleted successfully.</AdminNotice> : null}
       {query.error ? <AdminNotice tone="warning">{workspace === "media" ? "Image upload failed: " : "Changes could not be saved: "}{query.error}</AdminNotice> : null}
       <WebsiteWorkspaceNavigation admin={admin} selected={workspace} />
-      {workspace === "design" ? <>
+      {workspace === "design" ? query.view !== "layout" && pageKey === "home" ? <SimpleHomepageEditor config={config} /> : <>
+      <Link href="/admin/builder" className="mb-4 inline-flex text-sm font-semibold underline">← Back to homepage editor</Link>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-black/10 bg-white p-4">
         <div><h2 className="text-sm font-semibold">Design the existing storefront</h2><p className="mt-1 text-xs text-black/60">Use the real, device-sized preview and edit live homepage features with one design save.</p></div>
         <Link href="/" target="_blank" rel="noopener noreferrer" className="rounded-lg border border-black/15 px-3 py-2 text-xs font-semibold">View live website ↗</Link>
       </div>
       <nav aria-label="Choose page template" className="mb-4 flex flex-nowrap gap-2 overflow-x-auto rounded-2xl border border-black/10 bg-white p-3">
-        {([{ key: "home", label: "Homepage" }, ...visualPageKeys.map(key => ({ key, label: visualPageNames[key] }))] as const).map(item => <Link key={item.key} href={"/admin/builder?page=" + item.key} aria-current={pageKey === item.key ? "page" : undefined} className={`inline-flex min-h-10 shrink-0 items-center rounded-full border px-4 py-2 text-xs font-semibold ${pageKey === item.key ? "border-[#713a35] bg-[#713a35] text-white" : "border-black/15 bg-[#fffaf8] text-[#713a35]"}`}>{item.label}</Link>)}
+        {([{ key: "home", label: "Homepage" }, ...visualPageKeys.map(key => ({ key, label: visualPageNames[key] }))] as const).map(item => <Link key={item.key} href={"/admin/builder?view=layout&page=" + item.key} aria-current={pageKey === item.key ? "page" : undefined} className={`inline-flex min-h-10 shrink-0 items-center rounded-full border px-4 py-2 text-xs font-semibold ${pageKey === item.key ? "border-[#713a35] bg-[#713a35] text-white" : "border-black/15 bg-[#fffaf8] text-[#713a35]"}`}>{item.label}</Link>)}
       </nav>
       {pageKey !== "home" && <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-black/10 bg-white p-4">
         <div><p className="text-sm font-semibold">Existing page content and site navigation</p><p className="mt-1 text-xs text-black/60">Manage existing page text and structure without changing product, order or checkout functionality.</p></div>
         <div className="flex flex-wrap gap-2">
-          {["about", "shipping", "returns", "contact", "faq"].includes(pageKey) && <Link href={`/admin/pages/${pageKey}`} className="inline-flex min-h-10 items-center rounded-xl border border-black/15 px-3 py-2 text-xs font-semibold">Edit existing page content ↗</Link>}
+          {["about", "shipping", "returns", "contact", "faq", "privacy", "terms"].includes(pageKey) && <Link href={`/admin/pages/${pageKey}`} className="inline-flex min-h-10 items-center rounded-xl border border-black/15 px-3 py-2 text-xs font-semibold">Edit existing page content ↗</Link>}
           <Link href="/admin/settings" className="inline-flex min-h-10 items-center rounded-xl border border-black/15 px-3 py-2 text-xs font-semibold">Header, footer & appearance ↗</Link>
           <Link href="/admin/merchandising" className="inline-flex min-h-10 items-center rounded-xl border border-black/15 px-3 py-2 text-xs font-semibold">Collections & campaigns ↗</Link>
         </div>
       </div>}
-      <VisualBuilderStudio key={pageKey} pageKey={pageKey} initialLayout={layout} initialSiteContent={{ announcement: config.site.announcement, footerDescription: config.site.footerDescription }} initialPageContent={pageKey === "about" || pageKey === "shipping" || pageKey === "returns" || pageKey === "contact" ? config.pages[pageKey] : undefined} mediaPaths={media.slice(0, 150).map(item => item.pathname)} initialCoreContent={pageKey === "home" ? { eyebrow: config.homepage.eyebrow, headline: config.homepage.headline, intro: config.homepage.intro, primaryLabel: config.homepage.primaryLabel, primaryHref: config.homepage.primaryHref, secondaryLabel: config.homepage.secondaryLabel, secondaryHref: config.homepage.secondaryHref, heroImagePath: config.homepage.heroImagePath, heroStyle: config.homepage.heroStyle, heroAlignment: config.homepage.heroAlignment, heroLayout: config.homepage.heroLayout, browseEyebrow: config.homepage.browseEyebrow, browseTitle: config.homepage.browseTitle, browseIntro: config.homepage.browseIntro, browsePlaceholder: config.homepage.browsePlaceholder, categoriesEyebrow: config.homepage.categoriesEyebrow, categoriesTitle: config.homepage.categoriesTitle, categoriesIntro: config.homepage.categoriesIntro, routineFinderHeadline: config.homepage.routineFinderHeadline, routineFinderIntro: config.homepage.routineFinderIntro, ideaEyebrow: config.homepage.ideaEyebrow, ideaHeadline: config.homepage.ideaHeadline, ideaCopy: config.homepage.ideaCopy } : undefined} initialView={pageKey === "home" && query.view === "advanced" ? "advanced" : "canvas"} advancedSettings={pageKey === "home" ? <HomepageAdvancedControls config={config} /> : undefined} />
+      <VisualBuilderStudio key={`${pageKey}:${config.updatedAt}`} pageKey={pageKey} initialLayout={layout} initialSiteContent={{ announcement: config.site.announcement, footerDescription: config.site.footerDescription }} initialPageContent={pageKey === "about" || pageKey === "shipping" || pageKey === "returns" || pageKey === "contact" ? config.pages[pageKey] : undefined} mediaPaths={media.slice(0, 150).map(item => item.pathname)} initialCoreContent={pageKey === "home" ? { eyebrow: config.homepage.eyebrow, headline: config.homepage.headline, intro: config.homepage.intro, primaryLabel: config.homepage.primaryLabel, primaryHref: config.homepage.primaryHref, secondaryLabel: config.homepage.secondaryLabel, secondaryHref: config.homepage.secondaryHref, heroImagePath: config.homepage.heroImagePath, heroStyle: config.homepage.heroStyle, heroAlignment: config.homepage.heroAlignment, heroLayout: config.homepage.heroLayout, browseEyebrow: config.homepage.browseEyebrow, browseTitle: config.homepage.browseTitle, browseIntro: config.homepage.browseIntro, browsePlaceholder: config.homepage.browsePlaceholder, categoriesEyebrow: config.homepage.categoriesEyebrow, categoriesTitle: config.homepage.categoriesTitle, categoriesIntro: config.homepage.categoriesIntro, routineFinderHeadline: config.homepage.routineFinderHeadline, routineFinderIntro: config.homepage.routineFinderIntro, ideaEyebrow: config.homepage.ideaEyebrow, ideaHeadline: config.homepage.ideaHeadline, ideaCopy: config.homepage.ideaCopy } : undefined} initialView="canvas" advancedSettings={pageKey === "home" ? <HomepageAdvancedControls config={config} /> : undefined} />
       </> : <WebsiteWorkspacePanels workspace={workspace} config={config} admin={admin} media={media} mediaUnavailable={unavailable} contentKey={contentKey} editKind={query.kind === "campaign" || query.kind === "collection" ? query.kind : undefined} editId={query.id} query={query} />}
     </AdminShell>
   );

@@ -43,11 +43,11 @@ export async function WebsiteWorkspacePanels({ workspace, config, admin, media, 
         <h2 className="text-lg font-semibold">Edit pages and FAQ</h2>
         <p className="mt-1 text-sm text-black/60">Use the same page editing form here or in Pages & FAQ. Changes are saved directly; CRM operations are unaffected.</p>
         <nav aria-label="Choose page content" className="mt-4 flex flex-wrap gap-2">
-          {(["about", "shipping", "returns", "contact", "faq"] as const).map(key => (
+          {(["about", "shipping", "returns", "contact", "faq", "privacy", "terms"] as const).map(key => (
             <Link key={key} href={`/admin/builder?workspace=pages&content=${key}`}
               aria-current={contentKey === key ? "page" : undefined}
               className={`rounded-lg border px-3 py-2 text-xs font-semibold ${contentKey === key ? "border-[#713a35] bg-[#713a35] text-white" : "border-black/10"}`}>
-              {key === "faq" ? "FAQ" : key[0].toUpperCase() + key.slice(1)}
+              {key === "faq" ? "FAQ" : key === "privacy" ? "Privacy policy" : key === "terms" ? "Terms" : key[0].toUpperCase() + key.slice(1)}
             </Link>
           ))}
         </nav>

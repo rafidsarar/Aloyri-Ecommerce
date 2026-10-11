@@ -877,3 +877,11 @@ body[data-storefront-theme="sand"] {
   .store-campaign-slide .store-hero-art:has(.hero-products) { min-height: 275px; max-height: none; }
 }
 @media (prefers-reduced-motion: reduce) { .hero-product-panel { animation: none; } }
+
+/* Owner editing: one section at a time, with familiar form controls. */
+.admin-editor-section { overflow: hidden; border: 1px solid #e5dcd7; border-radius: 12px; background: white; }
+.admin-editor-section > summary { cursor: pointer; padding: 18px 20px; font-weight: 600; font-size: 15px; }
+.admin-editor-section[open] > summary { border-bottom: 1px solid #eee5df; background: #fff9f5; }
+.admin-editor-section > .admin-card { border: 0; border-radius: 0; }
+.admin-editor-section input, .admin-editor-section select, .admin-editor-section textarea { max-width: 100%; }
+.admin-editor-section summary:focus-visible { outline: 2px solid #713a35; outline-offset: -4px; }
