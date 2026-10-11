@@ -11,7 +11,7 @@ import type { StorefrontConfig } from "@/lib/storefront-admin-store";
 export function WebsiteSettingsEditor({ config, inBuilder = false }: { config: StorefrontConfig; inBuilder?: boolean }) {
   return (
     <div className="space-y-5">
-      <form action={saveSiteSettings} className="grid gap-5">
+      <form key={config.updatedAt} action={saveSiteSettings} className="grid gap-5">
         {inBuilder ? <input type="hidden" name="builderWorkspace" value="settings" /> : null}
         <details id="website-layout" name="website-setting" className="admin-editor-section"><summary>Header, navigation & product layout</summary><div className="p-5"><StorefrontLayoutFields value={config.presentation} /></div></details>
         <details id="website-appearance" name="website-setting" className="admin-editor-section"><summary>Color theme</summary><AdminCard>

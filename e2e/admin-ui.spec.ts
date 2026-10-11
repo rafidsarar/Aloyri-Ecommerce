@@ -403,7 +403,7 @@ test.describe('Owner administration editing safeguards', () => {
     await page.locator('#home-story > summary').click();
     await page.locator('input[name="ideaHeadline"]').fill('Care made simple');
     await expect(page.locator('#home-hero')).not.toHaveAttribute('open','');
-    const submitted = await page.locator('form').evaluate(form => Object.fromEntries(new FormData(form as HTMLFormElement)));
+    const submitted = await page.locator('#admin-content form').evaluate(form => Object.fromEntries(new FormData(form as HTMLFormElement)));
     expect(submitted.headline).toBe('A simpler daily routine');
     expect(submitted.ideaHeadline).toBe('Care made simple');
     expect(submitted.heroImagePath).toBe('media/fixture-banner.webp');
@@ -422,7 +422,7 @@ test.describe('Owner administration editing safeguards', () => {
     await added.getByRole('button',{name:`Move question ${before + 1} up`,exact:true}).click();
     await expect(list.locator('article').nth(before - 1).getByLabel('Question',{exact:true})).toHaveValue('New delivery question');
     await list.locator('article').first().getByRole('button',{name:'Remove question 1',exact:true}).click();
-    const submitted = await page.locator('form').evaluate(form => Object.fromEntries(new FormData(form as HTMLFormElement)));
+    const submitted = await page.locator('#admin-content form').evaluate(form => Object.fromEntries(new FormData(form as HTMLFormElement)));
     expect(submitted.itemCount).toBe(String(before));
     expect(submitted[`item_${before - 2}_question`]).toBe('New delivery question');
     expect(submitted[`item_${before - 2}_answer`]).toBe('Your updated delivery answer.');
@@ -437,7 +437,7 @@ test.describe('Owner administration editing safeguards', () => {
     await added.locator('textarea[name$="_paragraphs"]').fill('First paragraph.\nSecond paragraph.');
     await added.getByRole('button',{name:/Move section .* up/}).click();
     await list.locator('article').first().getByRole('button',{name:'Remove section 1',exact:true}).click();
-    const values = await page.locator('form').evaluate(form => Array.from(new FormData(form as HTMLFormElement).entries()));
+    const values = await page.locator('#admin-content form').evaluate(form => Array.from(new FormData(form as HTMLFormElement).entries()));
     expect(values).toContainEqual(expect.arrayContaining(['Our promise']));
     expect(values).toContainEqual(expect.arrayContaining(['First paragraph.\nSecond paragraph.']));
   });
@@ -448,7 +448,7 @@ test.describe('Owner administration editing safeguards', () => {
     await page.getByLabel('Announcement bar',{exact:true}).fill('A fresh store announcement');
     await page.locator('#website-support > summary').click();
     await page.getByLabel('Support email',{exact:true}).fill('owner@example.com');
-    const submitted = await page.locator('form').evaluate(form => Object.fromEntries(new FormData(form as HTMLFormElement)));
+    const submitted = await page.locator('#admin-content form').evaluate(form => Object.fromEntries(new FormData(form as HTMLFormElement)));
     expect(submitted.announcement).toBe('A fresh store announcement');
     expect(submitted.supportEmail).toBe('owner@example.com');
     expect(submitted.desktopColumns).toBe(originalColumns);

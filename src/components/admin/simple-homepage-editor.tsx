@@ -5,7 +5,7 @@ import { HomepageAdvancedControls } from "@/components/admin/homepage-advanced-c
 import type { StorefrontConfig } from "@/lib/storefront-admin-store";
 
 export function SimpleHomepageEditor({ config }: { config: StorefrontConfig }) {
-  return <form action={saveVisualBuilder} className="space-y-5">
+  return <form key={config.updatedAt} action={saveVisualBuilder} className="space-y-5">
     <input type="hidden" name="pageKey" value="home" />
     <input type="hidden" name="layout" value={JSON.stringify(config.homepage.visualLayout)} />
     <input type="hidden" name="homepageControls" value="1" />

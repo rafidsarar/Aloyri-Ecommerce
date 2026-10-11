@@ -16,7 +16,7 @@ export function WebsitePageEditor({ config, page, inBuilder = false }: {
 
     return (
       <>
-        <form action={saveFaq} className="grid gap-5">
+        <form key={config.updatedAt} action={saveFaq} className="grid gap-5">
           {inBuilder ? <input type="hidden" name="builderWorkspace" value="pages" /> : null}
           <AdminCard>
             <div className="grid gap-4">
@@ -48,7 +48,7 @@ export function WebsitePageEditor({ config, page, inBuilder = false }: {
 
   return (
     <>
-      <form action={saveInfoPage} className="grid gap-5">
+      <form key={config.updatedAt} action={saveInfoPage} className="grid gap-5">
         {inBuilder ? <input type="hidden" name="builderWorkspace" value="pages" /> : null}
         <input type="hidden" name="pageKey" value={page} />
 
