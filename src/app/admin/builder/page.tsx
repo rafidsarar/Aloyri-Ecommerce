@@ -30,7 +30,7 @@ export default async function VisualBuilderPage({
   const admin = await requireAdminPermission(workspacePermissions[requested]);
   const [config, { media, unavailable }] = await Promise.all([readDraftStorefrontConfig(), requested === "media" || (requested === "design" && (query.view === "layout" || (query.page && query.page !== "home"))) ? readStorefrontMediaLibrary() : Promise.resolve({ media: [], unavailable: false })]);
   const workspace = requested;
-  const contentOptions: EditableWebsitePage[] = ["about", "shipping", "returns", "contact", "faq"];
+  const contentOptions: EditableWebsitePage[] = ["about", "shipping", "returns", "contact", "faq", "privacy", "terms"];
   const contentKey = contentOptions.includes(query.content as EditableWebsitePage)
     ? query.content as EditableWebsitePage : "about";
   const pageKey = query.page === "home" || !query.page ? "home" : visualPageKeys.includes(query.page as VisualPageKey) ? query.page as VisualPageKey : "home";
@@ -59,7 +59,7 @@ export default async function VisualBuilderPage({
       {pageKey !== "home" && <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-black/10 bg-white p-4">
         <div><p className="text-sm font-semibold">Existing page content and site navigation</p><p className="mt-1 text-xs text-black/60">Manage existing page text and structure without changing product, order or checkout functionality.</p></div>
         <div className="flex flex-wrap gap-2">
-          {["about", "shipping", "returns", "contact", "faq"].includes(pageKey) && <Link href={`/admin/pages/${pageKey}`} className="inline-flex min-h-10 items-center rounded-xl border border-black/15 px-3 py-2 text-xs font-semibold">Edit existing page content ↗</Link>}
+          {["about", "shipping", "returns", "contact", "faq", "privacy", "terms"].includes(pageKey) && <Link href={`/admin/pages/${pageKey}`} className="inline-flex min-h-10 items-center rounded-xl border border-black/15 px-3 py-2 text-xs font-semibold">Edit existing page content ↗</Link>}
           <Link href="/admin/settings" className="inline-flex min-h-10 items-center rounded-xl border border-black/15 px-3 py-2 text-xs font-semibold">Header, footer & appearance ↗</Link>
           <Link href="/admin/merchandising" className="inline-flex min-h-10 items-center rounded-xl border border-black/15 px-3 py-2 text-xs font-semibold">Collections & campaigns ↗</Link>
         </div>

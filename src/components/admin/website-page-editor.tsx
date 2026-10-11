@@ -4,7 +4,7 @@ import { EditableContentList } from "@/components/admin/editable-content-list";
 import { AdminSubmitButton } from "@/components/admin/admin-submit-button";
 import type { StorefrontConfig } from "@/lib/storefront-admin-store";
 
-export type EditableWebsitePage = "about" | "shipping" | "returns" | "contact" | "faq";
+export type EditableWebsitePage = "about" | "shipping" | "returns" | "contact" | "faq" | "privacy" | "terms";
 
 /** Keeps the exact, existing page/FAQ save forms available inside Builder. */
 export function WebsitePageEditor({ config, page, inBuilder = false }: {

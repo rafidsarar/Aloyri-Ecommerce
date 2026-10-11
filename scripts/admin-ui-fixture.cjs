@@ -39,12 +39,12 @@ fs.writeFileSync(path.join(temp,'app/account/page.tsx'),'import {CustomerAccount
 fs.copyFileSync(path.join(root,'src/components/admin/storefront-layout-fields.tsx'),path.join(temp,'components/admin/storefront-layout-fields.tsx'));
 fs.copyFileSync(path.join(root,'src/lib/storefront-presentation.ts'),path.join(temp,'lib/storefront-presentation.ts'));
 fs.mkdirSync(path.join(temp,'app/admin/settings'),{recursive:true});
-fs.writeFileSync(path.join(temp,'app/admin/settings/page.tsx'),`import {AdminShell} from "@/components/admin/admin-shell"; import {StorefrontLayoutFields} from "@/components/admin/storefront-layout-fields"; import {defaultPresentation} from "@/lib/storefront-presentation"; export default function Page(){return <AdminShell username="preview" title="Store settings" subtitle="Customize the storefront"><form><StorefrontLayoutFields value={defaultPresentation}/></form></AdminShell>}`);
+fs.writeFileSync(path.join(temp,'app/admin/settings/page.tsx'),`import {AdminShell} from "@/components/admin/admin-shell"; import {StorefrontLayoutFields} from "@/components/admin/storefront-layout-fields"; import {defaultPrivacyContent,defaultTermsContent} from "@/lib/default-policy-content"; import {defaultPresentation} from "@/lib/storefront-presentation"; export default function Page(){return <AdminShell username="preview" title="Store settings" subtitle="Customize the storefront"><form><StorefrontLayoutFields value={defaultPresentation}/></form></AdminShell>}`);
 // Isolated Visual Builder interaction preview: reuses the production editor,
 // replacing only the server save action in this disposable test application.
 for (const file of ['visual-builder-studio.tsx', 'builder-preview-viewport.tsx']) fs.copyFileSync(path.join(root, 'src/components/admin', file), path.join(temp, 'components/admin', file));
 fs.copyFileSync(path.join(root,'src/components/visual-builder-block.tsx'),path.join(temp,'components/visual-builder-block.tsx'));
-for (const file of ['visual-builder.ts','homepage-builder.ts','recommendations.ts']) fs.copyFileSync(path.join(root,'src/lib',file),path.join(temp,'lib',file));
+for (const file of ['visual-builder.ts','homepage-builder.ts','recommendations.ts','default-policy-content.ts']) fs.copyFileSync(path.join(root,'src/lib',file),path.join(temp,'lib',file));
 fs.mkdirSync(path.join(temp,'app/admin/builder'),{recursive:true});
 fs.writeFileSync(path.join(temp,'app/admin/actions.ts'), '"use server"; export async function saveVisualBuilder(_formData: FormData) {}');
 fs.writeFileSync(path.join(temp,'app/admin/builder/page.tsx'),
@@ -55,10 +55,10 @@ for(const file of ['website-settings-editor.tsx','website-page-editor.tsx','simp
 const storeSource = fs.readFileSync(path.join(root,'src/lib/storefront-admin-store.ts'),'utf8');
 const defaults = storeSource.slice(storeSource.indexOf('export type ContentSection'),storeSource.indexOf('const PUBLISHED_CONFIG_PATH'));
 fs.writeFileSync(path.join(temp,'lib/storefront-admin-store.ts'),
-  'import {defaultPresentation} from "@/lib/storefront-presentation"; import {defaultHomepageOrder} from "@/lib/homepage-builder"; import {defaultVisualLayout,visualPageKeys} from "@/lib/visual-builder"; import {defaultRecommendationConfig} from "@/lib/recommendations";\n'+defaults+'\nexport async function readStorefrontMediaLibrary(){return {media:[{pathname:"media/fixture-banner.webp"}],unavailable:false}}');
+  'import {defaultPrivacyContent,defaultTermsContent} from "@/lib/default-policy-content"; import {defaultPresentation} from "@/lib/storefront-presentation"; import {defaultHomepageOrder} from "@/lib/homepage-builder"; import {defaultVisualLayout,visualPageKeys} from "@/lib/visual-builder"; import {defaultRecommendationConfig} from "@/lib/recommendations";\n'+defaults+'\nexport async function readStorefrontMediaLibrary(){return {media:[{pathname:"media/fixture-banner.webp"}],unavailable:false}}');
 fs.writeFileSync(path.join(temp,'lib/crm-catalog-integration.ts'),'export async function fetchCrmCatalog(){return {ok:true,body:{products:[{id:"fixture-product",name:"Fixture cleanser",brand:"Aloyri",availableStock:10}]}}}');
 fs.writeFileSync(path.join(temp,'app/admin/actions.ts'),'"use server"; export async function saveVisualBuilder(_formData: FormData) {} export async function saveFaq(_formData:FormData) {} export async function saveInfoPage(_formData:FormData) {} export async function saveSiteSettings(_formData:FormData) {}');
-for(const key of ['faq','about']) {
+for(const key of ['faq','about','privacy','terms']) {
   fs.mkdirSync(path.join(temp,'app/admin/pages',key),{recursive:true});
   fs.writeFileSync(path.join(temp,'app/admin/pages',key,'page.tsx'),'import {AdminShell} from "@/components/admin/admin-shell"; import {WebsitePageEditor} from "@/components/admin/website-page-editor"; import {defaultStorefrontConfig} from "@/lib/storefront-admin-store"; export default function Page(){return <AdminShell username="preview" title="Edit '+key+'" subtitle="Isolated content editor"><WebsitePageEditor config={defaultStorefrontConfig} page="'+key+'"/></AdminShell>}');
 }

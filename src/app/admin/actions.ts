@@ -680,7 +680,7 @@ export async function saveProductEditorial(formData: FormData) {
   );
 }
 
-const pageKeys = new Set(["about", "shipping", "returns", "contact"]);
+const pageKeys = new Set(["about", "shipping", "returns", "contact", "privacy", "terms"]);
 
 export async function saveInfoPage(formData: FormData) {
   const admin = await requireAdminPermission("pages.edit");

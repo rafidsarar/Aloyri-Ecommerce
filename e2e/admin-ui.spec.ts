@@ -441,6 +441,19 @@ test.describe('Owner administration editing safeguards', () => {
     expect(values).toContainEqual(expect.arrayContaining(['Our promise']));
     expect(values).toContainEqual(expect.arrayContaining(['First paragraph.\nSecond paragraph.']));
   });
+  test('Privacy and Terms use the same editable content forms', async ({page}) => {
+    for (const key of ['privacy','terms']) {
+      await page.goto(`${base}/admin/pages/${key}`);
+      await expect(page.locator('input[name="pageKey"]')).toHaveValue(key);
+      await page.getByLabel('Page title',{exact:true}).fill(`Updated ${key} page`);
+      const submitted = await page.locator('#admin-content form').evaluate(form => Object.fromEntries(new FormData(form as HTMLFormElement)));
+      expect(submitted.title).toBe(`Updated ${key} page`);
+      expect(Number(submitted.sectionCount)).toBeGreaterThan(0);
+      await expect(page.getByRole('button',{name:'Save page',exact:true})).toBeVisible();
+      // The next page navigation deliberately discards this disposable edit.
+      page.once('dialog', dialog => dialog.accept());
+    }
+  });
   test('Settings groups preserve header values while editing contact and announcement', async ({page}) => {
     await page.goto(`${base}/admin/store-settings`);
     await expect(page.locator('#website-content')).toHaveAttribute('open','');

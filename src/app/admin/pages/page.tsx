@@ -9,6 +9,8 @@ const items = [
   ["Returns & refunds", "returns", "Customer-facing return and refund policy content"],
   ["Contact", "contact", "Support guidance and public contact details"],
   ["FAQ", "faq", "Frequently asked customer questions"],
+  ["Privacy policy", "privacy", "Privacy information shown to customers"],
+  ["Terms & conditions", "terms", "Your public store terms"],
 ];
 
 export default async function AdminPagesPage() {
