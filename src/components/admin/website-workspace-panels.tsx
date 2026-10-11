@@ -11,10 +11,11 @@ import type { WebsiteWorkspace } from "@/components/admin/website-workspace-navi
 import { listStorefrontMedia } from "@/lib/storefront-admin-store";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
 
-export async function WebsiteWorkspacePanels({ workspace, config, admin, media, contentKey, editKind, editId, query }: {
+export async function WebsiteWorkspacePanels({ workspace, config, admin, media, mediaUnavailable, contentKey, editKind, editId, query }: {
   workspace: Exclude<WebsiteWorkspace, "design">;
   config: StorefrontConfig;
   admin: Pick<AdminSession, "role" | "permissions">;
+  mediaUnavailable?: boolean;
   media: Awaited<ReturnType<typeof listStorefrontMedia>>;
   contentKey: EditableWebsitePage;
   editKind?: "campaign" | "collection";
@@ -72,6 +73,6 @@ export async function WebsiteWorkspacePanels({ workspace, config, admin, media, 
       <p className="mt-1 text-sm text-black/60">Browse real website photography and reuse it from existing banner, product and campaign editors.</p>
       {hasAdminPermission(admin, "products.view") ? <Link className="mt-3 inline-flex rounded-lg border border-black/15 px-3 py-2 text-xs font-semibold" href="/admin/products">Edit product images →</Link> : null}
     </div>
-    <WebsiteMediaLibrary media={media} canUpload={hasAdminPermission(admin, "media.edit")} />
+    <WebsiteMediaLibrary media={media} unavailable={mediaUnavailable} canUpload={hasAdminPermission(admin, "media.edit")} />
   </section>;
 }

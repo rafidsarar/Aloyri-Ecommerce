@@ -44,6 +44,7 @@ export async function createStaffAction(formData: FormData) {
   const admin = await requireAdminPermission("staff.manage");
   const selectedRole = role(text(formData, "role", 40));
   const selectedPermissions = permissions(formData);
+  let accountId: string;
   try {
     const account = await createStaffAccount(admin, {
       username: text(formData, "username", 48),
@@ -54,12 +55,13 @@ export async function createStaffAction(formData: FormData) {
         : ROLE_TEMPLATES[selectedRole],
       temporaryPassword: text(formData, "temporaryPassword", 128),
     });
-    redirect("/admin/staff/" + account.id + "?created=1");
+    accountId = account.id;
   } catch (error) {
     redirect(
       "/admin/staff/new?error=" + encodeURIComponent(errorMessage(error)),
     );
   }
+  redirect("/admin/staff/" + accountId + "?created=1");
 }
 
 export async function updateStaffAction(formData: FormData) {

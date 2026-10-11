@@ -15,7 +15,7 @@
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "verify": "npm run lint && npm run typecheck && npm run build && npm run test:e2e",
-    "test:audit": "node scripts/audit-regression.cjs && node scripts/customer-request-regression.cjs && node scripts/customer-order-access-regression.cjs && node scripts/checkout-acceptance-regression.cjs && node scripts/media-gateway-contract-regression.cjs && node scripts/hero-banner-offers-regression.cjs"
+    "test:audit": "node scripts/audit-regression.cjs && node scripts/customer-request-regression.cjs && node scripts/customer-order-access-regression.cjs && node scripts/checkout-acceptance-regression.cjs && node scripts/media-gateway-contract-regression.cjs && node scripts/hero-banner-offers-regression.cjs && node scripts/staff-creation-regression.cjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",

@@ -6,7 +6,7 @@ import { WebsiteWorkspacePanels } from "@/components/admin/website-workspace-pan
 import type { EditableWebsitePage } from "@/components/admin/website-page-editor";
 import { HomepageAdvancedControls } from "@/components/admin/homepage-advanced-controls";
 import { requireAdminPermission, type AdminPermission } from "@/lib/admin-auth";
-import { listStorefrontMedia, readDraftStorefrontConfig } from "@/lib/storefront-admin-store";
+import { readStorefrontMediaLibrary, readDraftStorefrontConfig } from "@/lib/storefront-admin-store";
 import { visualPageKeys, visualPageNames, type VisualPageKey } from "@/lib/visual-builder";
 
 export default async function VisualBuilderPage({
@@ -27,7 +27,7 @@ export default async function VisualBuilderPage({
   };
   // Authorize the selected workspace before loading any page or media records.
   const admin = await requireAdminPermission(workspacePermissions[requested]);
-  const [config, media] = await Promise.all([readDraftStorefrontConfig(), listStorefrontMedia()]);
+  const [config, { media, unavailable }] = await Promise.all([readDraftStorefrontConfig(), readStorefrontMediaLibrary()]);
   const workspace = requested;
   const contentOptions: EditableWebsitePage[] = ["about", "shipping", "returns", "contact", "faq"];
   const contentKey = contentOptions.includes(query.content as EditableWebsitePage)
@@ -62,7 +62,7 @@ export default async function VisualBuilderPage({
         </div>
       </div>}
       <VisualBuilderStudio key={pageKey} pageKey={pageKey} initialLayout={layout} initialSiteContent={{ announcement: config.site.announcement, footerDescription: config.site.footerDescription }} initialPageContent={pageKey === "about" || pageKey === "shipping" || pageKey === "returns" || pageKey === "contact" ? config.pages[pageKey] : undefined} mediaPaths={media.slice(0, 150).map(item => item.pathname)} initialCoreContent={pageKey === "home" ? { eyebrow: config.homepage.eyebrow, headline: config.homepage.headline, intro: config.homepage.intro, primaryLabel: config.homepage.primaryLabel, primaryHref: config.homepage.primaryHref, secondaryLabel: config.homepage.secondaryLabel, secondaryHref: config.homepage.secondaryHref, heroImagePath: config.homepage.heroImagePath, heroStyle: config.homepage.heroStyle, heroAlignment: config.homepage.heroAlignment, heroLayout: config.homepage.heroLayout, browseEyebrow: config.homepage.browseEyebrow, browseTitle: config.homepage.browseTitle, browseIntro: config.homepage.browseIntro, browsePlaceholder: config.homepage.browsePlaceholder, categoriesEyebrow: config.homepage.categoriesEyebrow, categoriesTitle: config.homepage.categoriesTitle, categoriesIntro: config.homepage.categoriesIntro, routineFinderHeadline: config.homepage.routineFinderHeadline, routineFinderIntro: config.homepage.routineFinderIntro, ideaEyebrow: config.homepage.ideaEyebrow, ideaHeadline: config.homepage.ideaHeadline, ideaCopy: config.homepage.ideaCopy } : undefined} initialView={pageKey === "home" && query.view === "advanced" ? "advanced" : "canvas"} advancedSettings={pageKey === "home" ? <HomepageAdvancedControls config={config} /> : undefined} />
-      </> : <WebsiteWorkspacePanels workspace={workspace} config={config} admin={admin} media={media} contentKey={contentKey} editKind={query.kind === "campaign" || query.kind === "collection" ? query.kind : undefined} editId={query.id} query={query} />}
+      </> : <WebsiteWorkspacePanels workspace={workspace} config={config} admin={admin} media={media} mediaUnavailable={unavailable} contentKey={contentKey} editKind={query.kind === "campaign" || query.kind === "collection" ? query.kind : undefined} editId={query.id} query={query} />}
     </AdminShell>
   );
 }

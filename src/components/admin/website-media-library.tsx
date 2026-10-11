@@ -7,7 +7,7 @@ import { listStorefrontMedia, storefrontMediaUrl } from "@/lib/storefront-admin-
 type Media = Awaited<ReturnType<typeof listStorefrontMedia>>;
 
 /** Shared, read-only media browser. Uploads remain in authorized editors. */
-export function WebsiteMediaLibrary({ media, canUpload = false }: { media: Media; canUpload?: boolean }) {
+export function WebsiteMediaLibrary({ media, unavailable = false, canUpload = false }: { media: Media; unavailable?: boolean; canUpload?: boolean }) {
   return (
     <div className="space-y-4">
       <p className="text-sm leading-6 text-black/60">Use the same media library across Banner, Product and Campaign editors. Uploads here do not modify CRM images or inventory.</p>
@@ -20,7 +20,9 @@ export function WebsiteMediaLibrary({ media, canUpload = false }: { media: Media
         <AdminSubmitButton pendingLabel="Uploading…">Upload to library</AdminSubmitButton>
       </form> : null}
       <AdminCard>
-        {media.length ? (
+        {unavailable ? (
+          <p role="alert" className="py-8 text-center text-sm text-red-800">The media library could not be loaded. Reload the page to try again.</p>
+        ) : media.length ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {media.map((blob) => (
               <div key={blob.pathname} className="overflow-hidden rounded-xl border border-black/8">

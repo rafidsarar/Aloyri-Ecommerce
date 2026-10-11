@@ -65,9 +65,9 @@ export async function listMediaObjects(prefix: string): Promise<MediaObject[]> {
   const objects = new Map<string, MediaObject>(); const seen = new Set<string>(); let cursor = "";
   for (let page = 0; page < 100; page++) {
     let response = await fetch(url + "/list?prefix=" + encodeURIComponent(prefix) + (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""), { headers: headers(), cache: "no-store", signal: AbortSignal.timeout(15_000) });
-    // Legacy subpath routing can return 405 on Supabase Edge Functions.
+    // Supabase Edge Function subpath routing can return 404 or 405.
     // Fall back to the gateway's supported action=list contract.
-    if (response.status === 405 && !cursor) {
+    if ((response.status === 404 || response.status === 405) && !cursor) {
       const endpoint = new URL(url);
       endpoint.searchParams.set("action", "list");
       endpoint.searchParams.set("prefix", prefix);

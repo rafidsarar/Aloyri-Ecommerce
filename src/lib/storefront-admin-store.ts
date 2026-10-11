@@ -1394,7 +1394,7 @@ export async function uploadStorefrontMedia(file: File) {
   return pathname;
 }
 
-export async function listStorefrontMedia() {
+export async function listStorefrontMedia(throwOnError = false) {
   if (!mediaStorageConfigured()) return [];
   try {
     const objects = await listMediaObjects(storefrontStoragePath("media/"));
@@ -1404,6 +1404,7 @@ export async function listStorefrontMedia() {
     }));
   } catch (error) {
     console.error("Media list failed", error);
+    if (throwOnError) throw error;
     return [];
   }
 }
@@ -1411,4 +1412,12 @@ export async function listStorefrontMedia() {
 export function storefrontMediaUrl(pathname?: string) {
   if (!pathname) return "";
   return "/api/storefront-media/" + pathname.replace(/^media\//, "");
+}
+
+export async function readStorefrontMediaLibrary() {
+  try {
+    return { media: await listStorefrontMedia(true), unavailable: false };
+  } catch {
+    return { media: [], unavailable: true };
+  }
 }
