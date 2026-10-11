@@ -1,4 +1,5 @@
 "use server";
+import { saveAdminStorefront } from "@/lib/admin-save";
 
 import { redirect } from "next/navigation";
 import { requireAdminPermission } from "@/lib/admin-auth";
@@ -7,7 +8,6 @@ import {
   safeInternalPath,
 } from "@/lib/seo-manager";
 import {
-  updateDraftStorefrontConfig,
   uploadStorefrontMedia,
   type SeoCategoryKey,
   type SeoEntry,
@@ -85,7 +85,7 @@ export async function savePageSeo(formData: FormData) {
       uploaded = await uploadStorefrontMedia(file);
     }
 
-    await updateDraftStorefrontConfig((config) => {
+    await saveAdminStorefront(formData, (config) => {
       const current =
         location.type === "root"
           ? config.seo[location.key]
@@ -125,6 +125,7 @@ export async function savePageSeo(formData: FormData) {
       return config;
     }, {
       actor: admin.username,
+    expectedUpdatedAt: text(formData, "storefrontVersion", 80) || undefined,
       action: "seo.page_updated",
       scope: "seo",
       target: key,
@@ -155,7 +156,7 @@ export async function saveProductSeo(formData: FormData) {
       uploaded = await uploadStorefrontMedia(file);
     }
 
-    await updateDraftStorefrontConfig((config) => {
+    await saveAdminStorefront(formData, (config) => {
       const current = config.seo.products[productId] || {};
       const fallback = safeInternalPath(
         text(formData, "canonicalFallback", 400),
@@ -173,6 +174,7 @@ export async function saveProductSeo(formData: FormData) {
       return config;
     }, {
       actor: admin.username,
+    expectedUpdatedAt: text(formData, "storefrontVersion", 80) || undefined,
       action: "seo.product_updated",
       scope: "seo",
       target: productId,
@@ -241,11 +243,12 @@ export async function saveRedirects(formData: FormData) {
     }
   }
 
-  await updateDraftStorefrontConfig((config) => {
+  await saveAdminStorefront(formData, (config) => {
     config.seo.redirects = redirects;
     return config;
   }, {
     actor: admin.username,
+    expectedUpdatedAt: text(formData, "storefrontVersion", 80) || undefined,
     action: "seo.redirects_updated",
     scope: "seo",
     target: "redirects",

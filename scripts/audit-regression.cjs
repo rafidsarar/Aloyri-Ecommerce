@@ -19,6 +19,7 @@ function sql(strings,...values){
 sql.transaction=queries=>db.transaction(async tx=>{const results=[];for(const q of queries)results.push((await tx.query(q.query,q.values)).rows);return results;});
 Module._load=function(name,parent,isMain){
  if(name==='server-only')return {};
+ if(name==='next/cache')return {revalidatePath:()=>{}};
  if(name==='next/server')return {connection:async()=>{}};
  if(name==='next/headers')return {draftMode:async()=>{if(draftSignal)throw draftSignal;return {isEnabled:draftPreview};}};
  if(name==='@neondatabase/serverless')return {neon:()=>sql};
@@ -68,6 +69,30 @@ async function check(name,fn){await fn();passed++;console.log('PASS '+name);}
   const {normalizePresentation}=require('../src/lib/storefront-presentation.ts');
   const safe=normalizePresentation({desktopColumns:100,contentWidth:'bad',showAnnouncement:'false',navigation:[{label:'Bad',href:'javascript:alert(1)'},{label:'Admin',href:'/admin'},{label:'Bad',href:'//evil.test'},{label:'Shop',href:'/shop'}]});
   assert.equal(safe.desktopColumns,4);assert.equal(safe.contentWidth,'wide');assert.equal(safe.showAnnouncement,true);assert.deepEqual(safe.navigation,[{label:'Shop',href:'/shop'}]);
+ });
+ await check('Admin config, history and audit commit atomically; stale forms are rejected',async()=>{
+  const before=await publishing.readPublishedStorefrontConfig();
+  await publishing.updateDraftStorefrontConfig(config=>{config.site.announcement='Atomic fixture';return config;},{actor:'owner',action:'fixture.atomic',expectedUpdatedAt:before.updatedAt});
+  assert.equal((await publishing.readPublishedStorefrontConfig()).site.announcement,'Atomic fixture');
+  const count=(await db.query("SELECT count(*)::int AS n FROM ecommerce_records")).rows[0].n;
+  await assert.rejects(publishing.updateDraftStorefrontConfig(config=>{config.site.announcement='Stale';return config;},{actor:'owner',action:'fixture.stale',expectedUpdatedAt:before.updatedAt}),/This page has changed/);
+  assert.equal((await db.query("SELECT count(*)::int AS n FROM ecommerce_records")).rows[0].n,count);
+  const originalTransaction=sql.transaction;
+  sql.transaction=queries=>db.transaction(async tx=>{for(const q of queries){await tx.query(q.query,q.values);if(q.values.some(v=>typeof v==='string' && v.includes('fixture.fail')))throw new Error('injected-audit-failure');}});
+  await assert.rejects(publishing.updateDraftStorefrontConfig(config=>{config.site.announcement='Must roll back';return config;},{actor:'owner',action:'fixture.fail'}),/injected-audit-failure/);
+  sql.transaction=originalTransaction;
+  assert.equal((await publishing.readPublishedStorefrontConfig()).site.announcement,'Atomic fixture');
+  assert.equal((await db.query("SELECT count(*)::int AS n FROM ecommerce_records")).rows[0].n,count);
+ });
+ await check('Atomic Admin mutations retry conflicts and preserve both changes',async()=>{
+  await store.writeStructuredJson('fixture/admin-atomic.json',{left:0,right:0});
+  await Promise.all(['left','right'].map(field=>store.withAtomicRecordMutation(async()=>{
+    const value=await store.readStructuredJson('fixture/admin-atomic.json');
+    await new Promise(resolve=>setTimeout(resolve,5));
+    value[field]+=1;await store.writeStructuredJson('fixture/admin-atomic.json',value);
+    await store.writeStructuredJson('fixture/admin-audit-'+field+'.json',{field});
+  })));
+  assert.deepEqual(await store.readStructuredJson('fixture/admin-atomic.json'),{left:1,right:1});
  });
  await check('phone/email cannot grant unrelated support access',async()=>{
   assert.equal(ownsSupportCase({phone:'01700000000',email:'owner@test'},'account-a',new Set()),false);

@@ -12,7 +12,7 @@ import { visualPageKeys, visualPageNames, type VisualPageKey } from "@/lib/visua
 export default async function VisualBuilderPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string; deleted?: string; error?: string; page?: string; view?: string; workspace?: string; content?: string; kind?: string; id?: string }>;
+  searchParams: Promise<{ saved?: string; warning?: string; deleted?: string; error?: string; page?: string; view?: string; workspace?: string; content?: string; kind?: string; id?: string }>;
 }) {
   const query = await searchParams;
   const workspaceOptions: WebsiteWorkspace[] = ["design", "settings", "pages", "campaigns", "media"];
@@ -38,12 +38,13 @@ export default async function VisualBuilderPage({
     <AdminShell
       username={admin.username}
       title="Aloyri Storefront Builder"
-      subtitle="Edit storefront design, settings, pages, campaigns and media in a consistent, permission-aware workspace."
+      subtitle="Edit storefront design, settings, pages, campaigns and media in a consistent, Owner-only workspace."
       wide
     >
-      {query.saved ? <AdminNotice>{workspace === "campaigns" ? "Campaign or collection saved." : "Website changes saved."} <Link href="/" target="_blank" rel="noopener noreferrer" className="underline">Open website ↗</Link></AdminNotice> : null}
+      {query.saved ? <AdminNotice>{workspace === "media" ? "Image uploaded." : workspace === "campaigns" ? "Campaign or collection saved." : "Website changes saved."} <Link href="/" target="_blank" rel="noopener noreferrer" className="underline">Open website ↗</Link></AdminNotice> : null}
+      {query.warning === "audit" ? <AdminNotice tone="warning">The image was uploaded, but its activity record could not be saved.</AdminNotice> : null}
       {query.deleted ? <AdminNotice>Campaign or collection deleted successfully.</AdminNotice> : null}
-      {query.error ? <AdminNotice tone="warning">The design could not be saved. Check its content and try again.</AdminNotice> : null}
+      {query.error ? <AdminNotice tone="warning">{workspace === "media" ? "Image upload failed: " : "Changes could not be saved: "}{query.error}</AdminNotice> : null}
       <WebsiteWorkspaceNavigation admin={admin} selected={workspace} />
       {workspace === "design" ? <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-black/10 bg-white p-4">

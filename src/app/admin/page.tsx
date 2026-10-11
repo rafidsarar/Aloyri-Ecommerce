@@ -41,7 +41,7 @@ export default async function AdminOverviewPage({
     >
       {query.forbidden ? (
         <AdminNotice tone="warning">
-          Your staff account does not have permission to open that Admin area.
+          This Admin area is unavailable.
         </AdminNotice>
       ) : null}
       {publishing.hasDraftChanges ? (

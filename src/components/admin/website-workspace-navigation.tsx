@@ -41,7 +41,6 @@ export function WebsiteWorkspaceNavigation({ admin, selected }: {
             ["Customer service", "/admin/customer-service", "support.view"],
             ["Delivery", "/admin/delivery", "analytics.view"],
             ["Reviews", "/admin/reviews", "products.view"],
-            ["Staff access", "/admin/staff", "staff.view"],
             ["Security", "/admin/security", "security.self"],
             ["Version history", "/admin/history", "publishing.view"],
             ["Audit trail", "/admin/audit", "audit.view"],

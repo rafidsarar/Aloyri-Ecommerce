@@ -31,7 +31,7 @@ export default async function RecommendationMerchandisingPage({
       subtitle="Control related products, complete-the-routine relationships and recommendation priority. All recommendation logic stays in Ecommerce; CRM price, stock and orders remain authoritative."
     >
       {query.saved ? (
-        <AdminNotice>Recommendation merchandising draft saved.</AdminNotice>
+        <AdminNotice>Recommendation merchandising saved to the live website.</AdminNotice>
       ) : null}
       {!catalog.ok ? (
         <AdminNotice tone="warning">
@@ -189,7 +189,7 @@ export default async function RecommendationMerchandisingPage({
             disabled={!catalog.ok}
             className="rounded-xl bg-[#713a35] px-6 py-3.5 text-sm font-semibold text-white disabled:opacity-40"
           >
-            Save recommendation draft
+            Save recommendations
           </button>
         </div>
       </form>

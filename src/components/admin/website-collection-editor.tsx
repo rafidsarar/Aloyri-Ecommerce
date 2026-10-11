@@ -34,7 +34,7 @@ export function WebsiteCollectionEditor({ id, query = {}, config, catalog, inBui
 
   return (
     <div className="space-y-5">
-      {query.saved ? <AdminNotice>Collection draft saved.</AdminNotice> : null}
+      {query.saved ? <AdminNotice>Collection saved to the live website.</AdminNotice> : null}
       {query.error ? <AdminNotice tone="warning">{query.error}</AdminNotice> : null}
       {!catalog.ok ? (
         <AdminNotice tone="warning">
@@ -307,7 +307,7 @@ export function WebsiteCollectionEditor({ id, query = {}, config, catalog, inBui
 
         <div className="flex justify-end">
           <button className="rounded-xl bg-[#713a35] px-6 py-3.5 text-sm font-semibold text-white">
-            Save collection draft
+            Save collection
           </button>
         </div>
       </form>
@@ -322,7 +322,7 @@ export function WebsiteCollectionEditor({ id, query = {}, config, catalog, inBui
               Deletion is blocked while this collection is referenced by a campaign or homepage section.
             </p>
             <button className="mt-4 rounded-xl border border-red-200 bg-red-50 px-5 py-3 text-sm font-semibold text-red-700">
-              Delete from draft
+              Delete
             </button>
           </AdminCard>
         </form>

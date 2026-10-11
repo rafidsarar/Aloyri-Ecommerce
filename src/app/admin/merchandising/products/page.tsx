@@ -32,7 +32,7 @@ export default async function ProductMerchandisingPage({
       title="Product merchandising"
       subtitle="Control website badges, browse priority, search ranking and out-of-stock presentation. CRM price, promotions and stock remain read-only."
     >
-      {query.saved ? <AdminNotice>Product merchandising draft saved.</AdminNotice> : null}
+      {query.saved ? <AdminNotice>Product merchandising saved to the live website.</AdminNotice> : null}
       {!catalog.ok ? (
         <AdminNotice tone="warning">
           CRM catalog is unavailable, so product merchandising cannot be edited safely right now.
@@ -171,7 +171,7 @@ export default async function ProductMerchandisingPage({
             disabled={!catalog.ok}
             className="rounded-xl bg-[#713a35] px-6 py-3.5 text-sm font-semibold text-white disabled:opacity-40"
           >
-            Save product merchandising draft
+            Save product merchandising
           </button>
         </div>
       </form>

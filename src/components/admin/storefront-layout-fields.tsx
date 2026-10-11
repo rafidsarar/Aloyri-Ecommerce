@@ -10,7 +10,7 @@ export function StorefrontLayoutFields({ value }: { value: StorefrontPresentatio
   return <>
     <section className="rounded-2xl border border-black/10 bg-white p-5 sm:p-6">
       <h2 className="text-sm font-semibold">Layout & browsing</h2>
-      <p className="mt-2 text-xs leading-5 text-black/60">Changes are saved to your draft. Mobile product grids keep two columns.</p>
+      <p className="mt-2 text-xs leading-5 text-black/60">Changes go live when saved. Mobile product grids keep two columns.</p>
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <label className="grid gap-2 text-sm font-medium">Page width
           <select name="contentWidth" defaultValue={value.contentWidth} className="min-h-11 rounded-xl border border-black/10 px-3">

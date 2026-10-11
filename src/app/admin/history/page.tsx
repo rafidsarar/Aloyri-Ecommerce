@@ -15,7 +15,7 @@ export default async function StorefrontHistoryPage({ searchParams }: {
   const admin = await requireAdminPermission("publishing.view");
   const canRestore = admin.role === "owner" && hasAdminPermission(admin, "publishing.restore");
   const [query, versions, audit, live] = await Promise.all([
-    searchParams, listStorefrontVersions(30), listAdminAuditEvents(12), readPublishedStorefrontConfig(),
+    searchParams, listStorefrontVersions(30), hasAdminPermission(admin, "audit.view") ? listAdminAuditEvents(12) : Promise.resolve([]), readPublishedStorefrontConfig(),
   ]);
   return <AdminShell username={admin.username} title="Version history" subtitle="Changes go live as soon as you save. Restore a previous version if you need to undo a change.">
     {query.restored ? <AdminNotice>Previous storefront version restored to the live website.</AdminNotice> : null}

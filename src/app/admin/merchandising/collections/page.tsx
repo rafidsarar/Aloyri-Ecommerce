@@ -24,7 +24,7 @@ export default async function CollectionsPage({
       title="Collections"
       subtitle="Create curated product groups and landing pages. Product order is website-owned; live price and stock still come from CRM."
     >
-      {query.deleted ? <AdminNotice>Collection removed from Draft.</AdminNotice> : null}
+      {query.deleted ? <AdminNotice>Collection removed.</AdminNotice> : null}
 
       <div className="mb-5 flex justify-end">
         <Link

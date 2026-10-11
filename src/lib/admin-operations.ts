@@ -2,7 +2,7 @@ import "server-only";
 
 import { buildAnalyticsReport } from "@/lib/analytics-store";
 import {
-  listAdminAccounts,
+  listAdminOwners,
   type PublicAdminAccount,
 } from "@/lib/admin-auth";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
@@ -79,7 +79,7 @@ export async function runOperationalHealth(
     datastoreResult,
   ] = await Promise.allSettled([
     fetchCrmCatalog(),
-    listAdminAccounts(),
+    listAdminOwners(),
     getPublishingStatus(),
     buildAnalyticsReport(1),
     listAdminAuditEvents(50),
@@ -205,7 +205,7 @@ export async function runOperationalHealth(
     const active = staffResult.value.filter((account) => account.active).length;
     checks.push({
       id: "staff-directory",
-      label: "Admin staff directory",
+      label: "Admin Owner account",
       state: "healthy",
       detail:
         active +
@@ -218,9 +218,9 @@ export async function runOperationalHealth(
   } else {
     checks.push({
       id: "staff-directory",
-      label: "Admin staff directory",
+      label: "Admin Owner account",
       state: "error",
-      detail: "Staff access configuration could not be read.",
+      detail: "Owner access configuration could not be read.",
     });
   }
 
@@ -320,7 +320,7 @@ export async function createAdminBackup(actor: string, note: string) {
   const [published, publishing, staffAccess] = await Promise.all([
     readPublishedStorefrontConfig(),
     getPublishingStatus(),
-    listAdminAccounts(),
+    listAdminOwners(),
   ]);
   const record: AdminBackupRecord = {
     version: 1,

@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { AdminEditGuard } from "@/components/admin/admin-edit-guard";
+import { readStorefrontConfig } from "@/lib/storefront-admin-store";
 import { AdminNavigation } from "@/components/admin/admin-navigation";
 import { logoutAdmin } from "@/app/admin/actions";
 import {
@@ -26,7 +28,6 @@ const nav: Array<{
   { group: "Orders & service", label: "Customer Service", href: "/admin/customer-service", permission: "support.view" },
   { group: "Growth", label: "SEO", href: "/admin/seo", permission: "seo.view" },
   { group: "Storefront", label: "Version History", href: "/admin/history", permission: "publishing.view" },
-  { group: "Administration", label: "Team", href: "/admin/staff", permission: "staff.view" },
   { group: "Administration", label: "Audit", href: "/admin/audit", permission: "audit.view" },
   { group: "Administration", label: "Operations", href: "/admin/operations", permission: "health.view" },
   { group: "Administration", label: "Security", href: "/admin/security", permission: "security.self" },
@@ -46,7 +47,7 @@ export async function AdminShell({
   children: React.ReactNode;
   wide?: boolean;
 }) {
-  const session = await currentAdmin();
+  const [session, config] = await Promise.all([currentAdmin(), readStorefrontConfig()]);
   const visibleNav = session
     ? nav.filter((item) => hasAdminPermission(session, item.permission))
     : [];
@@ -73,6 +74,7 @@ export async function AdminShell({
             <h1>{title}</h1>
             <p>{subtitle}</p>
           </div>
+          <AdminEditGuard key={config.updatedAt} version={config.updatedAt} />
           {children}
         </main>
       </div>

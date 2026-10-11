@@ -31,12 +31,11 @@ export default async function DiscoveryMerchandisingPage({
       subtitle="Manage storefront search synonyms, category ordering and popular search shortcuts. Product-level search boosts stay under Product merchandising."
     >
       {query.saved ? (
-        <AdminNotice>Search & discovery draft saved.</AdminNotice>
+        <AdminNotice>Search & discovery saved to the live website.</AdminNotice>
       ) : null}
       {publishing.hasDraftChanges ? (
         <AdminNotice tone="warning">
-          These controls are in Draft. Customers will not see them until the
-          storefront draft is published.
+          Changes to these controls go live when saved.
         </AdminNotice>
       ) : null}
 
@@ -121,7 +120,7 @@ export default async function DiscoveryMerchandisingPage({
 
         <div className="flex justify-end">
           <button className="rounded-xl bg-[#713a35] px-6 py-3.5 text-sm font-semibold text-white">
-            Save discovery draft
+            Save discovery changes
           </button>
         </div>
       </form>

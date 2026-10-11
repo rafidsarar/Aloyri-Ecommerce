@@ -13,11 +13,12 @@ fs.writeFileSync(path.join(temp, 'tsconfig.json'), JSON.stringify({ compilerOpti
 fs.writeFileSync(path.join(temp, 'next.config.js'), `module.exports = { turbopack: { root: ${JSON.stringify(temp)} }, allowedDevOrigins: ['127.0.0.1'], images: { unoptimized: true } };`);
 fs.copyFileSync(path.join(root, 'postcss.config.mjs'), path.join(temp, 'postcss.config.mjs'));
 fs.copyFileSync(path.join(root, 'src/app/globals.css'), path.join(temp, 'app/globals.css'));
-for (const file of ['admin-navigation.tsx', 'admin-submit-button.tsx']) fs.copyFileSync(path.join(root, 'src/components/admin', file), path.join(temp, 'components/admin', file));
+for (const file of ['admin-navigation.tsx', 'admin-submit-button.tsx', 'admin-edit-guard.tsx']) fs.copyFileSync(path.join(root, 'src/components/admin', file), path.join(temp, 'components/admin', file));
 // Only this disposable fixture substitutes auth; production components remain protected.
 let shell = fs.readFileSync(path.join(root, 'src/components/admin/admin-shell.tsx'), 'utf8');
 shell = shell.replace('import { logoutAdmin } from "@/app/admin/actions";', 'import { logoutAdmin } from "@/fixture-actions";');
 shell = shell.replace(/import \{\s*currentAdmin,\s*hasAdminPermission,\s*type AdminPermission,\s*\} from "@\/lib\/admin-auth";/, 'type AdminPermission = string;\nconst currentAdmin = async () => ({ displayName: "Preview owner", role: "owner" });\nconst hasAdminPermission = () => true;');
+shell = shell.replace('import { readStorefrontConfig } from "@/lib/storefront-admin-store";', 'const readStorefrontConfig = async () => ({updatedAt: "2026-10-11T00:00:00.000Z"});');
 fs.writeFileSync(path.join(temp, 'components/admin/admin-shell.tsx'), shell);
 fs.writeFileSync(path.join(temp, 'fixture-actions.ts'), '"use server"; export async function logoutAdmin() {}');
 fs.writeFileSync(path.join(temp, 'app/layout.tsx'), 'import "./globals.css"; export default function Layout({children}:{children:React.ReactNode}) {return <html lang="en"><body>{children}</body></html>}');
