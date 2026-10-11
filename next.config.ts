@@ -40,11 +40,12 @@ const publicPreviewHeaders = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  experimental: { serverActions: { bodySizeLimit: "4.5mb" } },
   poweredByHeader: false,
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
-      ...["/", "/about", "/shipping-delivery", "/returns-refunds", "/contact", "/faq", "/shop"].map(source => ({ source, headers: publicPreviewHeaders })),
+      ...["/", "/about", "/shipping-delivery", "/returns-refunds", "/contact", "/faq", "/privacy", "/terms", "/shop"].map(source => ({ source, headers: publicPreviewHeaders })),
     ];
   },
   images: {

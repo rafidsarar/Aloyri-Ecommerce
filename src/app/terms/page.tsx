@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { staticPageSeoMetadata } from "@/lib/seo-manager";
+import { VisualPageSections } from "@/components/visual-page-sections";
 import { CustomerInfoPage } from "@/components/customer-info-page";
 import { readStorefrontConfig } from "@/lib/storefront-admin-store";
 
@@ -11,6 +12,6 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function TermsPage() {
   const config = await readStorefrontConfig();
   return (
-    <CustomerInfoPage {...config.pages.terms} />
+    <><CustomerInfoPage {...config.pages.terms} /><VisualPageSections layout={config.visualPages.terms} /></>
   );
 }

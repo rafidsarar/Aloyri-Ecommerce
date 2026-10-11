@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { MediaImagePicker } from "@/components/admin/media-image-picker";
 import { BannerProductPicker } from "@/components/admin/banner-product-picker";
 import { HomepageSectionOrganizer } from "@/components/admin/homepage-section-organizer";
@@ -12,7 +11,7 @@ import { readStorefrontMediaLibrary, type StorefrontConfig } from "@/lib/storefr
  * Do not add a nested form or save button here: the unified action persists both
  * advanced homepage fields and visual canvas changes atomically.
  */
-export async function HomepageAdvancedControls({ config }: { config: StorefrontConfig }) {
+export async function HomepageAdvancedControls({ config, inProperties = false }: { config: StorefrontConfig; inProperties?: boolean }) {
   const [catalog, { media, unavailable }] = await Promise.all([fetchCrmCatalog(), readStorefrontMediaLibrary()]);
   const mediaPaths = media.map(item => item.pathname);
   const home = config.homepage;
@@ -23,13 +22,13 @@ export async function HomepageAdvancedControls({ config }: { config: StorefrontC
 
   return (
     <div className="space-y-5" aria-label="Existing homepage feature settings">
-      <details className="mb-5 overflow-hidden rounded-2xl border border-black/10 bg-white">
+      {!inProperties && <details className="mb-5 overflow-hidden rounded-2xl border border-black/10 bg-white">
         <summary className="cursor-pointer px-5 py-4 text-sm font-semibold">Preview live homepage on mobile, tablet or desktop <span className="text-black/40">↓</span></summary>
         <div className="border-t border-black/10 p-4 sm:p-6">
           <StorefrontDevicePreview />
           <p className="mt-2 text-xs text-black/60">Preview shows the current live page. Save changes and refresh the preview to see your update.</p>
         </div>
-      </details>
+      </details>}
       <div className="grid gap-5">
 
         <details id="home-hero" name="homepage-section" className="admin-editor-section" open><summary>Main banner</summary>
@@ -42,7 +41,7 @@ export async function HomepageAdvancedControls({ config }: { config: StorefrontC
             </label>
             <label className="grid gap-1.5 text-sm font-medium">
               Headline
-              <textarea name="headline" defaultValue={home.headline} rows={3} maxLength={180} className="rounded-xl border border-black/10 px-4 py-3" />
+              <textarea aria-label="Main banner headline" name="headline" defaultValue={home.headline} rows={3} maxLength={180} className="rounded-xl border border-black/10 px-4 py-3" />
             </label>
             <label className="grid gap-1.5 text-sm font-medium">
               Introduction
@@ -65,7 +64,7 @@ export async function HomepageAdvancedControls({ config }: { config: StorefrontC
             </label>
             <label className="grid gap-1.5 text-sm font-medium sm:col-span-2">Custom banner image from Media Library
               <MediaImagePicker name="heroImagePath" value={home.heroImagePath} paths={mediaPaths} unavailable={unavailable} />
-              <span className="text-xs font-normal text-black/50">Optional. Leave empty to display the featured product. Upload images under <Link href="/admin/media" className="underline">Media</Link> then choose an image here.</span>
+              <span className="text-xs font-normal text-black/50">Optional. Leave empty to display the featured product. Choose an uploaded image here.</span>
             </label>
           </div>
         </AdminCard>

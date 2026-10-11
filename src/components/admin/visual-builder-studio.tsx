@@ -4,7 +4,10 @@ import { useCallback, useEffect, useReducer, useRef, useState, type DragEvent, t
 import Link from "next/link";
 import { saveVisualBuilder } from "@/app/admin/actions";
 import { VisualBuilderBlock } from "@/components/visual-builder-block";
+import { PreviewContentProperties, PreviewFaqProperties } from "@/components/admin/preview-content-properties";
+import { InlineMediaUpload } from "@/components/admin/inline-media-upload";
 import { BuilderPreviewViewport } from "@/components/admin/builder-preview-viewport";
+import { normalizePresentation, type StorefrontPresentation } from "@/lib/storefront-presentation";
 import { homepageBlocks, type HomepageBlockId } from "@/lib/homepage-builder";
 import type { InfoPageContent, StorefrontConfig } from "@/lib/storefront-admin-store";
 import {
@@ -61,10 +64,17 @@ function freshBlock(kind: VisualBlockKind): VisualBlock {
   };
 }
 
-export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], initialCoreContent, advancedSettings, initialView = "canvas", initialPageContent, initialSiteContent }: { initialLayout: VisualLayout; pageKey: "home" | VisualPageKey; mediaPaths?: string[]; initialCoreContent?: CoreContent; advancedSettings?: ReactNode; initialView?: "canvas" | "advanced"; initialPageContent?: InfoPageContent; initialSiteContent?: { announcement: string; footerDescription: string } }) {
+export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], initialCoreContent, advancedSettings, initialView = "canvas", initialPageContent, initialSiteContent, siteSettings, initialFaqContent, merchandisingSettings, initialPresentation, initialVersion }: { initialLayout: VisualLayout; pageKey: "home" | VisualPageKey; mediaPaths?: string[]; initialCoreContent?: CoreContent; advancedSettings?: ReactNode; initialView?: "canvas" | "advanced"; initialPageContent?: InfoPageContent; initialSiteContent?: { announcement: string; footerDescription: string }; siteSettings?: ReactNode; initialFaqContent?: StorefrontConfig["faq"]; merchandisingSettings?: ReactNode; initialPresentation?: StorefrontPresentation; initialVersion?: string }) {
   const [{ past, current: layout, future }, dispatch] = useReducer(historyReducer, { past: [], current: initialLayout, future: [] });
   const [coreContent, setCoreContent] = useState<CoreContent | undefined>(initialCoreContent);
   const [pageContent, setPageContent] = useState<InfoPageContent | undefined>(initialPageContent);
+  const [faqContent, setFaqContent] = useState(initialFaqContent);
+  const [propertiesTab, setPropertiesTab] = useState<"section" | "site">("section");
+  const [imagePaths, setImagePaths] = useState(mediaPaths);
+  const propertiesRef = useRef<HTMLElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const [presentationDraft, setPresentationDraft] = useState(initialPresentation);
+  const [appearanceDraft, setAppearanceDraft] = useState<string>();
   const [siteContent, setSiteContent] = useState(initialSiteContent);
   const publicFrame = useRef<HTMLIFrameElement>(null);
   const [publicSelection, setPublicSelection] = useState<"header" | "footer" | "page">("page");
@@ -80,7 +90,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
   function undoCore() { if (!corePast.length || !coreContent) return; setCoreFuture(f => [coreContent, ...f]); setCoreContent(corePast[corePast.length - 1]); setCorePast(p => p.slice(0, -1)); }
   function redoCore() { if (!coreFuture.length || !coreContent) return; setCorePast(p => [...p, coreContent]); setCoreContent(coreFuture[0]); setCoreFuture(f => f.slice(1)); }
   const [selectedId, setSelectedId] = useState(layout.order[0] || "");
-  const [view, setView] = useState<"canvas" | "advanced">(initialView);
+  const [view, setView] = useState<"canvas" | "advanced">(advancedSettings ? "advanced" : initialView);
   const [device, setDevice] = useState<"mobile" | "tablet" | "desktop">("desktop");
   const [previewMode, setPreviewMode] = useState<"live" | "draft">("live");
   const [focusPreview, setFocusPreview] = useState(false);
@@ -89,19 +99,20 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
   useEffect(() => {
     const receiveReady = (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return;
-      if (event.source === publicFrame.current?.contentWindow && event.data?.type === "aloyri-builder-public-select" && ["header", "footer", "page"].includes(event.data.section)) setPublicSelection(event.data.section);
+      if ((event.source === publicFrame.current?.contentWindow || event.source === draftFrame.current?.contentWindow) && event.data?.type === "aloyri-builder-public-select" && ["header", "footer", "page"].includes(event.data.section)) { setPublicSelection(event.data.section); setPropertiesTab(event.data.section === "page" ? "section" : "site"); propertiesRef.current?.scrollIntoView({block:"nearest"}); }
+      if (event.source === publicFrame.current?.contentWindow && event.data?.type === "aloyri-builder-public-ready") publicFrame.current?.contentWindow?.postMessage({type:"aloyri-builder-page-draft",content:pageContent,faqContent,siteContent,presentation:presentationDraft,appearance:appearanceDraft},window.location.origin);
       if (event.source !== draftFrame.current?.contentWindow) return;
       if (event.data?.type === "aloyri-builder-ready") sendDraft();
-      if (event.data?.type === "aloyri-builder-select" && typeof event.data.id === "string" && layout.order.includes(event.data.id)) setSelectedId(event.data.id);
+      if (event.data?.type === "aloyri-builder-select" && typeof event.data.id === "string" && layout.order.includes(event.data.id)) { setSelectedId(event.data.id); setPropertiesTab("section"); setView("advanced"); }
     };
     window.addEventListener("message", receiveReady);
     sendDraft();
     return () => window.removeEventListener("message", receiveReady);
-  }, [layout, sendDraft]);
+  }, [layout, sendDraft, pageContent, faqContent, siteContent, presentationDraft, appearanceDraft]);
   useEffect(() => {
-    publicFrame.current?.contentWindow?.postMessage({ type: "aloyri-builder-page-draft", content: pageContent, siteContent }, window.location.origin);
-    draftFrame.current?.contentWindow?.postMessage({ type: "aloyri-builder-site-draft", siteContent }, window.location.origin);
-  }, [pageContent, siteContent]);
+    publicFrame.current?.contentWindow?.postMessage({ type: "aloyri-builder-page-draft", content: pageContent, faqContent, siteContent, presentation: presentationDraft, appearance: appearanceDraft }, window.location.origin);
+    draftFrame.current?.contentWindow?.postMessage({ type: "aloyri-builder-site-draft", siteContent, presentation: presentationDraft, appearance: appearanceDraft }, window.location.origin);
+  }, [pageContent, faqContent, siteContent, presentationDraft, appearanceDraft]);
   const [filter, setFilter] = useState("");
   const isHomepage = pageKey === "home";
   const selectedCustom = layout.blocks.find(block => customBlockId(block.id) === selectedId);
@@ -180,9 +191,48 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
     if (block) change({ ...layout, blocks: layout.blocks.map(item => item.id === block.id ? { ...item, enabled: !item.enabled } : item) });
   }
 
+  useEffect(() => {
+    if (!coreContent || !formRef.current) return;
+    for (const [key,value] of Object.entries(coreContent)) {
+      const input = formRef.current.elements.namedItem(key);
+      if (input instanceof HTMLInputElement || input instanceof HTMLSelectElement || input instanceof HTMLTextAreaElement) input.value=String(value);
+    }
+  }, [coreContent]);
+
+  useEffect(() => {
+    if (!selectedCore || view !== "advanced") return;
+    const ids: Partial<Record<HomepageBlockId,string>> = {hero:"home-hero",browse:"home-discovery",categories:"home-discovery",routineFinder:"home-discovery",brandStory:"home-story",promoBeforeProducts:"home-banners",promoAfterProducts:"home-banners",editorialBeforeProducts:"home-editorial",editorialAfterProducts:"home-editorial",editorialBeforeStory:"home-editorial",products:"home-products"};
+    const details=formRef.current?.querySelector<HTMLDetailsElement>("#"+(ids[selectedCore] || "home-layout"));
+    if(details)details.open=true;
+  }, [selectedCore,view]);
+
   const deviceWidths = { mobile: 390, tablet: 820, desktop: 1280 };
   return (
-    <form action={saveVisualBuilder} className="space-y-4">
+    <form ref={formRef} action={saveVisualBuilder} className="space-y-4" onChange={event => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement)) return;
+      if (coreContent && target.name in coreContent) editCore(target.name as keyof CoreContent, target.value as CoreContent[keyof CoreContent]);
+      if (siteContent && (target.name === "announcement" || target.name === "footerDescription")) setSiteContent({...siteContent,[target.name]:target.value});
+      if (initialPresentation && formRef.current) {
+        const data = new FormData(formRef.current);
+        setPresentationDraft(normalizePresentation({
+          contentWidth:data.get("contentWidth"),desktopColumns:Number(data.get("desktopColumns")),
+          showAnnouncement:data.get("showAnnouncement")==="on",stickyHeader:data.get("stickyHeader")==="on",
+          showRoutine:data.get("showRoutine")==="on",showHeroImageOnMobile:data.get("showHeroImageOnMobile")==="on",
+          navigation:Array.from({length:5},(_,i)=>({label:data.get(`navLabel${i}`),href:data.get(`navHref${i}`)})),
+        }));
+        setAppearanceDraft(String(data.get("appearance") || "rose"));
+      }
+      const visibility: Record<string, HomepageBlockId> = {showHero:"hero",showBrowse:"browse",showCategories:"categories",showFocus:"focus",showRoutineFinder:"routineFinder",showRoutineSteps:"routineSteps",showBrandStory:"brandStory"};
+      if (target instanceof HTMLInputElement && visibility[target.name]) {
+        const id=visibility[target.name];
+        change({...layout,hiddenCore:target.checked?layout.hiddenCore.filter(item=>item!==id):[...new Set([...layout.hiddenCore,id])]});
+      }
+    }}>
+      {initialVersion && <input type="hidden" name="storefrontVersion" value={initialVersion} />}
+      <input type="hidden" name="editorView" value="layout" />
+      {siteSettings && <input type="hidden" name="settingsControls" value="1" />}
+      {faqContent && <input type="hidden" name="faqContent" value={JSON.stringify(faqContent)} />}
       <input type="hidden" name="layout" value={JSON.stringify(layout)} />
       {isHomepage && coreContent && <input type="hidden" name="coreContent" value={JSON.stringify(coreContent)} />}
       {isHomepage && <input type="hidden" name="coreBaseline" value={initialCoreSnapshot} />}
@@ -203,12 +253,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
           <button type="submit" className="min-h-11 rounded-xl bg-[#713a35] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#5a2e2a]">Save website changes</button>
         </div>
       </div>
-      {isHomepage && advancedSettings && <nav aria-label="Homepage editing tools" className="flex flex-wrap gap-2 rounded-2xl border border-black/10 bg-white p-3">
-        <button type="button" aria-current={view === "canvas" ? "page" : undefined} onClick={() => setView("canvas")} className={view === "canvas" ? "min-h-11 rounded-xl bg-[#713a35] px-4 text-sm font-semibold text-white" : secondaryButton}>Visual layout & components</button>
-        <button type="button" aria-current={view === "advanced" ? "page" : undefined} onClick={() => setView("advanced")} className={view === "advanced" ? "min-h-11 rounded-xl bg-[#713a35] px-4 text-sm font-semibold text-white" : secondaryButton}>Existing sections & detailed settings</button>
-        <p className="basis-full text-xs leading-5 text-black/60">One workspace, one save: switch between editors without losing unsaved changes. Both views save together.</p>
-      </nav>}
-      <div className={isHomepage && advancedSettings && view === "advanced" ? "hidden" : ""}>
+      <div>
       <div className={`builder-workspace grid min-w-0 gap-4 ${focusPreview ? "builder-workspace--focus" : ""}`}>
         <aside className="builder-library min-w-0 rounded-2xl border border-black/10 bg-white p-4" aria-label="Component library">
           <h2 className="text-sm font-semibold">Add components</h2>
@@ -234,7 +279,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
                 return <li key={id} draggable onDragStart={event => event.dataTransfer.setData("text/plain", id)} onDragOver={event => event.preventDefault()} onDrop={event => drop(event, id)}
                   className={`flex min-w-0 items-center gap-2 rounded-xl border p-2 ${selectedId === id ? "border-[#713a35] bg-[#f8eee9]" : "border-black/10 bg-white"}`}>
                   <span className="cursor-grab px-1 text-black/40" title="Drag to reorder" aria-hidden="true">⠿</span>
-                  <button type="button" onClick={() => setSelectedId(id)} aria-pressed={selectedId === id}
+                  <button type="button" onClick={() => {setSelectedId(id);setPropertiesTab("section");if(id.startsWith("core:"))setView("advanced");}} aria-pressed={selectedId === id}
                     className="min-w-0 flex-1 text-left focus-visible:rounded focus-visible:outline-2">
                     <span className="block truncate text-xs font-semibold">{name(id)}</span>
                     <span className="text-[11px] text-black/50">{core ? "Built-in commerce section" : componentName(layout.blocks.find(block => customBlockId(block.id) === id)!.kind)} · {hidden(id) ? "Hidden" : "Visible"}</span>
@@ -249,7 +294,7 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
           </div>
           <div className="builder-preview order-1 min-w-0 overflow-hidden rounded-2xl border border-black/10 bg-white p-3 sm:p-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-              <div><h2 className="text-sm font-semibold">Storefront preview</h2><p className="text-xs text-black/55">{isHomepage ? previewMode === "live" ? "Actual storefront components with unsaved section order, visibility, text edits and custom blocks. Product and campaign data stays live." : "Unsaved section order and custom components; existing sections are represented by editable summaries." : "Existing page content appears in the preview above; custom components appear in the unsaved layout below. The existing page can be edited through its management screen."}</p></div>
+              <div><h2 className="text-sm font-semibold">Storefront preview</h2><p className="text-xs text-black/55">{isHomepage ? previewMode === "live" ? "Actual storefront components with unsaved section order, visibility, text edits and custom blocks. Product and campaign data stays live." : "Unsaved section order and custom components; existing sections are represented by editable summaries." : "Page text changes appear in the preview above; custom components appear in the unsaved layout below. Edit page text and sections directly in Properties."}</p></div>
               <div className="flex flex-wrap gap-1" role="group" aria-label="Design preview device">
                 {(["mobile", "tablet", "desktop"] as const).map(item => <button key={item} type="button" aria-pressed={device === item} onClick={() => setDevice(item)}
                   className={`min-h-9 rounded-lg px-3 py-1 text-xs font-semibold ${device === item ? "bg-[#713a35] text-white" : "bg-[#f7f1ee] text-[#713a35]"}`}>{item}</button>)}
@@ -266,13 +311,13 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
               <button type="button" aria-pressed={previewMode === "draft"} onClick={() => setPreviewMode("draft")} className={previewMode === "draft" ? "min-h-10 rounded-lg bg-[#713a35] px-3 text-xs font-semibold text-white" : secondaryButton}>Unsaved layout & components</button>
             </div>}
             <div className="min-w-0 rounded-xl bg-[#eee8e4] p-2 sm:p-4">
-              {isHomepage && previewMode === "live" ? <BuilderPreviewViewport width={deviceWidths[device]} height={780}><iframe key={device} title={`Real storefront preview at ${deviceWidths[device]} pixels`} ref={draftFrame} src="/?builderPreview=1" onLoad={() => { sendDraft(); draftFrame.current?.contentWindow?.postMessage({ type: "aloyri-builder-site-draft", siteContent }, window.location.origin); }} width={deviceWidths[device]} height={780} loading="lazy" className="block border-0 bg-white" style={{ width: deviceWidths[device], height: 780, maxWidth: "none" }} /></BuilderPreviewViewport> : null}
+              {isHomepage && previewMode === "live" ? <BuilderPreviewViewport width={deviceWidths[device]} height={780}><iframe key={device} title={`Real storefront preview at ${deviceWidths[device]} pixels`} ref={draftFrame} src="/?builderPreview=1" onLoad={() => { sendDraft(); draftFrame.current?.contentWindow?.postMessage({ type: "aloyri-builder-site-draft", siteContent, presentation: presentationDraft, appearance: appearanceDraft }, window.location.origin); }} width={deviceWidths[device]} height={780} loading="lazy" className="block border-0 bg-white" style={{ width: deviceWidths[device], height: 780, maxWidth: "none" }} /></BuilderPreviewViewport> : null}
               {!isHomepage && <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg bg-white p-3 text-xs">
                 <span className="font-semibold">Selected: {publicSelection === "header" ? "Site header" : publicSelection === "footer" ? "Site footer" : "Page content"}</span>
-                <Link className={secondaryButton} href={publicSelection === "page" && ["about", "shipping", "returns", "contact", "faq"].includes(pageKey) ? `/admin/pages/${pageKey}` : publicSelection === "page" ? "/admin/merchandising" : "/admin/settings"}>Edit selected existing feature ↗</Link>
+                <button type="button" className={secondaryButton} onClick={() => { setPropertiesTab(publicSelection === "page" ? "section" : "site"); propertiesRef.current?.scrollIntoView({block:"nearest"}); }}>Edit selection in Properties</button>
                 <span className="text-black/50">Click an existing area in the preview to select it.</span>
               </div>}
-              {!isHomepage && <BuilderPreviewViewport width={deviceWidths[device]} height={650}><iframe ref={publicFrame} onLoad={() => publicFrame.current?.contentWindow?.postMessage({ type: "aloyri-builder-page-draft", content: pageContent, siteContent }, window.location.origin)} title={`Saved ${pageKey} page preview`} src={(pageKey === "shipping" ? "/shipping-delivery" : pageKey === "returns" ? "/returns-refunds" : pageKey === "category" ? "/shop" : pageKey === "product" ? "/shop" : `/${pageKey}`) + "?builderPreview=1"} width={deviceWidths[device]} height={650} loading="lazy" className="block border-0 bg-white" style={{ width: deviceWidths[device], height: 650, maxWidth: "none" }} /></BuilderPreviewViewport>}
+              {!isHomepage && <BuilderPreviewViewport width={deviceWidths[device]} height={650}><iframe ref={publicFrame} onLoad={() => publicFrame.current?.contentWindow?.postMessage({ type: "aloyri-builder-page-draft", content: pageContent, faqContent, siteContent, presentation: presentationDraft, appearance: appearanceDraft }, window.location.origin)} title={`Saved ${pageKey} page preview`} src={(pageKey === "shipping" ? "/shipping-delivery" : pageKey === "returns" ? "/returns-refunds" : pageKey === "category" ? "/shop" : pageKey === "product" ? "/shop" : `/${pageKey}`) + "?builderPreview=1"} width={deviceWidths[device]} height={650} loading="lazy" className="block border-0 bg-white" style={{ width: deviceWidths[device], height: 650, maxWidth: "none" }} /></BuilderPreviewViewport>}
               {(!isHomepage || previewMode === "draft") && <div className="min-w-0 overflow-x-auto rounded-xl pb-2" aria-label="Unscaled layout mockup (scroll within this panel)"><div className="mx-auto min-h-56 overflow-hidden rounded-lg bg-[#fffaf8] shadow-sm" style={{ width: deviceWidths[device], maxWidth: "none" }}>
                 <div className="flex justify-between border-b border-black/10 bg-white px-5 py-3 text-xs font-semibold"><span>ALOYRI</span><span>Preview</span></div>
                 {layout.order.map(id => {
@@ -286,10 +331,13 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
             <p className="mt-3 text-xs text-black/55">{isHomepage && previewMode === "live" ? "This preview uses the real storefront sections with your unsaved order, visibility and editable text. Advanced settings not yet represented here may require saving to appear." : "This is an approximate draft layout. Existing commerce sections are represented by summaries; choose Interactive unsaved preview to see their actual content."}</p>
           </div>
         </section>
-        <aside className="builder-properties min-w-0 self-start rounded-2xl border border-black/10 bg-white p-4" aria-label="Selected component properties">
+        <aside ref={propertiesRef} className="builder-properties min-w-0 self-start rounded-2xl border border-black/10 bg-white p-4" aria-label="Selected component properties">
           <h2 className="text-sm font-semibold">Properties</h2>
           <p className="mt-1 mb-4 text-xs leading-5 text-black/55">Select a section in the preview or page structure to edit its content and appearance.</p>
-          {siteContent && <div className="mb-3 space-y-3 rounded-xl border border-black/10 bg-white p-4" aria-label="Header and footer editor">
+          <div role="group" aria-label="Property categories" className="mb-4 flex flex-wrap gap-2"><button type="button" aria-pressed={propertiesTab === "section"} className={secondaryButton} onClick={()=>setPropertiesTab("section")}>Selected section</button><button type="button" aria-pressed={propertiesTab === "site"} className={secondaryButton} onClick={()=>setPropertiesTab("site")}>Header, footer & website</button></div>
+          <div className={propertiesTab === "site" ? "space-y-4" : "hidden"}>
+          {siteSettings}
+          {!siteSettings && siteContent && <div className="mb-3 space-y-3 rounded-xl border border-black/10 bg-white p-4" aria-label="Header and footer editor">
                 <p className="text-sm font-semibold">Existing header and footer content</p>
                 <label className="block text-xs font-semibold">Announcement text
                   <input className={field + " mt-1"} maxLength={180} value={siteContent.announcement} onChange={event => setSiteContent(current => current ? { ...current, announcement: event.target.value } : current)} />
@@ -297,43 +345,41 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
                 <label className="block text-xs font-semibold">Footer description
                   <textarea className={field + " mt-1"} maxLength={600} rows={3} value={siteContent.footerDescription} onChange={event => setSiteContent(current => current ? { ...current, footerDescription: event.target.value } : current)} />
                 </label>
-                <Link href="/admin/settings" className="text-xs font-semibold text-[#713a35] underline">Edit navigation links and site appearance ↗</Link>
+
               </div>}
-              {pageContent && <div className="mb-3 space-y-3 rounded-xl border border-black/10 bg-white p-4" aria-label="Existing page text editor">
-                <p className="text-sm font-semibold">Edit existing {pageKey} page</p>
-                <p className="text-xs text-black/60">Changes appear in the page preview and are saved together with the layout.</p>
-                {(["eyebrow", "title", "intro"] as const).map(key => <label key={key} className="block text-xs font-semibold capitalize">{key}
-                  <input className={field + " mt-1"} value={pageContent[key]} maxLength={key === "intro" ? 1000 : key === "title" ? 180 : 120} onChange={event => setPageContent(current => current ? { ...current, [key]: event.target.value } : current)} />
-                </label>)}
-                {pageContent.sections.map((section, index) => <label key={index} className="block text-xs font-semibold">Section {index + 1} heading
-                  <input className={field + " mt-1"} value={section.title} maxLength={180} onChange={event => setPageContent(current => current ? { ...current, sections: current.sections.map((item, i) => i === index ? { ...item, title: event.target.value } : item) } : current)} />
-                </label>)}
-              </div>}
-              
+          </div>
+          <div className={propertiesTab === "section" ? "space-y-4" : "hidden"}>
+              {pageContent && <PreviewContentProperties content={pageContent} onChange={setPageContent} />}
+              {faqContent && <PreviewFaqProperties content={faqContent} onChange={setFaqContent} />}
           {selectedCore ? <>
             <p className="mt-3 font-semibold">{sections.get(selectedId)}</p>
-            {coreContent ? <><p className="mt-2 text-xs leading-5 text-black/60">Edit the existing section here. The storefront retains its working features and CRM data.</p>{selectedCore === "hero" && <div className="mt-4 space-y-3"><label className="block text-xs font-semibold">Small label<input aria-label="Small label" value={coreContent.eyebrow} maxLength={600} onChange={event => editCore("eyebrow", event.target.value)} className={field + " mt-1"} /></label>
-<label className="block text-xs font-semibold">Main heading<input aria-label="Main heading" value={coreContent.headline} maxLength={600} onChange={event => editCore("headline", event.target.value)} className={field + " mt-1"} /></label>
-<label className="block text-xs font-semibold">Description<input aria-label="Description" value={coreContent.intro} maxLength={600} onChange={event => editCore("intro", event.target.value)} className={field + " mt-1"} /></label>
-<label className="block text-xs font-semibold">Primary button<input aria-label="Primary button" value={coreContent.primaryLabel} maxLength={600} onChange={event => editCore("primaryLabel", event.target.value)} className={field + " mt-1"} /></label>
+            {coreContent && !advancedSettings ? <><p className="mt-2 text-xs leading-5 text-black/60">Edit the existing section here. The storefront retains its working features and CRM data.</p>{selectedCore === "hero" && <div className="mt-4 space-y-3"><label className="block text-xs font-semibold">Small label<input aria-label="Small label" value={coreContent.eyebrow} maxLength={120} onChange={event => editCore("eyebrow", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Main heading<input aria-label="Main heading" value={coreContent.headline} maxLength={180} onChange={event => editCore("headline", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Description<input aria-label="Description" value={coreContent.intro} maxLength={1200} onChange={event => editCore("intro", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Primary button<input aria-label="Primary button" value={coreContent.primaryLabel} maxLength={80} onChange={event => editCore("primaryLabel", event.target.value)} className={field + " mt-1"} /></label>
 <label className="block text-xs font-semibold">Primary destination<input aria-label="Primary destination" value={coreContent.primaryHref} maxLength={200} onChange={event => editCore("primaryHref", event.target.value)} className={field + " mt-1"} /></label>
-<label className="block text-xs font-semibold">Secondary button<input aria-label="Secondary button" value={coreContent.secondaryLabel} maxLength={600} onChange={event => editCore("secondaryLabel", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Secondary button<input aria-label="Secondary button" value={coreContent.secondaryLabel} maxLength={80} onChange={event => editCore("secondaryLabel", event.target.value)} className={field + " mt-1"} /></label>
 <label className="block text-xs font-semibold">Secondary destination<input aria-label="Secondary destination" value={coreContent.secondaryHref} maxLength={200} onChange={event => editCore("secondaryHref", event.target.value)} className={field + " mt-1"} /></label>
 <label className="block text-xs font-semibold">Image path<input aria-label="Image path" value={coreContent.heroImagePath} maxLength={200} onChange={event => editCore("heroImagePath", event.target.value)} className={field + " mt-1"} /></label><label className="block text-xs font-semibold">Hero style<select value={coreContent.heroStyle} onChange={event => editCore("heroStyle", event.target.value as CoreContent["heroStyle"])} className={field + " mt-1"}><option value="soft">Soft</option><option value="minimal">Minimal</option><option value="contrast">Contrast</option></select></label><label className="block text-xs font-semibold">Layout<select value={coreContent.heroLayout} onChange={event => editCore("heroLayout", event.target.value as CoreContent["heroLayout"])} className={field + " mt-1"}><option value="split">Split</option><option value="stacked">Stacked</option></select></label></div>}
-{selectedCore === "browse" && <div className="mt-4 space-y-3"><label className="block text-xs font-semibold">Small label<input aria-label="Small label" value={coreContent.browseEyebrow} maxLength={600} onChange={event => editCore("browseEyebrow", event.target.value)} className={field + " mt-1"} /></label>
-<label className="block text-xs font-semibold">Heading<input aria-label="Heading" value={coreContent.browseTitle} maxLength={600} onChange={event => editCore("browseTitle", event.target.value)} className={field + " mt-1"} /></label>
+{selectedCore === "browse" && <div className="mt-4 space-y-3"><label className="block text-xs font-semibold">Small label<input aria-label="Small label" value={coreContent.browseEyebrow} maxLength={90} onChange={event => editCore("browseEyebrow", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Heading<input aria-label="Heading" value={coreContent.browseTitle} maxLength={140} onChange={event => editCore("browseTitle", event.target.value)} className={field + " mt-1"} /></label>
 <label className="block text-xs font-semibold">Description<input aria-label="Description" value={coreContent.browseIntro} maxLength={600} onChange={event => editCore("browseIntro", event.target.value)} className={field + " mt-1"} /></label>
-<label className="block text-xs font-semibold">Search placeholder<input aria-label="Search placeholder" value={coreContent.browsePlaceholder} maxLength={600} onChange={event => editCore("browsePlaceholder", event.target.value)} className={field + " mt-1"} /></label></div>}
-{selectedCore === "categories" && <div className="mt-4 space-y-3"><label className="block text-xs font-semibold">Small label<input aria-label="Small label" value={coreContent.categoriesEyebrow} maxLength={600} onChange={event => editCore("categoriesEyebrow", event.target.value)} className={field + " mt-1"} /></label>
-<label className="block text-xs font-semibold">Heading<input aria-label="Heading" value={coreContent.categoriesTitle} maxLength={600} onChange={event => editCore("categoriesTitle", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Search placeholder<input aria-label="Search placeholder" value={coreContent.browsePlaceholder} maxLength={100} onChange={event => editCore("browsePlaceholder", event.target.value)} className={field + " mt-1"} /></label></div>}
+{selectedCore === "categories" && <div className="mt-4 space-y-3"><label className="block text-xs font-semibold">Small label<input aria-label="Small label" value={coreContent.categoriesEyebrow} maxLength={90} onChange={event => editCore("categoriesEyebrow", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Heading<input aria-label="Heading" value={coreContent.categoriesTitle} maxLength={140} onChange={event => editCore("categoriesTitle", event.target.value)} className={field + " mt-1"} /></label>
 <label className="block text-xs font-semibold">Description<input aria-label="Description" value={coreContent.categoriesIntro} maxLength={600} onChange={event => editCore("categoriesIntro", event.target.value)} className={field + " mt-1"} /></label></div>}
-{selectedCore === "routineFinder" && <div className="mt-4 space-y-3"><label className="block text-xs font-semibold">Heading<input aria-label="Heading" value={coreContent.routineFinderHeadline} maxLength={600} onChange={event => editCore("routineFinderHeadline", event.target.value)} className={field + " mt-1"} /></label>
-<label className="block text-xs font-semibold">Description<input aria-label="Description" value={coreContent.routineFinderIntro} maxLength={600} onChange={event => editCore("routineFinderIntro", event.target.value)} className={field + " mt-1"} /></label></div>}
-{selectedCore === "brandStory" && <div className="mt-4 space-y-3"><label className="block text-xs font-semibold">Small label<input aria-label="Small label" value={coreContent.ideaEyebrow} maxLength={600} onChange={event => editCore("ideaEyebrow", event.target.value)} className={field + " mt-1"} /></label>
-<label className="block text-xs font-semibold">Heading<input aria-label="Heading" value={coreContent.ideaHeadline} maxLength={600} onChange={event => editCore("ideaHeadline", event.target.value)} className={field + " mt-1"} /></label>
-<label className="block text-xs font-semibold">Description<input aria-label="Description" value={coreContent.ideaCopy} maxLength={600} onChange={event => editCore("ideaCopy", event.target.value)} className={field + " mt-1"} /></label></div>}</> : <p className="mt-2 text-xs text-black/60">Use the linked management screen for this section.</p>}
+{selectedCore === "routineFinder" && <div className="mt-4 space-y-3"><label className="block text-xs font-semibold">Heading<input aria-label="Heading" value={coreContent.routineFinderHeadline} maxLength={180} onChange={event => editCore("routineFinderHeadline", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Description<input aria-label="Description" value={coreContent.routineFinderIntro} maxLength={1200} onChange={event => editCore("routineFinderIntro", event.target.value)} className={field + " mt-1"} /></label></div>}
+{selectedCore === "brandStory" && <div className="mt-4 space-y-3"><label className="block text-xs font-semibold">Small label<input aria-label="Small label" value={coreContent.ideaEyebrow} maxLength={90} onChange={event => editCore("ideaEyebrow", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Heading<input aria-label="Heading" value={coreContent.ideaHeadline} maxLength={180} onChange={event => editCore("ideaHeadline", event.target.value)} className={field + " mt-1"} /></label>
+<label className="block text-xs font-semibold">Description<input aria-label="Description" value={coreContent.ideaCopy} maxLength={1200} onChange={event => editCore("ideaCopy", event.target.value)} className={field + " mt-1"} /></label></div>}</> : <p className="mt-2 text-xs text-black/60">Use the complete section controls below.</p>}
             <label className="mt-4 flex items-center gap-2 text-sm"><input type="checkbox" checked={!layout.hiddenCore.includes(selectedCore)} onChange={() => toggleCore(selectedCore)} /> Show section</label>
-            {selectedCore === "products" ? <Link href="/admin/merchandising" className="mt-4 inline-flex min-h-11 items-center rounded-xl border border-black/15 px-4 py-2 text-xs font-semibold">Edit products & campaigns →</Link> : advancedSettings ? <button type="button" onClick={() => setView("advanced")} className={secondaryButton + " mt-4"}>Detailed section settings →</button> : <Link href="/admin/builder?view=advanced" className="mt-4 inline-flex min-h-11 items-center rounded-xl border border-black/15 px-4 py-2 text-xs font-semibold">Detailed section settings →</Link>}
+            {advancedSettings && <button type="button" onClick={() => {
+              setView("advanced");
+              const ids: Partial<Record<HomepageBlockId,string>> = {hero:"home-hero",browse:"home-discovery",categories:"home-discovery",routineFinder:"home-discovery",brandStory:"home-story",promoBeforeProducts:"home-banners",promoAfterProducts:"home-banners",editorialBeforeProducts:"home-editorial",editorialAfterProducts:"home-editorial",editorialBeforeStory:"home-editorial",products:"home-products"};
+              const details = formRef.current?.querySelector<HTMLDetailsElement>("#" + (ids[selectedCore] || "home-layout"));
+              if (details) { details.open=true; details.scrollIntoView({block:"nearest"}); }
+            }} className={secondaryButton + " mt-4"}>All section properties</button>}
           </> : selectedCustom ? <div className="mt-4 space-y-4">
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={duplicate} disabled={layout.blocks.length >= 32} className={secondaryButton}>Duplicate</button>
@@ -357,14 +403,14 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
               </label>
             </>}
             {selectedCustom.kind === "image" && <label className="block text-xs font-semibold">Media library image
-              <select value={mediaPaths.includes(selectedCustom.imagePath) ? selectedCustom.imagePath : ""} onChange={event => updateBlock("imagePath", event.target.value)} className={field + " mt-1"}>
+              <select value={imagePaths.includes(selectedCustom.imagePath) ? selectedCustom.imagePath : ""} onChange={event => updateBlock("imagePath", event.target.value)} className={field + " mt-1"}>
                 <option value="">Choose an uploaded image</option>
-                {mediaPaths.map(path => <option key={path} value={path}>{path.startsWith("media/") ? path.slice(6) : path}</option>)}
+                {imagePaths.map(path => <option key={path} value={path}>{path.startsWith("media/") ? path.slice(6) : path}</option>)}
               </select>
               <span className="mt-2 block text-xs font-normal text-black/60">Or enter an image path manually:</span>
               <span className="mt-2 block text-xs font-semibold">Image path</span>
               <input placeholder="media/your-image.webp" value={selectedCustom.imagePath} onChange={event => updateBlock("imagePath", event.target.value)} className={field + " mt-1"} />
-              <Link href="/admin/media" target="_blank" className="mt-1 block font-normal text-[#713a35] underline">Open media library ↗</Link>
+
             </label>}
             {["features", "quote", "faq"].includes(selectedCustom.kind) && <label className="block text-xs font-semibold">{selectedCustom.kind === "faq" ? "Questions (question|answer on each line)" : selectedCustom.kind === "features" ? "Feature cards (one per line)" : "Quote"}
               <textarea rows={5} maxLength={2000} value={selectedCustom.items.join("\n")} onChange={event => updateBlock("items", event.target.value.split(/\r?\n/).slice(0, 8))} className={field + " mt-1"} />
@@ -398,12 +444,12 @@ export function VisualBuilderStudio({ initialLayout, pageKey, mediaPaths = [], i
               <label className="mt-2 flex items-center gap-2 text-xs font-semibold"><input type="checkbox" checked={selectedCustom.hideDesktop} onChange={event => updateBlock("hideDesktop", event.target.checked)} /> Hide on desktop and tablet</label>
             </div>
           </div> : <p className="mt-3 text-xs text-black/60">Select a section to edit.</p>}
+          {isHomepage && advancedSettings && <details open={view === "advanced"} className="rounded-xl border border-black/10 p-3" aria-label="Complete section properties"><summary className="cursor-pointer text-sm font-semibold">Complete homepage properties</summary><div className="mt-4 space-y-4">{advancedSettings}{merchandisingSettings}</div></details>}
+          <InlineMediaUpload onUploaded={path => {window.dispatchEvent(new CustomEvent("admin:image-uploaded",{detail:{path}}));setImagePaths(paths => [...new Set([path,...paths])]); if(selectedCustom?.kind === "image") updateBlock("imagePath",path); else if(selectedCore === "hero") {editCore("heroImagePath",path);window.dispatchEvent(new CustomEvent("admin:image-selected",{detail:{name:"heroImagePath",path}}));}}} />
+          </div>
         </aside>
       </div>
       </div>
-      {isHomepage && advancedSettings && <section className={view === "advanced" ? "min-w-0" : "hidden"} aria-label="Detailed homepage settings">
-        {advancedSettings}
-      </section>}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-black/10 bg-white p-4">
         <p className="text-xs text-black/60">Saving updates the selected public page with a recoverable version-history snapshot. Orders, prices and stock remain managed by their existing systems.</p>
         <button type="submit" className="min-h-11 rounded-xl bg-[#713a35] px-5 py-2.5 text-sm font-semibold text-white">Save website changes</button>

@@ -885,3 +885,8 @@ body[data-storefront-theme="sand"] {
 .admin-editor-section > .admin-card { border: 0; border-radius: 0; }
 .admin-editor-section input, .admin-editor-section select, .admin-editor-section textarea { max-width: 100%; }
 .admin-editor-section summary:focus-visible { outline: 2px solid #713a35; outline-offset: -4px; }
+
+/* Properties controls use the panel width, independent of the preview device. */
+.builder-properties .grid { grid-template-columns: minmax(0, 1fr); }
+.builder-properties .grid > * { grid-column: auto; min-width: 0; }
+.builder-properties input, .builder-properties select, .builder-properties textarea { max-width: 100%; }

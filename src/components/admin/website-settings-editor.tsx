@@ -13,8 +13,23 @@ export function WebsiteSettingsEditor({ config, inBuilder = false }: { config: S
     <div className="space-y-5">
       <form key={config.updatedAt} action={saveSiteSettings} className="grid gap-5">
         {inBuilder ? <input type="hidden" name="builderWorkspace" value="settings" /> : null}
-        <details id="website-layout" name="website-setting" className="admin-editor-section"><summary>Header, navigation & product layout</summary><div className="p-5"><StorefrontLayoutFields value={config.presentation} /></div></details>
-        <details id="website-appearance" name="website-setting" className="admin-editor-section"><summary>Color theme</summary><AdminCard>
+        <WebsiteSettingsFields config={config} />
+        <AdminNotice tone="neutral">
+          Delivery prices, payment methods and order availability are managed in CRM.
+        </AdminNotice>
+
+        <div className="admin-save-bar"><p className="text-xs text-black/60">Saving updates the live storefront. You can restore an earlier version from Version History.</p><AdminSubmitButton pendingLabel="Saving…">Save changes</AdminSubmitButton></div>
+      </form>
+
+    </div>
+  );
+}
+
+/** Fields only, for the visual editor’s atomic save form. */
+export function WebsiteSettingsFields({config, homepage = false}: {config: StorefrontConfig; homepage?: boolean}) {
+  return <div className="space-y-4">
+        <details id="website-layout" name="website-setting" className="admin-editor-section"><summary>Header, navigation & product layout</summary><div className="p-5"><StorefrontLayoutFields value={config.presentation} headerOnly={homepage} /></div></details>
+        {!homepage && <details id="website-appearance" name="website-setting" className="admin-editor-section"><summary>Color theme</summary><AdminCard>
           <h2 className="mb-3 text-sm font-semibold">Storefront appearance</h2>
           <p className="mb-4 text-xs text-black/60">Choose a color theme. Save to update your live website.</p>
           <label className="grid gap-2 text-sm font-medium">Color theme
@@ -24,7 +39,7 @@ export function WebsiteSettingsEditor({ config, inBuilder = false }: { config: S
               <option value="sand">Sand — warm neutral</option>
             </select>
           </label>
-        </AdminCard></details>
+        </AdminCard></details>}
         <details id="website-content" name="website-setting" className="admin-editor-section" open><summary>Announcement & footer</summary><AdminCard>
           <div className="grid gap-4">
             <label className="grid gap-1.5 text-sm font-medium">
@@ -59,13 +74,5 @@ export function WebsiteSettingsEditor({ config, inBuilder = false }: { config: S
           </div>
         </AdminCard></details>
 
-        <AdminNotice tone="neutral">
-          Delivery prices, payment methods and order availability are managed in CRM.
-        </AdminNotice>
-
-        <div className="admin-save-bar"><p className="text-xs text-black/60">Saving updates the live storefront. You can restore an earlier version from Version History.</p><AdminSubmitButton pendingLabel="Saving…">Save changes</AdminSubmitButton></div>
-      </form>
-
-    </div>
-  );
+  </div>;
 }

@@ -1,3 +1,6 @@
+"use client";
+
+import { useBuilderPageContent } from "@/components/use-builder-page-content";
 import Link from "next/link";
 import { ArrowIcon } from "@/components/icons";
 
@@ -15,19 +18,15 @@ const careLinks = [
   ["Contact Aloyri", "/contact"],
 ];
 
-export function CustomerInfoPage({
-  eyebrow,
-  title,
-  intro,
-  sections,
-}: {
+export function CustomerInfoPage(initial: {
   eyebrow: string;
   title: string;
   intro: string;
   sections: InfoSection[];
 }) {
+  const {eyebrow,title,intro,sections}=useBuilderPageContent(initial,"content");
   return (
-    <main className="shell py-12 md:py-18">
+    <main data-builder-page-content className="shell py-12 md:py-18">
       <div className="grid gap-10 lg:grid-cols-[1fr_300px] lg:gap-16">
         <div>
           <div className="max-w-3xl border-b border-[#713a35]/10 pb-10">

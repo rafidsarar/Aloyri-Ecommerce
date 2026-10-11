@@ -28,6 +28,7 @@ import {
   readDraftStorefrontConfig,
   uploadStorefrontMedia,
   writeAdminAuditEvent,
+  type HomepageMerchandisingSection,
   type InfoPageContent,
   type ProductEditorial,
   type StorefrontConfig,
@@ -418,10 +419,10 @@ export async function saveVisualBuilder(formData: FormData) {
   if (!selected) redirect("/admin/builder?error=invalid");
   // Updating existing informational content requires its own page-edit permission.
   // Visual layout permissions alone must not grant access to page content edits.
-  let pageDraft: { eyebrow: string; title: string; intro: string; sectionTitles: string[] } | null = null;
+  let pageDraft: InfoPageContent | null = null;
   const rawPage = formData.get("pageContent");
   if (rawPage !== null) {
-    if (!["about", "shipping", "returns", "contact"].includes(selected)) redirect("/admin/builder?error=invalid");
+    if (!["about", "shipping", "returns", "contact", "privacy", "terms"].includes(selected)) redirect("/admin/builder?error=invalid");
     await requireAdminPermission("pages.edit");
     try {
       const value = JSON.parse(String(rawPage)) as Record<string, unknown>;
@@ -431,15 +432,55 @@ export async function saveVisualBuilder(formData: FormData) {
         if (typeof field !== "string" || field.length > max) throw Error("Invalid field");
         return field;
       };
-      const sectionTitles = value.sections.map((section: unknown) => {
+      const sections = value.sections.map((section: unknown) => {
         if (!section || typeof section !== "object" || Array.isArray(section)) throw Error("Invalid section");
-        const title = (section as Record<string, unknown>).title;
-        if (typeof title !== "string" || title.length > 180) throw Error("Invalid heading");
-        return title;
+        const row = section as Record<string, unknown>;
+        if (typeof row.title !== "string" || row.title.length > 180) throw Error("Invalid heading");
+        const lines = (key: string, count: number, max: number) => {
+          if (row[key] === undefined) return [];
+          if (!Array.isArray(row[key]) || row[key].length > count || row[key].some((line: unknown) => typeof line !== "string" || line.length > max)) throw Error("Invalid page text");
+          return (row[key] as string[]).map(line => line.trim()).filter(Boolean);
+        };
+        return {title:row.title, paragraphs:lines("paragraphs",8,1200), bullets:lines("bullets",16,600)};
       });
-      if (sectionTitles.length > 12) throw Error("Too many sections");
-      pageDraft = { eyebrow: readField("eyebrow", 120), title: readField("title", 180), intro: readField("intro", 1000), sectionTitles };
+      if (sections.length > 12) throw Error("Too many sections");
+      pageDraft = { eyebrow: readField("eyebrow", 120), title: readField("title", 180), intro: readField("intro", 1000), sections };
     } catch { redirect("/admin/builder?error=invalid"); }
+  }
+  let faqDraft: StorefrontConfig["faq"] | null = null;
+  if (formData.has("faqContent")) {
+    if (selected !== "faq") redirect("/admin/builder?error=invalid");
+    await requireAdminPermission("pages.edit");
+    try {
+      const value = JSON.parse(String(formData.get("faqContent")));
+      for (const [key,max] of [["eyebrow",120],["title",180],["intro",1000]] as const) {
+        if (typeof value[key] !== "string" || value[key].length > max) throw Error("Invalid FAQ");
+      }
+      if (!Array.isArray(value.items) || value.items.length > 30 || value.items.some((row: {question?: unknown; answer?: unknown}) => !row || typeof row.question !== "string" || !row.question.trim() || row.question.length > 400 || typeof row.answer !== "string" || !row.answer.trim() || row.answer.length > 1200)) throw Error("Invalid FAQ items");
+      faqDraft = {eyebrow:value.eyebrow,title:value.title,intro:value.intro,items:value.items.map((row: {question:string;answer:string})=>({question:row.question.trim(),answer:row.answer.trim()}))};
+    } catch {redirect("/admin/builder?error=invalid");}
+  }
+  let placements: HomepageMerchandisingSection[] | null = null;
+  if (formData.has("homepageMerchandising")) {
+    if (selected !== "home") redirect("/admin/builder?error=invalid");
+    await requireAdminPermission("merchandising.edit");
+    try {
+      const value = JSON.parse(String(formData.get("homepageMerchandising")));
+      if (!Array.isArray(value) || value.length > 20) throw Error("Invalid placements");
+      const ids = new Set<string>();
+      placements = value.map(row => {
+        if (!row || typeof row !== "object" || typeof row.id !== "string" || !/^[A-Za-z0-9_-]{1,64}$/.test(row.id) || ids.has(row.id) || !["bestsellers","featured","new-arrivals","collection","campaign"].includes(row.kind) || typeof row.enabled !== "boolean" || !Number.isInteger(row.maxProducts) || row.maxProducts < 1 || row.maxProducts > 12) throw Error("Invalid placement");
+        ids.add(row.id);
+        for (const [key,max] of [["eyebrow",120],["title",180],["copy",700]] as const) if (typeof row[key] !== "string" || row[key].length > max) throw Error("Invalid placement text");
+        if (row.referenceId !== undefined && (typeof row.referenceId !== "string" || row.referenceId.length > 64)) throw Error("Invalid reference");
+        return {id:row.id,kind:row.kind,enabled:row.enabled,eyebrow:row.eyebrow,title:row.title,copy:row.copy,maxProducts:row.maxProducts,...(row.referenceId?{referenceId:row.referenceId}:{})};
+      });
+    } catch {redirect("/admin/builder?view=layout&error=invalid-placement");}
+  }
+  const fullSettings = formData.get("settingsControls") === "1";
+  if (fullSettings) {
+    await requireAdminPermission("settings.edit");
+    validateSiteNavigation(formData,"/admin/builder");
   }
   let siteDraft: { announcement?: string; footerDescription?: string } | null = null;
   const rawSite = formData.get("siteContent");
@@ -460,6 +501,15 @@ export async function saveVisualBuilder(formData: FormData) {
     } catch { redirect("/admin/builder?error=invalid"); }
   }
   await saveAdminStorefront(formData, config => {
+    if (placements) {
+      for (const row of placements) {
+        if (row.kind === "campaign" && !config.merchandising.campaigns.some(item=>item.id===row.referenceId) || row.kind === "collection" && !config.merchandising.collections.some(item=>item.id===row.referenceId)) redirect("/admin/builder?view=layout&error=missing-reference");
+      }
+      config.merchandising.homepageSections=placements;
+      config.merchandising.outOfStockMode = ["keep","hide","push-down"].includes(String(formData.get("outOfStockMode"))) ? formData.get("outOfStockMode") as StorefrontConfig["merchandising"]["outOfStockMode"] : config.merchandising.outOfStockMode;
+      config.merchandising.shopSortMode = formData.get("shopSortMode") === "featured" ? "featured" : "priority";
+    }
+    if (faqDraft) config.faq = faqDraft;
     if (siteDraft) Object.assign(config.site, siteDraft);
     if (selected === "home") {
       const before = structuredClone(config.homepage.visualLayout);
@@ -501,7 +551,7 @@ export async function saveVisualBuilder(formData: FormData) {
         } catch { redirect("/admin/builder?error=invalid"); }
         if (!baseline || typeof baseline !== "object" || Array.isArray(baseline)) redirect("/admin/builder?error=invalid");
         if (!edited || typeof edited !== "object" || Array.isArray(edited)) redirect("/admin/builder?error=invalid");
-        const stringFields = { eyebrow: 100, headline: 180, intro: 1200, primaryLabel: 70, secondaryLabel: 70, browseEyebrow: 90, browseTitle: 140, browseIntro: 600, browsePlaceholder: 100, categoriesEyebrow: 90, categoriesTitle: 140, categoriesIntro: 600, routineFinderHeadline: 180, routineFinderIntro: 1200, ideaEyebrow: 90, ideaHeadline: 180, ideaCopy: 1200 } as const;
+        const stringFields = { eyebrow: 120, headline: 180, intro: 1200, primaryLabel: 80, secondaryLabel: 80, browseEyebrow: 90, browseTitle: 140, browseIntro: 600, browsePlaceholder: 100, categoriesEyebrow: 90, categoriesTitle: 140, categoriesIntro: 600, routineFinderHeadline: 180, routineFinderIntro: 1200, ideaEyebrow: 90, ideaHeadline: 180, ideaCopy: 1200 } as const;
         for (const [key, limit] of Object.entries(stringFields)) {
           if (typeof edited[key] !== "string" || edited[key].length > limit) redirect("/admin/builder?error=invalid");
           if (edited[key] !== baseline[key]) (config.homepage as unknown as Record<string, unknown>)[key] = edited[key];
@@ -530,15 +580,11 @@ export async function saveVisualBuilder(formData: FormData) {
       );
     } else {
       config.visualPages[selected] = normalizeVisualPageLayout(requested);
-      if (pageDraft && (selected === "about" || selected === "shipping" || selected === "returns" || selected === "contact")) {
-        const page = config.pages[selected];
-        if (page.sections.length !== pageDraft.sectionTitles.length) redirect("/admin/builder?error=invalid");
-        page.eyebrow = pageDraft.eyebrow;
-        page.title = pageDraft.title;
-        page.intro = pageDraft.intro;
-        page.sections = page.sections.map((section, index) => ({ ...section, title: pageDraft!.sectionTitles[index] }));
+      if (pageDraft && (selected === "about" || selected === "shipping" || selected === "returns" || selected === "contact" || selected === "privacy" || selected === "terms")) {
+        config.pages[selected] = pageDraft;
       }
     }
+    if (fullSettings) applySiteSettings(config, formData, selected === "home");
     return config;
   }, {
     actor: admin.username,
@@ -548,24 +594,24 @@ export async function saveVisualBuilder(formData: FormData) {
     target: selected,
     detail: "Visual website layout updated live.",
   });
-  redirect("/admin/builder?page=" + selected + "&saved=1");
+  redirect("/admin/builder?" + (formData.get("editorView") === "layout" ? "view=layout&" : "") + "page=" + selected + "&saved=1");
 }
 
-export async function saveSiteSettings(formData: FormData) {
-  const admin = await requireAdminPermission("settings.edit");
+function validateSiteNavigation(formData: FormData, destination = "/admin/settings") {
   for (let i=0;i<5;i++) {
     const label=text(formData,`navLabel${i}`,30); const href=text(formData,`navHref${i}`,160);
-    if ((label || href) && (!label || !safeNavigationHref(href))) redirect("/admin/settings?error="+encodeURIComponent(`Menu item ${i+1} needs a label and a valid storefront destination.`));
+    if ((label || href) && (!label || !safeNavigationHref(href))) redirect(destination + "?error="+encodeURIComponent(`Menu item ${i+1} needs a label and a valid storefront destination.`));
   }
+}
 
-  await saveAdminStorefront(formData, (config) => {
+function applySiteSettings(config: StorefrontConfig, formData: FormData, homepage = false) {
     config.presentation = normalizePresentation({
-      contentWidth: text(formData,"contentWidth",20),
-      desktopColumns: Number(formData.get("desktopColumns")),
+      contentWidth: homepage ? config.presentation.contentWidth : text(formData,"contentWidth",20),
+      desktopColumns: homepage ? config.presentation.desktopColumns : Number(formData.get("desktopColumns")),
       showAnnouncement: formData.get("showAnnouncement") === "on",
       stickyHeader: formData.get("stickyHeader") === "on",
-      showRoutine: formData.get("showRoutine") === "on",
-      showHeroImageOnMobile: formData.get("showHeroImageOnMobile") === "on",
+      showRoutine: homepage ? config.presentation.showRoutine : formData.get("showRoutine") === "on",
+      showHeroImageOnMobile: homepage ? config.presentation.showHeroImageOnMobile : formData.get("showHeroImageOnMobile") === "on",
       navigation: Array.from({length:5},(_,i)=>({label:text(formData,`navLabel${i}`,30),href:text(formData,`navHref${i}`,160)})),
     });
     config.site = {
@@ -578,6 +624,13 @@ export async function saveSiteSettings(formData: FormData) {
         ? text(formData, "appearance", 10) as "rose" | "sage" | "sand"
         : config.site.appearance,
     };
+}
+
+export async function saveSiteSettings(formData: FormData) {
+  const admin = await requireAdminPermission("settings.edit");
+  validateSiteNavigation(formData);
+  await saveAdminStorefront(formData, (config) => {
+    applySiteSettings(config, formData);
     return config;
   }, {
     actor: admin.username,
@@ -589,6 +642,21 @@ export async function saveSiteSettings(formData: FormData) {
   redirect(formData.get("builderWorkspace") === "settings"
     ? "/admin/builder?workspace=settings&saved=1"
     : "/admin/settings?saved=1");
+}
+
+export async function uploadPreviewMedia(formData: FormData): Promise<{ok:true;pathname:string;warning?:string}|{ok:false;error:string}> {
+  const admin = await requireAdminPermission("media.edit");
+  const file = formData.get("image");
+  if (!(file instanceof File) || !file.size) return {ok:false,error:"Choose an image first."};
+  if (file.size > 4 * 1024 * 1024) return {ok:false,error:"Use images up to 4 MB."};
+  let pathname: string;
+  try { pathname = await uploadStorefrontMedia(file); }
+  catch (error) { return {ok:false,error:errorMessage(error)}; }
+  let warning: string | undefined;
+  try { await writeAdminAuditEvent(admin.username,"media.uploaded","Image uploaded from preview Properties.",{scope:"media",target:pathname}); }
+  catch (error) { console.error("Preview upload audit failed",error); warning="Image uploaded, but its activity record could not be saved. Save website changes to publish your selection."; }
+  revalidatePath("/admin/builder");
+  return {ok:true,pathname,...(warning?{warning}:{})};
 }
 
 export async function uploadBuilderMedia(formData: FormData) {
