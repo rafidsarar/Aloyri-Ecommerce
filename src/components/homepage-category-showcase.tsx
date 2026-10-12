@@ -39,14 +39,12 @@ export function HomepageCategoryShowcase({ products, categories, eyebrow, title,
           return (
             <Link key={item.slug} href={item.href} className={"store-category-visual store-category-visual-" + style + " group relative flex min-h-[245px] w-[min(72vw,290px)] shrink-0 snap-center flex-col justify-between overflow-hidden rounded-[1.65rem] border p-5 transition-transform duration-300 hover:-translate-y-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#713a35] sm:min-h-[275px] sm:w-[280px] sm:shrink-0 sm:p-6 lg:min-h-[305px] lg:p-8"}>
               <h3 className="display relative z-10 text-[clamp(1.55rem,2.4vw,2rem)] leading-tight">{item.name}</h3>
-              {photo ? (
-                <div className="store-category-product pointer-events-none absolute right-[-6%] top-[13%] w-[74%] max-w-[330px] sm:right-[-12%] sm:top-[17%] lg:right-[-6%]">
-                  <ProductMedia product={photo} sizes="(max-width: 640px) 65vw, (max-width: 1024px) 25vw, 310px" className="aspect-square rounded-full" />
-                </div>
-              ) : (
-                <div className="store-category-orbit pointer-events-none absolute right-[-20%] top-[15%] aspect-square w-[85%] rounded-full" aria-hidden="true" />
-              )}
-              <div className="relative z-10 mt-auto max-w-[75%] pt-32">
+              <div className="store-category-media relative my-4 flex h-[180px] shrink-0 items-center justify-center overflow-hidden">
+                {photo ? <div className="w-[170px] max-w-full">
+                  <ProductMedia product={photo} sizes="170px" className="aspect-square rounded-full" />
+                </div> : <div className="store-category-orbit h-[170px] w-[170px] max-w-full rounded-full" aria-hidden="true" />}
+              </div>
+              <div className="store-category-description relative z-10 mt-auto">
                 <p className="mt-2 max-w-[13rem] text-xs leading-5 opacity-75 sm:text-sm">{familiar?.note || (matching.length ? `Explore ${item.name.toLocaleLowerCase("en")} from Aloyri.` : "New category · products coming soon.")}</p>
                 <span className="mt-5 inline-flex h-10 w-10 items-center justify-center rounded-full border border-current/25 transition group-hover:translate-x-1" aria-hidden="true"><ArrowIcon /></span>
               </div>
