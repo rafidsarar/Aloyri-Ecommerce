@@ -1,3 +1,4 @@
+import { normalizeHeroBackground } from "@/lib/hero-background";
 import { normalizeHeroProductIds, normalizeHeroDiscountMode, normalizeHeroPromotionCode } from "@/lib/hero-banner-offers";
 import "server-only";
 import { defaultPrivacyContent, defaultTermsContent } from "@/lib/default-policy-content";
@@ -203,6 +204,10 @@ export type StorefrontConfig = {
     heroDiscountMode: "none" | "label" | "checkout";
     heroPromotionCode: string;
     heroImagePath: string;
+    heroBackground?: string;
+    mainHeroBackground?: string;
+    bestsellersBackground?: string;
+    routineBackground?: string;
     heroStyle: "soft" | "minimal" | "contrast";
     heroAlignment: "left" | "center";
     showBrowse: boolean;
@@ -228,7 +233,7 @@ export type StorefrontConfig = {
     routineFinderIntro: string;
     showBrandStory: boolean;
     heroLayout: "split" | "stacked";
-    promoBanners: Array<{ enabled: boolean; eyebrow: string; title: string; copy: string; ctaLabel: string; ctaHref: string; layout: "split" | "centered"; mobileLayout: "stacked" | "compact"; imagePath: string; startAt: string; endAt: string; productIds: string[]; discountMode: "none" | "label" | "checkout"; promotionCode: string }>;
+    promoBanners: Array<{ background?: string; enabled: boolean; eyebrow: string; title: string; copy: string; ctaLabel: string; ctaHref: string; layout: "split" | "centered"; mobileLayout: "stacked" | "compact"; imagePath: string; startAt: string; endAt: string; productIds: string[]; discountMode: "none" | "label" | "checkout"; promotionCode: string }>;
     editorialSections: Array<{ enabled: boolean; kind: "story" | "testimonial" | "faq" | "announcement"; title: string; eyebrow: string; copy: string; ctaLabel: string; ctaHref: string; position: "before-products" | "after-products" | "before-story"; layout: "split" | "centered" }>;
     promoPlacement: "before-products" | "after-products";
   };
@@ -774,6 +779,10 @@ function normalizeConfig(value: Partial<StorefrontConfig> | null): StorefrontCon
       heroProductIds: normalizeHeroProductIds(value.homepage?.heroProductIds),
       heroDiscountMode: normalizeHeroDiscountMode(value.homepage?.heroDiscountMode),
       heroPromotionCode: normalizeHeroPromotionCode(value.homepage?.heroPromotionCode),
+      heroBackground: normalizeHeroBackground(value.homepage?.heroBackground),
+      mainHeroBackground: normalizeHeroBackground(value.homepage?.mainHeroBackground),
+      bestsellersBackground: normalizeHeroBackground(value.homepage?.bestsellersBackground),
+      routineBackground: normalizeHeroBackground(value.homepage?.routineBackground),
       heroStyle: value.homepage?.heroStyle === "contrast" || value.homepage?.heroStyle === "minimal" ? value.homepage.heroStyle : "soft",
       heroAlignment: value.homepage?.heroAlignment === "center" ? "center" : "left",
       showBrowse: value.homepage?.showBrowse !== false,
@@ -810,6 +819,7 @@ function normalizeConfig(value: Partial<StorefrontConfig> | null): StorefrontCon
             const clean = (v: unknown, limit: number) => typeof v === "string" ? v.trim().slice(0, limit) : "";
             const href = safePromoHref(item.ctaHref);
             return [{
+              background: normalizeHeroBackground(item.background),
               enabled: item.enabled === true,
               eyebrow: clean(item.eyebrow, 80),
               title: clean(item.title, 160),

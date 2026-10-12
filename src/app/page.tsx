@@ -124,7 +124,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
     { key: "bestsellers", eyebrow: "Explore Aloyri", title: "Meet your next skincare favourite.", copy: "Browse the products our community loves to discover.", label: "Shop bestsellers", href: "/shop?sort=bestseller" },
     { key: "routine", eyebrow: "A little guidance", title: "Your routine, made simpler.", copy: "Find a starting point for everyday skincare.", label: "Find your routine", href: "/routine-finder" },
   ].map((banner, index) => <section key={banner.key} className="store-campaign-intro">
-    <HeroBannerFrame style={home.heroStyle} alignment={home.heroAlignment} stacked={home.heroLayout === "stacked"} showImageOnMobile={config.presentation.showHeroImageOnMobile}
+    <HeroBannerFrame background={(index === 0 ? home.bestsellersBackground : home.routineBackground) || home.heroBackground} style={home.heroStyle} alignment={home.heroAlignment} stacked={home.heroLayout === "stacked"} showImageOnMobile={config.presentation.showHeroImageOnMobile}
       copy={<><div className="store-home-overline flex items-center gap-3"><span className="h-px w-8 bg-[#b9725f]/55" />{banner.eyebrow}</div>
         <div className="max-w-2xl py-8 lg:py-10"><h2 className="store-hero-heading display max-w-[13ch] text-[clamp(2.25rem,4.8vw,5rem)] leading-[1.02]">{banner.title}</h2>
           <p className="store-hero-muted mt-7 max-w-xl text-base leading-7 sm:text-lg">{banner.copy}</p>
@@ -137,7 +137,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
     hero: (
       <>
       {home.showHero && <HomepageHeroCarousel slides={[<section key="intro" className="store-campaign-intro">
-        <HeroBannerFrame style={home.heroStyle} alignment={home.heroAlignment} stacked={home.heroLayout === "stacked"} showImageOnMobile={config.presentation.showHeroImageOnMobile}
+        <HeroBannerFrame background={home.mainHeroBackground || home.heroBackground} style={home.heroStyle} alignment={home.heroAlignment} stacked={home.heroLayout === "stacked"} showImageOnMobile={config.presentation.showHeroImageOnMobile}
           copy={<>            <div className="store-home-overline flex items-center gap-3">
               <span className="h-px w-8 bg-[#b9725f]/55" />
               {home.eyebrow}
@@ -214,7 +214,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
                     </TrackedLink>
                   </div>
                 </div>}</>} />
-      </section>, ...carouselPromos.map((banner, index) => <HomepagePromoBanners key={index} banners={[banner]} compact heroStyle={home.heroStyle} heroAlignment={home.heroAlignment} heroStacked={home.heroLayout === "stacked"} showImageOnMobile={config.presentation.showHeroImageOnMobile} products={catalogProducts} bannerOffset={index} />), ...evergreenSlides]} />}
+      </section>, ...carouselPromos.map((banner, index) => <HomepagePromoBanners key={index} banners={[banner]} compact defaultBackground={home.heroBackground} heroStyle={home.heroStyle} heroAlignment={home.heroAlignment} heroStacked={home.heroLayout === "stacked"} showImageOnMobile={config.presentation.showHeroImageOnMobile} products={catalogProducts} bannerOffset={index} />), ...evergreenSlides]} />}
       </>
     ),
     browse: null,

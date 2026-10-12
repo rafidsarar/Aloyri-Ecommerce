@@ -23,11 +23,12 @@ export function activeHomepageBanners(banners: StorefrontConfig["homepage"]["pro
   return banners.filter(banner => banner.enabled && (banner.title.trim() || banner.copy.trim() || banner.imagePath || banner.productIds.length > 0) && inSchedule(banner.startAt, banner.endAt, now));
 }
 
-export function HomepagePromoBanners({ banners, compact = false, products = [], bannerOffset = 0, heroStyle = "soft", heroAlignment = "left", heroStacked = false, showImageOnMobile = true }: {
+export function HomepagePromoBanners({ banners, compact = false, products = [], bannerOffset = 0, defaultBackground, heroStyle = "soft", heroAlignment = "left", heroStacked = false, showImageOnMobile = true }: {
   banners: StorefrontConfig["homepage"]["promoBanners"];
   compact?: boolean;
   products?: Product[];
   bannerOffset?: number;
+  defaultBackground?: string;
   heroStyle?: "soft" | "minimal" | "contrast";
   heroAlignment?: "left" | "center";
   heroStacked?: boolean;
@@ -43,7 +44,7 @@ export function HomepagePromoBanners({ banners, compact = false, products = [], 
         return product ? [product] : [];
       });
       const fallback = products.find(item => item.active !== false);
-      return <HeroBannerFrame key={index} style={heroStyle} alignment={heroAlignment} stacked={heroStacked} showImageOnMobile={showImageOnMobile}
+      return <HeroBannerFrame key={index} background={banner.background || defaultBackground} style={heroStyle} alignment={heroAlignment} stacked={heroStacked} showImageOnMobile={showImageOnMobile}
         copy={<>
           {banner.eyebrow ? <div className="store-home-overline flex items-center gap-3"><span className="h-px w-8 bg-[#b9725f]/55" />{banner.eyebrow}</div> : null}
           <div className="max-w-2xl py-8 lg:py-10">

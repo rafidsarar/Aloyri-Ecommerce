@@ -1,4 +1,6 @@
 "use server";
+
+import { normalizeHeroBackground } from "@/lib/hero-background";
 import { saveAdminStorefront } from "@/lib/admin-save";
 import { normalizeHeroProductIds, normalizeHeroDiscountMode, normalizeHeroPromotionCode } from "@/lib/hero-banner-offers";
 
@@ -308,6 +310,7 @@ function applyHomepageControls(config: StorefrontConfig, formData: FormData) {
       heroDiscountMode: normalizeHeroDiscountMode(formData.get("heroDiscountMode")),
       heroPromotionCode: normalizeHeroPromotionCode(formData.get("heroPromotionCode")),
       heroImagePath: safeHomepageImagePath(text(formData, "heroImagePath", 200)),
+      ...Object.fromEntries((["heroBackground", "mainHeroBackground", "bestsellersBackground", "routineBackground"] as const).map(key => [key, formData.has(key) ? normalizeHeroBackground(formData.get(key)) : config.homepage[key]])),
       heroStyle: ["soft", "minimal", "contrast"].includes(text(formData, "heroStyle", 10))
         ? text(formData, "heroStyle", 10) as "soft" | "minimal" | "contrast"
         : config.homepage.heroStyle,
@@ -337,6 +340,7 @@ function applyHomepageControls(config: StorefrontConfig, formData: FormData) {
       promoBanners: Array.from({ length: 4 }, (_, index) => {
         const prefix = `promo${index}`;
         return {
+          background: formData.has(`${prefix}Background`) ? normalizeHeroBackground(formData.get(`${prefix}Background`)) : config.homepage.promoBanners[index]?.background || "",
           enabled: formData.get(`${prefix}Enabled`) === "on",
           eyebrow: text(formData, `${prefix}Eyebrow`, 80),
           title: text(formData, `${prefix}Title`, 160),
