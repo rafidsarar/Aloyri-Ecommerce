@@ -6,7 +6,7 @@ test.describe("storefront appearance and navigation", () => {
     await page.goto("/");
     await expect(page.locator("body")).toHaveAttribute("data-storefront-theme", /^(rose|sage|sand)$/);
     const desktopNav = page.getByRole("navigation", { name: "Shop and discover" });
-    await expect(desktopNav).not.toContainText("Customer care");
+    await expect(desktopNav).toHaveCount(0);
     const opener = page.getByRole("button", { name: "Open menu" });
     await expect(opener).toBeVisible();
     await opener.click();

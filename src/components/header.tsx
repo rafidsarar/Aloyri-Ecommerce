@@ -18,7 +18,6 @@ import { defaultPresentation, type StorefrontPresentation } from "@/lib/storefro
 export function Header({ announcement, presentation = defaultPresentation }: { announcement: string; presentation?: StorefrontPresentation }) {
   // Filter legacy, saved navigation so the removed Customer Care shortcut
   // cannot reappear until its old settings are explicitly replaced.
-  const links = presentation.navigation.filter(item => item.href !== "/customer-care").map(item=>[item.label,item.href]);
   const pathname = usePathname();
   const [queryString, setQueryString] = useState("");
   const searchParams = new URLSearchParams(queryString);
@@ -28,6 +27,10 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
   const [signOutError, setSignOutError] = useState("");
   const { categories: crmCategories, products, synced } = useCatalog();
   const publicCategories = buildCategoryDirectory(crmCategories, products);
+  const categoryDestinations = new Set(publicCategories.map(item => item.href));
+  const navigation = presentation.navigation.filter(item => item.href !== "/customer-care" && !categoryDestinations.has(item.href));
+  if (!navigation.some(item => item.href === "/shop")) navigation.unshift({ label: "Shop all", href: "/shop" });
+  const links = navigation.filter((item, index, items) => items.findIndex(other => other.href === item.href) === index).map(item => [item.label, item.href]);
   const [open, setOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const accountRef = useRef<HTMLDivElement>(null);
@@ -36,7 +39,6 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const menuDialogRef = useRef<HTMLDivElement>(null);
   const [compact, setCompact] = useState(false);
-  const megaMenuRef = useRef<HTMLDetailsElement>(null);
 
   useEffect(() => {
     const onPointerDown = (event: PointerEvent) => {
@@ -148,24 +150,6 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
   }, [open]);
 
   useEffect(() => {
-    const closeOnOutside = (event: PointerEvent) => {
-      if (megaMenuRef.current && !megaMenuRef.current.contains(event.target as Node)) megaMenuRef.current.open = false;
-    };
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && megaMenuRef.current?.open) {
-        megaMenuRef.current.open = false;
-        megaMenuRef.current.querySelector("summary")?.focus();
-      }
-    };
-    document.addEventListener("pointerdown", closeOnOutside);
-    document.addEventListener("keydown", closeOnEscape);
-    return () => {
-      document.removeEventListener("pointerdown", closeOnOutside);
-      document.removeEventListener("keydown", closeOnEscape);
-    };
-  }, []);
-
-  useEffect(() => {
     if (!presentation.stickyHeader) return;
     const update = () => setCompact(previous => window.scrollY > (previous ? 48 : 120));
     update();
@@ -173,15 +157,11 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
     return () => window.removeEventListener("scroll", update);
   }, [presentation.stickyHeader]);
 
-  useEffect(() => {
-    if (megaMenuRef.current) megaMenuRef.current.open = false;
-  }, [pathname]);
-
   const current = (href: string) => {
     const [path, query] = href.split("?");
     if (pathname !== path && !(path !== "/" && path !== "/shop" && pathname.startsWith(path + "/"))) return false;
     if (query) return Array.from(new URLSearchParams(query)).every(([key, value]) => searchParams.get(key) === value);
-    if (path === "/shop") return !links.some(([, target]) => {
+    if (path === "/shop") return searchParams.get("stock") !== "in-stock" && !links.some(([, target]) => {
       const [targetPath, targetQuery] = target.split("?");
       return targetPath === path && targetQuery && Array.from(new URLSearchParams(targetQuery)).every(([key, value]) => searchParams.get(key) === value);
     });
@@ -266,37 +246,6 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
             <CartLink />
           </div>
         </div>
-        <nav className="store-desktop-nav hidden lg:block" aria-label="Shop and discover">
-          <div className="shell relative flex min-h-12 items-center justify-center gap-1">
-            <details ref={megaMenuRef} className="store-mega-menu" onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node)) event.currentTarget.open = false; }}>
-              <summary data-active={pathname.startsWith("/category/")} className="store-desktop-nav-link flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-lg px-4 text-sm font-semibold">
-                Shop categories <span aria-hidden="true">⌄</span>
-              </summary>
-              <div onClick={event => { if ((event.target as HTMLElement).closest("a") && megaMenuRef.current) megaMenuRef.current.open = false; }} className="store-mega-panel absolute left-1/2 top-full z-50 w-[min(760px,calc(100vw-2rem))] -translate-x-1/2 rounded-2xl border p-5 shadow-xl">
-                <div className="mb-4 flex items-center justify-between gap-4 border-b border-[var(--store-border)] pb-4">
-                  <div><p className="text-[11px] font-semibold uppercase tracking-widest text-[var(--store-accent)]">Explore Aloyri</p>
-                    <p className="mt-1 text-lg font-semibold">Shop by category</p></div>
-                  <Link href="/shop" className="text-sm font-semibold text-[var(--store-accent)]">View all →</Link>
-                </div>
-                <div className="grid max-h-[55vh] grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3">
-                  {synced && publicCategories.length
-                    ? publicCategories.map(item => (
-                      <Link href={item.href} key={item.slug} aria-current={current(item.href) ? "page" : undefined} className="store-category-nav-item flex min-h-16 items-center gap-3 rounded-xl p-2 text-sm transition hover:bg-[var(--store-panel)] focus-visible:outline-2 focus-visible:outline-[var(--store-accent)]">
-                        <span aria-hidden="true" className="w-12 shrink-0">{(() => {
-                          const photo = products.find(product => matchesCategory(product.category, item.name) && product.merchandisingOutOfStockMode !== "hide");
-                          return photo ? <ProductMedia product={photo} sizes="48px" className="aspect-square rounded-lg" /> : <span className="grid h-12 place-items-center rounded-lg bg-[var(--store-panel)] text-lg text-[var(--store-accent)]">{item.name.charAt(0)}</span>;
-                        })()}</span><span className="min-w-0 break-words">{item.name}</span></Link>
-                    ))
-                    : <Link href="/shop" className="rounded-lg px-3 py-3 text-sm">Browse all skincare</Link>}
-                </div>
-              </div>
-            </details>
-            {links.map(([label, href]) => (
-              <Link key={href} href={href} aria-current={current(href) ? "page" : undefined}
-                className="store-desktop-nav-link flex min-h-11 items-center rounded-lg px-4 text-sm font-medium">{label}</Link>
-            ))}
-          </div>
-        </nav>
       </header>
 
       {open ? (
@@ -315,7 +264,7 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
             <p className="mt-6 px-2 text-[10px] font-semibold uppercase tracking-[.18em] text-[var(--store-muted)]">Explore</p>
             <nav className="mt-3 flex flex-col" aria-label="Store navigation">
               {links.map(([label, href]) => (
-                <Link key={label} href={href} aria-current={current(href) ? "page" : undefined}
+                <Link key={href} href={href} aria-current={current(href) ? "page" : undefined}
                   onClick={closeMenu}
                   className="store-mobile-link flex min-h-12 items-center justify-between border-b py-3 text-[15px] font-medium transition hover:bg-[var(--store-panel)] hover:text-[var(--store-accent)]">
                   <span>{label}</span><span aria-hidden="true" className="text-[var(--store-muted)]">›</span>
@@ -333,18 +282,17 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
                   ? publicCategories.map(item => (
                     <Link key={item.slug} href={item.href} onClick={closeMenu}
                       aria-current={current(item.href) ? "page" : undefined}
-                      className="store-mobile-tool rounded-lg px-3 py-2.5 text-[13px] transition hover:brightness-95">{item.name}</Link>
+                      className="store-mobile-tool store-category-nav-item flex min-h-16 items-center gap-2 rounded-xl p-2 text-[13px] transition hover:brightness-95">
+                      <span aria-hidden="true" className="w-10 shrink-0">{(() => {
+                        const photo = products.find(product => matchesCategory(product.category, item.name) && product.merchandisingOutOfStockMode !== "hide");
+                        return photo ? <ProductMedia product={photo} sizes="40px" className="aspect-square rounded-lg" /> : <span className="grid h-10 place-items-center rounded-lg bg-[var(--store-surface)] text-base text-[var(--store-accent)]">{item.name.charAt(0)}</span>;
+                      })()}</span><span className="min-w-0 break-words">{item.name}</span></Link>
                   ))
-                  : <Link href="/shop" onClick={closeMenu} className="store-mobile-tool col-span-2 rounded-lg p-3 text-[13px]">Browse all categories</Link>}
-                <Link href="/shop?stock=in-stock" onClick={closeMenu} className="store-mobile-tool rounded-lg px-3 py-2.5 text-[13px]">Available now</Link>
+                  : <p className="col-span-2 px-2 py-3 text-xs text-[var(--store-muted)]">{synced ? "Categories will appear here when available." : "Loading categories…"}</p>}
+                {!links.some(([, href]) => href === "/shop?stock=in-stock") ? <Link href="/shop?stock=in-stock" onClick={closeMenu} aria-current={current("/shop?stock=in-stock") ? "page" : undefined} className="store-mobile-tool rounded-lg px-3 py-2.5 text-[13px]">Available now</Link> : null}
               </div> : null}
             </div>
-            <div className="mt-auto pt-6">
-              <Link href="/shop" onClick={closeMenu}
-                className="flex min-h-11 items-center justify-between rounded-lg bg-[var(--store-panel)] px-4 py-3 text-sm font-medium text-[var(--store-ink)] transition hover:text-[var(--store-accent)]">
-                Browse all products <span aria-hidden="true">→</span>
-              </Link>
-            </div>
+
           </div>
         </div>
       ) : null}
