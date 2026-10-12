@@ -1,3 +1,4 @@
+import { StorefrontMotion, BotanicalScene } from "@/components/storefront-motion";
 import type { Metadata } from "next";
 import { VisualPageSections } from "@/components/visual-page-sections";
 import { staticPageSeoMetadata } from "@/lib/seo-manager";
@@ -11,5 +12,5 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function AboutPage() {
   const config = await readStorefrontConfig();
-  return <><CustomerInfoPage {...config.pages.about} /><VisualPageSections layout={config.visualPages.about} /></>;
+  return <StorefrontMotion className="editorial-about"><BotanicalScene /><CustomerInfoPage {...config.pages.about} /><VisualPageSections layout={config.visualPages.about} /></StorefrontMotion>;
 }

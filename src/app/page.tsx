@@ -1,3 +1,4 @@
+import { StorefrontMotion, RevealText } from "@/components/storefront-motion";
 import "./homepage.css";
 import { HeroBannerFrame } from "@/components/hero-banner-frame";
 import { HeroProductGallery } from "@/components/hero-product-gallery";
@@ -533,7 +534,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
                 Build a simple routine
               </p>
               <h2 className="display mt-4 max-w-md text-5xl leading-[0.94] sm:text-6xl">
-                Three steps. Less guesswork.
+                <RevealText>Three steps. Less guesswork.</RevealText>
               </h2>
             </div>
 
@@ -604,7 +605,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
   };
 
   return (
-    <main className="skincare-home">
+    <StorefrontMotion><main className="skincare-home">
       <AnalyticsViewTracker
         event="merchandising_impression"
         properties={{ placementId: "homepage-hero", placementKind: "hero" }}
@@ -619,6 +620,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
         const block = home.visualLayout.blocks.find(item => entry === `custom:${item.id}`);
         return block ? <VisualBuilderBlock key={entry} block={block} /> : null;
       })}
-    </main>
+    </main></StorefrontMotion>
   );
 }

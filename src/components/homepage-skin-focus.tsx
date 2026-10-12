@@ -1,3 +1,4 @@
+import { RevealText } from "@/components/storefront-motion";
 import Link from "next/link";
 import { ArrowIcon } from "@/components/icons";
 
@@ -12,7 +13,7 @@ export function HomepageSkinFocus() {
   return <section className="shell home-focus-section" aria-labelledby="home-focus-heading">
     <div className="home-focus-heading">
       <p className="store-home-overline">A little more personal</p>
-      <h2 id="home-focus-heading" className="display">What are you looking for?</h2>
+      <h2 id="home-focus-heading" className="display"><RevealText>What are you looking for?</RevealText></h2>
       <p className="store-home-muted">Explore skincare by the feel and finish you prefer.</p>
     </div>
     <nav aria-label="Shop by skincare focus" className="home-focus-grid">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useBuilderPageContent } from "@/components/use-builder-page-content";
+import { RevealText } from "@/components/storefront-motion";
 import Link from "next/link";
 import { ArrowIcon } from "@/components/icons";
 
@@ -33,7 +34,7 @@ export function CustomerInfoPage(initial: {
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/48">
               {eyebrow}
             </p>
-            <h1 className="display mt-3 text-5xl leading-[.94] sm:text-6xl">{title}</h1>
+            <h1 className="display mt-3 text-5xl leading-[.94] sm:text-6xl"><RevealText>{title}</RevealText></h1>
             <p className="mt-6 max-w-2xl text-base leading-8 text-[#321f1c]/58">
               {intro}
             </p>
@@ -46,7 +47,7 @@ export function CustomerInfoPage(initial: {
           <div className="divide-y divide-[#713a35]/10">
             {sections.map((section,index) => (
               <section id={`care-section-${index}`} key={section.title} className="py-8 first:pt-10">
-                <h2 className="display text-3xl">{section.title}</h2>
+                <h2 className="display text-3xl"><RevealText>{section.title}</RevealText></h2>
                 {section.paragraphs?.map((paragraph) => (
                   <p
                     key={paragraph}
