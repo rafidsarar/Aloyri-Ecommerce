@@ -16,7 +16,7 @@ const familiarCategories: Record<string, { style: string; note: string }> = {
 export function HomepageCategoryShowcase({ products, categories, eyebrow, title, intro }: { products: Product[]; categories: string[]; eyebrow: string; title: string; intro: string }) {
   const directory = buildCategoryDirectory(categories, products);
   return (
-    <section className="shell py-7 md:py-10" aria-labelledby="shop-by-category">
+    <section className="shell home-category-section py-7 md:py-10" aria-labelledby="shop-by-category">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3 md:mb-5">
         <div>
           <p className="store-home-overline">{eyebrow}</p>

@@ -1,3 +1,4 @@
+import "./homepage.css";
 import { HeroBannerFrame } from "@/components/hero-banner-frame";
 import { HeroProductGallery } from "@/components/hero-product-gallery";
 import type { Metadata } from "next";
@@ -6,7 +7,7 @@ import { HomepageLiveDraft } from "@/components/homepage-live-draft";
 import type { HomepageBlockId } from "@/lib/homepage-builder";
 import Image from "next/image";
 import Link from "next/link";
-import { BrandMark } from "@/components/brand-mark";
+import { HomepageSkinFocus } from "@/components/homepage-skin-focus";
 import { HomepagePromoBanners, activeHomepageBanners } from "@/components/homepage-promo-banners";
 import { HomepageHeroCarousel } from "@/components/homepage-hero-carousel";
 import { HomepageBrandShowcase } from "@/components/homepage-brand-showcase";
@@ -144,7 +145,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
             </div>
 
             <div className="max-w-2xl py-8 lg:py-10">
-              {home.heroDiscountMode === "label" ? <p className="hero-offer-badge mb-3">5% OFF <span>Banner label only</span></p> :
+              {home.heroDiscountMode === "label" ? <p className="hero-offer-badge mb-3">5% OFF</p> :
                 home.heroDiscountMode === "checkout" && home.heroPromotionCode && heroGalleryProducts.length ?
                 <p className="hero-offer-badge mb-3">5% OFF <span>Eligible products at checkout</span></p> : null}
               <h1 className="store-hero-heading display max-w-[13ch] text-[clamp(2.25rem,4.8vw,5rem)] leading-[1.02]">
@@ -227,20 +228,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
     focus: (
       <>
       {home.showFocus ? (
-        <nav aria-label="Shop by skincare focus" className="shell flex flex-wrap items-center gap-2 pb-6">
-          <span className="store-discovery-muted mr-2 text-xs font-semibold uppercase tracking-widest">Shop by skincare need</span>
-          {[
-            ["Hydration", "hydration"],
-            ["Light textures", "lightweight"],
-            ["Gentle daily care", "gentle"],
-            ["Daily SPF", "spf"],
-          ].map(([label, focus]) => (
-            <Link key={focus} href={`/shop?focus=${focus}`}
-              className="store-focus-chip inline-flex min-h-11 items-center rounded-full border px-4 text-xs font-semibold">
-              {label} →
-            </Link>
-          ))}
-        </nav>
+        <HomepageSkinFocus />
       ) : null}
       </>
     ),
@@ -459,7 +447,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
           : config.merchandising.outOfStockMode;
 
         return (
-          <section key={section.id} className="shell py-10 md:py-14">
+          <section key={section.id} className="shell home-product-section py-10 md:py-14">
             <AnalyticsViewTracker
               event="merchandising_impression"
               properties={{
@@ -537,9 +525,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
     ),
     routineSteps: (
       <>
-      {home.showRoutineSteps && config.presentation.showRoutine && <section className="border-y border-[#713a35]/10 bg-[#f5e8e2]">
+      {home.showRoutineSteps && config.presentation.showRoutine && <section className="home-routine-section">
         <div className="shell py-16 md:py-20">
-          <div className="grid gap-10 lg:grid-cols-[.75fr_1.25fr]">
+          <div className="home-routine-layout">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/50">
                 Build a simple routine
@@ -549,12 +537,12 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
               </h2>
             </div>
 
-            <div className="grid gap-3">
+            <div className="home-routine-cards">
               {routine.map((item) => (
                 <Link
                   key={item.step}
                   href={item.href}
-                  className="group grid gap-5 rounded-[1.4rem] border border-[#713a35]/10 bg-white/55 p-5 transition hover:bg-white sm:grid-cols-[52px_1fr_auto] sm:items-center"
+                  className="home-routine-card group"
                 >
                   <span className="rose-text text-sm font-semibold">{item.step}</span>
                   <div>
@@ -579,7 +567,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
     ),
     brandStory: (
       <>
-      {home.showBrandStory && <section className="shell py-12 md:py-16">
+      {home.showBrandStory && <section className="shell home-story-section py-12 md:py-16">
         <div className="store-brand-panel overflow-hidden rounded-[2rem]">
           <div className="grid lg:grid-cols-[1.18fr_.82fr]">
             <div className="p-8 sm:p-10 lg:p-14">
@@ -600,15 +588,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
               </Link>
             </div>
 
-            <div className="relative min-h-[320px] bg-[#9c5d50]">
-              <div className="absolute left-[16%] top-[16%] h-[68%] w-[26%] rotate-[-9deg] rounded-[2rem] border border-white/20 bg-white/12 backdrop-blur" />
-              <div className="absolute right-[16%] top-[22%] h-[62%] w-[26%] rotate-[8deg] rounded-[2rem] border border-white/20 bg-white/16 backdrop-blur" />
-              <div className="absolute left-1/2 top-1/2 h-[72%] w-[28%] -translate-x-1/2 -translate-y-1/2 rounded-[2rem] bg-[#fff8f5] shadow-2xl">
-                <div className="rose-metal mx-auto mt-10 h-2 w-16 rounded-full" />
-                <div className="mt-16 text-center">
-                  <BrandMark compact />
-                </div>
-              </div>
+            <div className="home-story-products" aria-label="Discover the Aloyri skincare collection">
+              {catalogProducts.filter(product => product.active !== false && (product.availableStock ?? 0) > 0).slice(0, 2).map((product, index) => (
+                <Link key={product.id} href={`/product/${product.slug}`} className={`home-story-product home-story-product-${index}`}>
+                  <ProductMedia product={product} sizes="(max-width: 640px) 42vw, 230px" className="aspect-[4/5] rounded-2xl" />
+                  <span className="mt-3 block text-xs font-medium">{product.brand}<span className="sr-only"> — {product.name}</span><span aria-hidden="true" className="ml-2">↗</span></span>
+                </Link>
+              ))}
             </div>
           </div>
         </div>
@@ -618,7 +604,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
   };
 
   return (
-    <main>
+    <main className="skincare-home">
       <AnalyticsViewTracker
         event="merchandising_impression"
         properties={{ placementId: "homepage-hero", placementKind: "hero" }}

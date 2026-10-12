@@ -13,6 +13,7 @@ export function HomepageHeroCarousel({ slides }: { slides: ReactNode[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [rotationStopped, setRotationStopped] = useState(false);
   const count = slides.length;
 
   const goTo = useCallback((index: number) => {
@@ -29,13 +30,13 @@ export function HomepageHeroCarousel({ slides }: { slides: ReactNode[] }) {
 
   // Respect reduced-motion, background tabs, and user hover/focus/touch.
   useEffect(() => {
-    if (count < 2 || paused) return;
+    if (count < 2 || paused || rotationStopped) return;
     const timer = window.setInterval(() => {
       if (document.hidden || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       goTo(active + 1);
     }, SLIDE_INTERVAL_MS);
     return () => window.clearInterval(timer);
-  }, [active, count, goTo, paused]);
+  }, [active, count, goTo, paused, rotationStopped]);
 
   function syncVisibleSlide() {
     const track = trackRef.current;
@@ -92,6 +93,10 @@ export function HomepageHeroCarousel({ slides }: { slides: ReactNode[] }) {
             ))}
           </div>
           <div className="flex gap-2">
+            <button type="button" className="store-campaign-pause" onClick={() => setRotationStopped(value => !value)}
+              aria-label={rotationStopped ? "Resume banner rotation" : "Pause banner rotation"} aria-pressed={rotationStopped}>
+              {rotationStopped ? "Play" : "Pause"}
+            </button>
             <button type="button" className="store-campaign-arrow" onClick={() => goTo(active - 1)}
               aria-label="Previous campaign"><span aria-hidden="true">←</span></button>
             <button type="button" className="store-campaign-arrow" onClick={() => goTo(active + 1)}
