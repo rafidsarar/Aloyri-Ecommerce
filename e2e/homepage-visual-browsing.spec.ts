@@ -65,3 +65,22 @@ for (const width of [390, 1440]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
 }
+
+for (const width of [320, 390, 768, 1440]) {
+  test(`category text does not overlap product images at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/");
+    const cards = page.locator(".store-category-visual");
+    await expect(cards.first()).toBeVisible();
+    const positions = await cards.evaluateAll(nodes => nodes.map(node => {
+      const title = node.querySelector('h3')!.getBoundingClientRect();
+      const media = node.querySelector('.store-category-media')!.getBoundingClientRect();
+      const copy = node.querySelector('.store-category-description')!.getBoundingClientRect();
+      return { titleBottom: title.bottom, mediaTop: media.top, mediaBottom: media.bottom, copyTop: copy.top };
+    }));
+    for (const position of positions) {
+      expect(position.titleBottom).toBeLessThanOrEqual(position.mediaTop);
+      expect(position.mediaBottom).toBeLessThanOrEqual(position.copyTop);
+    }
+  });
+}

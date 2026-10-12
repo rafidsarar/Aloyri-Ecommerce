@@ -927,3 +927,6 @@ body[data-storefront-theme="sand"] {
 .store-category-gallery { display: flex; gap: 1.25rem; overflow-x: auto; scroll-snap-type: x mandatory; padding: .3rem .25rem 1rem; scrollbar-width: thin; overscroll-behavior-x: contain; }
 .store-category-gallery > a { flex: 0 0 min(76vw, 290px); scroll-snap-align: start; }
 .store-category-gallery:focus-visible { outline: 2px solid var(--store-accent); outline-offset: 4px; }
+
+.store-category-gallery { scrollbar-width: none; }
+.store-category-gallery::-webkit-scrollbar { display: none; }
