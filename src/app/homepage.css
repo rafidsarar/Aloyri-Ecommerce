@@ -106,3 +106,7 @@
   .skincare-home :is(.home-focus-card,.store-product-card) { transition: none; }
   .home-focus-card:hover { transform: none; }
 }
+
+/* No decorative blank column when the current catalog has no available imagery. */
+.home-story-products:empty { display: none; }
+.home-story-section .grid:has(> .home-story-products:empty) { grid-template-columns: minmax(0,1fr); }
