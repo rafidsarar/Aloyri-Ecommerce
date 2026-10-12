@@ -17,7 +17,7 @@ function serverTimestamp() { return Date.now(); }
 
 export function activeHomepageBanners(banners: StorefrontConfig["homepage"]["promoBanners"]) {
   const now = serverTimestamp();
-  return banners.filter(banner => banner.enabled && banner.title.trim() && inSchedule(banner.startAt, banner.endAt, now));
+  return banners.filter(banner => banner.enabled && (banner.title.trim() || banner.copy.trim() || banner.imagePath || banner.productIds.length > 0) && inSchedule(banner.startAt, banner.endAt, now));
 }
 
 export function HomepagePromoBanners({ banners, compact = false, products = [], bannerOffset = 0 }: {
@@ -38,7 +38,7 @@ export function HomepagePromoBanners({ banners, compact = false, products = [], 
             {banner.discountMode === "label" ? <p className="hero-offer-badge mt-3">5% OFF <span>Banner label only</span></p> :
               banner.discountMode === "checkout" && banner.promotionCode && banner.productIds.length ?
                 <p className="hero-offer-badge mt-3">5% OFF <span>Eligible products at checkout</span></p> : null}
-            <h2 className="display mt-3 max-w-2xl text-[clamp(2rem,4vw,3.7rem)] leading-[1.06]">{banner.title}</h2>
+            {banner.title ? <h2 className="display mt-3 max-w-2xl text-[clamp(2rem,4vw,3.7rem)] leading-[1.06]">{banner.title}</h2> : null}
             {banner.copy ? <p className="store-home-muted mt-5 max-w-xl text-sm leading-7 sm:text-base">{banner.copy}</p> : null}
             {banner.ctaHref && banner.ctaLabel ? (
               <Link href={banner.ctaHref} className="store-home-primary mt-7 inline-flex min-h-12 items-center justify-center gap-3 rounded-full px-7 py-3 text-sm font-semibold">
@@ -59,7 +59,7 @@ export function HomepagePromoBanners({ banners, compact = false, products = [], 
             ) : banner.imagePath ? (
               <Image
                 src={storefrontMediaUrl(banner.imagePath)}
-                alt={banner.title}
+                alt={banner.title || "Aloyri promotional banner"}
                 fill
                 sizes="(max-width: 640px) 100vw, (min-width: 1024px) 45vw, 80vw"
                 className="object-cover"

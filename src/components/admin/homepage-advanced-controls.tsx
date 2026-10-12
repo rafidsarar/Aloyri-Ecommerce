@@ -211,11 +211,11 @@ export async function HomepageAdvancedControls({ config }: { config: StorefrontC
         <AdminCard>
           <h2 className="text-lg font-semibold">Promotional banners</h2>
           <p className="mt-2 text-xs leading-5 text-black/60">
-            Configure up to four banners, each with its own sliding products and either a 5% label or a CRM-validated 5% discount at checkout.
+            Configure up to four banners. Enable each banner and add an image, products or text. Headline and supporting copy are optional.
           </p>
           <label className="mt-5 grid gap-2 text-sm font-medium">Banner placement
             <select name="promoPlacement" defaultValue={home.promoPlacement} className="min-h-11 rounded-xl border border-black/10 px-4">
-              <option value="before-products">Before product collections</option>
+              <option value="before-products">Hero carousel (beside the main banner)</option>
               <option value="after-products">After product collections</option>
             </select>
           </label>
@@ -314,7 +314,7 @@ export async function HomepageAdvancedControls({ config }: { config: StorefrontC
                     </label>
                     <label className="grid gap-1.5 text-sm font-medium">Position
                       <select name={`${prefix}Position`} defaultValue={section?.position || "after-products"} className="min-h-11 min-w-0 rounded-xl border border-black/10 bg-white px-4">
-                        <option value="before-products">Before product collections</option><option value="after-products">After product collections</option><option value="before-story">Before brand story</option>
+                        <option value="before-products">Hero carousel (beside the main banner)</option><option value="after-products">After product collections</option><option value="before-story">Before brand story</option>
                       </select>
                     </label>
                     <label className="grid gap-1.5 text-sm font-medium">Layout

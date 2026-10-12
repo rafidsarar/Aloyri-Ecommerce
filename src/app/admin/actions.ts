@@ -352,7 +352,7 @@ function applyHomepageControls(config: StorefrontConfig, formData: FormData) {
           startAt: text(formData, `${prefix}StartAt`, 16),
           endAt: text(formData, `${prefix}EndAt`, 16),
         };
-      }).filter((banner) => banner.title || banner.copy),
+      }),
       editorialSections: Array.from({ length: 6 }, (_, index) => {
         const prefix = `editorial${index}`;
         return {

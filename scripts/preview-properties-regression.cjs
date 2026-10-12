@@ -11,6 +11,7 @@ const redirect=url=>{const error=new Error('REDIRECT:'+url);error.url=url;throw 
 let config;
 Module._load=function(name,parent,isMain){
  if(name==='server-only')return {};
+ if(name==='@/components/hero-product-gallery')return {HeroProductGallery:()=>null};
  if(name==='next/cache')return {revalidatePath:()=>{}};
  if(name==='next/headers')return {};
  if(name==='next/navigation')return {redirect};
@@ -20,7 +21,7 @@ Module._load=function(name,parent,isMain){
  if(name.startsWith('@/')) name=path.join(root,name.slice(2)+'.ts');
  return original.call(this,name,parent,isMain);
 };
-require.extensions['.ts']=(mod,file)=>mod._compile(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,file);
+require.extensions['.ts']=require.extensions['.tsx']=(mod,file)=>mod._compile(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText,file);
 // The actual defaults are needed without initializing a live datastore.
 const source=fs.readFileSync(path.join(root,'lib/storefront-admin-store.ts'),'utf8');
 const defaults=source.slice(source.indexOf('export type ContentSection'),source.indexOf('const PUBLISHED_CONFIG_PATH'));
@@ -63,5 +64,26 @@ async function save(data){await assert.rejects(actions.saveVisualBuilder(data),e
  await save(form('home',{homepageEditor:'1',homepageControls:'1',sectionOrder:JSON.stringify(coreOrder),layout:JSON.stringify(changedLayout)}));
  assert.deepEqual(saved.homepage.sectionOrder,coreOrder);
  assert.ok(saved.homepage.visualLayout.blocks.some(row=>row.title==='Saved extra'));
+ // Image/product banners must survive saving even without optional copy.
+ await save(form('home',{homepageEditor:'1',homepageControls:'1',showHero:'on',promoPlacement:'before-products',promo1Enabled:'on',promo1ImagePath:'media/banner-only.webp',promo3Enabled:'on',promo3ProductIds:'fixture-product'}));
+ assert.equal(saved.homepage.promoBanners[1]?.imagePath,'media/banner-only.webp');
+ assert.deepEqual(saved.homepage.promoBanners[3]?.productIds,['fixture-product']);
+ const {activeHomepageBanners}=require('../src/components/homepage-promo-banners.tsx');
+ const live=activeHomepageBanners(saved.homepage.promoBanners);
+ assert.equal(live.length,2);
+ assert.equal(live[0].imagePath,'media/banner-only.webp');
+ assert.deepEqual(live[1].productIds,['fixture-product']);
+ assert.equal(activeHomepageBanners(live.map(row=>({...row,enabled:false}))).length,0);
+ assert.equal(activeHomepageBanners(live.map(row=>({...row,startAt:'2099-01-01T00:00'}))).length,0);
+ // Reopening and saving retains both original banner positions.
+ const reopened=form('home',{homepageEditor:'1',homepageControls:'1',showHero:'on',promoPlacement:'before-products'});
+ for(const [i,banner] of saved.homepage.promoBanners.entries()) {
+   reopened.set(`promo${i}Enabled`,banner.enabled?'on':'');
+   reopened.set(`promo${i}ImagePath`,banner.imagePath);
+   for(const id of banner.productIds)reopened.append(`promo${i}ProductIds`,id);
+ }
+ await save(reopened);
+ assert.equal(saved.homepage.promoBanners[1].imagePath,'media/banner-only.webp');
+ assert.deepEqual(saved.homepage.promoBanners[3].productIds,['fixture-product']);
  console.log('Preview Properties: complete pages/FAQ, campaign references, navigation, atomic save boundary, validation, permissions and inline media PASS');
 })().catch(error=>{console.error(error);process.exitCode=1;});
