@@ -44,6 +44,10 @@ export function StorefrontMotion({ children, className = "" }: { children: React
         });
       };
       const schedule = () => { if (!frame) frame = requestAnimationFrame(update); };
+      const resize = new ResizeObserver(schedule);
+      resize.observe(node);
+      const header = document.querySelector(".store-header");
+      if (header) resize.observe(header);
       const pointer = (event: PointerEvent) => {
         if (!fine.matches) return;
         const scene = (event.target as Element).closest<HTMLElement>("[data-motion-scene]");
@@ -63,6 +67,7 @@ export function StorefrontMotion({ children, className = "" }: { children: React
       node.addEventListener("pointerleave", reset);
       dispose = () => {
         observer.disconnect();
+        resize.disconnect();
         cancelAnimationFrame(frame);
         window.removeEventListener("scroll", schedule);
         window.removeEventListener("resize", schedule);
@@ -80,7 +85,8 @@ export function StorefrontMotion({ children, className = "" }: { children: React
 }
 
 export function RevealText({ children }: { children: string }) {
-  return <span data-text-reveal>{children.split(" ").map((word, index) => <span className="reveal-word" style={{ "--word": Math.min(index, 12) } as CSSProperties} key={`${index}-${word}`}>{word}{" "}</span>)}</span>;
+  const words = children.split(" ");
+  return <span data-text-reveal>{words.map((word, index) => <span className="reveal-word" style={{ "--word": Math.min(index, 12) } as CSSProperties} key={`${index}-${word}`}>{word}{index < words.length - 1 ? " " : ""}</span>)}</span>;
 }
 
 /** Decorative botanical silhouette, with independent pointer depths. */
