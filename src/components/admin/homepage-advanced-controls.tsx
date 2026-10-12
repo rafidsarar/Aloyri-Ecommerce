@@ -1,7 +1,6 @@
 import { MediaImagePicker } from "@/components/admin/media-image-picker";
 import { BannerProductPicker } from "@/components/admin/banner-product-picker";
 import { HomepageSectionOrganizer } from "@/components/admin/homepage-section-organizer";
-import { StorefrontDevicePreview } from "@/components/admin/storefront-device-preview";
 import { AdminCard } from "@/components/admin/admin-shell";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
 import { readStorefrontMediaLibrary, type StorefrontConfig } from "@/lib/storefront-admin-store";
@@ -11,7 +10,7 @@ import { readStorefrontMediaLibrary, type StorefrontConfig } from "@/lib/storefr
  * Do not add a nested form or save button here: the unified action persists both
  * advanced homepage fields and visual canvas changes atomically.
  */
-export async function HomepageAdvancedControls({ config, inProperties = false }: { config: StorefrontConfig; inProperties?: boolean }) {
+export async function HomepageAdvancedControls({ config }: { config: StorefrontConfig; inProperties?: boolean }) {
   const [catalog, { media, unavailable }] = await Promise.all([fetchCrmCatalog(), readStorefrontMediaLibrary()]);
   const mediaPaths = media.map(item => item.pathname);
   const home = config.homepage;
@@ -22,13 +21,6 @@ export async function HomepageAdvancedControls({ config, inProperties = false }:
 
   return (
     <div className="space-y-5" aria-label="Existing homepage feature settings">
-      {!inProperties && <details className="mb-5 overflow-hidden rounded-2xl border border-black/10 bg-white">
-        <summary className="cursor-pointer px-5 py-4 text-sm font-semibold">Preview live homepage on mobile, tablet or desktop <span className="text-black/40">↓</span></summary>
-        <div className="border-t border-black/10 p-4 sm:p-6">
-          <StorefrontDevicePreview />
-          <p className="mt-2 text-xs text-black/60">Preview shows the current live page. Save changes and refresh the preview to see your update.</p>
-        </div>
-      </details>}
       <div className="grid gap-5">
 
         <details id="home-hero" name="homepage-section" className="admin-editor-section" open><summary>Main banner</summary>
@@ -101,7 +93,7 @@ export async function HomepageAdvancedControls({ config, inProperties = false }:
         <AdminCard>
           <div className="grid gap-4 lg:grid-cols-2">
             <label className="grid gap-1.5 text-sm font-medium">
-              Hero product
+              Banner product
               <select name="heroProductId" defaultValue={heroProductId} className="rounded-xl border border-black/10 px-4 py-3">
                 {products.map((product) => (
                   <option key={product.id} value={product.id}>
@@ -153,7 +145,7 @@ export async function HomepageAdvancedControls({ config, inProperties = false }:
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showRoutineFinder" defaultChecked={home.showRoutineFinder} /> Show guided routine finder</label>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showRoutineSteps" defaultChecked={home.showRoutineSteps} /> Show three-step routine on homepage</label>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showRoutine" defaultChecked={config.presentation.showRoutine} /> Enable routine-section layout</label>
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showHeroImageOnMobile" defaultChecked={config.presentation.showHeroImageOnMobile} /> Show hero image on phones</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showHeroImageOnMobile" defaultChecked={config.presentation.showHeroImageOnMobile} /> Show banner image on phones</label>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showCategories" defaultChecked={home.showCategories} /> Show category shortcuts</label>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="showBrandStory" defaultChecked={home.showBrandStory} /> Show brand story</label>
             <label className="grid gap-1 text-sm font-medium">Banner layout
@@ -304,7 +296,7 @@ export async function HomepageAdvancedControls({ config, inProperties = false }:
         </details>
         <details id="home-editorial" name="homepage-section" className="admin-editor-section"><summary>Editorial sections</summary>
         <AdminCard>
-          <h2 className="text-lg font-semibold">Visual section builder</h2>
+          <h2 className="text-lg font-semibold">Extra homepage sections</h2>
           <p className="mt-2 text-xs leading-5 text-black/60">Add up to six editorial sections. Choose a type and position, then save to update the live website. Position groups are rendered in the order shown here.</p>
           <div className="mt-5 grid gap-5">
             {Array.from({ length: 6 }, (_, index) => {

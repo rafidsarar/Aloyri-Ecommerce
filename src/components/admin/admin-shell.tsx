@@ -16,13 +16,15 @@ const nav: Array<{
   permission: AdminPermission;
   group: string;
 }> = [
-  { group: "Your store", label: "Overview", href: "/admin", permission: "dashboard.view" },
-  { group: "Your store", label: "Website", href: "/admin/builder", permission: "homepage.view" },
-  { group: "Your store", label: "Products", href: "/admin/products", permission: "products.view" },
-  { group: "Your store", label: "Campaigns & collections", href: "/admin/merchandising", permission: "merchandising.view" },
-  { group: "Your store", label: "Customer care", href: "/admin/customer-service", permission: "support.view" },
-  { group: "Your store", label: "Analytics", href: "/admin/analytics", permission: "analytics.view" },
-  { group: "Your store", label: "Settings", href: "/admin/settings", permission: "settings.view" },
+  { group: "Daily tasks", label: "Dashboard", href: "/admin", permission: "dashboard.view" },
+  { group: "Website content", label: "Homepage", href: "/admin/homepage", permission: "homepage.view" },
+  { group: "Website content", label: "Products", href: "/admin/products", permission: "products.view" },
+  { group: "Website content", label: "Pages & FAQ", href: "/admin/pages", permission: "pages.view" },
+  { group: "Website content", label: "Campaigns & collections", href: "/admin/merchandising", permission: "merchandising.view" },
+  { group: "Website content", label: "Images", href: "/admin/media", permission: "media.view" },
+  { group: "Business", label: "Customer care", href: "/admin/customer-service", permission: "support.view" },
+  { group: "Business", label: "Reports", href: "/admin/analytics", permission: "analytics.view" },
+  { group: "Account & store", label: "Settings", href: "/admin/settings", permission: "settings.view" },
 ];
 
 export async function AdminShell({
@@ -49,7 +51,7 @@ export async function AdminShell({
       <header className="admin-header">
         <Link href="/admin" className="admin-brand flex min-w-0 items-center gap-2.5 font-semibold tracking-tight" aria-label="Aloyri Ecommerce Admin overview">
           <span className="admin-brand-symbol" aria-hidden="true">A</span>
-          <span className="flex min-w-0 flex-col leading-tight"><span>Aloyri <span className="font-normal text-[#846e68]">/ Ecommerce</span></span><span className="text-[10px] font-medium uppercase tracking-[.13em] text-[#8c7370]">Administration</span></span>
+          <span className="flex min-w-0 flex-col leading-tight"><span>Aloyri</span><span className="text-[10px] font-medium uppercase tracking-[.13em] text-[#8c7370]">Store administration</span></span>
         </Link>
         <div className="flex flex-wrap items-center gap-3 text-sm">
           <Link href="/" target="_blank" rel="noopener noreferrer" className="admin-store-link">View store ↗</Link>
@@ -61,7 +63,7 @@ export async function AdminShell({
         <aside className="admin-sidebar"><AdminNavigation items={visibleNav} /></aside>
         <main id="admin-content" tabIndex={-1} className="admin-main min-w-0">
           <div className="admin-page-heading">
-            <p className="admin-page-eyebrow">Owner dashboard</p>
+            <p className="admin-page-eyebrow">Owner account</p>
             <h1>{title}</h1>
             <p>{subtitle}</p>
           </div>

@@ -5,10 +5,6 @@ import {
   AdminNotice,
   AdminShell,
 } from "@/components/admin/admin-shell";
-import {
-  SeoSearchPreview,
-  SeoSocialPreview,
-} from "@/components/admin/seo-preview";
 import { requireAdminPermission } from "@/lib/admin-auth";
 import { fetchCrmCatalog } from "@/lib/crm-catalog-integration";
 import {
@@ -151,7 +147,7 @@ export default async function ProductSeoEditor({
           </div>
         </AdminCard>
 
-        <div className="grid gap-5 xl:grid-cols-2">
+        <div className="grid gap-5">
           <AdminCard>
             <p className="text-sm font-semibold">Social sharing</p>
             <div className="mt-4 grid gap-4">
@@ -194,19 +190,7 @@ export default async function ProductSeoEditor({
               ) : null}
             </div>
           </AdminCard>
-
-          <SeoSocialPreview
-            title={effective.ogTitle || effective.title || ""}
-            description={effective.ogDescription || effective.description || ""}
-            imagePath={effective.ogImagePath}
-          />
         </div>
-
-        <SeoSearchPreview
-          title={effective.title || ""}
-          description={effective.description || ""}
-          canonical={effective.canonical || canonicalPath}
-        />
 
         <div className="flex flex-wrap justify-end gap-3">
           <button className="rounded-xl bg-[#713a35] px-6 py-3.5 text-sm font-semibold text-white">

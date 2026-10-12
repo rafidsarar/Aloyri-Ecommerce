@@ -1,21 +1,24 @@
-import { AdminShell } from "@/components/admin/admin-shell";
+import { AdminShell, AdminNotice } from "@/components/admin/admin-shell";
 import { WebsiteMediaLibrary } from "@/components/admin/website-media-library";
 import { requireAdminPermission } from "@/lib/admin-auth";
 import {
   readStorefrontMediaLibrary,
 } from "@/lib/storefront-admin-store";
 
-export default async function AdminMediaPage() {
+export default async function AdminMediaPage({searchParams}:{searchParams:Promise<{saved?:string;error?:string;warning?:string}>}) {
   const admin = await requireAdminPermission("media.view");
-  const { media, unavailable } = await readStorefrontMediaLibrary();
+  const [{media,unavailable},query]=await Promise.all([readStorefrontMediaLibrary(),searchParams]);
 
   return (
     <AdminShell
       username={admin.username}
-      title="Media library"
-      subtitle="Product images uploaded from Ecommerce Admin are stored separately from CRM in the private website datastore."
+      title="Images"
+      subtitle="Upload photos and choose them in your homepage, product and campaign forms."
     >
-      <WebsiteMediaLibrary media={media} unavailable={unavailable} />
+      {query.saved && <AdminNotice>Image uploaded.</AdminNotice>}
+      {query.error && <AdminNotice tone="warning">{query.error}</AdminNotice>}
+      {query.warning && <AdminNotice tone="warning">The image was uploaded, but its activity record could not be saved.</AdminNotice>}
+      <WebsiteMediaLibrary media={media} unavailable={unavailable} canUpload />
     </AdminShell>
   );
 }

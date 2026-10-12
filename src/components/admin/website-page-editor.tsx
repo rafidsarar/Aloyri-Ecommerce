@@ -1,6 +1,7 @@
 import { saveFaq, saveInfoPage } from "@/app/admin/actions";
 import { AdminCard } from "@/components/admin/admin-shell";
 import { EditableContentList } from "@/components/admin/editable-content-list";
+import { AdditionalContentEditor } from "@/components/admin/additional-content-editor";
 import { AdminSubmitButton } from "@/components/admin/admin-submit-button";
 import type { StorefrontConfig } from "@/lib/storefront-admin-store";
 
@@ -17,11 +18,12 @@ export function WebsitePageEditor({ config, page, inBuilder = false }: {
     return (
       <>
         <form key={config.updatedAt} action={saveFaq} className="grid gap-5">
+          <input type="hidden" name="storefrontVersion" value={config.updatedAt}/>
           {inBuilder ? <input type="hidden" name="builderWorkspace" value="pages" /> : null}
           <AdminCard>
             <div className="grid gap-4">
               <label className="grid gap-1.5 text-sm font-medium">
-                Eyebrow
+                Short label
                 <input name="eyebrow" defaultValue={config.faq.eyebrow} className="rounded-xl border border-black/10 px-4 py-3" />
               </label>
               <label className="grid gap-1.5 text-sm font-medium">
@@ -37,7 +39,8 @@ export function WebsitePageEditor({ config, page, inBuilder = false }: {
 
           <EditableContentList mode="faq" initialItems={config.faq.items} />
 
-          <div className="flex justify-end">
+          <AdditionalContentEditor initialLayout={config.visualPages.faq} />
+        <div className="flex justify-end">
             <AdminSubmitButton>Save FAQ</AdminSubmitButton>
           </div>
         </form>
@@ -49,13 +52,14 @@ export function WebsitePageEditor({ config, page, inBuilder = false }: {
   return (
     <>
       <form key={config.updatedAt} action={saveInfoPage} className="grid gap-5">
+        <input type="hidden" name="storefrontVersion" value={config.updatedAt}/>
         {inBuilder ? <input type="hidden" name="builderWorkspace" value="pages" /> : null}
         <input type="hidden" name="pageKey" value={page} />
 
         <AdminCard>
           <div className="grid gap-4">
             <label className="grid gap-1.5 text-sm font-medium">
-              Eyebrow
+              Short label
               <input name="eyebrow" defaultValue={content.eyebrow} maxLength={120} className="rounded-xl border border-black/10 px-4 py-3" />
             </label>
             <label className="grid gap-1.5 text-sm font-medium">
@@ -71,6 +75,7 @@ export function WebsitePageEditor({ config, page, inBuilder = false }: {
 
         <EditableContentList mode="sections" initialItems={content.sections} />
 
+        <AdditionalContentEditor initialLayout={config.visualPages[page]} />
         <div className="flex justify-end">
           <AdminSubmitButton>Save page</AdminSubmitButton>
         </div>

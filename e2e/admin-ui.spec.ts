@@ -24,10 +24,10 @@ test.describe("minimal admin interface", () => {
     await page.setViewportSize({ width: 1440, height: 960 });
     await page.goto(`${base}/admin/builder`);
     const nav = page.getByRole("navigation", { name: "Admin navigation" });
-    await expect(nav.getByRole("link", { name: "Website", exact: true })).toHaveAttribute("aria-current", "page");
+    await expect(nav.getByRole("link", { name: "Homepage", exact: true })).toHaveAttribute("aria-current", "page");
     await page.getByRole("searchbox", { name: "Find an admin section" }).fill("products");
     await expect(nav.getByRole("link", { name: "Products", exact: true })).toBeVisible();
-    await expect(nav.getByRole("link", { name: "Website", exact: true })).toHaveCount(0);
+    await expect(nav.getByRole("link", { name: "Homepage", exact: true })).toHaveCount(0);
     await page.getByRole("searchbox").fill("");
     await page.screenshot({ path: testInfo.outputPath("admin-desktop.png"), fullPage: true });
     await page.goto(`${base}/admin/products/item`);
@@ -386,11 +386,11 @@ test.describe('Owner administration editing safeguards', () => {
     await control.selectOption(options.find(option => option !== value)!);
     await expect(page.getByRole('status').filter({hasText:'Unsaved changes'})).toBeVisible();
     page.once('dialog', dialog => dialog.dismiss());
-    await page.getByRole('navigation',{name:'Admin navigation'}).getByRole('link',{name:'Overview',exact:true}).click();
+    await page.getByRole('navigation',{name:'Admin navigation'}).getByRole('link',{name:'Dashboard',exact:true}).click();
     await expect(page).toHaveURL(`${base}/admin/settings`);
     page.once('dialog', dialog => dialog.accept());
-    await page.getByRole('navigation',{name:'Admin navigation'}).getByRole('link',{name:'Website',exact:true}).click();
-    await expect(page).toHaveURL(`${base}/admin/builder`);
+    await page.getByRole('navigation',{name:'Admin navigation'}).getByRole('link',{name:'Homepage',exact:true}).click();
+    await expect(page).toHaveURL(`${base}/admin/homepage`);
   });
   test('Simple homepage opens the banner first and submits values from closed sections', async ({page}, testInfo) => {
     await page.goto(`${base}/admin/website`);
@@ -468,9 +468,9 @@ test.describe('Owner administration editing safeguards', () => {
     await expect(page.locator('#website-content')).not.toHaveAttribute('open','');
     await expect(page.getByRole('button',{name:'Save changes',exact:true})).toBeVisible();
   });
-  test('Seven main sections keep security and operational tools accessible under Settings', async ({page}) => {
+  test('Clear main sections keep security and operational tools accessible under Settings', async ({page}) => {
     await page.goto(`${base}/admin/settings`);
-    await expect(page.getByRole('navigation',{name:'Admin navigation'}).getByRole('link')).toHaveCount(7);
+    await expect(page.getByRole('navigation',{name:'Admin navigation'}).getByRole('link')).toHaveCount(9);
     const related = page.getByRole('navigation',{name:'Related store tools'});
     await expect(related.getByRole('link',{name:'Security',exact:true})).toHaveAttribute('href','/admin/security');
     await expect(related.getByRole('link',{name:'History & restore',exact:true})).toBeVisible();
@@ -562,6 +562,37 @@ test.describe('Owner administration editing safeguards', () => {
     await expect(page).toHaveURL(`${base}/admin/preview-properties`);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     await page.screenshot({path:testInfo.outputPath('preview-full-properties-mobile.png'),fullPage:true});
+  });
+
+  test('Plain owner dashboard shows direct tasks without builder or preview tools',async({page},testInfo)=>{
+    for(const width of [1440,390]) {
+      await page.setViewportSize({width,height:900});
+      await page.goto(`${base}/admin/dashboard`);
+      await expect(page.getByRole('heading',{name:'Dashboard',exact:true})).toBeVisible();
+      await expect(page.getByRole('heading',{name:'What would you like to update?'})).toBeVisible();
+      await expect(page.locator('.admin-task-card')).toHaveCount(8);
+      await expect(page.locator('iframe')).toHaveCount(0);
+      await expect(page.locator('a[href*="builder"],a[href*="preview"],a[href*="publishing"]')).toHaveCount(0);
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+      await page.screenshot({path:testInfo.outputPath(`plain-admin-${width}.png`),fullPage:true});
+    }
+  });
+  test('Homepage settings retain editable content and a single direct save without preview',async({page})=>{
+    await page.goto(`${base}/admin/website`);
+    await expect(page.locator('iframe')).toHaveCount(0);
+    await expect(page.locator('a[href*="builder"],a[href*="preview"]')).toHaveCount(0);
+    await expect(page.locator('#admin-content form')).toHaveCount(1);
+    await page.getByText('Additional content (0)',{exact:true}).click();
+    await page.getByRole('button',{name:'Add extra section'}).click();
+    await page.getByLabel('Extra heading',{exact:true}).fill('Our new story');
+    await page.getByLabel('Extra text',{exact:true}).fill('Useful information for our customers.');
+    const values=await page.locator('#admin-content form').evaluate(form=>Object.fromEntries(new FormData(form as HTMLFormElement)));
+    expect(values.homepageEditor).toBe('1');
+    expect(JSON.parse(String(values.layout)).blocks[0]).toMatchObject({title:'Our new story',body:'Useful information for our customers.'});
+    expect(values.headline).toBeTruthy();
+    await page.getByRole('button',{name:'Remove extra section'}).click();
+    expect(JSON.parse(await page.locator('input[name="layout"]').inputValue()).blocks).toHaveLength(0);
+    await expect(page.getByRole('button',{name:'Save homepage',exact:true})).toBeVisible();
   });
 
 });

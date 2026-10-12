@@ -12,6 +12,7 @@ export function WebsiteSettingsEditor({ config, inBuilder = false }: { config: S
   return (
     <div className="space-y-5">
       <form key={config.updatedAt} action={saveSiteSettings} className="grid gap-5">
+        <input type="hidden" name="storefrontVersion" value={config.updatedAt}/>
         {inBuilder ? <input type="hidden" name="builderWorkspace" value="settings" /> : null}
         <WebsiteSettingsFields config={config} />
         <AdminNotice tone="neutral">
