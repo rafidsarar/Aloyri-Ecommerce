@@ -582,6 +582,12 @@ test.describe('Owner administration editing safeguards', () => {
     await expect(page.locator('iframe')).toHaveCount(0);
     await expect(page.locator('a[href*="builder"],a[href*="preview"]')).toHaveCount(0);
     await expect(page.locator('#admin-content form')).toHaveCount(1);
+    await page.getByLabel('Default background for all hero banners',{exact:true}).fill('#123456');
+    await expect(page.locator('input[name="heroBackground"]')).toHaveValue('#123456');
+    await page.getByLabel('Main banner background',{exact:true}).fill('#ffffff');
+    await expect(page.locator('input[name="mainHeroBackground"]')).toHaveValue('#ffffff');
+    await page.getByRole('group',{name:'Main banner background',exact:true}).getByRole('button',{name:'Use default background',exact:true}).click();
+    await expect(page.locator('input[name="mainHeroBackground"]')).toHaveValue('');
     await page.getByText('Additional content (0)',{exact:true}).click();
     await page.getByRole('button',{name:'Add extra section'}).click();
     await page.getByLabel('Extra heading',{exact:true}).fill('Our new story');

@@ -51,7 +51,7 @@ fs.writeFileSync(path.join(temp,'app/admin/builder/page.tsx'),
   'import {AdminShell} from "@/components/admin/admin-shell"; import {VisualBuilderStudio} from "@/components/admin/visual-builder-studio"; import {defaultVisualLayout} from "@/lib/visual-builder"; export default function Page(){return <AdminShell username="preview" title="Visual Builder preview" subtitle="Disposable UI fixture"><VisualBuilderStudio pageKey="home" initialLayout={defaultVisualLayout}/></AdminShell>}');
 
 // Production page/FAQ editors and simple homepage, isolated from live records.
-for(const file of ['website-settings-editor.tsx','website-page-editor.tsx','simple-homepage-editor.tsx','homepage-advanced-controls.tsx','homepage-section-organizer.tsx','banner-product-picker.tsx','media-image-picker.tsx','storefront-device-preview.tsx']) fs.copyFileSync(path.join(root,'src/components/admin',file),path.join(temp,'components/admin',file));
+for(const file of ['website-settings-editor.tsx','website-page-editor.tsx','simple-homepage-editor.tsx','hero-background-field.tsx','homepage-advanced-controls.tsx','homepage-section-organizer.tsx','banner-product-picker.tsx','media-image-picker.tsx','storefront-device-preview.tsx']) fs.copyFileSync(path.join(root,'src/components/admin',file),path.join(temp,'components/admin',file));
 const storeSource = fs.readFileSync(path.join(root,'src/lib/storefront-admin-store.ts'),'utf8');
 const defaults = storeSource.slice(storeSource.indexOf('export type ContentSection'),storeSource.indexOf('const PUBLISHED_CONFIG_PATH'));
 fs.writeFileSync(path.join(temp,'lib/storefront-admin-store.ts'),
