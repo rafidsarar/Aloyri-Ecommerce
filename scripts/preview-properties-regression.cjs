@@ -85,5 +85,26 @@ async function save(data){await assert.rejects(actions.saveVisualBuilder(data),e
  await save(reopened);
  assert.equal(saved.homepage.promoBanners[1].imagePath,'media/banner-only.webp');
  assert.deepEqual(saved.homepage.promoBanners[3].productIds,['fixture-product']);
+ // Background settings persist independently and reset without affecting other banners.
+ await save(form('home',{homepageEditor:'1',homepageControls:'1',heroBackground:'#ABCDEF',mainHeroBackground:'#121212',bestsellersBackground:'#fff000',routineBackground:'#00ff00',promo1Background:'#123456'}));
+ assert.equal(saved.homepage.heroBackground,'#abcdef');
+ assert.equal(saved.homepage.mainHeroBackground,'#121212');
+ assert.equal(saved.homepage.bestsellersBackground,'#fff000');
+ assert.equal(saved.homepage.routineBackground,'#00ff00');
+ assert.equal(saved.homepage.promoBanners[1].background,'#123456');
+ await save(form('home',{homepageEditor:'1',homepageControls:'1',mainHeroBackground:'',promo1Background:'url(https://invalid.example)'}));
+ assert.equal(saved.homepage.mainHeroBackground,'');
+ assert.equal(saved.homepage.heroBackground,'#abcdef');
+ assert.equal(saved.homepage.promoBanners[1].background,'');
+ const {heroBackgroundStyle,normalizeHeroBackground}=require('../src/lib/hero-background.ts');
+ assert.equal(normalizeHeroBackground('red; color:white'),'');
+ assert.equal(heroBackgroundStyle('#ffffff')['--hero-foreground'],'#000000');
+ assert.equal(heroBackgroundStyle('#000000')['--hero-foreground'],'#ffffff');
+ const React=require('react');const {renderToStaticMarkup}=require('react-dom/server');
+ const {HeroBannerFrame}=require('../src/components/hero-banner-frame.tsx');
+ const markup=renderToStaticMarkup(React.createElement(HeroBannerFrame,{background:saved.homepage.heroBackground,copy:'Heading',visual:'Product'}));
+ assert.ok(markup.includes('--hero-background:#abcdef'));
+ assert.ok(markup.includes('data-custom-background="true"'));
+ assert.ok(!renderToStaticMarkup(React.createElement(HeroBannerFrame,{background:'invalid',copy:'Heading',visual:'Product'})).includes('data-custom-background'));
  console.log('Preview Properties: complete pages/FAQ, campaign references, navigation, atomic save boundary, validation, permissions and inline media PASS');
 })().catch(error=>{console.error(error);process.exitCode=1;});

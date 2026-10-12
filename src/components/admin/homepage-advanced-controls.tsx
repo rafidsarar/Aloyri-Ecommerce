@@ -1,3 +1,4 @@
+import { HeroBackgroundField } from "@/components/admin/hero-background-field";
 import { MediaImagePicker } from "@/components/admin/media-image-picker";
 import { BannerProductPicker } from "@/components/admin/banner-product-picker";
 import { HomepageSectionOrganizer } from "@/components/admin/homepage-section-organizer";
@@ -26,6 +27,11 @@ export async function HomepageAdvancedControls({ config }: { config: StorefrontC
         <details id="home-hero" name="homepage-section" className="admin-editor-section" open><summary>Main banner</summary>
         <AdminCard>
           <h2 className="mb-4 text-lg font-semibold">Main banner</h2>
+          <div className="mb-5 grid gap-4"><HeroBackgroundField name="heroBackground" label="Default background for all hero banners" value={home.heroBackground} fallbackLabel="Use theme background" />
+          <HeroBackgroundField name="mainHeroBackground" label="Main banner background" value={home.mainHeroBackground} />
+          <HeroBackgroundField name="bestsellersBackground" label="Default bestsellers banner background" value={home.bestsellersBackground} />
+          <HeroBackgroundField name="routineBackground" label="Default routine banner background" value={home.routineBackground} />
+          <p className="text-xs text-black/60">Choose a color for all banners, or override individual banners. The two default discovery banners appear when no promotional banners are active. Text adjusts automatically for readability.</p></div>
           <div className="grid gap-4">
             <label className="grid gap-1.5 text-sm font-medium">
               Short label above heading
@@ -226,6 +232,7 @@ export async function HomepageAdvancedControls({ config }: { config: StorefrontC
               return (
                 <fieldset key={index} className="min-w-0 rounded-2xl border border-black/10 bg-black/[.02] p-4 sm:p-5">
                   <legend className="px-2 text-sm font-semibold">Banner {index + 1}</legend>
+                  <HeroBackgroundField name={`${prefix}Background`} label={`Banner ${index + 1} background`} value={banner?.background} />
                   <div className="grid gap-4">
                     <label className="flex min-h-11 items-center gap-3 text-sm">
                       <input type="checkbox" name={`${prefix}Enabled`} defaultChecked={banner?.enabled || false} />
