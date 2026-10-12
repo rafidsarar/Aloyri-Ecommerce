@@ -1,15 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { volatileStorage } from "@/lib/volatile-storage";
 import { writeSavedProductIds } from "@/lib/product-preferences";
 import { BrandMark } from "@/components/brand-mark";
+import { ProductMedia } from "@/components/product-media";
 import { CartLink } from "@/components/cart-link";
 import { useCatalog } from "@/components/catalog-provider";
-import { buildCategoryDirectory } from "@/lib/storefront-categories";
+import { buildCategoryDirectory, matchesCategory } from "@/lib/storefront-categories";
 import { CloseIcon, MenuIcon, SearchIcon } from "@/components/icons";
 
 import { defaultPresentation, type StorefrontPresentation } from "@/lib/storefront-presentation";
@@ -19,6 +20,8 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
   // cannot reappear until its old settings are explicitly replaced.
   const links = presentation.navigation.filter(item => item.href !== "/customer-care").map(item=>[item.label,item.href]);
   const pathname = usePathname();
+  const [queryString, setQueryString] = useState("");
+  const searchParams = new URLSearchParams(queryString);
   const router = useRouter();
   const [signedIn, setSignedIn] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -32,6 +35,7 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const menuDialogRef = useRef<HTMLDivElement>(null);
+  const [compact, setCompact] = useState(false);
   const megaMenuRef = useRef<HTMLDetailsElement>(null);
 
   useEffect(() => {
@@ -161,16 +165,37 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
     };
   }, []);
 
-  const current = (href: string) =>
-    pathname === href || (href !== "/shop" && pathname.startsWith(href));
+  useEffect(() => {
+    if (!presentation.stickyHeader) return;
+    const update = () => setCompact(previous => window.scrollY > (previous ? 48 : 120));
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, [presentation.stickyHeader]);
+
+  useEffect(() => {
+    if (megaMenuRef.current) megaMenuRef.current.open = false;
+  }, [pathname]);
+
+  const current = (href: string) => {
+    const [path, query] = href.split("?");
+    if (pathname !== path && !(path !== "/" && path !== "/shop" && pathname.startsWith(path + "/"))) return false;
+    if (query) return Array.from(new URLSearchParams(query)).every(([key, value]) => searchParams.get(key) === value);
+    if (path === "/shop") return !links.some(([, target]) => {
+      const [targetPath, targetQuery] = target.split("?");
+      return targetPath === path && targetQuery && Array.from(new URLSearchParams(targetQuery)).every(([key, value]) => searchParams.get(key) === value);
+    });
+    return true;
+  };
 
   return (
     <>
+      <Suspense><NavigationQuery onChange={setQueryString} /></Suspense>
       {presentation.showAnnouncement && announcement ? <div className="store-announcement px-4 py-2.5 text-center text-[10px] font-medium uppercase tracking-[0.15em] sm:text-[11px]">
         {announcement}
       </div> : null}
 
-      <header className={`store-header top-0 z-40 border-b backdrop-blur-xl ${presentation.stickyHeader ? "sticky" : "relative"}`}>
+      <header data-compact={presentation.stickyHeader && compact} className={`store-header top-0 z-40 border-b backdrop-blur-xl ${presentation.stickyHeader ? "sticky" : "relative"}`}>
         <div className="shell store-header-grid">
 
           <div className="store-header-leading flex items-center gap-1">
@@ -242,12 +267,12 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
           </div>
         </div>
         <nav className="store-desktop-nav hidden lg:block" aria-label="Shop and discover">
-          <div className="shell flex min-h-12 items-center justify-center gap-1">
-            <details ref={megaMenuRef} className="store-mega-menu relative">
-              <summary className="store-desktop-nav-link flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-lg px-4 text-sm font-semibold">
+          <div className="shell relative flex min-h-12 items-center justify-center gap-1">
+            <details ref={megaMenuRef} className="store-mega-menu" onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node)) event.currentTarget.open = false; }}>
+              <summary data-active={pathname.startsWith("/category/")} className="store-desktop-nav-link flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-lg px-4 text-sm font-semibold">
                 Shop categories <span aria-hidden="true">⌄</span>
               </summary>
-              <div className="store-mega-panel absolute left-0 top-full z-50 w-[min(760px,calc(100vw-3rem))] rounded-2xl border p-6 shadow-2xl">
+              <div onClick={event => { if ((event.target as HTMLElement).closest("a") && megaMenuRef.current) megaMenuRef.current.open = false; }} className="store-mega-panel absolute left-1/2 top-full z-50 w-[min(760px,calc(100vw-2rem))] -translate-x-1/2 rounded-2xl border p-5 shadow-xl">
                 <div className="mb-4 flex items-center justify-between gap-4 border-b border-[var(--store-border)] pb-4">
                   <div><p className="text-[11px] font-semibold uppercase tracking-widest text-[var(--store-accent)]">Explore Aloyri</p>
                     <p className="mt-1 text-lg font-semibold">Shop by category</p></div>
@@ -256,7 +281,11 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
                 <div className="grid max-h-[55vh] grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3">
                   {synced && publicCategories.length
                     ? publicCategories.map(item => (
-                      <Link href={item.href} key={item.slug} className="rounded-lg px-3 py-3 text-sm transition hover:bg-[var(--store-panel)] focus-visible:outline-2 focus-visible:outline-[var(--store-accent)]">{item.name}</Link>
+                      <Link href={item.href} key={item.slug} aria-current={current(item.href) ? "page" : undefined} className="store-category-nav-item flex min-h-16 items-center gap-3 rounded-xl p-2 text-sm transition hover:bg-[var(--store-panel)] focus-visible:outline-2 focus-visible:outline-[var(--store-accent)]">
+                        <span aria-hidden="true" className="w-12 shrink-0">{(() => {
+                          const photo = products.find(product => matchesCategory(product.category, item.name) && product.merchandisingOutOfStockMode !== "hide");
+                          return photo ? <ProductMedia product={photo} sizes="48px" className="aspect-square rounded-lg" /> : <span className="grid h-12 place-items-center rounded-lg bg-[var(--store-panel)] text-lg text-[var(--store-accent)]">{item.name.charAt(0)}</span>;
+                        })()}</span><span className="min-w-0 break-words">{item.name}</span></Link>
                     ))
                     : <Link href="/shop" className="rounded-lg px-3 py-3 text-sm">Browse all skincare</Link>}
                 </div>
@@ -321,4 +350,10 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
       ) : null}
     </>
   );
+}
+
+function NavigationQuery({ onChange }: { onChange: (query: string) => void }) {
+  const searchParams = useSearchParams();
+  useEffect(() => onChange(searchParams.toString()), [searchParams, onChange]);
+  return null;
 }
