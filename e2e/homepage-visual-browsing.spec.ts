@@ -41,3 +41,27 @@ test.describe("homepage visual shopping", () => {
     });
   }
 });
+
+for (const width of [390, 1440]) {
+  test(`category carousel scrolls both ways at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/");
+    const track = page.locator(".store-category-gallery");
+    await expect(track).toBeVisible();
+    await expect(track.getByText(/\d+ \/ EXPLORE/)).toHaveCount(0);
+    const cards = track.locator('a');
+    expect(await cards.count()).toBeGreaterThan(0);
+    await expect(cards.first().locator(':scope > h3')).toHaveCount(1);
+    if (await track.evaluate(node => node.scrollWidth > node.clientWidth)) {
+      await expect(page.getByRole('button', {name:'Previous categories',exact:true})).toBeDisabled();
+      await page.getByRole('button', {name:'Next categories',exact:true}).click();
+      await expect.poll(() => track.evaluate(node => node.scrollLeft)).toBeGreaterThan(10);
+      await page.getByRole('button', {name:'Previous categories',exact:true}).click();
+      await expect.poll(() => track.evaluate(node => node.scrollLeft)).toBeLessThan(2);
+      await track.focus();
+      await page.keyboard.press('ArrowRight');
+      await expect.poll(() => track.evaluate(node => node.scrollLeft)).toBeGreaterThan(10);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  });
+}
