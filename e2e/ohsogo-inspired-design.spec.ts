@@ -56,6 +56,7 @@ for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: 600 });
     await page.goto("/");
     const header = page.locator(".store-header");
+    await expect(header).toBeVisible();
     const initial = (await header.boundingBox())!.height;
     await page.evaluate(() => window.scrollTo(0, 500));
     await expect(header).toHaveAttribute("data-compact", "true");

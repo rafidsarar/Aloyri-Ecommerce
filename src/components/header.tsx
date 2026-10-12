@@ -15,12 +15,13 @@ import { CloseIcon, MenuIcon, SearchIcon } from "@/components/icons";
 
 import { defaultPresentation, type StorefrontPresentation } from "@/lib/storefront-presentation";
 
-function HeaderContent({ announcement, presentation = defaultPresentation }: { announcement: string; presentation?: StorefrontPresentation }) {
+export function Header({ announcement, presentation = defaultPresentation }: { announcement: string; presentation?: StorefrontPresentation }) {
   // Filter legacy, saved navigation so the removed Customer Care shortcut
   // cannot reappear until its old settings are explicitly replaced.
   const links = presentation.navigation.filter(item => item.href !== "/customer-care").map(item=>[item.label,item.href]);
   const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const [queryString, setQueryString] = useState("");
+  const searchParams = new URLSearchParams(queryString);
   const router = useRouter();
   const [signedIn, setSignedIn] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -189,6 +190,7 @@ function HeaderContent({ announcement, presentation = defaultPresentation }: { a
 
   return (
     <>
+      <Suspense><NavigationQuery onChange={setQueryString} /></Suspense>
       {presentation.showAnnouncement && announcement ? <div className="store-announcement px-4 py-2.5 text-center text-[10px] font-medium uppercase tracking-[0.15em] sm:text-[11px]">
         {announcement}
       </div> : null}
@@ -350,6 +352,8 @@ function HeaderContent({ announcement, presentation = defaultPresentation }: { a
   );
 }
 
-export function Header(props: { announcement: string; presentation?: StorefrontPresentation }) {
-  return <Suspense><HeaderContent {...props} /></Suspense>;
+function NavigationQuery({ onChange }: { onChange: (query: string) => void }) {
+  const searchParams = useSearchParams();
+  useEffect(() => onChange(searchParams.toString()), [searchParams, onChange]);
+  return null;
 }
