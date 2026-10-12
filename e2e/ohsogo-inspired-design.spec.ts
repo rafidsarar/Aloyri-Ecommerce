@@ -48,7 +48,7 @@ test("category panel fits, closes on selection, and highlights the selected rout
   await expect(nav.locator("summary")).toBeFocused();
   await page.goto("/shop?sort=bestseller");
   await expect(nav.getByRole("link", { name: "Bestsellers", exact: true })).toHaveAttribute("aria-current", "page");
-  await expect(nav.getByRole("link", { name: "Shop", exact: true })).not.toHaveAttribute("aria-current", "page");
+  await expect(nav.locator('a.store-desktop-nav-link[href="/shop"]')).not.toHaveAttribute("aria-current", "page");
 });
 
 for (const width of [390, 1440]) {
