@@ -7,13 +7,13 @@ const catalog = {
     category: "Cleanser", size: "100ml", price: 400, active: true, availableStock: 6 }],
 };
 
-test("desktop category mega-menu follows the live catalog without replacing floating search", async ({ page }) => {
+test("hamburger category panel follows the live catalog without replacing floating search", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.route("**/api/catalog", route => route.fulfill({ status: 200, json: catalog }));
   await page.goto("/");
-  const nav = page.getByRole("navigation", { name: "Shop and discover" });
+  await page.getByRole("button", { name: "Open menu" }).click();
+  const nav = page.getByRole("dialog", { name: "Store navigation menu" });
   await expect(nav).toBeVisible();
-  await nav.locator("summary").click();
   await expect(nav.getByRole("link", { name: "Lip care" })).toHaveAttribute("href", "/category/lip-care");
   await page.keyboard.press("Escape");
   await expect(nav.getByRole("link", { name: "Lip care" })).not.toBeVisible();
@@ -30,26 +30,6 @@ test("homepage merchandising does not introduce mobile horizontal overflow", asy
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
-test("category panel fits, closes on selection, and highlights the selected route", async ({ page }) => {
-  await page.setViewportSize({ width: 1024, height: 768 });
-  await page.route("**/api/catalog", route => route.fulfill({ status: 200, json: catalog }));
-  await page.goto("/");
-  const nav = page.getByRole("navigation", { name: "Shop and discover" });
-  await nav.locator("summary").click();
-  const box = await nav.locator(".store-mega-panel").boundingBox();
-  expect(box!.x).toBeGreaterThanOrEqual(0);
-  expect(box!.x + box!.width).toBeLessThanOrEqual(1024);
-  await nav.getByRole("link", { name: "Cleanser", exact: true }).click();
-  await expect(page).toHaveURL(/\/category\/cleanser/);
-  await expect(nav.locator("details")).not.toHaveAttribute("open", "");
-  await nav.locator("summary").click();
-  await expect(nav.getByRole("link", { name: "Cleanser", exact: true })).toHaveAttribute("aria-current", "page");
-  await page.keyboard.press("Escape");
-  await expect(nav.locator("summary")).toBeFocused();
-  await page.goto("/shop?sort=bestseller");
-  await expect(nav.getByRole("link", { name: "Bestsellers", exact: true })).toHaveAttribute("aria-current", "page");
-  await expect(nav.locator('a.store-desktop-nav-link[href="/shop"]')).not.toHaveAttribute("aria-current", "page");
-});
 
 for (const width of [390, 1440]) {
   test(`sticky header compacts and restores at ${width}px`, async ({ page }) => {
@@ -64,5 +44,34 @@ for (const width of [390, 1440]) {
     expect((await header.boundingBox())!.y).toBe(0);
     await page.evaluate(() => window.scrollTo(0, 0));
     await expect(header).toHaveAttribute("data-compact", "false");
+  });
+}
+
+for (const width of [390, 1024, 1440]) {
+  test(`unified drawer has unique destinations and active navigation at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 768 });
+    await page.route("**/api/catalog", route => route.fulfill({ status: 200, json: catalog }));
+    await page.goto("/");
+    await expect(page.getByRole("navigation", { name: "Shop and discover" })).toHaveCount(0);
+    const opener = page.getByRole("button", { name: "Open menu" });
+    await opener.click();
+    const drawer = page.getByRole("dialog", { name: "Store navigation menu" });
+    const destinations = await drawer.locator('a[href]').evaluateAll(links => links.map(link => link.getAttribute('href')));
+    expect(new Set(destinations).size).toBe(destinations.length);
+    await expect(drawer.locator('a[href="/shop"]')).toHaveCount(1);
+    await expect(drawer.getByRole('link', { name: 'Routine finder', exact: true })).toBeVisible();
+    await drawer.getByRole('link', { name: 'Cleanser', exact: true }).click();
+    await expect(page).toHaveURL(/\/category\/cleanser/);
+    await expect(drawer).toHaveCount(0);
+    await opener.click();
+    await expect(drawer.getByRole('link', { name: 'Cleanser', exact: true })).toHaveAttribute('aria-current', 'page');
+    await drawer.getByRole('link', { name: 'Bestsellers', exact: true }).click();
+    await expect(page).toHaveURL(/sort=bestseller/);
+    await opener.click();
+    await expect(drawer.getByRole('link', { name: 'Bestsellers', exact: true })).toHaveAttribute('aria-current', 'page');
+    await expect(drawer.locator('a[href="/shop"]')).not.toHaveAttribute('aria-current', 'page');
+    await page.keyboard.press('Escape');
+    await expect(opener).toBeFocused();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
 }
