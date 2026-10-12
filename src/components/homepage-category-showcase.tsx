@@ -16,8 +16,8 @@ const familiarCategories: Record<string, { style: string; note: string }> = {
 export function HomepageCategoryShowcase({ products, categories, eyebrow, title, intro }: { products: Product[]; categories: string[]; eyebrow: string; title: string; intro: string }) {
   const directory = buildCategoryDirectory(categories, products);
   return (
-    <section className="shell py-9 md:py-14" aria-labelledby="shop-by-category">
-      <div className="mb-7 flex flex-wrap items-end justify-between gap-4 md:mb-9">
+    <section className="shell py-7 md:py-10" aria-labelledby="shop-by-category">
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3 md:mb-5">
         <div>
           <p className="store-home-overline">{eyebrow}</p>
           <h2 id="shop-by-category" className="store-home-heading display mt-2">{title}</h2>
@@ -37,16 +37,16 @@ export function HomepageCategoryShowcase({ products, categories, eyebrow, title,
           const familiar = familiarCategories[item.name.toLocaleLowerCase("en")];
           const style = familiar?.style || (index % 3 === 0 ? "cleanser" : index % 3 === 1 ? "moisturizer" : "sunscreen");
           return (
-            <Link key={item.slug} href={item.href} className={"store-category-visual store-category-visual-" + style + " group relative flex min-h-[245px] w-[min(72vw,290px)] shrink-0 snap-center flex-col justify-between overflow-hidden rounded-[1.65rem] border p-5 transition-transform duration-300 hover:-translate-y-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#713a35] sm:min-h-[275px] sm:w-[280px] sm:shrink-0 sm:p-6 lg:min-h-[305px] lg:p-8"}>
-              <h3 className="display relative z-10 text-[clamp(1.55rem,2.4vw,2rem)] leading-tight">{item.name}</h3>
-              <div className="store-category-media relative my-4 flex h-[180px] shrink-0 items-center justify-center overflow-hidden">
-                {photo ? <div className="w-[170px] max-w-full">
-                  <ProductMedia product={photo} sizes="170px" className="aspect-square rounded-full" />
-                </div> : <div className="store-category-orbit h-[170px] w-[170px] max-w-full rounded-full" aria-hidden="true" />}
+            <Link key={item.slug} href={item.href} className={"store-category-visual store-category-visual-" + style + " group relative flex shrink-0 snap-start flex-col overflow-hidden rounded-2xl border p-4 transition-transform duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#713a35] sm:p-5"}>
+              <h3 className="display relative z-10 text-[1.25rem] leading-tight sm:text-[1.4rem] [overflow-wrap:anywhere]">{item.name}</h3>
+              <div className="store-category-media relative my-3 flex h-[112px] sm:h-[128px] shrink-0 items-center justify-center overflow-hidden">
+                {photo ? <div className="w-[112px] sm:w-[128px] max-w-full">
+                  <ProductMedia product={photo} sizes="(min-width: 640px) 128px, 112px" className="aspect-square rounded-full" />
+                </div> : <div className="store-category-orbit h-[112px] w-[112px] sm:h-[128px] sm:w-[128px] max-w-full rounded-full" aria-hidden="true" />}
               </div>
-              <div className="store-category-description relative z-10 mt-auto">
-                <p className="mt-2 max-w-[13rem] text-xs leading-5 opacity-75 sm:text-sm">{familiar?.note || (matching.length ? `Explore ${item.name.toLocaleLowerCase("en")} from Aloyri.` : "New category · products coming soon.")}</p>
-                <span className="mt-5 inline-flex h-10 w-10 items-center justify-center rounded-full border border-current/25 transition group-hover:translate-x-1" aria-hidden="true"><ArrowIcon /></span>
+              <div className="store-category-description relative z-10 mt-auto flex items-center gap-3">
+                <p className="min-w-0 flex-1 text-xs leading-5 opacity-75">{familiar?.note || (matching.length ? `Explore ${item.name.toLocaleLowerCase("en")} from Aloyri.` : "New category · products coming soon.")}</p>
+                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-current/25 transition group-hover:translate-x-1" aria-hidden="true"><ArrowIcon /></span>
               </div>
             </Link>
           );
