@@ -80,7 +80,7 @@ for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 800 });
     await page.goto("/");
     await expect(page.locator(".store-header").getByRole("button", { name: "Search products" })).toBeVisible();
-    const gallery = page.getByLabel("Browse CRM skincare categories");
+    const gallery = page.getByLabel("Browse skincare categories");
     await expect(gallery).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.goto("/shop");
