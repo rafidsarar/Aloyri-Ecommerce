@@ -296,7 +296,7 @@ export async function HomepageAdvancedControls({ config }: { config: StorefrontC
         </details>
         <details id="home-editorial" name="homepage-section" className="admin-editor-section"><summary>Editorial sections</summary>
         <AdminCard>
-          <h2 className="text-lg font-semibold">Visual section builder</h2>
+          <h2 className="text-lg font-semibold">Extra homepage sections</h2>
           <p className="mt-2 text-xs leading-5 text-black/60">Add up to six editorial sections. Choose a type and position, then save to update the live website. Position groups are rendered in the order shown here.</p>
           <div className="mt-5 grid gap-5">
             {Array.from({ length: 6 }, (_, index) => {

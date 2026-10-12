@@ -23,7 +23,7 @@ export function WebsitePageEditor({ config, page, inBuilder = false }: {
           <AdminCard>
             <div className="grid gap-4">
               <label className="grid gap-1.5 text-sm font-medium">
-                Eyebrow
+                Short label
                 <input name="eyebrow" defaultValue={config.faq.eyebrow} className="rounded-xl border border-black/10 px-4 py-3" />
               </label>
               <label className="grid gap-1.5 text-sm font-medium">
@@ -59,7 +59,7 @@ export function WebsitePageEditor({ config, page, inBuilder = false }: {
         <AdminCard>
           <div className="grid gap-4">
             <label className="grid gap-1.5 text-sm font-medium">
-              Eyebrow
+              Short label
               <input name="eyebrow" defaultValue={content.eyebrow} maxLength={120} className="rounded-xl border border-black/10 px-4 py-3" />
             </label>
             <label className="grid gap-1.5 text-sm font-medium">

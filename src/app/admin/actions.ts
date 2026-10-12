@@ -519,7 +519,7 @@ export async function saveVisualBuilder(formData: FormData) {
       let layout = normalizeVisualLayout(requested, beforeOrder);
       const advancedOrderChanged = JSON.stringify(beforeOrder) !== JSON.stringify(config.homepage.sectionOrder);
       const canvasOrderChanged = JSON.stringify(before.order) !== JSON.stringify(layout.order);
-      if (fullControls && advancedOrderChanged && !canvasOrderChanged) {
+      if (fullControls && advancedOrderChanged && (!canvasOrderChanged || formData.get("homepageEditor") === "1")) {
         layout = reorderVisualCoreSections(layout, config.homepage.sectionOrder);
       }
       const canvasVisibilityChanged = JSON.stringify([...before.hiddenCore].sort()) !== JSON.stringify([...layout.hiddenCore].sort());

@@ -29,7 +29,7 @@ export default async function SeoManagerPage() {
     <AdminShell
       username={admin.username}
       title="SEO & Discoverability"
-      subtitle="Manage search metadata, social previews, indexing, canonicals, structured product discovery and redirects through the automatic live-save workflow."
+      subtitle="Manage search metadata, social sharing information, indexing, canonicals, structured product discovery and redirects through the automatic live-save workflow."
     >
       {publishing.hasDraftChanges ? (
         <AdminNotice tone="warning">
@@ -77,7 +77,7 @@ export default async function SeoManagerPage() {
 
       <div className="mt-5 grid gap-4 md:grid-cols-3">
         {[
-          ["Pages & categories", "Titles, descriptions, canonicals, indexing and social previews.", "/admin/seo/pages"],
+          ["Pages & categories", "Titles, descriptions, canonicals, indexing and social sharing information.", "/admin/seo/pages"],
           ["Products", "Product metadata and search/social presentation with CRM-safe fallbacks.", "/admin/seo/products"],
           ["Redirects", "Versioned internal 307/308 redirects with loop and protected-route safeguards.", "/admin/seo/redirects"],
         ].map(([title, copy, href]) => (

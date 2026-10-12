@@ -55,5 +55,13 @@ async function save(data){await assert.rejects(actions.saveVisualBuilder(data),e
  await assert.rejects(actions.saveFaq(question),error=>error.url==='/admin/pages/faq?saved=1');assert.equal(saved.faq.items[0].answer,'Direct answer.');
  saved=null;content.set('layout','{"blocks":false}');await assert.rejects(actions.saveInfoPage(content),/invalid-content/);assert.equal(saved,null);
  const direct=form('home',{homepageEditor:'1'});await assert.rejects(actions.saveVisualBuilder(direct),error=>error.url==='/admin/homepage?saved=1');
+ // Core order and extra content can be changed in the same ordinary homepage save.
+ const coreOrder=[...config.homepage.sectionOrder].reverse();
+ const changedLayout=structuredClone(config.homepage.visualLayout);
+ const extra={id:'new-extra',kind:'text',enabled:true,title:'Saved extra',body:'Kept with the new core order',items:[]};
+ changedLayout.blocks.push(extra);changedLayout.order.push('custom:new-extra');
+ await save(form('home',{homepageEditor:'1',homepageControls:'1',sectionOrder:JSON.stringify(coreOrder),layout:JSON.stringify(changedLayout)}));
+ assert.deepEqual(saved.homepage.sectionOrder,coreOrder);
+ assert.ok(saved.homepage.visualLayout.blocks.some(row=>row.title==='Saved extra'));
  console.log('Preview Properties: complete pages/FAQ, campaign references, navigation, atomic save boundary, validation, permissions and inline media PASS');
 })().catch(error=>{console.error(error);process.exitCode=1;});
