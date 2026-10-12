@@ -1,3 +1,4 @@
+import { HeroBannerFrame } from "@/components/hero-banner-frame";
 import { HeroProductGallery } from "@/components/hero-product-gallery";
 import type { Metadata } from "next";
 import { Fragment, type ReactNode } from "react";
@@ -120,33 +121,24 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
   // When no promotional banners are configured, offer evergreen discovery cards
   // rather than inventing prices, discounts, or stock claims.
   const evergreenSlides: ReactNode[] = carouselPromos.length ? [] : [
-    <section key="bestsellers" className="store-campaign-editorial store-campaign-editorial-bestsellers">
-      <div className="store-campaign-editorial-copy">
-        <p className="store-home-overline">Explore Aloyri</p>
-        <h2 className="display store-campaign-editorial-title">Meet your next skincare favourite.</h2>
-        <p className="store-campaign-editorial-subtitle">Browse the products our community loves to discover.</p>
-        <Link href="/shop?sort=bestseller" className="store-campaign-editorial-link">Shop bestsellers <ArrowIcon /></Link>
-      </div>
-      <span className="store-campaign-editorial-mark" aria-hidden="true">A</span>
-    </section>,
-    <section key="routine" className="store-campaign-editorial store-campaign-editorial-routine">
-      <div className="store-campaign-editorial-copy">
-        <p className="store-home-overline">A little guidance</p>
-        <h2 className="display store-campaign-editorial-title">Your routine, made simpler.</h2>
-        <p className="store-campaign-editorial-subtitle">Find a starting point for everyday skincare.</p>
-        <Link href="/routine-finder" className="store-campaign-editorial-link">Find your routine <ArrowIcon /></Link>
-      </div>
-      <span className="store-campaign-editorial-mark" aria-hidden="true">A</span>
-    </section>,
-  ];
+    { key: "bestsellers", eyebrow: "Explore Aloyri", title: "Meet your next skincare favourite.", copy: "Browse the products our community loves to discover.", label: "Shop bestsellers", href: "/shop?sort=bestseller" },
+    { key: "routine", eyebrow: "A little guidance", title: "Your routine, made simpler.", copy: "Find a starting point for everyday skincare.", label: "Find your routine", href: "/routine-finder" },
+  ].map((banner, index) => <section key={banner.key} className="store-campaign-intro">
+    <HeroBannerFrame style={home.heroStyle} alignment={home.heroAlignment} stacked={home.heroLayout === "stacked"} showImageOnMobile={config.presentation.showHeroImageOnMobile}
+      copy={<><div className="store-home-overline flex items-center gap-3"><span className="h-px w-8 bg-[#b9725f]/55" />{banner.eyebrow}</div>
+        <div className="max-w-2xl py-8 lg:py-10"><h2 className="store-hero-heading display max-w-[13ch] text-[clamp(2.25rem,4.8vw,5rem)] leading-[1.02]">{banner.title}</h2>
+          <p className="store-hero-muted mt-7 max-w-xl text-base leading-7 sm:text-lg">{banner.copy}</p>
+          <div className="mt-9 flex flex-wrap gap-3"><Link href={banner.href} className="store-hero-primary inline-flex items-center gap-3 rounded-full px-6 py-3.5 text-sm font-semibold transition hover:-translate-y-0.5">{banner.label}<ArrowIcon /></Link></div></div></>}
+      visual={<ProductMedia product={catalogProducts[index] || heroProduct} sizes="(max-width: 1024px) 90vw, 600px" className="store-hero-product aspect-square max-h-[440px] rounded-[2rem] soft-shadow" />} />
+  </section>);
+
 
   const blocks: Record<HomepageBlockId, ReactNode> = {
     hero: (
       <>
       {home.showHero && <HomepageHeroCarousel slides={[<section key="intro" className="store-campaign-intro">
-        <div className={`store-hero store-hero-${home.heroStyle} store-hero-align-${home.heroAlignment} grid min-h-[490px] overflow-hidden rounded-[2rem] border ${home.heroLayout === "stacked" ? "grid-cols-1" : "lg:grid-cols-[1.03fr_.97fr]"}`}>
-          <div className="store-hero-copy min-w-0 relative z-10 flex flex-col justify-between p-7 sm:p-10 lg:p-14">
-            <div className="store-home-overline flex items-center gap-3">
+        <HeroBannerFrame style={home.heroStyle} alignment={home.heroAlignment} stacked={home.heroLayout === "stacked"} showImageOnMobile={config.presentation.showHeroImageOnMobile}
+          copy={<>            <div className="store-home-overline flex items-center gap-3">
               <span className="h-px w-8 bg-[#b9725f]/55" />
               {home.eyebrow}
             </div>
@@ -178,14 +170,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
               </div>
             </div>
 
-
-          </div>
-
-          <div className={`store-hero-art min-w-0 relative min-h-[280px] lg:min-h-[420px] p-6 sm:p-9 lg:p-12 ${config.presentation.showHeroImageOnMobile ? "" : "hidden lg:block"}`}>
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_18%,rgba(255,255,255,.85),transparent_36%)]" />
-            <div className="relative mx-auto flex h-full max-w-[580px] items-center">
-              <div className="relative w-full">
-                {home.heroImagePath ? (
+</>} visual={<>                {home.heroImagePath ? (
                   <div className="relative aspect-square max-h-[440px] overflow-hidden rounded-[2rem] soft-shadow">
                     <Image src={storefrontMediaUrl(home.heroImagePath)} alt={home.headline || "Aloyri homepage banner"} fill priority sizes="(max-width: 1024px) 90vw, 600px" className="object-cover" />
                   </div>
@@ -228,12 +213,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
                       <ArrowIcon />
                     </TrackedLink>
                   </div>
-                </div>}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>, ...carouselPromos.map((banner, index) => <HomepagePromoBanners key={index} banners={[banner]} compact products={catalogProducts} bannerOffset={index} />), ...evergreenSlides]} />}
+                </div>}</>} />
+      </section>, ...carouselPromos.map((banner, index) => <HomepagePromoBanners key={index} banners={[banner]} compact heroStyle={home.heroStyle} heroAlignment={home.heroAlignment} heroStacked={home.heroLayout === "stacked"} showImageOnMobile={config.presentation.showHeroImageOnMobile} products={catalogProducts} bannerOffset={index} />), ...evergreenSlides]} />}
       </>
     ),
     browse: null,

@@ -20,6 +20,6 @@ test("homepage Builder preview renders real sections and applies unsaved order a
       layout: { order, hiddenCore: [], blocks: [] },
       coreContent: { headline: "Preview-only heading" },
     }, window.location.origin);
-  }, order); return frame.locator("[data-builder-core='hero'] .store-hero-heading").textContent(); }, { timeout: 30_000 }).toBe("Preview-only heading");
+  }, order); return frame.locator("[data-builder-core='hero'] h1.store-hero-heading").textContent(); }, { timeout: 30_000 }).toBe("Preview-only heading");
   await expect.poll(() => frame.locator("[data-builder-core]").evaluateAll(nodes => nodes.map(node => node.getAttribute("data-builder-core")))).toEqual(["brandStory", "hero"]);
 });
