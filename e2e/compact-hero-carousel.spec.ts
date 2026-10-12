@@ -62,3 +62,21 @@ test("reduced motion disables automatic rotation without removing manual control
   await carousel.getByRole("button", { name: "Next campaign" }).click();
   await expect(carousel.getByRole("button", { name: "Show campaign 2" })).toHaveAttribute("aria-current", "true");
 });
+
+
+test("every carousel banner uses the same hero frame and typography", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  const slides = page.locator(".store-campaign-slide");
+  const count = await slides.count();
+  expect(count).toBeGreaterThanOrEqual(2);
+  await expect(page.locator(".store-campaign-editorial")).toHaveCount(0);
+  for (let index = 0; index < count; index++) {
+    await expect(slides.nth(index).locator(".store-hero")).toHaveCount(1);
+    await expect(slides.nth(index).locator(".store-hero-copy")).toHaveCount(1);
+    await expect(slides.nth(index).locator(".store-hero-art")).toHaveCount(1);
+  }
+  const typography = await page.locator(".store-campaign-slide .store-hero-heading").evaluateAll(nodes => nodes.map(node => ({size:getComputedStyle(node).fontSize,lineHeight:getComputedStyle(node).lineHeight})));
+  expect(typography.length).toBeGreaterThanOrEqual(2);
+  expect(typography.every(style => style.size === typography[0].size && style.lineHeight === typography[0].lineHeight)).toBe(true);
+});

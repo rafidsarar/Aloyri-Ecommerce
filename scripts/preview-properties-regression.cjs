@@ -18,7 +18,7 @@ Module._load=function(name,parent,isMain){
  if(name==='@/lib/admin-auth')return {requireAdminPermission:async permission=>{permissions.push(permission);if(!allow)redirect('/admin/login');return {username:'fixture-owner'};}};
  if(name==='@/lib/admin-save')return {saveAdminStorefront:async(data,updater,options)=>{assert.equal(options.expectedUpdatedAt,'fixture-version');const next=updater(structuredClone(config));saved=next;config=next;}};
  if(name==='@/lib/storefront-admin-store')return {uploadStorefrontMedia:async()=> 'media/fixture-upload.webp',writeAdminAuditEvent:async()=>{}};
- if(name.startsWith('@/')) name=path.join(root,name.slice(2)+'.ts');
+ if(name.startsWith('@/')) {const base=path.join(root,name.slice(2));name=fs.existsSync(base+'.ts')?base+'.ts':base+'.tsx';}
  return original.call(this,name,parent,isMain);
 };
 require.extensions['.ts']=require.extensions['.tsx']=(mod,file)=>mod._compile(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText,file);
