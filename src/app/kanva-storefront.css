@@ -260,3 +260,34 @@
   [data-kanva-storefront] .store-product-card,
   [data-kanva-storefront] .store-product-card .relative > div:first-child { transform: none !important; transition: none !important; }
 }
+
+/* All editorial information routes inherit the same layout vocabulary. */
+[data-kanva-storefront] .kanva-information-page,
+[data-kanva-storefront] .kanva-faq-page { padding-top: clamp(2.5rem, 6vw, 6.5rem); padding-bottom: 5rem; }
+[data-kanva-storefront] .kanva-information-intro { border-color: var(--kanva-hairline); }
+[data-kanva-storefront] .kanva-information-intro h1,
+[data-kanva-storefront] .kanva-faq-page h1 {
+  font-size: clamp(3.25rem, 7vw, 7rem); line-height: .98; letter-spacing: -.072em;
+  text-wrap: balance; overflow-wrap: anywhere;
+}
+[data-kanva-storefront] .kanva-information-intro > p:last-child,
+[data-kanva-storefront] .kanva-faq-page > div:first-child > p:last-child {
+  color: var(--kanva-subtle); line-height: 1.85;
+}
+[data-kanva-storefront] .kanva-information-section { border-color: var(--kanva-hairline); scroll-margin-top: 7rem; }
+[data-kanva-storefront] .kanva-information-section h2 {
+  font-size: clamp(1.8rem,3vw,2.7rem); letter-spacing: -.045em;
+}
+[data-kanva-storefront] .kanva-information-page aside {
+  background: var(--kanva-mist); border-color: var(--kanva-hairline);
+}
+[data-kanva-storefront] .kanva-faq-list { border-color: var(--kanva-hairline); }
+[data-kanva-storefront] .kanva-faq-list > details { padding-block: 1.5rem; }
+[data-kanva-storefront] .kanva-faq-list summary {
+  min-height: 48px; gap: 1.4rem; font-size: clamp(.95rem,1.5vw,1.18rem);
+  font-weight: 550; line-height: 1.4;
+}
+[data-kanva-storefront] .kanva-faq-list summary:focus-visible { outline-offset: 4px; }
+[data-kanva-storefront] .kanva-faq-list details[open] { background: color-mix(in srgb, var(--kanva-mist) 35%, transparent); }
+[data-kanva-storefront] .account-panel { border-color: var(--kanva-hairline); }
+[data-kanva-storefront] .account-display { letter-spacing: -.055em; }
