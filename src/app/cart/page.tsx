@@ -165,8 +165,8 @@ export default function CartPage() {
   }
 
   return (
-    <main className="shell min-w-0 pb-32 pt-8 md:pb-16 lg:pb-16">
-      <div className="border-b border-[#713a35]/10 pb-8">
+    <main className="kanva-cart-page shell min-w-0 pb-32 pt-8 md:pb-16 lg:pb-16">
+      <div className="kanva-page-heading border-b border-[#713a35]/10 pb-8">
         <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/48">
           Your selection
         </p>
