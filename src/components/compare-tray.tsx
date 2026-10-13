@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { useCatalog } from "@/components/catalog-provider";
 import {
   readCompareProductIds,
@@ -18,6 +18,9 @@ export function CompareTray() {
   useSyncExternalStore(subscribeProductPreferences, productPreferencesSnapshot, productPreferencesServerSnapshot);
   const selected = readCompareProductIds();
   const available = selected.map(id => products.find(p => p.id === id)).filter((p): p is (typeof products)[number] => Boolean(p));
+  useEffect(() => {
+    if (synced && selected.length !== available.length) writeCompareProductIds(available.map(product => product.id));
+  }, [synced, selected, available]);
   if (!synced || !selected.length || pathname === "/compare" || pathname.startsWith("/checkout") || pathname.startsWith("/admin")) return null;
 
   return (

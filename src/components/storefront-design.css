@@ -117,3 +117,8 @@
   .storefront-design[data-storefront-page="cart"] main > div:first-child,
   .storefront-design[data-storefront-page="compare"] main > div:first-child { padding: 22px; }
 }
+
+/* Comparison is a quiet secondary action, distinct from add-to-cart. */
+.storefront-design .store-product-card-action .compare-toggle { background: var(--store-surface); color: var(--store-accent); border: 1px solid var(--design-line); }
+.storefront-design .store-product-card-action .compare-toggle[aria-pressed="true"] { background: var(--design-soft); border-color: var(--store-accent); }
+.storefront-design .store-product-card-action .compare-toggle:disabled { background: var(--design-soft); color: var(--store-muted); }

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { AddToCart } from "@/components/add-to-cart";
 import { useCatalog } from "@/components/catalog-provider";
 import { ProductMedia } from "@/components/product-media";
@@ -36,6 +36,10 @@ export function CompareProductsClient() {
       .sort((a, b) => Number((b.availableStock ?? 0) > 0) - Number((a.availableStock ?? 0) > 0))
       .slice(0, 12);
   }, [products, ids, query]);
+
+  useEffect(() => {
+    if (synced && ids.length !== compared.length) writeCompareProductIds(compared.map(product => product.id));
+  }, [synced, ids, compared]);
 
   function remove(id: string) {
     writeCompareProductIds(ids.filter(item => item !== id));
