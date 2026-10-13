@@ -37,7 +37,7 @@ test("shop compare buttons open a persistent live-catalog comparison without an 
   await page.getByRole("button", { name: "Add Skin Aqua Super Moisture UV Gel to comparison" }).click();
   await expect(region.getByRole("columnheader", { name: /Skin Aqua Super Moisture UV Gel/ })).toBeVisible();
   await expect(region).toContainText("Daily sun care");
-  await expect(page.getByRole("heading", { name: "Choose products" })).toContainText("2 of 3");
+  await expect(page.getByRole("heading", { name: /Choose products/ })).toContainText("2 of 3");
 });
 
 test("comparison limits selections, removes items and remains changeable", async ({ page }) => {
