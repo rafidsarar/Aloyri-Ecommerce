@@ -47,7 +47,7 @@ export default async function ShopPage({
           The Aloyri collection
         </p>
         <h1 className="display mt-2 text-4xl leading-tight sm:text-5xl">
-          The skincare edit.
+          Shop skincare.
         </h1>
         <p className="mt-2 max-w-xl text-sm leading-6 text-[#321f1c]/55">
           Discover your everyday skincare essentials.
