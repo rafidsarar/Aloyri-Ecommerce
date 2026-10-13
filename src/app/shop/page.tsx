@@ -41,13 +41,13 @@ export default async function ShopPage({
 
   return (
     <>
-    <main className="shell py-8 md:py-11">
-      <header className="border-b border-[#713a35]/10 pb-5 md:pb-6">
+    <main className="kanva-shop-page shell py-8 md:py-11">
+      <header className="kanva-page-heading border-b border-[#713a35]/10 pb-5 md:pb-6" data-kanva-reveal>
         <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#713a35]/50">
           The Aloyri collection
         </p>
         <h1 className="display mt-2 text-4xl leading-tight sm:text-5xl">
-          Shop skincare.
+          The skincare edit.
         </h1>
         <p className="mt-2 max-w-xl text-sm leading-6 text-[#321f1c]/55">
           Discover your everyday skincare essentials.
