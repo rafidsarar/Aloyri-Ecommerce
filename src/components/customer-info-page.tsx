@@ -26,10 +26,10 @@ export function CustomerInfoPage(initial: {
 }) {
   const {eyebrow,title,intro,sections}=useBuilderPageContent(initial,"content");
   return (
-    <main data-builder-page-content className="shell py-12 md:py-18">
+    <main data-builder-page-content className="kanva-information-page shell py-12 md:py-18">
       <div className="grid gap-10 lg:grid-cols-[1fr_300px] lg:gap-16">
         <div>
-          <div className="max-w-3xl border-b border-[#713a35]/10 pb-10">
+          <div className="kanva-information-intro max-w-3xl border-b border-[#713a35]/10 pb-10">
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/48">
               {eyebrow}
             </p>
@@ -45,7 +45,7 @@ export function CustomerInfoPage(initial: {
           </nav> : null}
           <div className="divide-y divide-[#713a35]/10">
             {sections.map((section,index) => (
-              <section id={`care-section-${index}`} key={section.title} className="py-8 first:pt-10">
+              <section id={`care-section-${index}`} key={section.title} className="kanva-information-section py-8 first:pt-10">
                 <h2 className="display text-3xl">{section.title}</h2>
                 {section.paragraphs?.map((paragraph) => (
                   <p
