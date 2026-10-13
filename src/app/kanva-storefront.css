@@ -55,7 +55,7 @@
 [data-kanva-storefront] .store-product-card-action button { border-radius: .65rem; font-weight: 600; letter-spacing: .015em; }
 [data-kanva-storefront] .store-product-card-action button:focus-visible { outline-offset: 4px; }
 [data-kanva-storefront] .store-hero { overflow: hidden; }
-[data-kanva-storefront] .store-hero-heading { font-size: clamp(2.8rem, 5.5vw, 6.4rem); line-height: .98; letter-spacing: -.065em; }
+[data-kanva-storefront] .store-hero-heading { line-height: 1.02; letter-spacing: -.065em; }
 [data-kanva-storefront] .store-hero-art { min-width: 0; }
 [data-kanva-storefront] .store-hero-art img { max-width: 100%; }
 [data-kanva-storefront] .store-home-heading,
@@ -249,7 +249,7 @@
   [data-kanva-storefront] .kanva-product-section-nav { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
   [data-kanva-storefront] .kanva-product-section-nav::-webkit-scrollbar { display: none; }
   [data-kanva-storefront] .kanva-product-section-nav a { flex-shrink: 0; white-space: nowrap; }
-  [data-kanva-storefront] .store-hero-heading { font-size: clamp(2.4rem,9vw,4.2rem); }
+  [data-kanva-storefront] .store-hero-heading { overflow-wrap: anywhere; }
   [data-kanva-storefront] .store-product-card:hover { transform: none; }
 }
 @media (prefers-reduced-motion: reduce) {
