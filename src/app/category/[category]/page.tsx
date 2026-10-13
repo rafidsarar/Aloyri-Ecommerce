@@ -78,9 +78,9 @@ export default async function CategoryPage({
 
   return (
     <>
-      <main className="shell py-12 md:py-16">
+      <main className="kanva-category-page shell py-12 md:py-16">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumb) }} />
-        <div className="grid gap-4 border-b border-[#713a35]/10 pb-6 lg:grid-cols-[1fr_.7fr] lg:items-end">
+        <div className="kanva-page-heading grid gap-4 border-b border-[#713a35]/10 pb-6 lg:grid-cols-[1fr_.7fr] lg:items-end" data-kanva-reveal>
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/48">Shop by category</p>
             <h1 className="display mt-3 text-4xl leading-tight sm:text-5xl">{entry.name}.</h1>
