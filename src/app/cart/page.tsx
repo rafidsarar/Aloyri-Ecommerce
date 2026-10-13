@@ -165,8 +165,8 @@ export default function CartPage() {
   }
 
   return (
-    <main className="shell min-w-0 pb-32 pt-8 md:pb-16 lg:pb-16">
-      <div className="border-b border-[#713a35]/10 pb-8">
+    <main className="kanva-cart-page shell min-w-0 pb-32 pt-8 md:pb-16 lg:pb-16">
+      <div className="kanva-page-heading border-b border-[#713a35]/10 pb-8">
         <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/48">
           Your selection
         </p>
@@ -198,7 +198,7 @@ export default function CartPage() {
               return (
                 <div
                   key={productId}
-                  className="grid min-w-0 grid-cols-[76px_minmax(0,1fr)] gap-4 border-b border-[#713a35]/10 py-5 first:pt-0 sm:grid-cols-[100px_minmax(0,1fr)_auto] sm:gap-6 lg:grid-cols-[120px_minmax(0,1fr)_auto]"
+                  className="cart-product-row grid min-w-0 grid-cols-[76px_minmax(0,1fr)] gap-4 border-b border-[#713a35]/10 py-5 first:pt-0 sm:grid-cols-[100px_minmax(0,1fr)_auto] sm:gap-6 lg:grid-cols-[120px_minmax(0,1fr)_auto]"
                 >
                   {product ? (
                     <Link href={`/product/${product.slug}`}>
@@ -343,7 +343,7 @@ export default function CartPage() {
                 Order summary
               </p>
               <span className="text-[10px] text-[#321f1c]/38">
-                {refreshing ? "Refreshing…" : "Live CRM verified"}
+                {refreshing ? "Refreshing…" : "Availability checked"}
               </span>
             </div>
 

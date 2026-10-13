@@ -5,6 +5,7 @@ import { safeJsonLd } from "@/lib/seo";
 import { absoluteUrl, siteConfig } from "@/lib/site";
 import { readStorefrontConfig } from "@/lib/storefront-admin-store";
 import "./globals.css";
+import "./kanva-storefront.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),

@@ -1,3 +1,4 @@
+import { StorefrontMotion, RevealText } from "@/components/storefront-motion";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { draftMode } from "next/headers";
@@ -98,19 +99,19 @@ export default async function CollectionPage({
   }
 
   return (
-    <main className="shell py-12 md:py-16">
+    <StorefrontMotion><main className="kanva-collection-page shell py-12 md:py-16">
       <AnalyticsViewTracker
         event="collection_view"
         properties={{ collectionId: collection.id }}
         context={{ collectionId: collection.id }}
       />
-      <div className="grid gap-8 lg:grid-cols-[1fr_.72fr] lg:items-end">
+      <div className="kanva-page-heading collection-page-intro grid gap-8 lg:grid-cols-[1fr_.72fr] lg:items-end">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/48">
             {collection.eyebrow || "Aloyri collection"}
           </p>
           <h1 className="display mt-3 text-6xl leading-[0.92] sm:text-7xl">
-            {collection.title}
+            <RevealText>{collection.title}</RevealText>
           </h1>
           {collection.description ? (
             <p className="mt-5 max-w-2xl text-base leading-8 text-[#321f1c]/58">
@@ -153,6 +154,6 @@ export default async function CollectionPage({
           </div>
         )}
       </div>
-    </main>
+    </main></StorefrontMotion>
   );
 }

@@ -1,3 +1,4 @@
+import { StorefrontMotion, RevealText, BotanicalScene } from "@/components/storefront-motion";
 import type { Metadata } from "next";
 import { VisualPageSections } from "@/components/visual-page-sections";
 import { shopSeoMetadata } from "@/lib/seo-manager";
@@ -40,19 +41,19 @@ export default async function ShopPage({
   ]);
 
   return (
-    <>
-    <main className="shell py-8 md:py-11">
-      <header className="border-b border-[#713a35]/10 pb-5 md:pb-6">
+    <StorefrontMotion>
+    <main className="kanva-shop-page shell py-8 md:py-11">
+      <header className="kanva-page-heading editorial-page-header border-b border-[#713a35]/10"><div>
         <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#713a35]/50">
           The Aloyri collection
         </p>
         <h1 className="display mt-2 text-4xl leading-tight sm:text-5xl">
-          Shop skincare.
+          <RevealText>Shop skincare.</RevealText>
         </h1>
         <p className="mt-2 max-w-xl text-sm leading-6 text-[#321f1c]/55">
           Discover your everyday skincare essentials.
         </p>
-      </header>
+      </div><BotanicalScene /></header>
 
       <ShopClient
         key={[query.category, query.q, query.brand, query.focus, query.stock, query.price, query.sort].join(":")}
@@ -87,6 +88,6 @@ export default async function ShopPage({
       />
     </main>
     <VisualPageSections layout={config.visualPages.shop} />
-    </>
+    </StorefrontMotion>
   );
 }

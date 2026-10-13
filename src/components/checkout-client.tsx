@@ -1046,7 +1046,7 @@ export function CheckoutClient() {
     : "Not selected";
 
   return (
-    <main className="shell min-w-0 pb-36 pt-6 sm:pt-8 lg:pb-16 lg:pt-12">
+    <main className="kanva-checkout-page shell min-w-0 pb-36 pt-6 sm:pt-8 lg:pb-16 lg:pt-12">
       <nav aria-label="Checkout progress" className="mb-6 sm:mb-8">
         <ol className="grid grid-cols-3 gap-1.5 rounded-[1.2rem] border border-[#713a35]/10 bg-white/55 p-1.5 text-center text-[10px] font-semibold uppercase tracking-[0.08em] sm:max-w-xl sm:gap-2 sm:p-2 sm:tracking-[0.12em]">
           <li>
