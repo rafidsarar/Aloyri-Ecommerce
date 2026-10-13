@@ -55,6 +55,27 @@ export function StorefrontMotion() {
     const requestScroll = () => {
       if (!frame) frame = window.requestAnimationFrame(updateScroll);
     };
+    const onPointerMove = (event: PointerEvent) => {
+      if (event.pointerType !== "mouse") return;
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const visual = target.closest<HTMLElement>("[data-kanva-cursor]");
+      if (!visual || !root.contains(visual)) return;
+      const box = visual.getBoundingClientRect();
+      const x = ((event.clientX - box.left) / box.width - .5) * 12;
+      const y = ((event.clientY - box.top) / box.height - .5) * 12;
+      visual.style.setProperty("--kanva-pointer-x", `${x.toFixed(1)}px`);
+      visual.style.setProperty("--kanva-pointer-y", `${y.toFixed(1)}px`);
+    };
+    const onPointerOut = (event: PointerEvent) => {
+      if (!(event.target instanceof Element)) return;
+      const visual = event.target.closest<HTMLElement>("[data-kanva-cursor]");
+      if (!visual || (event.relatedTarget instanceof Node && visual.contains(event.relatedTarget))) return;
+      visual.style.removeProperty("--kanva-pointer-x");
+      visual.style.removeProperty("--kanva-pointer-y");
+    };
+    root.addEventListener("pointermove", onPointerMove, { passive: true });
+    root.addEventListener("pointerout", onPointerOut);
     window.addEventListener("scroll", requestScroll, { passive: true });
     window.addEventListener("resize", requestScroll);
     requestScroll();
@@ -63,6 +84,8 @@ export function StorefrontMotion() {
       delete root.dataset.motionReady;
       mutationObserver.disconnect();
       revealObserver.disconnect();
+      root.removeEventListener("pointermove", onPointerMove);
+      root.removeEventListener("pointerout", onPointerOut);
       window.removeEventListener("scroll", requestScroll);
       window.removeEventListener("resize", requestScroll);
       if (frame) window.cancelAnimationFrame(frame);
