@@ -81,6 +81,8 @@
   background: var(--kanva-mist);
 }
 [data-kanva-storefront] .kanva-product-image {
+  transform: translate3d(var(--kanva-pointer-x,0px), var(--kanva-pointer-y,0px),0);
+  transition: transform 180ms ease-out;
   aspect-ratio: 4 / 4.8; border-radius: inherit; box-shadow: none;
   background: radial-gradient(circle at 51% 42%, var(--kanva-paper), var(--kanva-mist));
 }
@@ -227,7 +229,12 @@
 [data-kanva-storefront][data-motion-ready="true"] [data-kanva-reveal].kanva-visible {
   opacity: 1; transform: translate3d(0,0,0);
 }
-[data-kanva-storefront] [data-kanva-parallax] { transform: translate3d(0,var(--kanva-offset,0px),0); }
+[data-kanva-storefront] [data-kanva-parallax] { transform: translate3d(0,var(--kanva-offset,0px),0); transition: transform 90ms linear; }
+[data-kanva-storefront] .store-header { border-bottom: 1px solid var(--kanva-hairline); backdrop-filter: blur(16px); }
+[data-kanva-storefront] .store-footer { border-top: 1px solid var(--kanva-hairline); }
+[data-kanva-storefront] .store-footer a { transition: color .2s ease; }
+[data-kanva-storefront] .store-footer a:hover { color: var(--kanva-accent); }
+[data-kanva-storefront] .kanva-product-page :is(button, a) { touch-action: manipulation; }
 @media (min-width: 1024px) {
   [data-kanva-storefront] .kanva-product-hero { grid-template-columns: minmax(0,1.08fr) minmax(0,.92fr); }
   [data-kanva-storefront] .kanva-product-chapter { grid-template-columns: minmax(0,1.1fr) minmax(0,.9fr); }
@@ -247,6 +254,7 @@
 }
 @media (prefers-reduced-motion: reduce) {
   [data-kanva-storefront] [data-kanva-reveal] { opacity: 1 !important; transform: none !important; transition: none !important; }
+  [data-kanva-storefront] .kanva-product-image { transform: none !important; transition: none !important; }
   [data-kanva-storefront] [data-kanva-rotate],
   [data-kanva-storefront] [data-kanva-parallax] { transform: none !important; will-change: auto; }
   [data-kanva-storefront] .store-product-card,
