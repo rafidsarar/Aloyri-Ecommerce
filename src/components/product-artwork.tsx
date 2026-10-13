@@ -1,5 +1,6 @@
 import type { Product } from "@/lib/catalog";
 
+/** A single coordinate system keeps fallback packaging proportional in every slot. */
 export function ProductArtwork({
   product,
   className = "",
@@ -7,86 +8,38 @@ export function ProductArtwork({
   product: Product;
   className?: string;
 }) {
-  const packageClasses = {
-    tube: "h-[62%] w-[31%] rounded-[2rem_2rem_1rem_1rem]",
-    bottle: "h-[58%] w-[33%] rounded-[1.4rem_1.4rem_1rem_1rem]",
-    pump: "h-[58%] w-[31%] rounded-[1.3rem_1.3rem_.9rem_.9rem]",
-  }[product.visual.package];
+  const { visual } = product;
+  const tube = visual.package === "tube";
+  const pump = visual.package === "pump";
 
   return (
     <div
-      className={`relative overflow-hidden ${className}`}
+      className={`product-artwork relative overflow-hidden ${className}`}
       style={{
-        background: `linear-gradient(145deg, ${product.visual.from} 0%, ${product.visual.to} 72%)`,
+        background: `linear-gradient(145deg, ${visual.from} 0%, ${visual.to} 72%)`,
       }}
       aria-hidden="true"
     >
-      <div
-        className="absolute -right-[12%] -top-[8%] h-[42%] w-[42%] rounded-full opacity-35 blur-3xl"
-        style={{ background: product.visual.accent }}
-      />
-      <div
-        className="absolute -bottom-[15%] -left-[8%] h-[42%] w-[42%] rounded-full opacity-25 blur-3xl"
-        style={{ background: product.visual.accent }}
-      />
-
-      <div
-        className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/88 shadow-[0_32px_70px_rgba(50,31,28,.16)] ${packageClasses}`}
-      >
-        {product.visual.package === "pump" ? (
-          <>
-            <div className="absolute -top-[10%] left-1/2 h-[11%] w-[34%] -translate-x-1/2 rounded-t-lg bg-white/95" />
-            <div
-              className="absolute -top-[13%] left-[48%] h-[4%] w-[30%] rounded-full"
-              style={{ background: product.visual.ink }}
-            />
-          </>
-        ) : null}
-
-        {product.visual.package === "tube" ? (
-          <div
-            className="absolute bottom-0 left-0 right-0 h-[9%] rounded-b-[.9rem]"
-            style={{ background: product.visual.ink }}
-          />
-        ) : (
-          <div
-            className="absolute top-0 left-0 right-0 h-[12%] rounded-t-[1.1rem]"
-            style={{ background: product.visual.ink }}
-          />
-        )}
-
-        <div className="absolute inset-x-[12%] top-[29%] text-center">
-          <p
-            className="text-[clamp(.45rem,1.2vw,.72rem)] font-semibold uppercase tracking-[0.14em]"
-            style={{ color: product.visual.ink }}
-          >
-            {product.brand}
-          </p>
-          <div
-            className="mx-auto mt-3 h-px w-8 opacity-45"
-            style={{ background: product.visual.ink }}
-          />
-          <p
-            className="mt-3 text-[clamp(.42rem,1vw,.62rem)] leading-tight opacity-80"
-            style={{ color: product.visual.ink }}
-          >
-            {product.category}
-          </p>
-        </div>
-      </div>
-
-      <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between gap-3">
-        <p
-          className="text-[10px] font-semibold uppercase tracking-[0.16em] opacity-60"
-          style={{ color: product.visual.ink }}
-        >
-          {product.routineStep}
-        </p>
-        <span
-          className="h-2.5 w-2.5 rounded-full"
-          style={{ background: product.visual.accent }}
-        />
-      </div>
+      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 300 360" fill="none" focusable="false">
+        <circle cx="270" cy="35" r="85" fill={visual.accent} opacity=".08" />
+        <circle cx="25" cy="330" r="95" fill={visual.accent} opacity=".08" />
+        <ellipse cx="150" cy="294" rx="57" ry="9" fill={visual.ink} opacity=".08" />
+        {pump ? <>
+          <rect x="137" y="63" width="26" height="25" rx="4" fill="white" />
+          <rect x="138" y="59" width="45" height="8" rx="4" fill={visual.ink} />
+        </> : null}
+        <rect x="103" y="83" width="94" height="204" rx={tube ? 30 : 20} fill="white" fillOpacity=".9" />
+        {tube
+          ? <path d="M103 268H197V273Q197 287 181 287H119Q103 287 103 273Z" fill={visual.ink} />
+          : <path d="M103 107V103Q103 83 123 83H177Q197 83 197 103V107Z" fill={visual.ink} />}
+        {/* Decorative label marks stay inside the package even at 40px thumbnail size.
+            Product names, brands and categories are rendered by the surrounding UI. */}
+        <rect x="121" y="151" width="58" height="7" rx="2" fill={visual.ink} opacity=".75" />
+        <rect x="129" y="166" width="42" height="4" rx="2" fill={visual.ink} opacity=".45" />
+        <path d="M133 192H167" stroke={visual.ink} strokeOpacity=".3" />
+        <rect x="125" y="209" width="50" height="4" rx="2" fill={visual.ink} opacity=".35" />
+        <rect x="135" y="220" width="30" height="4" rx="2" fill={visual.ink} opacity=".25" />
+      </svg>
     </div>
   );
 }

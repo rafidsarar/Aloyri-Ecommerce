@@ -282,11 +282,11 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
                   ? publicCategories.map(item => (
                     <Link key={item.slug} href={item.href} onClick={closeMenu}
                       aria-current={current(item.href) ? "page" : undefined}
-                      className="store-mobile-tool store-category-nav-item flex min-h-16 items-center gap-2 rounded-xl p-2 text-[13px] transition hover:brightness-95">
+                      className="store-mobile-tool store-category-nav-item flex min-w-0 min-h-16 items-center gap-2 rounded-xl p-2 text-[13px] transition hover:brightness-95">
                       <span aria-hidden="true" className="w-10 shrink-0">{(() => {
                         const photo = products.find(product => matchesCategory(product.category, item.name) && product.merchandisingOutOfStockMode !== "hide");
                         return photo ? <ProductMedia product={photo} sizes="40px" className="aspect-square rounded-lg" /> : <span className="grid h-10 place-items-center rounded-lg bg-[var(--store-surface)] text-base text-[var(--store-accent)]">{item.name.charAt(0)}</span>;
-                      })()}</span><span className="min-w-0 break-words">{item.name}</span></Link>
+                      })()}</span><span className="min-w-0 [overflow-wrap:anywhere]">{item.name}</span></Link>
                   ))
                   : <p className="col-span-2 px-2 py-3 text-xs text-[var(--store-muted)]">{synced ? "Categories will appear here when available." : "Loading categories…"}</p>}
                 {!links.some(([, href]) => href === "/shop?stock=in-stock") ? <Link href="/shop?stock=in-stock" onClick={closeMenu} aria-current={current("/shop?stock=in-stock") ? "page" : undefined} className="store-mobile-tool rounded-lg px-3 py-2.5 text-[13px]">Available now</Link> : null}
