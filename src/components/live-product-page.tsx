@@ -131,7 +131,7 @@ export function LiveProductPage({
 
       <div className="kanva-product-hero grid gap-8 lg:grid-cols-[1.08fr_.92fr] lg:gap-14">
         <div className="kanva-product-gallery" data-kanva-reveal>
-          <div className="kanva-product-visual" data-kanva-parallax>
+          <div className="kanva-product-visual" data-kanva-cursor>
           <ProductMedia
             product={product}
             priority
