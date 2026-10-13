@@ -40,7 +40,6 @@ export function StorefrontMotion({ children, className = "" }: { children: React
           if (rect.bottom < -100 || rect.top > innerHeight + 100) return;
           const progress = Math.max(-1, Math.min(1, (innerHeight / 2 - rect.top - rect.height / 2) / innerHeight));
           scene.style.setProperty("--drift", `${progress * 100}px`);
-          scene.style.setProperty("--turn", `${progress * 32}deg`);
         });
       };
       const schedule = () => { if (!frame) frame = requestAnimationFrame(update); };
@@ -74,7 +73,7 @@ export function StorefrontMotion({ children, className = "" }: { children: React
         node.removeEventListener("pointermove", pointer);
         node.removeEventListener("pointerleave", reset);
         delete node.dataset.motion;
-        scenes.forEach(scene => ["--drift", "--turn", "--pointer-x", "--pointer-y"].forEach(name => scene.style.removeProperty(name)));
+        scenes.forEach(scene => ["--drift", "--pointer-x", "--pointer-y"].forEach(name => scene.style.removeProperty(name)));
       };
     };
     setup();
@@ -87,14 +86,4 @@ export function StorefrontMotion({ children, className = "" }: { children: React
 export function RevealText({ children }: { children: string }) {
   const words = children.split(" ");
   return <span data-text-reveal>{words.map((word, index) => <span className="reveal-word" style={{ "--word": Math.min(index, 12) } as CSSProperties} key={`${index}-${word}`}>{word}{index < words.length - 1 ? " " : ""}</span>)}</span>;
-}
-
-/** Decorative botanical silhouette, with independent pointer depths. */
-export function BotanicalScene() {
-  return <div className="botanical-scene" data-motion-scene aria-hidden="true">
-    <div className="motion-halo motion-background" />
-    <div className="botanical-stem motion-midground"><i /><i /><i /><i /></div>
-    <div className="botanical-orbit motion-foreground"><span className="motion-rotate">✳</span></div>
-    <span className="botanical-caption">A little care, every day.</span>
-  </div>;
 }

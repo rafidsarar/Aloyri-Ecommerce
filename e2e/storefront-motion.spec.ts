@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
 
-test("scroll reverses scene rotation and pointer layers have different depths", async ({ page }) => {
+test("scroll reverses scene parallax and pointer movement remains available", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.goto("/shop");
-  const scene = page.locator(".botanical-scene");
+  await page.goto("/");
+  const scene = page.locator(".store-hero[data-motion-scene]").first();
   await expect(page.locator('[data-motion="enabled"]')).toBeVisible();
-  const turn = () => scene.evaluate(el => parseFloat((el as HTMLElement).style.getPropertyValue("--turn")));
+  const turn = () => scene.evaluate(el => parseFloat((el as HTMLElement).style.getPropertyValue("--drift")));
   const initial = await turn();
   await page.evaluate(() => window.scrollTo(0, 180));
   await expect.poll(turn).toBeGreaterThan(initial);
@@ -14,11 +14,11 @@ test("scroll reverses scene rotation and pointer layers have different depths", 
   const box = await scene.boundingBox();
   await page.mouse.move(box!.x + box!.width * .8, box!.y + box!.height * .4);
   await expect.poll(() => scene.evaluate(el => parseFloat((el as HTMLElement).style.getPropertyValue("--pointer-x")))).toBeGreaterThan(0);
-  const transforms = await scene.locator('.motion-midground,.motion-foreground').evaluateAll(els => els.map(el => getComputedStyle(el).transform));
+  const transforms = await scene.locator('.motion-background,.motion-midground').evaluateAll(els => els.map(el => getComputedStyle(el).transform));
   expect(transforms[0]).not.toBe(transforms[1]);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(page.locator('[data-motion="enabled"]')).toHaveCount(0);
-  await expect(scene.locator('.motion-rotate')).toHaveCSS('transform', 'none');
+  await expect(scene.locator('.motion-midground')).toHaveCSS('transform', 'none');
 });
 
 test("routine cards stack on desktop and reveal words on arrival", async ({ page }) => {
