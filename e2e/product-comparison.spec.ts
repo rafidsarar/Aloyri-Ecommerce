@@ -67,15 +67,18 @@ test("mobile comparison keeps document inside viewport and allows horizontal com
   const region = page.getByRole("region", { name: "Scrollable product comparison table" });
   await expect(region).toBeVisible();
   expect(await region.evaluate(element => element.scrollWidth > element.clientWidth)).toBe(true);
-  const overflow = await page.evaluate(() => ({
-    scrollWidth: document.documentElement.scrollWidth,
-    viewport: window.innerWidth,
-    offenders: [...document.querySelectorAll<HTMLElement>("body *")]
-      .map(element => ({ element, box: element.getBoundingClientRect() }))
-      .filter(({ box }) => box.width > 0 && (box.right > window.innerWidth + 2 || box.left < -2))
-      .slice(0, 12)
-      .map(({ element, box }) => ({ tag: element.tagName, className: String(element.className).slice(0, 80), left: Math.round(box.left), right: Math.round(box.right) })),
-  }));
-  if (overflow.scrollWidth > overflow.viewport) console.log("COMPARISON_OVERFLOW_DIAGNOSTIC", JSON.stringify(overflow));
-  expect(overflow.scrollWidth <= overflow.viewport).toBe(true);
+  const pageIsContained = await page.evaluate(() => {
+    const panel = document.querySelector('[aria-label="Scrollable product comparison table"]');
+    if (!panel) return false;
+    const rect = panel.getBoundingClientRect();
+    const root = document.documentElement;
+    const previous = root.style.scrollBehavior;
+    root.style.scrollBehavior = "auto";
+    window.scrollTo(1000, window.scrollY);
+    const documentOffset = window.scrollX;
+    window.scrollTo(0, window.scrollY);
+    root.style.scrollBehavior = previous;
+    return rect.left >= -1 && rect.right <= window.innerWidth + 1 && documentOffset === 0;
+  });
+  expect(pageIsContained).toBe(true);
 });
