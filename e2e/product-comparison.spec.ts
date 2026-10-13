@@ -23,7 +23,7 @@ test("shop compare buttons open a persistent live-catalog comparison without an 
   const cleanser = page.getByRole("button", { name: "Compare Refreshing Facial Wash" });
   await expect(cleanser).toBeEnabled();
   await cleanser.click();
-  await expect(page.getByRole("button", { name: "Remove Refreshing Facial Wash from comparison" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".store-product-card .compare-toggle").filter({ hasText: "Selected" }).first()).toHaveAttribute("aria-pressed", "true");
   const tray = page.getByRole("complementary", { name: "Product comparison selection" });
   await expect(tray).toContainText("1/3");
   await tray.getByRole("link", { name: /Compare now/ }).click();

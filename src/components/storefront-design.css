@@ -122,3 +122,6 @@
 .storefront-design .store-product-card-action .compare-toggle { background: var(--store-surface); color: var(--store-accent); border: 1px solid var(--design-line); }
 .storefront-design .store-product-card-action .compare-toggle[aria-pressed="true"] { background: var(--design-soft); border-color: var(--store-accent); }
 .storefront-design .store-product-card-action .compare-toggle:disabled { background: var(--design-soft); color: var(--store-muted); }
+
+/* Keep horizontal table scrolling local to the comparison panel, not the document. */
+.storefront-design[data-storefront-page="compare"] { overflow-x: clip; }
