@@ -29,7 +29,7 @@ test("product detail has an editorial hero and retains live purchase controls", 
   await expect(page.getByRole("heading", { name: "Refreshing Facial Wash" })).toBeVisible();
   await expect(page.getByRole("heading", { name: /Care that fits your rhythm/i })).toBeVisible();
   await expect(page.getByRole("navigation", { name: "Product information" })).toBeVisible();
-  await expect(page.getByText(/৳\s?749/).first()).toBeVisible();
+  await expect(page.locator(".kanva-product-price").getByText(/749/)).toBeVisible();
   await page.getByRole("button", { name: "Add to cart", exact: true }).first().click();
   await page.getByRole("button", { name: /^Cart with 1 item$/ }).click();
   await expect(page.getByRole("dialog", { name: "Shopping cart" }).getByText("Refreshing Facial Wash", { exact: true })).toBeVisible();
