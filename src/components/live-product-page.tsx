@@ -117,10 +117,10 @@ export function LiveProductPage({
   const routinePlacementId = recommendationPlacementId("routine", product.id);
 
   return (
-    <main className="shell py-8 md:py-12">
+    <main className="kanva-product-page shell py-7 md:py-12">
       <nav
         aria-label="Breadcrumb"
-        className="mb-7 flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#713a35]/45"
+        className="kanva-breadcrumb mb-9 flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#713a35]/45"
       >
         <Link href="/">Home</Link>
         <span>/</span>
@@ -129,14 +129,17 @@ export function LiveProductPage({
         <span className="text-[#321f1c]/48">{product.name}</span>
       </nav>
 
-      <div className="grid gap-8 lg:grid-cols-[1.08fr_.92fr] lg:gap-14">
-        <div>
+      <div className="kanva-product-hero grid gap-8 lg:grid-cols-[1.08fr_.92fr] lg:gap-14">
+        <div className="kanva-product-gallery" data-kanva-reveal>
+          <div className="kanva-product-visual" data-kanva-parallax>
           <ProductMedia
             product={product}
             priority
             sizes="(max-width: 1024px) 90vw, 720px"
-            className="aspect-[4/5] rounded-[2rem] soft-shadow"
+            className="kanva-product-image aspect-[4/5] rounded-[2rem] soft-shadow"
           />
+          <span className="kanva-product-image-caption" aria-hidden="true">THE ALOYRI EDIT · DAILY SKINCARE</span>
+          </div>
           {verified?.photo && !product.mediaPath ? (
             <p className="mt-3 text-[11px] leading-5 text-[#321f1c]/42">
               Product photography:{" "}
@@ -151,7 +154,7 @@ export function LiveProductPage({
               {verified.photo.exactVariant ? " · exact listed variant" : ""}
             </p>
           ) : null}
-          <div className="mt-4 grid grid-cols-3 gap-3">
+          <div className="kanva-product-specs mt-4 grid grid-cols-3 gap-3">
             <div className="rounded-[1.1rem] bg-[#f5e8e2] p-4">
               <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[#713a35]/46">
                 Texture
@@ -179,7 +182,7 @@ export function LiveProductPage({
           </div>
         </div>
 
-        <div className="lg:sticky lg:top-32 lg:self-start lg:py-7">
+        <div className="kanva-product-purchase lg:sticky lg:top-32 lg:self-start lg:py-7" data-kanva-reveal>
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full bg-[#f5e8e2] px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-[#713a35]">
               {product.category}
@@ -201,15 +204,15 @@ export function LiveProductPage({
             </span>
           </div>
 
-          <p className="mt-7 text-xs font-semibold uppercase tracking-[0.2em] text-[#713a35]/48">
+          <p className="kanva-product-brand mt-7 text-xs font-semibold uppercase tracking-[0.2em] text-[#713a35]/48">
             {product.brand}
           </p>
-          <h1 className="display mt-3 break-words text-3xl leading-tight sm:text-5xl lg:text-6xl">
+          <h1 className="kanva-product-name display mt-3 break-words text-3xl leading-tight sm:text-5xl lg:text-6xl">
             {product.name}
           </h1>
           <ProductRatingSummary data={reviewData} />
 
-          <div className="mt-6 flex flex-wrap items-end justify-between gap-3 border-b border-[#713a35]/10 pb-7">
+          <div className="kanva-product-price mt-6 flex flex-wrap items-end justify-between gap-3 border-b border-[#713a35]/10 pb-7">
             <div>
               <div className="flex items-baseline gap-2">
                 <p className="text-xl font-semibold">{formatPrice(salePrice)}</p>
@@ -229,11 +232,11 @@ export function LiveProductPage({
             </p>
           </div>
 
-          <p className="mt-7 max-w-xl text-base leading-7 text-[#321f1c]/60">
+          <p className="kanva-product-description mt-7 max-w-xl text-base leading-7 text-[#321f1c]/60">
             {product.description}
           </p>
 
-          <div className="mt-7 rounded-[1.3rem] bg-[#f7ebe6] p-5">
+          <div className="kanva-product-routine mt-7 rounded-[1.3rem] bg-[#f7ebe6] p-5">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#713a35]/48">
               Routine note
             </p>
@@ -247,7 +250,7 @@ export function LiveProductPage({
             <p>Inside Dhaka ৳80 · Outside Dhaka ৳150. Your final delivery charge is shown at checkout.</p>
             <Link href="/shipping-delivery" className="inline-flex min-h-10 items-center font-semibold text-[#713a35] underline underline-offset-4">Delivery information</Link>
           </div>
-          <div className="mt-7">
+          <div className="kanva-product-actions mt-7">
             <AddToCart productId={product.id} />
             <ProductPreferenceButtons productId={product.id} />
             <ProductAlertSignup
@@ -264,14 +267,29 @@ export function LiveProductPage({
         </div>
       </div>
 
-      <nav aria-label="Product information" className="mt-8 flex flex-wrap gap-3 border-y border-[#713a35]/10 py-4 text-sm font-semibold text-[#713a35]">
+      <section className="kanva-product-chapter" aria-label="Skincare details" data-kanva-reveal>
+        <div className="kanva-product-chapter-copy">
+          <p className="kanva-eyebrow">THE ALOYRI SKIN RITUAL</p>
+          <h2 className="display">Care that fits <em>your rhythm.</em></h2>
+          <p>{product.bestFor || product.description}</p>
+          <a href="#product-details" className="kanva-text-link">Explore the details <ArrowIcon className="h-4 w-4" /></a>
+        </div>
+        <div className="kanva-product-chapter-art" aria-hidden="true">
+          <div className="kanva-product-orbit" data-kanva-rotate><span>AL</span></div>
+          <p>TEXTURE / {product.texture || "SKINCARE"}</p>
+          <p>ROUTINE / {product.routineStep || "YOUR DAILY RITUAL"}</p>
+        </div>
+      </section>
+
+      <div id="product-details" className="kanva-product-details-anchor" />
+      <nav aria-label="Product information" className="kanva-product-section-nav mt-8 flex flex-wrap gap-3 border-y border-[#713a35]/10 py-4 text-sm font-semibold text-[#713a35]">
         {verified ? <a href="#product-guidance" className="rounded-full bg-[#f5e8e2] px-4 py-3">Product guidance</a> : null}
         <a href="#reviews" className="rounded-full bg-[#f5e8e2] px-4 py-3">Customer reviews</a>
         <a href="#delivery-information" className="rounded-full bg-[#f5e8e2] px-4 py-3">Delivery &amp; returns</a>
       </nav>
 
       {verified ? (
-        <section id="product-guidance" className="mt-8 rounded-[1.6rem] border border-[#713a35]/10 bg-[#f7ebe6] p-6 sm:p-8">
+        <section id="product-guidance" data-kanva-reveal className="mt-8 rounded-[1.6rem] border border-[#713a35]/10 bg-[#f7ebe6] p-6 sm:p-8">
           <div className="grid gap-7 lg:grid-cols-[.72fr_1.28fr]">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#713a35]/48">
@@ -313,7 +331,7 @@ export function LiveProductPage({
         </section>
       ) : null}
 
-      <section className={`mt-5 grid gap-5 ${careNotes.length > 0 ? "lg:grid-cols-2" : ""}`}>
+      <section data-kanva-reveal className={`mt-5 grid gap-5 ${careNotes.length > 0 ? "lg:grid-cols-2" : ""}`}>
         <div className="rounded-[1.6rem] border border-[#713a35]/10 bg-white/65 p-6 sm:p-8">
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#713a35]/48">
             How to use
@@ -352,7 +370,7 @@ export function LiveProductPage({
         ) : null}
       </section>
 
-      <section className="mt-5 rounded-[1.6rem] border border-[#713a35]/10 bg-white/65 p-6 sm:p-8">
+      <section data-kanva-reveal className="mt-5 rounded-[1.6rem] border border-[#713a35]/10 bg-white/65 p-6 sm:p-8">
         <div className="grid gap-7 lg:grid-cols-[.72fr_1.28fr]">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#713a35]/48">
@@ -423,7 +441,7 @@ export function LiveProductPage({
         sourceLabel={verified?.sourceLabel}
       />
 
-      <section id="delivery-information" aria-label="Delivery and returns" className="mt-5 grid gap-4 md:grid-cols-3">
+      <section id="delivery-information" data-kanva-reveal aria-label="Delivery and returns" className="mt-5 grid gap-4 md:grid-cols-3">
         <Link
           href="/shipping-delivery"
           className="rounded-[1.3rem] border border-[#713a35]/10 bg-white/60 p-5 transition hover:bg-white"
