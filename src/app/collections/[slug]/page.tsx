@@ -98,13 +98,13 @@ export default async function CollectionPage({
   }
 
   return (
-    <main className="shell py-12 md:py-16">
+    <main className="kanva-collection-page shell py-12 md:py-16">
       <AnalyticsViewTracker
         event="collection_view"
         properties={{ collectionId: collection.id }}
         context={{ collectionId: collection.id }}
       />
-      <div className="grid gap-8 lg:grid-cols-[1fr_.72fr] lg:items-end">
+      <div className="kanva-page-heading grid gap-8 lg:grid-cols-[1fr_.72fr] lg:items-end" data-kanva-reveal>
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/48">
             {collection.eyebrow || "Aloyri collection"}
