@@ -144,7 +144,7 @@ export function CompareProductsClient() {
             <h2 className="text-lg font-semibold">Side-by-side details</h2>
             <p className="text-xs text-[#713a35]/70 sm:hidden">Swipe horizontally to see each product →</p>
           </div>
-          <div role="region" aria-label="Scrollable product comparison table" tabIndex={0} className="max-w-full overflow-x-auto overscroll-x-contain rounded-2xl border border-[#713a35]/15 bg-white/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#713a35]">
+          <div role="region" aria-label="Scrollable product comparison table" tabIndex={0} style={{ width: "100%", maxWidth: "calc(100vw - 2rem)", overflowX: "auto" }} className="min-w-0 overscroll-x-contain rounded-2xl border border-[#713a35]/15 bg-white/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#713a35]">
             <table className="w-full border-collapse text-left text-sm" style={{ minWidth: 130 + compared.length * 220 }}>
               <caption className="sr-only">Compare live prices, availability, and skincare details for selected products.</caption>
               <thead>
