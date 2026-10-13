@@ -67,5 +67,15 @@ test("mobile comparison keeps document inside viewport and allows horizontal com
   const region = page.getByRole("region", { name: "Scrollable product comparison table" });
   await expect(region).toBeVisible();
   expect(await region.evaluate(element => element.scrollWidth > element.clientWidth)).toBe(true);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  const overflow = await page.evaluate(() => ({
+    scrollWidth: document.documentElement.scrollWidth,
+    viewport: window.innerWidth,
+    offenders: [...document.querySelectorAll<HTMLElement>("body *")]
+      .map(element => ({ element, box: element.getBoundingClientRect() }))
+      .filter(({ box }) => box.width > 0 && (box.right > window.innerWidth + 2 || box.left < -2))
+      .slice(0, 12)
+      .map(({ element, box }) => ({ tag: element.tagName, className: String(element.className).slice(0, 80), left: Math.round(box.left), right: Math.round(box.right) })),
+  }));
+  if (overflow.scrollWidth > overflow.viewport) console.log("COMPARISON_OVERFLOW_DIAGNOSTIC", JSON.stringify(overflow));
+  expect(overflow.scrollWidth <= overflow.viewport).toBe(true);
 });

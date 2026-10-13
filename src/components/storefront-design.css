@@ -125,3 +125,6 @@
 
 /* Keep horizontal table scrolling local to the comparison panel, not the document. */
 .storefront-design[data-storefront-page="compare"] { overflow-x: clip; }
+
+/* A wide comparison table is only scrollable within its labelled region. */
+html:has(.storefront-design[data-storefront-page="compare"]) { overflow-x: clip; }
