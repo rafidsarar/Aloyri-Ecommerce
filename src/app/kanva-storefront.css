@@ -295,8 +295,7 @@
 /* Integration: keep PR #108's enlarged accessible image gallery while
    applying PR #109's editorial detailing to the same page. */
 [data-kanva-storefront] .kanva-product-visual .product-gallery-image {
-  transform: translate3d(var(--kanva-pointer-x, 0px), var(--kanva-pointer-y, 0px), 0);
-  transition: transform 180ms ease-out;
+  transform: none;
 }
 [data-kanva-storefront] .kanva-product-visual .product-gallery-open { border-radius: inherit; }
 [data-kanva-storefront] .kanva-product-visual .product-gallery-zoom { z-index: 2; }
@@ -320,3 +319,18 @@
 @media (prefers-reduced-motion: reduce) {
  [data-kanva-storefront] .kanva-product-visual .product-gallery-image { transform: none !important; transition: none !important; }
 }
+
+/* Keep the product photograph and its frame aligned at every viewport size. */
+[data-kanva-storefront] .kanva-product-visual .product-gallery { border-radius: inherit; }
+[data-kanva-storefront] .kanva-product-visual .product-gallery-image { border-radius: inherit; }
+.product-gallery-image:has(> div:not(.product-artwork)) > .product-artwork { visibility: hidden; }
+.product-gallery-image > div:not(.product-artwork) {
+  inset: 5%; overflow: hidden; border-radius: 18px;
+}
+.product-gallery-image > div:not(.product-artwork) img { padding: 0; }
+.product-add-controls { display: flex; flex-wrap: wrap; align-items: stretch; gap: 12px; }
+.product-add-controls > button { flex: 1 1 150px; min-height: 52px; border-radius: 12px; }
+.product-quantity { display: flex; align-items: center; border: 1px solid var(--design-line); border-radius: 12px; overflow: hidden; }
+.product-quantity button { width: 44px; min-height: 52px; font-size: 20px; }
+.product-quantity button:disabled { opacity: .35; cursor: not-allowed; }
+.product-quantity output { min-width: 28px; text-align: center; font-variant-numeric: tabular-nums; }

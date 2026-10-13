@@ -132,7 +132,7 @@ export function LiveProductPage({
 
       <div className="product-detail-layout kanva-product-hero grid gap-8 lg:grid-cols-[1.08fr_.92fr] lg:gap-14">
         <div className="kanva-product-gallery" data-kanva-reveal>
-          <div className="kanva-product-visual" data-kanva-cursor>
+          <div className="kanva-product-visual">
             <ProductGallery product={product} />
             <span className="kanva-product-image-caption" aria-hidden="true">THE ALOYRI EDIT · DAILY SKINCARE</span>
           </div>
@@ -233,7 +233,7 @@ export function LiveProductPage({
           </p>
 
           <div className="product-purchase-actions kanva-product-actions mt-7">
-            <AddToCart productId={product.id} />
+            <AddToCart productId={product.id} showQuantity />
             <ProductPreferenceButtons productId={product.id} />
             <ProductAlertSignup
               productId={product.id}
