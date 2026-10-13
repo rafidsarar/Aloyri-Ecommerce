@@ -17,7 +17,6 @@ export function HeroBannerFrame({ copy, visual, background, style = "soft", alig
     <div className={`store-hero-art min-w-0 relative min-h-[280px] lg:min-h-[420px] p-6 sm:p-9 lg:p-12 ${showImageOnMobile ? "" : "hidden lg:block"}`}>
       <div className="motion-background absolute inset-0 bg-[radial-gradient(circle_at_70%_18%,rgba(255,255,255,.85),transparent_36%)]" />
       <div className="motion-midground relative mx-auto flex h-full max-w-[580px] items-center"><div className="relative w-full" data-kanva-parallax>{visual}</div></div>
-      <div aria-hidden="true" className="hero-motion-seal motion-foreground"><span className="motion-rotate">✳</span></div>
     </div>
   </div>;
 }

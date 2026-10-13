@@ -111,6 +111,5 @@
 .home-story-section .grid:has(> .home-story-products:empty) { grid-template-columns: minmax(0,1fr); }
 
 /* Editorial accents inspired by botanical skincare campaigns. */
-.hero-motion-seal { position: absolute; right: 7%; top: 7%; pointer-events: none; color: var(--store-accent); font-size: clamp(38px,5vw,70px); opacity: .6; }
 .skincare-home .home-focus-heading { padding-block: 16px; }
 .skincare-home .home-routine-card > span { font-size: 3rem; font-weight: 400; }
