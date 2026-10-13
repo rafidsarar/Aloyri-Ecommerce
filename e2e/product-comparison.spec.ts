@@ -78,6 +78,7 @@ test("mobile comparison keeps document inside viewport and allows horizontal com
     const documentOffset = window.scrollX;
     window.scrollTo(0, window.scrollY);
     root.style.scrollBehavior = previous;
+    console.log("COMPARISON_MOBILE_BOUNDS", JSON.stringify({ left: rect.left, right: rect.right, width: rect.width, viewport: window.innerWidth, documentOffset, rootScrollWidth: root.scrollWidth }));
     return rect.left >= -1 && rect.right <= window.innerWidth + 1 && documentOffset === 0;
   });
   expect(pageIsContained).toBe(true);

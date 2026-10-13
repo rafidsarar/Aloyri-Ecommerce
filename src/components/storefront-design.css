@@ -128,3 +128,8 @@
 
 /* A wide comparison table is only scrollable within its labelled region. */
 html:has(.storefront-design[data-storefront-page="compare"]) { overflow-x: clip; }
+
+/* Prevent wide comparison content from creating document-level horizontal panning. */
+html:has(.storefront-design[data-storefront-page="compare"]),
+body:has(.storefront-design[data-storefront-page="compare"]) { overflow-x: hidden !important; max-width: 100%; }
+.storefront-design[data-storefront-page="compare"] main.shell { min-width: 0; max-width: calc(100vw - 2rem); }
