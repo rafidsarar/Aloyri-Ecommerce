@@ -318,6 +318,10 @@ export function ShopClient({
             )}
       </nav>
 
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#713a35]/12 bg-[#fff9f6] px-4 py-3">
+        <p className="text-xs leading-5 text-[#321f1c]/70">Not sure which skincare product suits you? Compare prices, sizes, and skin concerns side by side.</p>
+        <Link href="/compare" className="inline-flex min-h-11 shrink-0 items-center rounded-full border border-[#713a35]/25 px-4 text-xs font-semibold text-[#713a35] hover:bg-[#f5e8e2]">Compare products →</Link>
+      </div>
       <div className="relative mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-[#713a35]/10 pb-4">
         <p role="status" className="text-xs text-[#796762] sm:text-sm">
           {refreshing ? "Refreshing…" : `${filtered.length} ${filtered.length === 1 ? "product" : "products"}`}

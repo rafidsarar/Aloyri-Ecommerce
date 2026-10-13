@@ -38,6 +38,7 @@ export function Footer({ description }: { description: string }) {
               <Link href="/shop">All skincare</Link>
               <Link href="/shop?sort=bestseller">Bestsellers</Link>
               <Link href="/routine-finder">Routine finder</Link>
+              <Link href="/compare">Compare products</Link>
               {synced ? directory.map(category => <Link key={category.slug} href={category.href}>{category.name}</Link>) : null}
             </div>
           </div>

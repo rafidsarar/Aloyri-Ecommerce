@@ -13,6 +13,7 @@ import { PublicPagePreviewBridge } from "@/components/public-page-preview-bridge
 import { Header } from "@/components/header";
 import { GlobalStorefrontSearch } from "@/components/global-storefront-search";
 import { KanvaMotion } from "@/components/kanva-motion";
+import { CompareTray } from "@/components/compare-tray";
 
 export function SiteChrome({
   children,
@@ -73,6 +74,7 @@ export function SiteChrome({
       </a>
       <Header announcement={draft?.announcement ?? announcement} presentation={displayPresentation} />
       <GlobalStorefrontSearch key={pathname} synonymGroups={searchSynonymGroups} />
+      <CompareTray />
       <div id="main-content" tabIndex={-1}>
         {children}
       </div>
