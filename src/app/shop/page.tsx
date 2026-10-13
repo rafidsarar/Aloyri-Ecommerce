@@ -1,4 +1,4 @@
-import { StorefrontMotion, RevealText, BotanicalScene } from "@/components/storefront-motion";
+import { StorefrontMotion, RevealText } from "@/components/storefront-motion";
 import type { Metadata } from "next";
 import { VisualPageSections } from "@/components/visual-page-sections";
 import { shopSeoMetadata } from "@/lib/seo-manager";
@@ -53,7 +53,7 @@ export default async function ShopPage({
         <p className="mt-2 max-w-xl text-sm leading-6 text-[#321f1c]/55">
           Discover your everyday skincare essentials.
         </p>
-      </div><BotanicalScene /></header>
+      </div></header>
 
       <ShopClient
         key={[query.category, query.q, query.brand, query.focus, query.stock, query.price, query.sort].join(":")}

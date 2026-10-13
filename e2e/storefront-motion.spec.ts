@@ -2,8 +2,8 @@ import { expect, test } from "@playwright/test";
 
 test("scroll reverses scene parallax and pointer movement remains available", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.goto("/shop");
-  const scene = page.locator(".botanical-scene");
+  await page.goto("/");
+  const scene = page.locator(".store-hero[data-motion-scene]").first();
   await expect(page.locator('[data-motion="enabled"]')).toBeVisible();
   const turn = () => scene.evaluate(el => parseFloat((el as HTMLElement).style.getPropertyValue("--drift")));
   const initial = await turn();

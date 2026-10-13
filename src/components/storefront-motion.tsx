@@ -87,12 +87,3 @@ export function RevealText({ children }: { children: string }) {
   const words = children.split(" ");
   return <span data-text-reveal>{words.map((word, index) => <span className="reveal-word" style={{ "--word": Math.min(index, 12) } as CSSProperties} key={`${index}-${word}`}>{word}{index < words.length - 1 ? " " : ""}</span>)}</span>;
 }
-
-/** Decorative botanical silhouette, with independent pointer depths. */
-export function BotanicalScene() {
-  return <div className="botanical-scene" data-motion-scene aria-hidden="true">
-    <div className="motion-halo motion-background" />
-    <div className="botanical-stem motion-midground"><i /><i /><i /><i /></div>
-    <span className="botanical-caption">A little care, every day.</span>
-  </div>;
-}

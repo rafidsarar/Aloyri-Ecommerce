@@ -4,18 +4,9 @@
 [data-motion="enabled"] [data-revealed="true"] .reveal-word { transition: opacity .65s ease, transform .65s cubic-bezier(.2,.7,.2,1); transition-delay: calc(var(--word) * 35ms); }
 .motion-background { transform: translateY(calc(var(--drift) * .22)); }
 .motion-midground { transform: translate(calc(var(--pointer-x) * .5), calc(var(--drift) * -.28 + var(--pointer-y) * .5)); }
-.motion-halo { position: absolute; inset: 12%; border-radius: 50%; background: radial-gradient(ellipse,#f7e5cd 0%,#dddccb 70%); }
-.botanical-scene { position: relative; min-height: 340px; overflow: hidden; background: #e9ebdf; border-radius: 26px; isolation: isolate; }
-.botanical-stem { position: absolute; height: 220px; width: 2px; background: #6e7960; left: 50%; top: 16%; rotate: -18deg; }
-.botanical-stem i { position: absolute; width: 65px; height: 95px; background: linear-gradient(120deg,#a0aa85,#69795b); border-radius: 90% 0 90% 0; right: 0; top: 10px; }
-.botanical-stem i:nth-child(2) { left: 0; top: 65px; scale: -1 1; }
-.botanical-stem i:nth-child(3) { top: 120px; scale: .8; transform-origin: right; }
-.botanical-stem i:nth-child(4) { left: 0; top: 170px; scale: -.65 .65; transform-origin: center top; }
-.botanical-caption { position: absolute; bottom: 24px; left: 24px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; }
-.editorial-page-header { display: grid; grid-template-columns: 1fr .65fr; align-items: center; gap: 40px; padding: 40px 0; margin-bottom: 26px; }
+.editorial-page-header { display: block; padding: 32px 0; margin-bottom: 26px; }
 .editorial-page-header h1 { font-size: clamp(2.8rem,5vw,5.5rem); letter-spacing: -.04em; }
 .editorial-about { padding-top: 32px; }
-.editorial-about > .botanical-scene { max-width: 1240px; margin: 0 auto; min-height: 300px; }
 @media (min-width: 900px) and (min-height: 650px) and (prefers-reduced-motion: no-preference) {
   .skincare-home .home-routine-layout { grid-template-columns: .85fr 1.15fr; align-items: start; gap: 70px; }
   .skincare-home .home-routine-layout > div:first-child { position: sticky; top: 160px; }
@@ -27,9 +18,6 @@
 }
 @media (max-width: 767px) {
   .editorial-page-header { grid-template-columns: 1fr; gap: 22px; padding-top: 8px; }
-  .editorial-page-header .botanical-scene { min-height: 200px; }
-  .editorial-page-header .botanical-stem { scale: .7; transform-origin: center top; }
-  .editorial-about > .botanical-scene { margin-inline: 20px; min-height: 240px; }
   .motion-background,.motion-midground { transform: none; }
 }
 @media (prefers-reduced-motion: reduce) {
