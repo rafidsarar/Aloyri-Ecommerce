@@ -5,7 +5,8 @@ import { useEffect } from "react";
 import { AddToCart } from "@/components/add-to-cart";
 import { useCatalog } from "@/components/catalog-provider";
 import { ArrowIcon } from "@/components/icons";
-import { ProductMedia } from "@/components/product-media";
+import { ProductGallery } from "@/components/product-gallery";
+import { StorefrontMotion, RevealText } from "@/components/storefront-motion";
 import { ProductCard } from "@/components/product-card";
 import {
   ProductRatingSummary,
@@ -117,7 +118,7 @@ export function LiveProductPage({
   const routinePlacementId = recommendationPlacementId("routine", product.id);
 
   return (
-    <main className="shell py-8 md:py-12">
+    <StorefrontMotion key={product.id}><main className="product-detail-page shell py-8 md:py-12">
       <nav
         aria-label="Breadcrumb"
         className="mb-7 flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#713a35]/45"
@@ -129,14 +130,9 @@ export function LiveProductPage({
         <span className="text-[#321f1c]/48">{product.name}</span>
       </nav>
 
-      <div className="grid gap-8 lg:grid-cols-[1.08fr_.92fr] lg:gap-14">
+      <div className="product-detail-layout grid gap-8 lg:grid-cols-[1.08fr_.92fr] lg:gap-14">
         <div>
-          <ProductMedia
-            product={product}
-            priority
-            sizes="(max-width: 1024px) 90vw, 720px"
-            className="aspect-[4/5] rounded-[2rem] soft-shadow"
-          />
+          <ProductGallery product={product} />
           {verified?.photo && !product.mediaPath ? (
             <p className="mt-3 text-[11px] leading-5 text-[#321f1c]/42">
               Product photography:{" "}
@@ -151,7 +147,7 @@ export function LiveProductPage({
               {verified.photo.exactVariant ? " · exact listed variant" : ""}
             </p>
           ) : null}
-          <div className="mt-4 grid grid-cols-3 gap-3">
+          <div className="product-facts mt-4 grid grid-cols-3 gap-3">
             <div className="rounded-[1.1rem] bg-[#f5e8e2] p-4">
               <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[#713a35]/46">
                 Texture
@@ -179,7 +175,7 @@ export function LiveProductPage({
           </div>
         </div>
 
-        <div className="lg:sticky lg:top-32 lg:self-start lg:py-7">
+        <div className="product-purchase-panel lg:self-start">
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full bg-[#f5e8e2] px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-[#713a35]">
               {product.category}
@@ -233,6 +229,20 @@ export function LiveProductPage({
             {product.description}
           </p>
 
+          <div className="product-purchase-actions mt-7">
+            <AddToCart productId={product.id} />
+            <ProductPreferenceButtons productId={product.id} />
+            <ProductAlertSignup
+              productId={product.id}
+              productName={product.name}
+              outOfStock={(product.availableStock ?? 0) <= 0}
+            />
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[10px] uppercase tracking-[0.14em] text-[#321f1c]/38">
+              <span>Live price</span>
+              <span>Live availability</span>
+              <span>COD checkout</span>
+            </div>
+          </div>
           <div className="mt-7 rounded-[1.3rem] bg-[#f7ebe6] p-5">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#713a35]/48">
               Routine note
@@ -247,25 +257,14 @@ export function LiveProductPage({
             <p>Inside Dhaka ৳80 · Outside Dhaka ৳150. Your final delivery charge is shown at checkout.</p>
             <Link href="/shipping-delivery" className="inline-flex min-h-10 items-center font-semibold text-[#713a35] underline underline-offset-4">Delivery information</Link>
           </div>
-          <div className="mt-7">
-            <AddToCart productId={product.id} />
-            <ProductPreferenceButtons productId={product.id} />
-            <ProductAlertSignup
-              productId={product.id}
-              productName={product.name}
-              outOfStock={(product.availableStock ?? 0) <= 0}
-            />
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[10px] uppercase tracking-[0.14em] text-[#321f1c]/38">
-              <span>Live price</span>
-              <span>Live availability</span>
-              <span>COD checkout</span>
-            </div>
-          </div>
+
         </div>
       </div>
 
       <nav aria-label="Product information" className="mt-8 flex flex-wrap gap-3 border-y border-[#713a35]/10 py-4 text-sm font-semibold text-[#713a35]">
         {verified ? <a href="#product-guidance" className="rounded-full bg-[#f5e8e2] px-4 py-3">Product guidance</a> : null}
+        <a href="#product-use" className="rounded-full bg-[#f5e8e2] px-4 py-3">How to use</a>
+        <a href="#product-ingredients" className="rounded-full bg-[#f5e8e2] px-4 py-3">Ingredients</a>
         <a href="#reviews" className="rounded-full bg-[#f5e8e2] px-4 py-3">Customer reviews</a>
         <a href="#delivery-information" className="rounded-full bg-[#f5e8e2] px-4 py-3">Delivery &amp; returns</a>
       </nav>
@@ -278,7 +277,7 @@ export function LiveProductPage({
                 Manufacturer reference
               </p>
               <h2 className="display mt-2 text-3xl">
-                Product guidance from {verified.sourceLabel}.
+                <RevealText>{`Product guidance from ${verified.sourceLabel}.`}</RevealText>
               </h2>
               <a
                 href={verified.sourceUrl}
@@ -313,7 +312,7 @@ export function LiveProductPage({
         </section>
       ) : null}
 
-      <section className={`mt-5 grid gap-5 ${careNotes.length > 0 ? "lg:grid-cols-2" : ""}`}>
+      <section id="product-use" className={`product-use-section mt-5 grid gap-5 ${careNotes.length > 0 ? "lg:grid-cols-2" : ""}`}>
         <div className="rounded-[1.6rem] border border-[#713a35]/10 bg-white/65 p-6 sm:p-8">
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#713a35]/48">
             How to use
@@ -352,7 +351,7 @@ export function LiveProductPage({
         ) : null}
       </section>
 
-      <section className="mt-5 rounded-[1.6rem] border border-[#713a35]/10 bg-white/65 p-6 sm:p-8">
+      <section id="product-ingredients" className="mt-5 rounded-[1.6rem] border border-[#713a35]/10 bg-white/65 p-6 sm:p-8">
         <div className="grid gap-7 lg:grid-cols-[.72fr_1.28fr]">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#713a35]/48">
@@ -554,6 +553,6 @@ export function LiveProductPage({
           <AddToCart productId={product.id} compact />
         </div>
       </div>
-    </main>
+    </main></StorefrontMotion>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import "./storefront-design.css";
 import { useEffect, useState, type CSSProperties } from "react";
 import { normalizePresentation, defaultPresentation, type StorefrontPresentation } from "@/lib/storefront-presentation";
 import { usePathname } from "next/navigation";
@@ -49,7 +50,7 @@ export function SiteChrome({
 
   return (
     <CatalogProvider>
-      <div data-storefront-columns={displayPresentation.desktopColumns} style={{"--storefront-width": displayPresentation.contentWidth === "comfortable" ? "1200px" : "1440px"} as CSSProperties}>
+      <div className="storefront-design" data-storefront-page={pathname.split("/")[1] || "home"} data-storefront-columns={displayPresentation.desktopColumns} style={{"--storefront-width": displayPresentation.contentWidth === "comfortable" ? "1200px" : "1440px"} as CSSProperties}>
       <CustomerDataCleanup />
       <PublicPagePreviewBridge />
       {!preview ? <StorefrontAnalyticsTracker /> : null}

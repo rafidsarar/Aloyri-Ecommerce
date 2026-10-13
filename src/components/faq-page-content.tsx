@@ -5,7 +5,7 @@ import type { StorefrontConfig } from "@/lib/storefront-admin-store";
 export function FaqPageContent({initial}:{initial:StorefrontConfig["faq"]}) {
   const faq=useBuilderPageContent(initial,"faqContent");
   return (
-    <main data-builder-page-content className="shell py-12 md:py-18">
+    <main data-builder-page-content className="faq-page shell py-12 md:py-18">
       <div className="max-w-3xl">
         <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/48">
           {faq.eyebrow}
