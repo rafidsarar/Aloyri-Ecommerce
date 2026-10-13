@@ -30,6 +30,7 @@ export function Header({ announcement, presentation = defaultPresentation }: { a
   const categoryDestinations = new Set(publicCategories.map(item => item.href));
   const navigation = presentation.navigation.filter(item => item.href !== "/customer-care" && !categoryDestinations.has(item.href));
   if (!navigation.some(item => item.href === "/shop")) navigation.unshift({ label: "Shop all", href: "/shop" });
+  if (!navigation.some(item => item.href === "/compare")) navigation.push({ label: "Compare products", href: "/compare" });
   const links = navigation.filter((item, index, items) => items.findIndex(other => other.href === item.href) === index).map(item => [item.label, item.href]);
   const [open, setOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);

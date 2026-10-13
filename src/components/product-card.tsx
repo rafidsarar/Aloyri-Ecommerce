@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ProductMedia } from "@/components/product-media";
 import { AddToCart } from "@/components/add-to-cart";
+import { CompareToggle } from "@/components/compare-toggle";
 import { useCatalogProduct } from "@/components/catalog-provider";
 import {
   formatPrice,
@@ -124,8 +125,9 @@ export function ProductCard({
           </div>
         </div>
       </Link>
-      <div className="store-product-card-action mt-3">
+      <div className="store-product-card-action mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
         <AddToCart productId={product.id} compact ariaLabel={`Add ${product.name} to cart`} />
+        <CompareToggle productId={product.id} productName={product.name} />
       </div>
     </article>
   );
