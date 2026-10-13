@@ -1,3 +1,4 @@
+import { StorefrontMotion, RevealText } from "@/components/storefront-motion";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -77,16 +78,16 @@ export default async function CategoryPage({
   };
 
   return (
-    <>
+    <StorefrontMotion>
       <main className="kanva-category-page shell py-12 md:py-16">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumb) }} />
-        <div className="kanva-page-heading grid gap-4 border-b border-[#713a35]/10 pb-6 lg:grid-cols-[1fr_.7fr] lg:items-end" data-kanva-reveal>
+        <div className="kanva-page-heading collection-page-intro grid gap-4 border-b border-[#713a35]/10 pb-6 lg:grid-cols-[1fr_.7fr] lg:items-end">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/48">Shop by category</p>
-            <h1 className="display mt-3 text-4xl leading-tight sm:text-5xl">{entry.name}.</h1>
+            <h1 className="display mt-3 text-4xl leading-tight sm:text-5xl"><RevealText>{`${entry.name}.`}</RevealText></h1>
           </div>
           <p className="max-w-xl text-sm leading-7 text-[#321f1c]/52 lg:justify-self-end">
-            Explore the Aloyri {entry.name.toLocaleLowerCase("en")} edit with live product availability and CRM-synced prices.
+            Explore the Aloyri {entry.name.toLocaleLowerCase("en")} edit. Find your everyday essentials with current prices and availability.
           </p>
         </div>
         <ShopClient
@@ -99,6 +100,6 @@ export default async function CategoryPage({
         />
       </main>
       <VisualPageSections layout={config.visualPages.category} />
-    </>
+    </StorefrontMotion>
   );
 }

@@ -1,99 +1,100 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, type ReactNode, type CSSProperties } from "react";
+import "./storefront-motion.css";
 
-/**
- * Progressive enhancement for editorial storefront sections. All content
- * remains visible if JavaScript is unavailable or reduced motion is requested.
- * Motion never changes prices, stock, cart state, or form behavior.
- */
-export function StorefrontMotion() {
+/** Progressive enhancement: content remains visible without JavaScript. */
+export function StorefrontMotion({ children, className = "" }: { children: ReactNode; className?: string }) {
+  const root = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const root = document.querySelector<HTMLElement>("[data-kanva-storefront]");
-    if (!root || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    const observed = new WeakSet<Element>();
-    const revealObserver = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          entry.target.classList.add("kanva-visible");
-          revealObserver.unobserve(entry.target);
-        }
-      },
-      { threshold: 0.08, rootMargin: "0px 0px -30px 0px" },
-    );
-    const observe = () => {
-      root.querySelectorAll<HTMLElement>("[data-kanva-reveal]").forEach((element) => {
-        if (observed.has(element)) return;
-        observed.add(element);
-        revealObserver.observe(element);
+    const node = root.current;
+    if (!node) return;
+    const preference = matchMedia("(prefers-reduced-motion: reduce)");
+    const fine = matchMedia("(hover: hover) and (pointer: fine)");
+    let dispose = () => {};
+    const setup = () => {
+      dispose();
+      if (preference.matches) return;
+      const scenes = [...node.querySelectorAll<HTMLElement>("[data-motion-scene]")];
+      const reveals = [...node.querySelectorAll<HTMLElement>("[data-text-reveal]")];
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.setAttribute("data-revealed", "true");
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12 });
+      reveals.forEach(element => {
+        // Never hide content already visible, including restored scroll positions.
+        const rect = element.getBoundingClientRect();
+        element.dataset.revealed = rect.top < innerHeight && rect.bottom > 0 ? "true" : "false";
+        observer.observe(element);
       });
-    };
-
-    root.dataset.motionReady = "true";
-    observe();
-    const mutationObserver = new MutationObserver(observe);
-    mutationObserver.observe(root, { childList: true, subtree: true });
-
-    let frame = 0;
-    const updateScroll = () => {
-      frame = 0;
-      const viewport = window.innerHeight || 1;
-      root.querySelectorAll<HTMLElement>("[data-kanva-rotate], [data-kanva-parallax]").forEach((element) => {
-        const box = element.getBoundingClientRect();
-        if (box.bottom < 0 || box.top > viewport) return;
-        const progress = Math.max(-1, Math.min(1, (viewport / 2 - (box.top + box.height / 2)) / viewport));
-        if (element.hasAttribute("data-kanva-rotate")) {
-          element.style.setProperty("--kanva-rotation", `${(progress * 18).toFixed(2)}deg`);
-        }
-        if (element.hasAttribute("data-kanva-parallax")) {
-          element.style.setProperty("--kanva-offset", `${(progress * 24).toFixed(1)}px`);
-        }
+      node.dataset.motion = "enabled";
+      let frame = 0;
+      const update = () => {
+        frame = 0;
+        scenes.forEach(scene => {
+          const rect = scene.getBoundingClientRect();
+          if (rect.bottom < -100 || rect.top > innerHeight + 100) return;
+          const progress = Math.max(-1, Math.min(1, (innerHeight / 2 - rect.top - rect.height / 2) / innerHeight));
+          scene.style.setProperty("--drift", `${progress * 100}px`);
+          scene.style.setProperty("--turn", `${progress * 32}deg`);
+        });
+      };
+      const schedule = () => { if (!frame) frame = requestAnimationFrame(update); };
+      const resize = new ResizeObserver(schedule);
+      resize.observe(node);
+      const header = document.querySelector(".store-header");
+      if (header) resize.observe(header);
+      const pointer = (event: PointerEvent) => {
+        if (!fine.matches) return;
+        const scene = (event.target as Element).closest<HTMLElement>("[data-motion-scene]");
+        if (!scene || !node.contains(scene)) return;
+        const rect = scene.getBoundingClientRect();
+        scene.style.setProperty("--pointer-x", `${((event.clientX - rect.left) / rect.width - .5) * 16}px`);
+        scene.style.setProperty("--pointer-y", `${((event.clientY - rect.top) / rect.height - .5) * 16}px`);
+      };
+      const reset = () => scenes.forEach(scene => {
+        scene.style.removeProperty("--pointer-x");
+        scene.style.removeProperty("--pointer-y");
       });
+      update();
+      window.addEventListener("scroll", schedule, { passive: true });
+      window.addEventListener("resize", schedule);
+      node.addEventListener("pointermove", pointer, { passive: true });
+      node.addEventListener("pointerleave", reset);
+      dispose = () => {
+        observer.disconnect();
+        resize.disconnect();
+        cancelAnimationFrame(frame);
+        window.removeEventListener("scroll", schedule);
+        window.removeEventListener("resize", schedule);
+        node.removeEventListener("pointermove", pointer);
+        node.removeEventListener("pointerleave", reset);
+        delete node.dataset.motion;
+        scenes.forEach(scene => ["--drift", "--turn", "--pointer-x", "--pointer-y"].forEach(name => scene.style.removeProperty(name)));
+      };
     };
-    const requestScroll = () => {
-      if (!frame) frame = window.requestAnimationFrame(updateScroll);
-    };
-    const onPointerMove = (event: PointerEvent) => {
-      if (event.pointerType !== "mouse") return;
-      const target = event.target;
-      if (!(target instanceof Element)) return;
-      const visual = target.closest<HTMLElement>("[data-kanva-cursor]");
-      if (!visual || !root.contains(visual)) return;
-      const box = visual.getBoundingClientRect();
-      const x = ((event.clientX - box.left) / box.width - .5) * 12;
-      const y = ((event.clientY - box.top) / box.height - .5) * 12;
-      visual.style.setProperty("--kanva-pointer-x", `${x.toFixed(1)}px`);
-      visual.style.setProperty("--kanva-pointer-y", `${y.toFixed(1)}px`);
-    };
-    const onPointerOut = (event: PointerEvent) => {
-      if (!(event.target instanceof Element)) return;
-      const visual = event.target.closest<HTMLElement>("[data-kanva-cursor]");
-      if (!visual || (event.relatedTarget instanceof Node && visual.contains(event.relatedTarget))) return;
-      visual.style.removeProperty("--kanva-pointer-x");
-      visual.style.removeProperty("--kanva-pointer-y");
-    };
-    root.addEventListener("pointermove", onPointerMove, { passive: true });
-    root.addEventListener("pointerout", onPointerOut);
-    window.addEventListener("scroll", requestScroll, { passive: true });
-    window.addEventListener("resize", requestScroll);
-    requestScroll();
-
-    return () => {
-      delete root.dataset.motionReady;
-      mutationObserver.disconnect();
-      revealObserver.disconnect();
-      root.removeEventListener("pointermove", onPointerMove);
-      root.removeEventListener("pointerout", onPointerOut);
-      window.removeEventListener("scroll", requestScroll);
-      window.removeEventListener("resize", requestScroll);
-      if (frame) window.cancelAnimationFrame(frame);
-      root.querySelectorAll<HTMLElement>("[data-kanva-rotate], [data-kanva-parallax]").forEach((element) => {
-        element.style.removeProperty("--kanva-rotation");
-        element.style.removeProperty("--kanva-offset");
-      });
-    };
+    setup();
+    preference.addEventListener("change", setup);
+    return () => { dispose(); preference.removeEventListener("change", setup); };
   }, []);
-  return null;
+  return <div ref={root} className={`store-motion ${className}`}>{children}</div>;
+}
+
+export function RevealText({ children }: { children: string }) {
+  const words = children.split(" ");
+  return <span data-text-reveal>{words.map((word, index) => <span className="reveal-word" style={{ "--word": Math.min(index, 12) } as CSSProperties} key={`${index}-${word}`}>{word}{index < words.length - 1 ? " " : ""}</span>)}</span>;
+}
+
+/** Decorative botanical silhouette, with independent pointer depths. */
+export function BotanicalScene() {
+  return <div className="botanical-scene" data-motion-scene aria-hidden="true">
+    <div className="motion-halo motion-background" />
+    <div className="botanical-stem motion-midground"><i /><i /><i /><i /></div>
+    <div className="botanical-orbit motion-foreground"><span className="motion-rotate">✳</span></div>
+    <span className="botanical-caption">A little care, every day.</span>
+  </div>;
 }

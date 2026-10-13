@@ -73,6 +73,21 @@ export function CartLink() {
     return () => { document.body.style.overflow = original; document.removeEventListener("keydown", onKey); };
   }, [open]);
 
+  function changeQuantity(productId: string, delta: -1 | 1) {
+    if (removing) return;
+    const current = readCart();
+    const item = current.find(row => row.productId === productId);
+    if (!item) return;
+    const product = products.find(row => row.id === productId);
+    const limit = Math.min(99, product?.availableStock ?? 0);
+    if (delta > 0 && (!synced || error || !product || item.qty >= limit)) return;
+    const qty = Math.max(1, item.qty + delta);
+    if (qty === item.qty) return;
+    const next = current.map(row => row.productId === productId ? { ...row, qty } : row);
+    writeCart(next);
+    trackStorefrontEvent("cart_quantity_change", { productId, itemCount: cartCount(next), quantityDelta: qty - item.qty });
+  }
+
   function removeItem(productId: string, qty: number) {
     if (removing) return;
     setRemoving(productId);
@@ -120,13 +135,21 @@ export function CartLink() {
                   <div className="min-w-0 flex-1">
                     <p className="line-clamp-2 text-sm font-semibold text-[var(--store-ink)]">{product?.name ?? "Unavailable product"}</p>
                     <p className="mt-2 text-sm font-semibold text-[var(--store-accent)]">{product ? formatPrice(salePriceFor(product) * qty) : "Unavailable"}</p>
-                    <div className="mt-3 flex items-center justify-between gap-2">
-                      <span className="text-xs text-[var(--store-muted)]">Qty: {qty}</span>
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                      <div role="group" aria-label={`Quantity for ${product?.name ?? "unavailable product"}`} className="inline-flex items-center rounded-full border border-[var(--store-border)] bg-[var(--store-panel)]">
+                        <button type="button" disabled={qty <= 1 || Boolean(removing)} onClick={() => changeQuantity(productId, -1)}
+                          aria-label={`Decrease ${product?.name ?? "product"} quantity`}
+                          className="h-11 w-11 rounded-full text-lg text-[var(--store-accent)] hover:bg-[var(--store-surface)] focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-35">−</button>
+                        <span aria-live="polite" aria-atomic="true" className="min-w-7 text-center text-sm font-semibold text-[var(--store-ink)]"><span className="sr-only">Quantity: </span>{qty}</span>
+                        <button type="button" disabled={Boolean(removing) || !synced || Boolean(error) || !product || qty >= Math.min(99, product.availableStock ?? 0)} onClick={() => changeQuantity(productId, 1)}
+                          aria-label={`Increase ${product?.name ?? "product"} quantity`}
+                          className="h-11 w-11 rounded-full text-lg text-[var(--store-accent)] hover:bg-[var(--store-surface)] focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-35">+</button>
+                      </div>
                       <button type="button" disabled={Boolean(removing)} onClick={() => removeItem(productId, qty)}
                         aria-label={`Remove ${product?.name ?? "product"} from cart`}
-                        className="min-h-9 rounded-lg px-3 text-xs font-semibold text-[var(--store-accent)] underline underline-offset-4 transition hover:bg-[var(--store-panel)] disabled:opacity-40">Remove</button>
+                        className="min-h-11 rounded-lg px-3 text-xs font-semibold text-[var(--store-accent)] underline underline-offset-4 transition hover:bg-[var(--store-panel)] disabled:opacity-40">Remove</button>
                     </div>
-                    {!product || (product.availableStock ?? 0) < qty ? <p className="mt-2 text-xs text-red-700">Update unavailable quantity in your cart.</p> : null}
+                    {!product || (product.availableStock ?? 0) < qty ? <p className="mt-2 text-xs text-red-700">Reduce the quantity or remove this item.</p> : null}
                   </div>
                 </div>
               ))}

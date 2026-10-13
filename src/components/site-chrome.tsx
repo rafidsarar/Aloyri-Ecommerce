@@ -1,5 +1,6 @@
 "use client";
 
+import "./storefront-design.css";
 import { useEffect, useState, type CSSProperties } from "react";
 import { normalizePresentation, defaultPresentation, type StorefrontPresentation } from "@/lib/storefront-presentation";
 import { usePathname } from "next/navigation";
@@ -11,7 +12,7 @@ import { Footer } from "@/components/footer";
 import { PublicPagePreviewBridge } from "@/components/public-page-preview-bridge";
 import { Header } from "@/components/header";
 import { GlobalStorefrontSearch } from "@/components/global-storefront-search";
-import { StorefrontMotion } from "@/components/storefront-motion";
+import { KanvaMotion } from "@/components/kanva-motion";
 
 export function SiteChrome({
   children,
@@ -50,8 +51,8 @@ export function SiteChrome({
 
   return (
     <CatalogProvider>
-      <div data-kanva-storefront data-storefront-columns={displayPresentation.desktopColumns} style={{"--storefront-width": displayPresentation.contentWidth === "comfortable" ? "1200px" : "1440px"} as CSSProperties}>
-      <StorefrontMotion key={pathname} />
+      <div data-kanva-storefront className="storefront-design" data-storefront-page={pathname.split("/")[1] || "home"} data-storefront-columns={displayPresentation.desktopColumns} style={{"--storefront-width": displayPresentation.contentWidth === "comfortable" ? "1200px" : "1440px"} as CSSProperties}>
+      <KanvaMotion key={pathname} />
       <CustomerDataCleanup />
       <PublicPagePreviewBridge />
       {!preview ? <StorefrontAnalyticsTracker /> : null}

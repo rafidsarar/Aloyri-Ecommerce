@@ -291,3 +291,32 @@
 [data-kanva-storefront] .kanva-faq-list details[open] { background: color-mix(in srgb, var(--kanva-mist) 35%, transparent); }
 [data-kanva-storefront] .account-panel { border-color: var(--kanva-hairline); }
 [data-kanva-storefront] .account-display { letter-spacing: -.055em; }
+
+/* Integration: keep PR #108's enlarged accessible image gallery while
+   applying PR #109's editorial detailing to the same page. */
+[data-kanva-storefront] .kanva-product-visual .product-gallery-image {
+  transform: translate3d(var(--kanva-pointer-x, 0px), var(--kanva-pointer-y, 0px), 0);
+  transition: transform 180ms ease-out;
+}
+[data-kanva-storefront] .kanva-product-visual .product-gallery-open { border-radius: inherit; }
+[data-kanva-storefront] .kanva-product-visual .product-gallery-zoom { z-index: 2; }
+[data-kanva-storefront] .kanva-product-visual .kanva-product-image-caption {
+  bottom: 1.5rem; left: 1.5rem; max-width: calc(100% - 12rem);
+}
+[data-kanva-storefront] .kanva-product-page h1.kanva-product-name {
+  font-size: clamp(2.6rem, 5vw, 5.6rem);
+  line-height: 1.01; letter-spacing: -.066em;
+}
+[data-kanva-storefront] .kanva-product-page .kanva-product-chapter h2.display {
+  font-size: clamp(2.8rem, 5.5vw, 6.2rem);
+  line-height: 1.03; letter-spacing: -.07em;
+}
+[data-kanva-storefront] .kanva-product-page .kanva-product-gallery .product-facts {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+@media (max-width: 767px) {
+ [data-kanva-storefront] .kanva-product-visual .kanva-product-image-caption { max-width: calc(100% - 11rem); font-size: .52rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+ [data-kanva-storefront] .kanva-product-visual .product-gallery-image { transform: none !important; transition: none !important; }
+}
