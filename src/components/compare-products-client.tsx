@@ -149,7 +149,7 @@ export function CompareProductsClient() {
               <caption className="sr-only">Compare live prices, availability, and skincare details for selected products.</caption>
               <thead>
                 <tr className="bg-[#fbf2ee]">
-                  <th scope="col" className="w-[130px] min-w-[130px] px-3 py-4 align-top text-xs text-[#713a35]/70 sm:px-4">Details</th>
+                  <th scope="col" className="sticky left-0 z-10 w-[130px] min-w-[130px] bg-[#fbf2ee] px-3 py-4 align-top text-xs text-[#713a35]/70 sm:px-4">Details</th>
                   {compared.map(product => (
                     <th scope="col" key={product.id} className="min-w-[220px] border-l border-[#713a35]/10 px-4 py-4 align-top">
                       <Link href={"/product/" + product.slug} className="block text-sm font-semibold text-[#321f1c] underline-offset-4 hover:underline">{product.name}</Link>
@@ -172,7 +172,7 @@ export function CompareProductsClient() {
                   ["Origin", (p: Product) => readable(p.origin)],
                 ] as [string, (p: Product) => string][]).map(([label, getValue]) => (
                   <tr key={label} className="border-t border-[#713a35]/10">
-                    <th scope="row" className="px-3 py-4 align-top text-xs font-semibold text-[#713a35] sm:px-4">{label}</th>
+                    <th scope="row" className="sticky left-0 z-10 bg-[#fffaf7] px-3 py-4 align-top text-xs font-semibold text-[#713a35] sm:px-4">{label}</th>
                     {compared.map(product => <td key={product.id} className="border-l border-[#713a35]/10 px-4 py-4 align-top text-xs leading-5 text-[#321f1c]/80">{getValue(product)}</td>)}
                   </tr>
                 ))}
