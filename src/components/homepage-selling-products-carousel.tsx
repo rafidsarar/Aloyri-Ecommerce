@@ -1,10 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
-import { Pause, Play, ArrowLeft, ArrowRight } from "lucide-react";
+
 import { ProductCard } from "@/components/product-card";
 import { useCatalog } from "@/components/catalog-provider";
 import { sellingProducts } from "@/lib/homepage-selling-products";
+
+function ControlIcon({ name }: { name: "left" | "right" | "pause" | "play" }) {
+  return <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
+    strokeLinejoin="round" aria-hidden="true">
+    {name === "left" ? <path d="M19 12H5m7 7-7-7 7-7" /> :
+      name === "right" ? <path d="M5 12h14m-7-7 7 7-7 7" /> :
+      name === "pause" ? <><path d="M8 5v14M16 5v14" /></> :
+      <path d="m8 5 11 7-11 7V5Z" />}
+  </svg>;
+}
 
 const SPEED_PIXELS_PER_SECOND = 34;
 
@@ -119,12 +130,12 @@ export function HomepageSellingProductsCarousel({
           <button type="button" aria-label="Previous products" aria-controls={trackId}
             disabled={!synced || edges.first} onClick={() => moveByCard(-1)}
             className="home-selling-control">
-            <ArrowLeft size={17} aria-hidden="true" />
+            <ControlIcon name="left" />
           </button>
           <button type="button" aria-label="Next products" aria-controls={trackId}
             disabled={!synced || edges.last} onClick={() => moveByCard(1)}
             className="home-selling-control">
-            <ArrowRight size={17} aria-hidden="true" />
+            <ControlIcon name="right" />
           </button>
           <button type="button" aria-controls={trackId}
             aria-label={reducedMotion ? "Automatic scrolling disabled by reduced-motion preference"
@@ -132,8 +143,8 @@ export function HomepageSellingProductsCarousel({
             aria-pressed={paused} disabled={reducedMotion || available.length < 2}
             onClick={() => setPaused(value => !value)}
             className="home-selling-control home-selling-play-control">
-            {paused || reducedMotion ? <Play size={16} aria-hidden="true" /> :
-              <Pause size={16} aria-hidden="true" />}
+            {paused || reducedMotion ? <ControlIcon name="play" /> :
+              <ControlIcon name="pause" />}
             <span>{reducedMotion ? "Motion off" : paused ? "Play" : "Pause"}</span>
           </button>
         </div>
