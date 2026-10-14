@@ -200,3 +200,21 @@ test("shop prioritizes the catalog above the fold and tucks away advanced filter
   await page.getByLabel("Brand", { exact: true }).selectOption("Simple");
   await expect(page.getByRole("button", { name: "Remove brand: Simple" })).toBeVisible();
 });
+
+for (const width of [390, 1440]) {
+  test(`floating search has no input underline when focused at ${width}px`, async ({ page }) => {
+    await mockCatalog(page);
+    await page.setViewportSize({ width, height: 850 });
+    await page.goto("/shop");
+    await page.getByRole("button", { name: "Search products", exact: true }).click();
+    const modal = page.getByRole("dialog", { name: "Search discovery" });
+    const input = modal.getByRole("combobox", { name: "Search skincare" });
+    await expect(input).toBeFocused();
+    await expect(input).toHaveCSS("box-shadow", "none");
+    await input.fill("Skin Aqua");
+    await expect(input).toHaveCSS("box-shadow", "none");
+    await expect(modal.getByRole("option", { name: /Skin Aqua Super Moisture UV Gel/ })).toBeVisible();
+    await input.press("Escape");
+    await expect(modal).toHaveCount(0);
+  });
+}
