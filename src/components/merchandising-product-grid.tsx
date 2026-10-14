@@ -17,6 +17,8 @@ export function MerchandisingProductGrid({
   campaignId,
   placementId,
   placementKind,
+  horizontalScroll = false,
+  carouselId,
 }: {
   productIds: string[];
   fallbackProducts: Product[];
@@ -28,6 +30,8 @@ export function MerchandisingProductGrid({
   campaignId?: string;
   placementId?: string;
   placementKind?: string;
+  horizontalScroll?: boolean;
+  carouselId?: string;
 }) {
   const { products, synced } = useCatalog();
 
@@ -93,18 +97,35 @@ export function MerchandisingProductGrid({
     );
   }
 
+  const cards = selected.map((product) => (
+    <ProductCard
+      key={product.id}
+      product={product}
+      collectionId={collectionId}
+      campaignId={campaignId}
+      placementId={placementId}
+      placementKind={placementKind}
+    />
+  ));
+
+  if (horizontalScroll) {
+    return (
+      <div className="relative min-w-0" aria-label="All products carousel">
+        <div id={carouselId} tabIndex={0} role="region" aria-label="Browse all selling products horizontally"
+          className="flex min-w-0 items-stretch snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain py-1 pb-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {selected.map((product) => (
+            <div key={product.id} data-testid="home-product-carousel-card" className="relative isolate flex min-w-0 w-[min(78vw,290px)] shrink-0 snap-start flex-col self-stretch sm:w-[min(42vw,320px)] lg:w-[calc((100%-3rem)/4)]">
+              <ProductCard product={product} equalHeight collectionId={collectionId} campaignId={campaignId} placementId={placementId} placementKind={placementKind} />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="storefront-product-grid grid grid-cols-2 gap-x-4 gap-y-8 lg:grid-cols-3 xl:grid-cols-4">
-      {selected.map((product) => (
-        <ProductCard
-          key={product.id}
-          product={product}
-          collectionId={collectionId}
-          campaignId={campaignId}
-          placementId={placementId}
-          placementKind={placementKind}
-        />
-      ))}
+      {cards}
     </div>
   );
 }

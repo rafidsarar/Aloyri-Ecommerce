@@ -396,10 +396,10 @@ export const defaultMerchandisingConfig: MerchandisingConfig = {
       id: "homepage-bestsellers",
       kind: "bestsellers",
       enabled: true,
-      eyebrow: "Bestsellers",
-      title: "The products people start with.",
+      eyebrow: "Shop all products",
+      title: "Discover all our skincare.",
       copy: "",
-      maxProducts: 3,
+      maxProducts: 12,
     },
     {
       id: "homepage-featured",

@@ -18,12 +18,14 @@ export function ProductCard({
   campaignId,
   placementId,
   placementKind,
+  equalHeight = false,
 }: {
   product: Product;
   collectionId?: string;
   campaignId?: string;
   placementId?: string;
   placementKind?: string;
+  equalHeight?: boolean;
 }) {
   const { product: liveProduct, synced } = useCatalogProduct(fallback.id);
 
@@ -36,10 +38,10 @@ export function ProductCard({
   const onSale = synced && hasSalePrice(product);
 
   return (
-    <article className="group store-product-card">
+    <article className="group store-product-card flex h-full min-w-0 flex-col">
       <Link
         href={`/product/${product.slug}`}
-        className="block rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#713a35]"
+        className={`${equalHeight ? "flex min-h-0 flex-1 flex-col" : "block"} rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#713a35]`}
         onClick={() => {
           trackStorefrontEvent(
             collectionId ? "collection_product_click" : "product_click",
@@ -95,8 +97,8 @@ export function ProductCard({
           ) : null}
         </div>
 
-        <div className="px-1 pt-4">
-          <div className="flex flex-col gap-3">
+        <div className={equalHeight ? "flex min-w-0 flex-1 flex-col px-1 pt-4" : "px-1 pt-4"}>
+          <div className={equalHeight ? "flex flex-1 flex-col gap-3" : "flex flex-col gap-3"}>
             <div className="min-w-0">
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#713a35]/48">
                 {product.brand}
@@ -111,7 +113,7 @@ export function ProductCard({
                 {product.size} · {stockLabel}
               </p>
             </div>
-            <div className="flex items-baseline gap-2">
+            <div className={equalHeight ? "mt-auto flex items-baseline gap-2 pt-3" : "flex items-baseline gap-2"}>
               <p className="text-sm font-medium text-[#321f1c]">
                 {synced ? formatPrice(salePrice) : "—"}
               </p>
@@ -124,7 +126,7 @@ export function ProductCard({
           </div>
         </div>
       </Link>
-      <div className="store-product-card-action mt-3">
+      <div className="store-product-card-action mt-auto pt-3">
         <AddToCart productId={product.id} compact ariaLabel={`Add ${product.name} to cart`} />
       </div>
     </article>
