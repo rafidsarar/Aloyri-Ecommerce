@@ -521,7 +521,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
       <>
       {home.showRoutineSteps && config.presentation.showRoutine && <section className="home-routine-section">
         <div className="shell py-16 md:py-20">
-          <div className="home-routine-layout">
+          <div className="home-routine-layout home-routine-stack-layout">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/50">
                 Build a simple routine
@@ -531,12 +531,12 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
               </h2>
             </div>
 
-            <div className="home-routine-cards">
+            <div className="home-routine-cards home-routine-stack">
               {routine.map((item) => (
                 <Link
                   key={item.step}
                   href={item.href}
-                  className="home-routine-card group"
+                  className="home-routine-card home-routine-stack-card group"
                 >
                   <span className="rose-text text-sm font-semibold">{item.step}</span>
                   <div>

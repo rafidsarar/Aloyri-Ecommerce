@@ -113,3 +113,27 @@
 /* Editorial accents inspired by botanical skincare campaigns. */
 .skincare-home .home-focus-heading { padding-block: 16px; }
 .skincare-home .home-routine-card > span { font-size: 3rem; font-weight: 400; }
+
+/* Scroll-position-driven routine: cards pin and stack naturally, in both directions. */
+@media (min-width: 768px) {
+  .skincare-home .home-routine-stack-layout { grid-template-columns: minmax(0,.9fr) minmax(0,1.1fr); align-items: start; gap: clamp(28px,5vw,88px); }
+  .skincare-home .home-routine-stack-layout > :first-child { position: sticky; top: 120px; align-self: start; padding-top: 20px; }
+  .skincare-home .home-routine-stack { display: flex; flex-direction: column; gap: 0; padding-bottom: 12vh; }
+  .skincare-home .home-routine-stack-card {
+    position: sticky; top: calc(115px + (var(--routine-index) * 24px));
+    display: flex; flex-direction: column; align-items: stretch;
+    min-height: clamp(245px,25vw,315px); margin-bottom: clamp(30px,6vh,64px);
+    padding: clamp(28px,3vw,44px); border-radius: 22px;
+    box-shadow: 0 12px 32px rgb(49 31 28 / 4%); isolation: isolate;
+  }
+  .skincare-home .home-routine-stack-card:nth-child(1) { --routine-index: 0; background: #fffaf7; }
+  .skincare-home .home-routine-stack-card:nth-child(2) { --routine-index: 1; background: #eaece0; }
+  .skincare-home .home-routine-stack-card:nth-child(3) { --routine-index: 2; background: #f1e0d7; }
+  .skincare-home .home-routine-stack-card > span { grid-column: auto; font-size: clamp(2.5rem,4vw,4rem); }
+  .skincare-home .home-routine-stack-card > div { margin-top: auto; }
+  .skincare-home .home-routine-stack-card > svg { position: absolute; right: 32px; bottom: 35px; }
+}
+@media (max-width: 767px) {
+  .skincare-home .home-routine-stack-card:nth-child(2) { background: #eaece0; }
+  .skincare-home .home-routine-stack-card:nth-child(3) { background: #f1e0d7; }
+}
