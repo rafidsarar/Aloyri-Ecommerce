@@ -22,6 +22,7 @@ const nav: Array<{
   { group: "Website content", label: "Pages & FAQ", href: "/admin/pages", permission: "pages.view" },
   { group: "Website content", label: "Campaigns & collections", href: "/admin/merchandising", permission: "merchandising.view" },
   { group: "Website content", label: "Images", href: "/admin/media", permission: "media.view" },
+  { group: "Website content", label: "Shop by brands", href: "/admin/brands", permission: "merchandising.view" },
   { group: "Business", label: "Customer care", href: "/admin/customer-service", permission: "support.view" },
   { group: "Business", label: "Reports", href: "/admin/analytics", permission: "analytics.view" },
   { group: "Account & store", label: "Settings", href: "/admin/settings", permission: "settings.view" },
