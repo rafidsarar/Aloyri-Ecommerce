@@ -112,10 +112,10 @@ export function MerchandisingProductGrid({
     return (
       <div className="relative min-w-0" aria-label="All products carousel">
         <div id={carouselId} tabIndex={0} role="region" aria-label="Browse all selling products horizontally"
-          className="flex items-stretch snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          className="flex min-w-0 items-stretch snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain py-1 pb-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {selected.map((product) => (
-            <div key={product.id} className="w-[min(78vw,290px)] shrink-0 snap-start sm:w-[min(42vw,320px)] lg:w-[calc((100%-3rem)/4)]">
-              <ProductCard product={product} collectionId={collectionId} campaignId={campaignId} placementId={placementId} placementKind={placementKind} />
+            <div key={product.id} data-testid="home-product-carousel-card" className="relative isolate flex min-w-0 w-[min(78vw,290px)] shrink-0 snap-start flex-col self-stretch sm:w-[min(42vw,320px)] lg:w-[calc((100%-3rem)/4)]">
+              <ProductCard product={product} equalHeight collectionId={collectionId} campaignId={campaignId} placementId={placementId} placementKind={placementKind} />
             </div>
           ))}
         </div>
