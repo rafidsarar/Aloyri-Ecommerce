@@ -1,11 +1,22 @@
 "use client";
 
 import Link from "next/link";
+import { Facebook, Instagram, Youtube, Linkedin, Twitter, Music2, MessageCircle } from "lucide-react";
+import { socialPlatforms, validSocialUrl, type SocialLinks } from "@/lib/storefront-admin-store";
 import { BrandMark } from "@/components/brand-mark";
 import { useCatalog } from "@/components/catalog-provider";
 import { buildCategoryDirectory } from "@/lib/storefront-categories";
 
-export function Footer({ description }: { description: string }) {
+const socialNames: Record<keyof SocialLinks, string> = {
+  facebook: "Facebook", instagram: "Instagram", tiktok: "TikTok", youtube: "YouTube",
+  x: "X", linkedin: "LinkedIn", whatsapp: "WhatsApp",
+};
+const socialIcons = {
+  facebook: Facebook, instagram: Instagram, tiktok: Music2, youtube: Youtube,
+  x: Twitter, linkedin: Linkedin, whatsapp: MessageCircle,
+};
+
+export function Footer({ description, socialLinks }: { description: string; socialLinks: SocialLinks }) {
   const { products, categories, synced } = useCatalog();
   const directory = buildCategoryDirectory(categories, products);
   return (
@@ -22,6 +33,16 @@ export function Footer({ description }: { description: string }) {
             <p className="store-footer-description mt-6 max-w-md text-sm leading-7">
               {description}
             </p>
+            <div aria-label="Follow Aloyri" className="mt-5 flex flex-wrap items-center gap-2">
+              {socialPlatforms.map(platform => {
+                const href = validSocialUrl(platform, socialLinks?.[platform] || "");
+                if (!href) return null;
+                const Icon = socialIcons[platform];
+                return <a key={platform} href={href} target="_blank" rel="noopener noreferrer" aria-label={"Aloyri on " + socialNames[platform]} title={socialNames[platform]} className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-current/20 transition-colors hover:bg-[#713a35]/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">
+                  <Icon aria-hidden="true" size={19} strokeWidth={1.8} />
+                </a>;
+              })}
+            </div>
             <Link
               href="/about"
               className="store-footer-accent mt-5 inline-flex text-sm font-semibold underline underline-offset-4"

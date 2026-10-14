@@ -54,6 +54,21 @@ export function WebsiteSettingsFields({config, homepage = false}: {config: Store
           </div>
         </AdminCard></details>
 
+        {!homepage && <details id="website-social" name="website-setting" className="admin-editor-section"><summary>Social media & footer links</summary><AdminCard>
+          <h2 className="text-sm font-semibold">Social media profiles</h2>
+          <p className="mt-1 mb-4 text-xs leading-5 text-black/55">Add your official profile URLs. Only filled, valid links appear as social icons in the customer-facing footer. Leave a field blank to hide it.</p>
+          <div className="grid gap-4 md:grid-cols-2">
+            {([
+              ["facebook", "Facebook"], ["instagram", "Instagram"], ["tiktok", "TikTok"],
+              ["youtube", "YouTube"], ["x", "X / Twitter"], ["linkedin", "LinkedIn"],
+              ["whatsapp", "WhatsApp"]
+            ] as const).map(([platform, label]) => <label key={platform} className="grid gap-1.5 text-sm font-medium">
+              {label} URL
+              <input name={"social" + platform.charAt(0).toUpperCase() + platform.slice(1)} type="url" inputMode="url" placeholder={"https://" + (platform === "x" ? "x.com" : platform === "whatsapp" ? "wa.me" : platform + ".com") + "/..."} defaultValue={config.site.socialLinks?.[platform] || ""} maxLength={300} className="min-w-0 rounded-xl border border-black/10 px-4 py-3" />
+            </label>)}
+          </div>
+        </AdminCard></details>}
+
         <details id="website-support" name="website-setting" className="admin-editor-section"><summary>Customer contact</summary><AdminCard>
           <p className="text-sm font-semibold">Customer support details</p>
           <p className="mt-1 text-xs leading-5 text-black/45">
