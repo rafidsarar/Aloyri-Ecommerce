@@ -13,7 +13,7 @@ export function normalizeCrmBrands(value:unknown,products:readonly CatalogBrandP
   const input:Array<{id:string;name:string}>=Array.isArray(value)
     ? value.filter((entry):entry is {id:string;name:string}=>Boolean(entry)&&typeof entry==='object'
       &&typeof (entry as CrmBrand).id==='string'&&typeof (entry as CrmBrand).name==='string')
-    : [...new Map(products.map(item=>item.brand.trim()).filter(Boolean).map(name=>[key(name),name])).values()]
+    : products.map(item=>item.brand.trim()).filter(Boolean)
       .map(name=>({id:legacyId(name),name}));
   for(const entry of input){
     const name=entry.name.trim(),id=entry.id.trim(),folded=key(name);
