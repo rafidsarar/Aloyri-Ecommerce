@@ -265,22 +265,7 @@ export function LiveProductPage({
       </div>
 
 
-      <section className="kanva-product-chapter" aria-label="Skincare details" data-kanva-reveal>
-        <div className="kanva-product-chapter-copy">
-          <p className="kanva-eyebrow">THE ALOYRI SKIN RITUAL</p>
-          <h2 className="display">Care that fits <em>your rhythm.</em></h2>
-          <p>{product.bestFor || product.description}</p>
-          <a href="#product-details" className="kanva-text-link">Explore the details <ArrowIcon className="h-4 w-4" /></a>
-        </div>
-        <div className="kanva-product-chapter-art" aria-hidden="true">
-          <div className="kanva-product-orbit" data-kanva-rotate><span>AL</span></div>
-          <p>TEXTURE / {product.texture || "SKINCARE"}</p>
-          <p>ROUTINE / {product.routineStep || "YOUR DAILY RITUAL"}</p>
-        </div>
-      </section>
-      <div id="product-details" className="kanva-product-details-anchor" />
-
-      <nav aria-label="Product information" className="kanva-product-section-nav mt-8 flex flex-wrap gap-3 border-y border-[#713a35]/10 py-4 text-sm font-semibold text-[#713a35]">
+      <nav id="product-details" aria-label="Product information" className="kanva-product-section-nav mt-8 flex flex-wrap gap-3 border-y border-[#713a35]/10 py-4 text-sm font-semibold text-[#713a35]">
         {verified ? <a href="#product-guidance" className="rounded-full bg-[#f5e8e2] px-4 py-3">Product guidance</a> : null}
         <a href="#product-use" className="rounded-full bg-[#f5e8e2] px-4 py-3">How to use</a>
         <a href="#product-ingredients" className="rounded-full bg-[#f5e8e2] px-4 py-3">Ingredients</a>
