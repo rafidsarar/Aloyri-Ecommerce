@@ -49,3 +49,26 @@ test('care and account pages share responsive styling and usable forms', async (
   await expect(faq).toHaveAttribute('open', '');
   await page.screenshot({ path: testInfo.outputPath('faq-mobile.png'), fullPage: true });
 });
+
+for (const width of [390, 1440]) {
+  test(`product page omits decorative skin ritual chapter at ${width}px while keeping details accessible`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await catalog(page);
+    await page.goto("/shop");
+    await page.getByRole("link", { name: /Refreshing Facial Wash/ }).first().click();
+    const productPage = page.locator(".product-detail-page");
+    await expect(productPage).toBeVisible();
+    await expect(productPage.getByRole("heading", { name: "Refreshing Facial Wash" })).toBeVisible();
+    await expect(productPage.locator(".kanva-product-chapter")).toHaveCount(0);
+    await expect(productPage.getByText("Care that fits")).toHaveCount(0);
+    await expect(productPage.locator(".kanva-product-orbit")).toHaveCount(0);
+    const navigation = productPage.getByRole("navigation", { name: "Product information" });
+    await expect(navigation).toBeVisible();
+    await expect(productPage.locator("#product-use")).toBeAttached();
+    await expect(productPage.locator("#product-ingredients")).toBeAttached();
+    await expect(productPage.locator("#delivery-information")).toBeAttached();
+    await navigation.getByRole("link", { name: "How to use" }).click();
+    await expect(page).toHaveURL(/#product-use$/);
+    await expect(productPage.locator(".product-purchase-actions")).toBeAttached();
+  });
+}
