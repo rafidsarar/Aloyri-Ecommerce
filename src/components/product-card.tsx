@@ -36,7 +36,7 @@ export function ProductCard({
   const onSale = synced && hasSalePrice(product);
 
   return (
-    <article className="group store-product-card">
+    <article className="group store-product-card flex h-full flex-col">
       <Link
         href={`/product/${product.slug}`}
         className="block rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#713a35]"
@@ -124,7 +124,7 @@ export function ProductCard({
           </div>
         </div>
       </Link>
-      <div className="store-product-card-action mt-3">
+      <div className="store-product-card-action mt-auto pt-3">
         <AddToCart productId={product.id} compact ariaLabel={`Add ${product.name} to cart`} />
       </div>
     </article>
