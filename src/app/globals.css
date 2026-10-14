@@ -945,3 +945,47 @@ body[data-storefront-theme="sand"] {
   .store-header-grid { transition: none; }
   .store-mega-menu[open] .store-mega-panel { animation: none; }
 }
+
+/* Guided routine finder: the actual homepage "Find your routine" panel.
+   Native sticky cards respond to scroll direction, with no timed animation. */
+@media (min-width: 1024px) {
+  .home-finder-scroll-section .home-finder-scroll-layout {
+    align-items: start;
+    overflow: visible;
+    isolation: isolate;
+  }
+  .home-finder-scroll-section .home-finder-scroll-intro {
+    position: sticky;
+    top: 116px;
+    align-self: start;
+  }
+  .home-finder-scroll-section .home-finder-scroll-cards {
+    display: flex;
+    flex-direction: column;
+    align-content: stretch;
+    padding-bottom: 12vh;
+    background: transparent;
+  }
+  .home-finder-scroll-section .home-finder-scroll-card {
+    position: sticky;
+    top: calc(116px + var(--finder-card-index) * 24px);
+    min-height: clamp(230px, 25vw, 310px);
+    padding: clamp(28px, 3vw, 42px);
+    margin-bottom: clamp(40px, 8vh, 92px);
+    align-items: flex-start;
+    flex-direction: column;
+    gap: clamp(24px, 4vw, 55px);
+    border-radius: 22px;
+    box-shadow: 0 12px 35px rgb(50 31 26 / 6%);
+  }
+  .home-finder-scroll-section .home-finder-scroll-card:nth-child(1) { --finder-card-index: 0; background: #fffaf7; }
+  .home-finder-scroll-section .home-finder-scroll-card:nth-child(2) { --finder-card-index: 1; background: #eaece0; }
+  .home-finder-scroll-section .home-finder-scroll-card:nth-child(3) { --finder-card-index: 2; background: #f1e0d7; }
+  .home-finder-scroll-section .home-finder-scroll-card > span { font-size: clamp(2.6rem, 4vw, 4rem); line-height: 1; }
+  .home-finder-scroll-section .home-finder-scroll-card > div { margin-top: auto; }
+  .home-finder-scroll-section .home-finder-scroll-card > div > p:first-child { font-size: 1.1rem; }
+}
+@media (max-width: 1023px) {
+  .home-finder-scroll-section .home-finder-scroll-card:nth-child(2) { background: #eaece0; }
+  .home-finder-scroll-section .home-finder-scroll-card:nth-child(3) { background: #f1e0d7; }
+}

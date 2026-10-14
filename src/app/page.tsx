@@ -229,9 +229,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
     routineFinder: (
       <>
       {home.showRoutineFinder ? (
-        <section className="shell pb-10 pt-2 md:pb-14" aria-labelledby="routine-finder-feature">
-          <div className="store-discovery-feature grid overflow-hidden rounded-[2rem] border lg:grid-cols-[1.1fr_.9fr]">
-            <div className="p-7 sm:p-10 lg:p-14">
+        <section className="shell home-finder-scroll-section pb-10 pt-2 md:pb-14" aria-labelledby="routine-finder-feature">
+          <div className="store-discovery-feature home-finder-scroll-layout grid rounded-[2rem] border lg:grid-cols-[1.1fr_.9fr]">
+            <div className="home-finder-scroll-intro p-7 sm:p-10 lg:p-14">
               <p className="store-discovery-muted text-[11px] font-semibold uppercase tracking-[.22em]">A little guidance, a better beginning</p>
               <h2 id="routine-finder-feature" className="store-discovery-title display mt-5 max-w-lg text-4xl leading-tight sm:text-5xl">
                 {home.routineFinderHeadline}
@@ -243,13 +243,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
                 Find your routine <ArrowIcon />
               </Link>
             </div>
-            <div className="store-discovery-feature-steps grid content-center gap-3 p-6 sm:p-9">
+            <div className="store-discovery-feature-steps home-finder-scroll-cards grid gap-3 p-6 sm:p-9">
               {[
                 ["01", "Tell us what feels right", "Choose how your skin usually feels."],
                 ["02", "Choose your priority", "Hydration, light texture, simplicity or daily SPF."],
                 ["03", "Explore the edit", "See relevant products with live availability."],
               ].map(([number, title, description]) => (
-                <div key={number} className="store-discovery-step flex items-start gap-4 rounded-2xl border p-4">
+                <div key={number} className="store-discovery-step home-finder-scroll-card flex items-start gap-4 rounded-2xl border p-4">
                   <span className="store-discovery-accent display text-2xl">{number}</span>
                   <div>
                     <p className="text-sm font-semibold">{title}</p>
