@@ -72,6 +72,7 @@ export default async function RootLayout({
           presentation={config.presentation}
           announcement={config.site.announcement}
           footerDescription={config.site.footerDescription}
+          socialLinks={config.site.socialLinks}
           preview={previewState.isEnabled}
           searchSynonymGroups={config.merchandising.discovery.synonymGroups}
         >

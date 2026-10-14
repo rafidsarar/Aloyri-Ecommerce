@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
+import { FooterSocialLinks } from "@/components/footer-social-links";
+import type { SocialLinks } from "@/lib/social-links";
 import { useCatalog } from "@/components/catalog-provider";
 import { buildCategoryDirectory } from "@/lib/storefront-categories";
 
-export function Footer({ description }: { description: string }) {
+export function Footer({ description, socialLinks }: { description: string; socialLinks: SocialLinks }) {
   const { products, categories, synced } = useCatalog();
   const directory = buildCategoryDirectory(categories, products);
   return (
@@ -22,6 +24,7 @@ export function Footer({ description }: { description: string }) {
             <p className="store-footer-description mt-6 max-w-md text-sm leading-7">
               {description}
             </p>
+            <FooterSocialLinks links={socialLinks} />
             <Link
               href="/about"
               className="store-footer-accent mt-5 inline-flex text-sm font-semibold underline underline-offset-4"

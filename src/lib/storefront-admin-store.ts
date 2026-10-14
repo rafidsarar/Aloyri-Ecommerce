@@ -1,4 +1,5 @@
 import { normalizeHeroBackground } from "@/lib/hero-background";
+import { emptySocialLinks, normalizeSocialLinks, type SocialLinks } from "@/lib/social-links";
 import { normalizeHeroProductIds, normalizeHeroDiscountMode, normalizeHeroPromotionCode } from "@/lib/hero-banner-offers";
 import "server-only";
 import { defaultPrivacyContent, defaultTermsContent } from "@/lib/default-policy-content";
@@ -186,6 +187,7 @@ export type StorefrontConfig = {
   site: {
     announcement: string;
     footerDescription: string;
+    socialLinks: SocialLinks;
     supportEmail: string;
     supportPhone: string;
     supportHours: string;
@@ -420,6 +422,7 @@ export const defaultStorefrontConfig: StorefrontConfig = {
     announcement: "Let Your Skin Glow. · Curated skincare for Bangladesh",
     footerDescription:
       "Aloyri is a skincare destination built around considered selection, clear product information and a calmer way to build an everyday routine.",
+    socialLinks: { ...emptySocialLinks },
     supportEmail: "",
     supportPhone: "",
     supportHours: "",
@@ -768,6 +771,7 @@ function normalizeConfig(value: Partial<StorefrontConfig> | null): StorefrontCon
     site: {
       ...defaultStorefrontConfig.site,
       ...(value.site || {}),
+      socialLinks: normalizeSocialLinks(value.site?.socialLinks),
     },
     homepage: {
       ...defaultStorefrontConfig.homepage,

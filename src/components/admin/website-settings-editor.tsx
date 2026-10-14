@@ -3,6 +3,7 @@ import { AdminSubmitButton } from "@/components/admin/admin-submit-button";
 import { saveSiteSettings } from "@/app/admin/actions";
 import { AdminCard, AdminNotice } from "@/components/admin/admin-shell";
 import type { StorefrontConfig } from "@/lib/storefront-admin-store";
+import { socialPlatformOptions } from "@/lib/social-links";
 
 /**
  * Identical settings form in /admin/settings and the unified Builder.
@@ -51,6 +52,20 @@ export function WebsiteSettingsFields({config, homepage = false}: {config: Store
               Footer description
               <textarea name="footerDescription" defaultValue={config.site.footerDescription} rows={4} maxLength={600} className="rounded-xl border border-black/10 px-4 py-3" />
             </label>
+          </div>
+        </AdminCard></details>
+
+        <details id="website-social" name="website-setting" className="admin-editor-section"><summary>Footer social links</summary><AdminCard>
+          <p className="text-sm font-semibold">Follow Aloyri</p>
+          <p className="mt-1 text-xs leading-5 text-black/55">Enter your official profile URLs. Only links you save will appear as social icons in the storefront footer. Leave any profile blank to hide its icon.</p>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            {socialPlatformOptions.map(({ key, label, field, example }) => (
+              <label key={key} className="grid gap-1.5 text-sm font-medium">
+                {label} profile URL
+                <input type="url" name={field} defaultValue={config.site.socialLinks[key]} maxLength={300} placeholder={example}
+                  autoComplete="url" className="min-w-0 rounded-xl border border-black/10 px-4 py-3" />
+              </label>
+            ))}
           </div>
         </AdminCard></details>
 
