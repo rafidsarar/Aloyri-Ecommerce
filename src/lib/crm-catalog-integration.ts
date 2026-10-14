@@ -1,6 +1,7 @@
 import { unstable_rethrow } from "next/navigation";
 import type { LiveCatalogProduct } from "@/lib/catalog";
 import { categoryNamesFromCatalog } from "@/lib/storefront-categories";
+import { normalizeCrmBrands } from "@/lib/crm-brand-directory";
 import { recordRuntimeError } from "@/lib/runtime-error-store";
 
 const enc = new TextEncoder();
@@ -118,6 +119,7 @@ export async function fetchCrmCatalog() {
     const json = (await response.json()) as {
       products?: unknown[];
       categories?: unknown[];
+      brands?: unknown;
       generatedAt?: unknown;
       workspaceUpdatedAt?: unknown;
       error?: string;
@@ -147,6 +149,7 @@ export async function fetchCrmCatalog() {
         // Older CRM deployments do not yet send the explicit registry;
         // derive categories from product records until the CRM upgrade is live.
         categories: categoryNamesFromCatalog(json.categories, safeProducts),
+        brands: normalizeCrmBrands(json.brands, safeProducts),
         generatedAt:
           typeof json.generatedAt === "string" ? json.generatedAt : new Date().toISOString(),
       },
