@@ -18,6 +18,7 @@ import { HomepageEditorialSections } from "@/components/homepage-editorial-secti
 import { ArrowIcon } from "@/components/icons";
 import { ProductMedia } from "@/components/product-media";
 import { MerchandisingProductGrid } from "@/components/merchandising-product-grid";
+import { ProductCarouselControls } from "@/components/product-carousel-controls";
 import { AnalyticsViewTracker } from "@/components/storefront-analytics-tracker";
 import { TrackedLink } from "@/components/tracked-link";
 import { mergeLiveCatalog, products as localProducts } from "@/lib/catalog";
@@ -461,7 +462,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
                 ...(collection ? { collectionId: collection.id } : {}),
               }}
             />
-            <div className="mb-7 grid gap-5 md:grid-cols-[1fr_auto] md:items-end">
+            <div className={`${isAllProductsCarousel ? "mb-5" : "mb-7"} grid gap-4 md:grid-cols-[1fr_auto] md:items-end`}>
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#713a35]/48">
                   {displayEyebrow}
@@ -475,6 +476,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
                   </p>
                 ) : null}
               </div>
+              <div className="flex flex-wrap items-center gap-4 md:justify-end">
               <TrackedLink
                 href={sectionHref}
                 analyticsEvent="merchandising_click"
@@ -492,6 +494,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
               >
                 {collection ? "View collection" : "Shop all"} <ArrowIcon />
               </TrackedLink>
+              {isAllProductsCarousel ? <ProductCarouselControls targetId={`homepage-products-${section.id}`} /> : null}
+              </div>
             </div>
 
             <MerchandisingProductGrid
@@ -500,6 +504,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
               outOfStockMode={mode}
               maxProducts={isAllProductsCarousel ? undefined : section.maxProducts}
               horizontalScroll={isAllProductsCarousel}
+              carouselId={isAllProductsCarousel ? `homepage-products-${section.id}` : undefined}
               overrideProductRules={
                 Boolean(
                   collection && collection.outOfStockMode !== "inherit",
