@@ -57,7 +57,7 @@
 .skincare-home .store-discovery-feature { border-radius: 24px; background: var(--store-panel); border-color: var(--home-line); }
 .skincare-home .store-discovery-title { font-size: clamp(1.9rem,3vw,2.9rem); }
 .skincare-home .store-discovery-feature-steps { background: transparent; }
-.skincare-home .store-discovery-step { border-radius: 0; border: 0; border-bottom: 1px solid var(--home-line); background: transparent; padding: 20px 0; }
+.skincare-home .store-discovery-step:not(.home-finder-scroll-card) { border-radius: 0; border: 0; border-bottom: 1px solid var(--home-line); background: transparent; padding: 20px 0; }
 .home-routine-section { background: color-mix(in srgb, var(--store-panel) 55%, var(--store-surface)); border-block: 1px solid var(--home-line); }
 .home-routine-section > .shell { padding-block: 48px; }
 .home-routine-layout { display: grid; gap: 30px; }
@@ -136,4 +136,55 @@
 @media (max-width: 767px) {
   .skincare-home .home-routine-stack-card:nth-child(2) { background: #eaece0; }
   .skincare-home .home-routine-stack-card:nth-child(3) { background: #f1e0d7; }
+}
+
+/* Homepage routine-finder cards have their own component styling.
+   The general .store-discovery-step rule above is for the compact, unstacked design only. */
+.skincare-home .home-finder-scroll-section .home-finder-scroll-cards {
+  min-width: 0;
+}
+.skincare-home .home-finder-scroll-section .store-discovery-step.home-finder-scroll-card {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  border: 1px solid color-mix(in srgb, var(--store-accent) 13%, transparent);
+  border-radius: 24px;
+  padding: clamp(24px, 3vw, 42px);
+  box-shadow: 0 12px 32px rgb(50 31 26 / 6%);
+  overflow: hidden;
+}
+.skincare-home .home-finder-scroll-section .home-finder-scroll-card > span {
+  display: block;
+  font-size: clamp(2.8rem, 4vw, 4rem);
+  line-height: 1;
+}
+.skincare-home .home-finder-scroll-section .home-finder-scroll-card > div {
+  min-width: 0;
+}
+.skincare-home .home-finder-scroll-section .home-finder-scroll-card > div > p:first-child {
+  font-size: clamp(1rem, 1.3vw, 1.2rem);
+  line-height: 1.4;
+}
+.skincare-home .home-finder-scroll-section .home-finder-scroll-card > div > p:last-child {
+  margin-top: 8px;
+  font-size: .875rem;
+  line-height: 1.6;
+}
+@media (min-width: 1024px) {
+  .skincare-home .home-finder-scroll-section .store-discovery-step.home-finder-scroll-card {
+    min-height: clamp(260px, 27vw, 348px);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: stretch;
+    margin-bottom: clamp(36px, 7vh, 75px);
+  }
+  .skincare-home .home-finder-scroll-section .store-discovery-step.home-finder-scroll-card:last-child {
+    margin-bottom: 0;
+  }
+}
+@media (max-width: 1023px) {
+  .skincare-home .home-finder-scroll-section .store-discovery-step.home-finder-scroll-card {
+    min-height: 162px;
+  }
 }
