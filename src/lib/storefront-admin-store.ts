@@ -1,7 +1,7 @@
 import { normalizeHeroBackground } from "@/lib/hero-background";
 import { normalizeHeroProductIds, normalizeHeroDiscountMode, normalizeHeroPromotionCode } from "@/lib/hero-banner-offers";
 import "server-only";
-import { defaultSocialLinks, socialPlatforms, validSocialUrl, type SocialLinks } from "@/lib/social-links";
+import { socialPlatforms, validSocialUrl, type SocialLinks } from "@/lib/social-links";
 import { defaultPrivacyContent, defaultTermsContent } from "@/lib/default-policy-content";
 import { defaultVisualLayout, normalizeVisualLayout, normalizeVisualPageLayout, visualPageKeys, type VisualLayout, type VisualPageKey } from "@/lib/visual-builder";
 import { defaultHomepageOrder, normalizeHomepageOrder, safeHomepageImagePath, type HomepageBlockId } from "@/lib/homepage-builder";
@@ -422,7 +422,7 @@ export const defaultStorefrontConfig: StorefrontConfig = {
     announcement: "Let Your Skin Glow. · Curated skincare for Bangladesh",
     footerDescription:
       "Aloyri is a skincare destination built around considered selection, clear product information and a calmer way to build an everyday routine.",
-    socialLinks: { ...defaultSocialLinks },
+    socialLinks: { facebook: "", instagram: "", tiktok: "", youtube: "", x: "", linkedin: "", whatsapp: "" },
     supportEmail: "",
     supportPhone: "",
     supportHours: "",
