@@ -470,7 +470,7 @@ test.describe('Owner administration editing safeguards', () => {
   });
   test('Clear main sections keep security and operational tools accessible under Settings', async ({page}) => {
     await page.goto(`${base}/admin/settings`);
-    await expect(page.getByRole('navigation',{name:'Admin navigation'}).getByRole('link')).toHaveCount(9);
+    await expect(page.getByRole('navigation',{name:'Admin navigation'}).getByRole('link')).toHaveCount(10);
     const related = page.getByRole('navigation',{name:'Related store tools'});
     await expect(related.getByRole('link',{name:'Security',exact:true})).toHaveAttribute('href','/admin/security');
     await expect(related.getByRole('link',{name:'History & restore',exact:true})).toBeVisible();
