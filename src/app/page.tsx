@@ -385,8 +385,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
                         ? campaign.outOfStockMode
                         : config.merchandising.outOfStockMode
                     }
-                    maxProducts={isAllProductsCarousel ? undefined : section.maxProducts}
-              horizontalScroll={isAllProductsCarousel}
+                    maxProducts={section.maxProducts}
                     promotionOnly={campaign.promotionOnly}
                     overrideProductRules={
                       Boolean(
@@ -499,7 +498,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
               productIds={productIds}
               fallbackProducts={selected}
               outOfStockMode={mode}
-              maxProducts={section.maxProducts}
+              maxProducts={isAllProductsCarousel ? undefined : section.maxProducts}
+              horizontalScroll={isAllProductsCarousel}
               overrideProductRules={
                 Boolean(
                   collection && collection.outOfStockMode !== "inherit",
