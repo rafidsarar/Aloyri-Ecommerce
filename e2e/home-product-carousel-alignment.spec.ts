@@ -51,8 +51,9 @@ for (const width of [390, 1440]) {
 
     const controls = page.getByRole("group", { name: "Product carousel navigation" });
     await expect(controls).toBeVisible();
-    const controlBottom = (await controls.boundingBox())?.y! + (await controls.boundingBox())?.height!;
-    expect(controlBottom).toBeLessThanOrEqual(geometry[0].y + 2);
+    const controlsRect = await controls.boundingBox();
+    expect(controlsRect).not.toBeNull();
+    if (controlsRect) expect(controlsRect.y + controlsRect.height).toBeLessThanOrEqual(geometry[0].y + 2);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
   });
 }
