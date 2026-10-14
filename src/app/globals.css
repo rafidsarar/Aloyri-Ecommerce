@@ -946,46 +946,71 @@ body[data-storefront-theme="sand"] {
   .store-mega-menu[open] .store-mega-panel { animation: none; }
 }
 
-/* Guided routine finder: the actual homepage "Find your routine" panel.
-   Native sticky cards respond to scroll direction, with no timed animation. */
+/* Refined guided routine finder: equal-width, rounded cards and a controlled scroll stack.
+   The stack pins within its own panel, rather than bleeding under the site header. */
+.home-finder-scroll-section .home-finder-scroll-layout {
+  border-radius: clamp(22px, 3vw, 34px);
+}
+.home-finder-scroll-section .home-finder-scroll-card {
+  min-width: 0;
+  width: 100%;
+  border-radius: 24px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.home-finder-scroll-section .home-finder-scroll-card:nth-child(1) { background: #fffaf7; }
+.home-finder-scroll-section .home-finder-scroll-card:nth-child(2) { background: #eaece0; }
+.home-finder-scroll-section .home-finder-scroll-card:nth-child(3) { background: #f1e0d7; }
 @media (min-width: 1024px) {
   .home-finder-scroll-section .home-finder-scroll-layout {
-    align-items: start;
-    overflow: visible;
+    align-items: stretch;
+    overflow: clip;
     isolation: isolate;
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr);
   }
   .home-finder-scroll-section .home-finder-scroll-intro {
     position: sticky;
     top: 116px;
     align-self: start;
+    min-width: 0;
   }
   .home-finder-scroll-section .home-finder-scroll-cards {
     display: flex;
     flex-direction: column;
-    align-content: stretch;
-    padding-bottom: 12vh;
+    align-items: stretch;
+    gap: 0;
+    min-width: 0;
+    padding-bottom: clamp(28px, 5vh, 56px);
     background: transparent;
   }
   .home-finder-scroll-section .home-finder-scroll-card {
     position: sticky;
-    top: calc(116px + var(--finder-card-index) * 24px);
-    min-height: clamp(230px, 25vw, 310px);
-    padding: clamp(28px, 3vw, 42px);
-    margin-bottom: clamp(40px, 8vh, 92px);
-    align-items: flex-start;
+    top: calc(116px + var(--finder-card-index) * 22px);
+    flex: 0 0 auto;
+    min-height: clamp(255px, 26vw, 340px);
+    margin: 0 0 clamp(42px, 8vh, 84px);
+    padding: clamp(26px, 3vw, 42px);
+    display: flex;
     flex-direction: column;
-    gap: clamp(24px, 4vw, 55px);
-    border-radius: 22px;
-    box-shadow: 0 12px 35px rgb(50 31 26 / 6%);
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 32px;
+    box-shadow: 0 12px 30px rgb(50 31 26 / 7%);
   }
-  .home-finder-scroll-section .home-finder-scroll-card:nth-child(1) { --finder-card-index: 0; background: #fffaf7; }
-  .home-finder-scroll-section .home-finder-scroll-card:nth-child(2) { --finder-card-index: 1; background: #eaece0; }
-  .home-finder-scroll-section .home-finder-scroll-card:nth-child(3) { --finder-card-index: 2; background: #f1e0d7; }
-  .home-finder-scroll-section .home-finder-scroll-card > span { font-size: clamp(2.6rem, 4vw, 4rem); line-height: 1; }
+  .home-finder-scroll-section .home-finder-scroll-card:nth-child(1) { --finder-card-index: 0; z-index: 1; }
+  .home-finder-scroll-section .home-finder-scroll-card:nth-child(2) { --finder-card-index: 1; z-index: 2; }
+  .home-finder-scroll-section .home-finder-scroll-card:nth-child(3) { --finder-card-index: 2; z-index: 3; margin-bottom: 0; }
+  .home-finder-scroll-section .home-finder-scroll-card > span {
+    flex: none;
+    font-size: clamp(2.8rem, 4vw, 4rem);
+    line-height: 1;
+  }
   .home-finder-scroll-section .home-finder-scroll-card > div { margin-top: auto; }
-  .home-finder-scroll-section .home-finder-scroll-card > div > p:first-child { font-size: 1.1rem; }
+  .home-finder-scroll-section .home-finder-scroll-card > div > p:first-child { font-size: 1.1rem; line-height: 1.45; }
+  .home-finder-scroll-section .home-finder-scroll-card > div > p:last-child { font-size: .85rem; line-height: 1.6; }
 }
 @media (max-width: 1023px) {
-  .home-finder-scroll-section .home-finder-scroll-card:nth-child(2) { background: #eaece0; }
-  .home-finder-scroll-section .home-finder-scroll-card:nth-child(3) { background: #f1e0d7; }
+  .home-finder-scroll-section .home-finder-scroll-layout { overflow: hidden; }
+  .home-finder-scroll-section .home-finder-scroll-cards { background: transparent; }
+  .home-finder-scroll-section .home-finder-scroll-card { min-height: 155px; padding: 24px; }
 }
