@@ -123,49 +123,6 @@
 [data-kanva-storefront] .kanva-product-actions button[aria-label^="Add"] {
   min-height: 52px; border-radius: .65rem;
 }
-[data-kanva-storefront] .kanva-product-chapter {
-  position: relative; isolation: isolate;
-  display: grid; grid-template-columns: minmax(0,1fr);
-  gap: clamp(1rem,3vw,3rem); overflow: hidden;
-  margin-top: clamp(4rem,10vw,10rem);
-  padding: clamp(2rem,6vw,6.5rem);
-  border-radius: clamp(1.1rem,3vw,2.2rem);
-  background: var(--kanva-mist);
-}
-[data-kanva-storefront] .kanva-product-chapter-copy { display: flex; flex-direction: column; align-items: start; justify-content: center; max-width: 37rem; z-index: 1; }
-[data-kanva-storefront] .kanva-product-chapter h2 {
-  font-size: clamp(2.8rem,5.5vw,6.2rem); line-height: 1.03;
-  letter-spacing: -.07em; margin-top: 1.3rem; text-wrap: balance;
-}
-[data-kanva-storefront] .kanva-product-chapter h2 em { font-weight: 400; color: var(--kanva-accent); }
-[data-kanva-storefront] .kanva-product-chapter-copy > p:not(.kanva-eyebrow) {
-  font-size: clamp(.95rem,1.5vw,1.125rem); color: var(--kanva-subtle);
-  line-height: 1.8; margin-top: 1.6rem; max-width: 28rem;
-}
-[data-kanva-storefront] .kanva-product-chapter .kanva-text-link { margin-top: 1.75rem; }
-[data-kanva-storefront] .kanva-product-chapter-art {
-  display: flex; flex-direction: column; justify-content: center;
-  align-items: center; gap: .6rem; min-height: 16rem;
-  color: var(--kanva-accent);
-}
-[data-kanva-storefront] .kanva-product-chapter-art > p {
-  max-width: 100%; overflow-wrap: anywhere; text-align: center;
-  font-size: .62rem; letter-spacing: .16em;
-}
-[data-kanva-storefront] .kanva-product-orbit {
-  display: grid; place-items: center;
-  width: min(58vw,23rem); aspect-ratio: 1; border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--kanva-accent) 35%, transparent);
-  outline: 1px solid color-mix(in srgb, var(--kanva-accent) 18%, transparent);
-  outline-offset: -2rem;
-  transform: rotate(var(--kanva-rotation, 0deg));
-  will-change: transform;
-}
-[data-kanva-storefront] .kanva-product-orbit span {
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(5rem,12vw,11rem); letter-spacing: -.1em; opacity: .68;
-}
-[data-kanva-storefront] .kanva-product-details-anchor { scroll-margin-top: 8rem; }
 [data-kanva-storefront] .kanva-product-section-nav {
   position: relative; gap: .5rem; margin-top: 2.5rem;
   border-color: var(--kanva-hairline); scroll-margin-top: 6rem;
@@ -237,15 +194,12 @@
 [data-kanva-storefront] .kanva-product-page :is(button, a) { touch-action: manipulation; }
 @media (min-width: 1024px) {
   [data-kanva-storefront] .kanva-product-hero { grid-template-columns: minmax(0,1.08fr) minmax(0,.92fr); }
-  [data-kanva-storefront] .kanva-product-chapter { grid-template-columns: minmax(0,1.1fr) minmax(0,.9fr); }
 }
 @media (max-width: 767px) {
   [data-kanva-storefront] .kanva-product-name { font-size: clamp(2.7rem,10vw,4.2rem); }
   [data-kanva-storefront] .kanva-product-visual { border-radius: 1.15rem; }
   [data-kanva-storefront] .kanva-product-image { aspect-ratio: 4 / 4.6; }
   [data-kanva-storefront] .kanva-product-specs p { font-size: .7rem; line-height: 1.4; }
-  [data-kanva-storefront] .kanva-product-chapter { margin-top: 4rem; }
-  [data-kanva-storefront] .kanva-product-orbit { width: min(58vw,16rem); }
   [data-kanva-storefront] .kanva-product-section-nav { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
   [data-kanva-storefront] .kanva-product-section-nav::-webkit-scrollbar { display: none; }
   [data-kanva-storefront] .kanva-product-section-nav a { flex-shrink: 0; white-space: nowrap; }
@@ -305,10 +259,6 @@
 [data-kanva-storefront] .kanva-product-page h1.kanva-product-name {
   font-size: clamp(2.6rem, 5vw, 5.6rem);
   line-height: 1.01; letter-spacing: -.066em;
-}
-[data-kanva-storefront] .kanva-product-page .kanva-product-chapter h2.display {
-  font-size: clamp(2.8rem, 5.5vw, 6.2rem);
-  line-height: 1.03; letter-spacing: -.07em;
 }
 [data-kanva-storefront] .kanva-product-page .kanva-product-gallery .product-facts {
   grid-template-columns: repeat(3, minmax(0, 1fr));
