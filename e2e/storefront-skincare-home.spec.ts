@@ -7,17 +7,11 @@ for (const width of [320, 390, 768, 1440]) {
     await page.goto("/");
     await expect(page.locator("main.skincare-home")).toBeVisible();
     await expect(page.locator("h1")).toHaveCount(1);
-    const focus = page.getByRole("navigation", { name: "Shop by skincare focus" });
-    await expect(focus.getByRole("link")).toHaveCount(4);
-    await expect(focus.getByRole("link", { name: /Hydration/ })).toHaveAttribute("href", "/shop?focus=hydration");
+    await expect(page.getByRole("navigation", { name: "Shop by skincare focus" })).toHaveCount(0);
+    await expect(page.locator(".home-focus-card")).toHaveCount(0);
+    await expect(page.locator("#routine-finder-feature")).toHaveCount(0);
     await expect(page.getByRole("navigation", { name: "Shop and discover" })).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-    const cards = page.locator(".home-focus-card");
-    for (let index = 0; index < await cards.count(); index++) {
-      const box = await cards.nth(index).boundingBox();
-      expect(box!.x).toBeGreaterThanOrEqual(0);
-      expect(box!.x + box!.width).toBeLessThanOrEqual(width);
-    }
     await page.screenshot({ path: `test-results/storefront-skincare-${width}/homepage.png`, fullPage: true });
   });
 }
