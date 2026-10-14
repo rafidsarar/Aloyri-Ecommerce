@@ -188,3 +188,79 @@
     min-height: 162px;
   }
 }
+
+
+/* Full CRM assortment: a compact, manually browsable track with gentle
+   end-to-end motion. Never let a long catalog widen the page itself. */
+.skincare-home .home-selling-carousel { min-width: 0; }
+.skincare-home .home-selling-carousel-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.skincare-home .home-selling-carousel-controls > p { max-width: 36rem; line-height: 1.6; }
+.skincare-home .home-selling-carousel-buttons { display: flex; align-items: center; gap: 8px; }
+.skincare-home .home-selling-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 9px 11px;
+  border: 1px solid var(--home-line);
+  border-radius: 999px;
+  background: var(--store-surface);
+  color: var(--store-ink);
+  transition: background-color .2s, border-color .2s;
+}
+.skincare-home .home-selling-control:not(:disabled):hover { background: var(--store-panel); border-color: var(--store-accent); }
+.skincare-home .home-selling-control:disabled { opacity: .4; cursor: not-allowed; }
+.skincare-home .home-selling-play-control { min-width: 86px; font-size: .8rem; font-weight: 600; }
+.skincare-home .home-selling-carousel-track {
+  display: flex;
+  min-width: 0;
+  gap: clamp(12px, 1.5vw, 18px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 5px 3px 14px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.skincare-home .home-selling-carousel-track::-webkit-scrollbar { display: none; }
+.skincare-home .home-selling-carousel-item {
+  flex: 0 0 clamp(228px, 25vw, 308px);
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+}
+.skincare-home .home-selling-carousel-item .store-product-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+}
+.skincare-home .home-selling-carousel-item .store-product-card-action { margin-top: auto; padding-top: 10px; }
+.skincare-home .home-selling-carousel-empty {
+  padding: 36px 24px;
+  border: 1px solid var(--home-line);
+  border-radius: 18px;
+  font-size: .9rem;
+  color: var(--store-muted);
+  background: var(--store-surface);
+}
+@media (max-width: 639px) {
+  .skincare-home .home-selling-carousel-item { flex-basis: min(76vw, 286px); }
+  .skincare-home .home-selling-carousel-controls { align-items: flex-start; }
+  .skincare-home .home-selling-carousel-controls > p { flex: 1 1 100%; }
+  .skincare-home .home-selling-carousel-buttons { margin-left: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skincare-home .home-selling-control { transition: none; }
+}

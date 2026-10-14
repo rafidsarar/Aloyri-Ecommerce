@@ -18,6 +18,7 @@ import { HomepageEditorialSections } from "@/components/homepage-editorial-secti
 import { ArrowIcon } from "@/components/icons";
 import { ProductMedia } from "@/components/product-media";
 import { MerchandisingProductGrid } from "@/components/merchandising-product-grid";
+import { HomepageSellingProductsCarousel } from "@/components/homepage-selling-products-carousel";
 import { AnalyticsViewTracker } from "@/components/storefront-analytics-tracker";
 import { TrackedLink } from "@/components/tracked-link";
 import { mergeLiveCatalog, products as localProducts } from "@/lib/catalog";
@@ -403,12 +404,15 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
           );
         }
 
-        const selected = productsForHomepageSection(
+        // Replace the legacy bestseller-only slot with the full live, in-stock
+        // CRM product collection. The client component does not impose a cap.
+        const isSellingCarousel = section.kind === "bestsellers";
+        const selected = isSellingCarousel ? [] : productsForHomepageSection(
           section,
           config.merchandising,
           catalogProducts,
         );
-        if (!selected.length) return null;
+        if (!isSellingCarousel && !selected.length) return null;
 
         const productIds = selected.map((product) => product.id);
         const collection =
@@ -419,6 +423,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
             : undefined;
         const sectionHref = collection ? collectionHref(collection) : "/shop";
         const displayEyebrow =
+          isSellingCarousel ? "FULL COLLECTION" :
           section.eyebrow ||
           collection?.eyebrow ||
           (section.kind === "new-arrivals"
@@ -427,6 +432,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
               ? "Bestsellers"
               : "Aloyri selection");
         const displayTitle =
+          isSellingCarousel ? "Explore every skincare essential." :
           section.title ||
           collection?.title ||
           (section.kind === "new-arrivals"
@@ -434,7 +440,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
             : section.kind === "bestsellers"
               ? "The products people start with."
               : "Everyday skincare, clearly presented.");
-        const displayCopy =
+        const displayCopy = isSellingCarousel ? "" :
           section.copy || collection?.description || "";
         const mode = collection
           ? collection.outOfStockMode === "inherit"
@@ -490,20 +496,24 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
               </TrackedLink>
             </div>
 
-            <MerchandisingProductGrid
-              productIds={productIds}
-              fallbackProducts={selected}
-              outOfStockMode={mode}
-              maxProducts={section.maxProducts}
-              overrideProductRules={
-                Boolean(
-                  collection && collection.outOfStockMode !== "inherit",
-                )
-              }
-              collectionId={collection?.id}
-              placementId={section.id}
-              placementKind={section.kind}
-            />
+            {isSellingCarousel ? (
+              <HomepageSellingProductsCarousel placementId={section.id} />
+            ) : (
+              <MerchandisingProductGrid
+                productIds={productIds}
+                fallbackProducts={selected}
+                outOfStockMode={mode}
+                maxProducts={section.maxProducts}
+                overrideProductRules={
+                  Boolean(
+                    collection && collection.outOfStockMode !== "inherit",
+                  )
+                }
+                collectionId={collection?.id}
+                placementId={section.id}
+                placementKind={section.kind}
+              />
+            )}
           </section>
         );
       })}
