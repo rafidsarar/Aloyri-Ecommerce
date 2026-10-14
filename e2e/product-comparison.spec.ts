@@ -17,17 +17,13 @@ async function mockCatalog(page: Page) {
   }));
 }
 
-test("shop compare buttons open a persistent live-catalog comparison without an account", async ({ page }) => {
+test("shop cards stay purchase-focused while dedicated comparison remains available", async ({ page }) => {
   await mockCatalog(page);
   await page.goto("/shop");
-  const cleanser = page.getByRole("button", { name: "Compare Refreshing Facial Wash" });
-  await expect(cleanser).toBeEnabled();
-  await cleanser.click();
-  await expect(page.locator(".store-product-card .compare-toggle").filter({ hasText: "Selected" }).first()).toHaveAttribute("aria-pressed", "true");
-  const tray = page.getByRole("complementary", { name: "Product comparison selection" });
-  await expect(tray).toContainText("1/3");
-  await tray.getByRole("link", { name: /Compare now/ }).click();
-  await expect(page).toHaveURL(/\/compare$/);
+  await expect(page.locator(".store-product-card .compare-toggle")).toHaveCount(0);
+  await expect(page.locator(".store-product-card").first().getByRole("button", { name: /Add .* to cart/ })).toBeVisible();
+  await page.goto("/compare");
+  await page.getByRole("button", { name: "Add Refreshing Facial Wash to comparison" }).click();
   const region = page.getByRole("region", { name: "Scrollable product comparison table" });
   await expect(region.getByRole("columnheader", { name: /Refreshing Facial Wash/ })).toBeVisible();
   await expect(region).toContainText("Gentle cleansing");
@@ -60,9 +56,9 @@ test("mobile comparison keeps document inside viewport and allows horizontal com
   await page.setViewportSize({ width: 390, height: 844 });
   await mockCatalog(page);
   await page.goto("/shop");
-  await page.getByRole("button", { name: "Compare Refreshing Facial Wash" }).click();
-  await expect(page.getByRole("complementary", { name: "Product comparison selection" }).getByRole("link", { name: /Compare now/ })).toBeVisible();
-  await page.getByRole("complementary", { name: "Product comparison selection" }).getByRole("link", { name: /Compare now/ }).click();
+  await expect(page.locator(".store-product-card .compare-toggle")).toHaveCount(0);
+  await page.goto("/compare");
+  await page.getByRole("button", { name: "Add Refreshing Facial Wash to comparison" }).click();
   await page.getByRole("button", { name: "Add Skin Aqua Super Moisture UV Gel to comparison" }).click();
   const region = page.getByRole("region", { name: "Scrollable product comparison table" });
   await expect(region).toBeVisible();
