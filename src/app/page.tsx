@@ -8,7 +8,6 @@ import { HomepageLiveDraft } from "@/components/homepage-live-draft";
 import type { HomepageBlockId } from "@/lib/homepage-builder";
 import Image from "next/image";
 import Link from "next/link";
-import { HomepageSkinFocus } from "@/components/homepage-skin-focus";
 import { HomepagePromoBanners, activeHomepageBanners } from "@/components/homepage-promo-banners";
 import { HomepageHeroCarousel } from "@/components/homepage-hero-carousel";
 import { HomepageBrandShowcase } from "@/components/homepage-brand-showcase";
@@ -226,13 +225,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
       </>
     ),
     brands: <HomepageBrandShowcase products={crm.ok ? catalogProducts : []} />,
-    focus: (
-      <>
-      {home.showFocus ? (
-        <HomepageSkinFocus />
-      ) : null}
-      </>
-    ),
+    focus: null,
     routineFinder: (
       <>
       {home.showRoutineFinder ? (
