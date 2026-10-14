@@ -249,7 +249,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
                 ["02", "Choose your priority", "Hydration, light texture, simplicity or daily SPF."],
                 ["03", "Explore the edit", "See relevant products with live availability."],
               ].map(([number, title, description]) => (
-                <div key={number} className="store-discovery-step home-finder-scroll-card flex items-start gap-4 rounded-2xl border p-4">
+                <div key={number} className="store-discovery-step home-finder-scroll-card">
                   <span className="store-discovery-accent display text-2xl">{number}</span>
                   <div>
                     <p className="text-sm font-semibold">{title}</p>
