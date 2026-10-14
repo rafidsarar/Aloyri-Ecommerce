@@ -226,7 +226,43 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
     ),
     brands: <HomepageBrandShowcase products={crm.ok ? catalogProducts : []} />,
     focus: null,
-    routineFinder: null,
+    routineFinder: (
+      <>
+      {home.showRoutineFinder ? (
+        <section className="shell pb-10 pt-2 md:pb-14" aria-labelledby="routine-finder-feature">
+          <div className="store-discovery-feature grid overflow-hidden rounded-[2rem] border lg:grid-cols-[1.1fr_.9fr]">
+            <div className="p-7 sm:p-10 lg:p-14">
+              <p className="store-discovery-muted text-[11px] font-semibold uppercase tracking-[.22em]">A little guidance, a better beginning</p>
+              <h2 id="routine-finder-feature" className="store-discovery-title display mt-5 max-w-lg text-4xl leading-tight sm:text-5xl">
+                {home.routineFinderHeadline}
+              </h2>
+              <p className="store-discovery-muted mt-5 max-w-xl text-sm leading-7">
+                {home.routineFinderIntro}
+              </p>
+              <Link href="/routine-finder" className="store-discovery-button mt-8 inline-flex min-h-12 items-center gap-3 rounded-full px-6 py-3 text-sm font-semibold">
+                Find your routine <ArrowIcon />
+              </Link>
+            </div>
+            <div className="store-discovery-feature-steps grid content-center gap-3 p-6 sm:p-9">
+              {[
+                ["01", "Tell us what feels right", "Choose how your skin usually feels."],
+                ["02", "Choose your priority", "Hydration, light texture, simplicity or daily SPF."],
+                ["03", "Explore the edit", "See relevant products with live availability."],
+              ].map(([number, title, description]) => (
+                <div key={number} className="store-discovery-step flex items-start gap-4 rounded-2xl border p-4">
+                  <span className="store-discovery-accent display text-2xl">{number}</span>
+                  <div>
+                    <p className="text-sm font-semibold">{title}</p>
+                    <p className="store-discovery-muted mt-1 text-xs leading-5">{description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
+      </>
+    ),
     editorialBeforeProducts: (
       <>
       <HomepageEditorialSections sections={home.editorialSections} position="before-products" />
