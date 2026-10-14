@@ -29,3 +29,40 @@ test("shoppers can pause hero rotation while retaining manual navigation", async
   await expect(page.getByRole("button", { name: "Show campaign 2" })).toHaveAttribute("aria-current", "true");
   await expect(page.getByRole("button", { name: "Resume banner rotation" })).toHaveAttribute("aria-pressed", "true");
 });
+
+for (const width of [390, 1024, 1440]) {
+  test(`routine finder has rounded, aligned cards with readable content at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/");
+    const section = page.locator(".home-finder-scroll-section");
+    await expect(section).toBeVisible();
+    const cards = section.locator(".home-finder-scroll-card");
+    await expect(cards).toHaveCount(3);
+    const details = await cards.evaluateAll(elements => elements.map(element => {
+      const rect = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      const title = element.querySelector("div > p:first-child")?.getBoundingClientRect();
+      const number = element.querySelector("span")?.getBoundingClientRect();
+      return {
+        width: rect.width, left: rect.left,
+        radius: parseFloat(style.borderTopLeftRadius),
+        border: parseFloat(style.borderTopWidth),
+        padding: parseFloat(style.paddingLeft),
+        position: style.position,
+        titleInside: Boolean(title && title.left >= rect.left && title.right <= rect.right + 1),
+        numberInside: Boolean(number && number.left >= rect.left && number.right <= rect.right + 1),
+      };
+    }));
+    for (const card of details) {
+      expect(card.radius).toBeGreaterThanOrEqual(20);
+      expect(card.border).toBeGreaterThanOrEqual(1);
+      expect(card.padding).toBeGreaterThanOrEqual(20);
+      expect(card.titleInside).toBe(true);
+      expect(card.numberInside).toBe(true);
+      if (width >= 1024) expect(card.position).toBe("sticky");
+    }
+    expect(Math.max(...details.map(d => d.width)) - Math.min(...details.map(d => d.width))).toBeLessThan(2);
+    expect(Math.max(...details.map(d => d.left)) - Math.min(...details.map(d => d.left))).toBeLessThan(2);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  });
+}
