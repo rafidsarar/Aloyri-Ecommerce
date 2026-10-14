@@ -1,6 +1,7 @@
 import { normalizeHeroBackground } from "@/lib/hero-background";
 import { normalizeHeroProductIds, normalizeHeroDiscountMode, normalizeHeroPromotionCode } from "@/lib/hero-banner-offers";
 import "server-only";
+import { socialPlatforms, validSocialUrl, type SocialLinks } from "@/lib/social-links";
 import { defaultPrivacyContent, defaultTermsContent } from "@/lib/default-policy-content";
 import { defaultVisualLayout, normalizeVisualLayout, normalizeVisualPageLayout, visualPageKeys, type VisualLayout, type VisualPageKey } from "@/lib/visual-builder";
 import { defaultHomepageOrder, normalizeHomepageOrder, safeHomepageImagePath, type HomepageBlockId } from "@/lib/homepage-builder";
@@ -186,6 +187,7 @@ export type StorefrontConfig = {
   site: {
     announcement: string;
     footerDescription: string;
+    socialLinks: SocialLinks;
     supportEmail: string;
     supportPhone: string;
     supportHours: string;
@@ -420,6 +422,7 @@ export const defaultStorefrontConfig: StorefrontConfig = {
     announcement: "Let Your Skin Glow. · Curated skincare for Bangladesh",
     footerDescription:
       "Aloyri is a skincare destination built around considered selection, clear product information and a calmer way to build an everyday routine.",
+    socialLinks: { facebook: "", instagram: "", tiktok: "", youtube: "", x: "", linkedin: "", whatsapp: "" },
     supportEmail: "",
     supportPhone: "",
     supportHours: "",
@@ -768,6 +771,7 @@ function normalizeConfig(value: Partial<StorefrontConfig> | null): StorefrontCon
     site: {
       ...defaultStorefrontConfig.site,
       ...(value.site || {}),
+      socialLinks: Object.fromEntries(socialPlatforms.map(platform => [platform, validSocialUrl(platform, typeof value.site?.socialLinks?.[platform] === "string" ? value.site.socialLinks[platform] : "")])) as SocialLinks,
     },
     homepage: {
       ...defaultStorefrontConfig.homepage,

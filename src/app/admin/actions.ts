@@ -35,6 +35,7 @@ import {
   type ProductEditorial,
   type StorefrontConfig,
 } from "@/lib/storefront-admin-store";
+import { validSocialUrl } from "@/lib/social-links";
 
 function text(formData: FormData, key: string, max = 4000) {
   const value = formData.get(key);
@@ -610,6 +611,15 @@ function validateSiteNavigation(formData: FormData, destination = "/admin/settin
 }
 
 function applySiteSettings(config: StorefrontConfig, formData: FormData, homepage = false) {
+    const socialKeys = ["facebook", "instagram", "tiktok", "youtube", "x", "linkedin", "whatsapp"] as const;
+    const socialLinks = { ...config.site.socialLinks };
+    for (const platform of socialKeys) {
+      const field = "social" + platform.charAt(0).toUpperCase() + platform.slice(1);
+      if (!formData.has(field)) continue;
+      const value = String(formData.get(field) || "").trim();
+      if (value && !validSocialUrl(platform, value)) throw new Error("Invalid " + platform + " profile URL. Use an HTTPS link to the matching platform.");
+      socialLinks[platform] = value ? validSocialUrl(platform, value) : "";
+    }
     config.presentation = normalizePresentation({
       contentWidth: homepage ? config.presentation.contentWidth : text(formData,"contentWidth",20),
       desktopColumns: homepage ? config.presentation.desktopColumns : Number(formData.get("desktopColumns")),
@@ -622,6 +632,7 @@ function applySiteSettings(config: StorefrontConfig, formData: FormData, homepag
     config.site = {
       announcement: text(formData, "announcement", 180),
       footerDescription: text(formData, "footerDescription", 600),
+      socialLinks,
       supportEmail: text(formData, "supportEmail", 200),
       supportPhone: text(formData, "supportPhone", 80),
       supportHours: text(formData, "supportHours", 200),

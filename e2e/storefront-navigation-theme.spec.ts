@@ -56,3 +56,18 @@ test.describe("storefront appearance and navigation", () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
 });
+
+test("footer only renders configured official social profile links", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  const footer = page.locator(".store-footer");
+  await expect(footer).toBeVisible();
+  const socialLinks = footer.locator('[aria-label^="Aloyri on "]');
+  for (const link of await socialLinks.all()) {
+    await expect(link).toHaveAttribute("target", "_blank");
+    await expect(link).toHaveAttribute("rel", /noopener noreferrer/);
+    const url = new URL((await link.getAttribute("href"))!);
+    expect(url.protocol).toBe("https:");
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});

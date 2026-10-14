@@ -9,6 +9,7 @@ import { StorefrontAnalyticsTracker } from "@/components/storefront-analytics-tr
 import { PerformanceReporter } from "@/components/performance-reporter";
 import { CustomerDataCleanup } from "@/components/customer-data-cleanup";
 import { Footer } from "@/components/footer";
+import type { SocialLinks } from "@/lib/social-links";
 import { PublicPagePreviewBridge } from "@/components/public-page-preview-bridge";
 import { Header } from "@/components/header";
 import { GlobalStorefrontSearch } from "@/components/global-storefront-search";
@@ -20,6 +21,7 @@ export function SiteChrome({
   presentation = defaultPresentation,
   announcement,
   footerDescription,
+  socialLinks,
   preview,
   searchSynonymGroups = [],
 }: {
@@ -27,6 +29,7 @@ export function SiteChrome({
   presentation?: StorefrontPresentation;
   announcement: string;
   footerDescription: string;
+  socialLinks: SocialLinks;
   preview: boolean;
   searchSynonymGroups?: string[][];
 }) {
@@ -78,7 +81,7 @@ export function SiteChrome({
       <div id="main-content" tabIndex={-1}>
         {children}
       </div>
-      <Footer description={draft?.footerDescription ?? footerDescription} />
+      <Footer description={draft?.footerDescription ?? footerDescription} socialLinks={socialLinks} />
       </div>
     </CatalogProvider>
   );
