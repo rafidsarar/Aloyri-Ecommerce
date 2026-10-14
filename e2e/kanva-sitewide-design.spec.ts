@@ -27,7 +27,7 @@ test("product detail has an editorial hero and retains live purchase controls", 
   await page.getByRole("link", { name: /Refreshing Facial Wash/i }).first().click();
   await expect(page.locator(".kanva-product-hero")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Refreshing Facial Wash" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: /Care that fits your rhythm/i })).toBeVisible();
+  await expect(page.locator(".kanva-product-chapter")).toHaveCount(0);
   await expect(page.getByRole("navigation", { name: "Product information" })).toBeVisible();
   await expect(page.locator(".kanva-product-price").getByText(/749/)).toBeVisible();
   await page.getByRole("button", { name: "Add to cart", exact: true }).first().click();
@@ -45,8 +45,9 @@ for (const width of [320, 390, 768, 1440]) {
     await page.getByRole("link", { name: /Refreshing Facial Wash/i }).first().click();
     await expect(page.locator(".kanva-product-page")).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-    await page.locator(".kanva-product-chapter").scrollIntoViewIfNeeded();
-    await expect(page.locator(".kanva-product-chapter")).toBeVisible();
+    await page.getByRole("navigation", { name: "Product information" }).scrollIntoViewIfNeeded();
+    await expect(page.getByRole("navigation", { name: "Product information" })).toBeVisible();
+    await expect(page.locator(".kanva-product-chapter")).toHaveCount(0);
   });
 }
 
@@ -55,6 +56,7 @@ test("reduced-motion visitors can read every product section without animation",
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/shop");
   await page.getByRole("link", { name: /Refreshing Facial Wash/i }).first().click();
-  await expect(page.getByRole("heading", { name: /Care that fits your rhythm/i })).toBeVisible();
-  await expect(page.locator(".kanva-product-chapter")).toHaveCSS("opacity", "1");
+  await expect(page.locator(".kanva-product-chapter")).toHaveCount(0);
+  await expect(page.getByRole("navigation", { name: "Product information" })).toBeVisible();
+  await expect(page.locator("#product-use")).toBeAttached();
 });
