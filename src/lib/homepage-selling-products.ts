@@ -7,8 +7,9 @@ import type { Product } from "@/lib/catalog";
 export function sellingProducts(products: readonly Product[]): Product[] {
   const seen = new Set<string>();
   return products.filter((product) => {
-    if (!product.id || seen.has(product.id)) return false;
+    if (!product.id || product.active === false ||
+        (product.availableStock ?? 0) <= 0 || seen.has(product.id)) return false;
     seen.add(product.id);
-    return (product.availableStock ?? 0) > 0;
+    return true;
   });
 }
