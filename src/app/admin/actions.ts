@@ -1,6 +1,7 @@
 "use server";
 
 import { normalizeHeroBackground } from "@/lib/hero-background";
+import { normalizeSocialLinks, normalizeSocialUrl, socialPlatformOptions } from "@/lib/social-links";
 import { saveAdminStorefront } from "@/lib/admin-save";
 import { normalizeHeroProductIds, normalizeHeroDiscountMode, normalizeHeroPromotionCode } from "@/lib/hero-banner-offers";
 
@@ -607,6 +608,12 @@ function validateSiteNavigation(formData: FormData, destination = "/admin/settin
     const label=text(formData,`navLabel${i}`,30); const href=text(formData,`navHref${i}`,160);
     if ((label || href) && (!label || !safeNavigationHref(href))) redirect(destination + "?error="+encodeURIComponent(`Menu item ${i+1} needs a label and a valid storefront destination.`));
   }
+  for (const { key, field, label } of socialPlatformOptions) {
+    const url = text(formData, field, 320);
+    if (url && !normalizeSocialUrl(url, key)) {
+      redirect(destination + "?error=" + encodeURIComponent(`Enter a valid HTTPS ${label} profile URL.`));
+    }
+  }
 }
 
 function applySiteSettings(config: StorefrontConfig, formData: FormData, homepage = false) {
@@ -622,6 +629,7 @@ function applySiteSettings(config: StorefrontConfig, formData: FormData, homepag
     config.site = {
       announcement: text(formData, "announcement", 180),
       footerDescription: text(formData, "footerDescription", 600),
+      socialLinks: normalizeSocialLinks(Object.fromEntries(socialPlatformOptions.map(({ key, field }) => [key, text(formData, field, 320)]))),
       supportEmail: text(formData, "supportEmail", 200),
       supportPhone: text(formData, "supportPhone", 80),
       supportHours: text(formData, "supportHours", 200),
