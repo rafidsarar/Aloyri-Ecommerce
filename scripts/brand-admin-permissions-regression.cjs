@@ -18,7 +18,7 @@ Module._load=function(name,parent,isMain){
   }};
   if(name==='@/lib/crm-catalog-integration')return {fetchCrmCatalog:async()=>crmOnline?{ok:true,body:{brands:[brand]}}:{ok:false}};
   if(name==='@/lib/storefront-admin-store')return {
-    uploadStorefrontMedia:async file=>{uploaded++;return 'media/upload.webp'},
+    uploadStorefrontMedia:async ()=>{uploaded++;return 'media/upload.webp'},
     writeAdminAuditEvent:async()=>{},
   };
   if(name==='@/lib/brand-image-store')return {
@@ -42,10 +42,10 @@ const upload=()=>{const form=new FormData();form.set('brandId',brand.id);
   assert.equal(mutations,0);assert.equal(uploaded,0);
   allowed=new Set(['merchandising.edit','media.edit']);
   const forged=upload();forged.set('brandId','website-created-brand');
-  await assert.rejects(saveBrandPhoto(forged),/REDIRECT:.*not in CRM/);
+  await assert.rejects(saveBrandPhoto(forged),/REDIRECT:.*not%20in%20CRM/);
   assert.equal(mutations,0);
   crmOnline=false;
-  await assert.rejects(saveBrandPhoto(upload()),/REDIRECT:.*Cannot verify/);
+  await assert.rejects(saveBrandPhoto(upload()),/REDIRECT:.*Cannot%20verify/);
   assert.equal(uploaded,0);
   crmOnline=true;
   await assert.rejects(saveBrandPhoto(upload()),/REDIRECT:\/admin\/brands\?saved=1/);
