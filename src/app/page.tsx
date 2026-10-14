@@ -385,7 +385,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
                         ? campaign.outOfStockMode
                         : config.merchandising.outOfStockMode
                     }
-                    maxProducts={section.maxProducts}
+                    maxProducts={isAllProductsCarousel ? undefined : section.maxProducts}
+              horizontalScroll={isAllProductsCarousel}
                     promotionOnly={campaign.promotionOnly}
                     overrideProductRules={
                       Boolean(
@@ -403,11 +404,15 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
           );
         }
 
-        const selected = productsForHomepageSection(
-          section,
-          config.merchandising,
-          catalogProducts,
-        );
+        // This homepage slot now showcases every sellable CRM product, not only bestseller flags.
+        const isAllProductsCarousel = section.kind === "bestsellers";
+        const selected = isAllProductsCarousel
+          ? catalogProducts.filter((product) => product.active !== false)
+          : productsForHomepageSection(
+              section,
+              config.merchandising,
+              catalogProducts,
+            );
         if (!selected.length) return null;
 
         const productIds = selected.map((product) => product.id);
@@ -418,7 +423,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
               )
             : undefined;
         const sectionHref = collection ? collectionHref(collection) : "/shop";
-        const displayEyebrow =
+        const displayEyebrow = isAllProductsCarousel ? "Shop all products" :
           section.eyebrow ||
           collection?.eyebrow ||
           (section.kind === "new-arrivals"
@@ -426,7 +431,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
             : section.kind === "bestsellers"
               ? "Bestsellers"
               : "Aloyri selection");
-        const displayTitle =
+        const displayTitle = isAllProductsCarousel ? "Discover all our skincare." :
           section.title ||
           collection?.title ||
           (section.kind === "new-arrivals"
