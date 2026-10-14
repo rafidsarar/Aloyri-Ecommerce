@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { socialPlatforms, validSocialUrl, type SocialLinks } from "@/lib/storefront-admin-store";
+import { socialPlatforms, validSocialUrl, type SocialLinks } from "@/lib/social-links";
 import { BrandMark } from "@/components/brand-mark";
 import { useCatalog } from "@/components/catalog-provider";
 import { buildCategoryDirectory } from "@/lib/storefront-categories";

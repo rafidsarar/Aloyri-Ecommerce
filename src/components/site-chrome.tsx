@@ -9,7 +9,7 @@ import { StorefrontAnalyticsTracker } from "@/components/storefront-analytics-tr
 import { PerformanceReporter } from "@/components/performance-reporter";
 import { CustomerDataCleanup } from "@/components/customer-data-cleanup";
 import { Footer } from "@/components/footer";
-import type { SocialLinks } from "@/lib/storefront-admin-store";
+import type { SocialLinks } from "@/lib/social-links";
 import { PublicPagePreviewBridge } from "@/components/public-page-preview-bridge";
 import { Header } from "@/components/header";
 import { GlobalStorefrontSearch } from "@/components/global-storefront-search";

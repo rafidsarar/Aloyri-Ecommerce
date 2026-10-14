@@ -34,8 +34,8 @@ import {
   type InfoPageContent,
   type ProductEditorial,
   type StorefrontConfig,
-  validSocialUrl,
 } from "@/lib/storefront-admin-store";
+import { validSocialUrl } from "@/lib/social-links";
 
 function text(formData: FormData, key: string, max = 4000) {
   const value = formData.get(key);
