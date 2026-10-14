@@ -1,6 +1,7 @@
 import { normalizeHeroBackground } from "@/lib/hero-background";
 import { normalizeHeroProductIds, normalizeHeroDiscountMode, normalizeHeroPromotionCode } from "@/lib/hero-banner-offers";
 import "server-only";
+import { normalizeSocialLinks } from "@/lib/social-links";
 import { defaultPrivacyContent, defaultTermsContent } from "@/lib/default-policy-content";
 import { defaultVisualLayout, normalizeVisualLayout, normalizeVisualPageLayout, visualPageKeys, type VisualLayout, type VisualPageKey } from "@/lib/visual-builder";
 import { defaultHomepageOrder, normalizeHomepageOrder, safeHomepageImagePath, type HomepageBlockId } from "@/lib/homepage-builder";
@@ -190,6 +191,15 @@ export type StorefrontConfig = {
     supportPhone: string;
     supportHours: string;
     appearance: "rose" | "sage" | "sand";
+    socialLinks: {
+      facebook: string;
+      instagram: string;
+      tiktok: string;
+      youtube: string;
+      x: string;
+      linkedin: string;
+      whatsapp: string;
+    };
   };
   homepage: {
     eyebrow: string;
@@ -424,6 +434,7 @@ export const defaultStorefrontConfig: StorefrontConfig = {
     supportPhone: "",
     supportHours: "",
     appearance: "rose",
+    socialLinks: { facebook: "", instagram: "", tiktok: "", youtube: "", x: "", linkedin: "", whatsapp: "" },
   },
   homepage: {
     eyebrow: "Aloyri skincare edit",
@@ -768,6 +779,7 @@ function normalizeConfig(value: Partial<StorefrontConfig> | null): StorefrontCon
     site: {
       ...defaultStorefrontConfig.site,
       ...(value.site || {}),
+      socialLinks: normalizeSocialLinks(value.site?.socialLinks),
     },
     homepage: {
       ...defaultStorefrontConfig.homepage,

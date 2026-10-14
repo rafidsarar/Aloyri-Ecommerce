@@ -1,4 +1,5 @@
 import { StorefrontLayoutFields } from "@/components/admin/storefront-layout-fields";
+import { SOCIAL_PLATFORMS } from "@/lib/social-links";
 import { AdminSubmitButton } from "@/components/admin/admin-submit-button";
 import { saveSiteSettings } from "@/app/admin/actions";
 import { AdminCard, AdminNotice } from "@/components/admin/admin-shell";
@@ -53,6 +54,30 @@ export function WebsiteSettingsFields({config, homepage = false}: {config: Store
             </label>
           </div>
         </AdminCard></details>
+
+        {!homepage && <details id="website-social" name="website-setting" className="admin-editor-section"><summary>Social media</summary><AdminCard>
+          <h2 className="text-sm font-semibold">Social profile links</h2>
+          <p className="mt-1 text-xs leading-5 text-black/55">
+            Enter the full HTTPS URL for each profile. Saved links appear automatically as icons in the website footer; empty fields remain hidden.
+          </p>
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            {SOCIAL_PLATFORMS.map(platform => (
+              <label key={platform.key} className="grid min-w-0 gap-1.5 text-sm font-medium">
+                {platform.label} profile URL
+                <input
+                  name={"social_" + platform.key}
+                  type="url"
+                  inputMode="url"
+                  autoComplete="url"
+                  placeholder={"https://" + platform.hosts[0] + "/"}
+                  defaultValue={config.site.socialLinks?.[platform.key] || ""}
+                  maxLength={400}
+                  className="w-full min-w-0 rounded-xl border border-black/10 px-4 py-3 text-sm font-normal"
+                />
+              </label>
+            ))}
+          </div>
+        </AdminCard></details>}
 
         <details id="website-support" name="website-setting" className="admin-editor-section"><summary>Customer contact</summary><AdminCard>
           <p className="text-sm font-semibold">Customer support details</p>

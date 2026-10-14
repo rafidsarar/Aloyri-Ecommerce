@@ -3,6 +3,7 @@
 import "./storefront-design.css";
 import { useEffect, useState, type CSSProperties } from "react";
 import { normalizePresentation, defaultPresentation, type StorefrontPresentation } from "@/lib/storefront-presentation";
+import type { SocialLinks } from "@/lib/social-links";
 import { usePathname } from "next/navigation";
 import { CatalogProvider } from "@/components/catalog-provider";
 import { StorefrontAnalyticsTracker } from "@/components/storefront-analytics-tracker";
@@ -20,6 +21,7 @@ export function SiteChrome({
   presentation = defaultPresentation,
   announcement,
   footerDescription,
+  socialLinks,
   preview,
   searchSynonymGroups = [],
 }: {
@@ -27,6 +29,7 @@ export function SiteChrome({
   presentation?: StorefrontPresentation;
   announcement: string;
   footerDescription: string;
+  socialLinks: SocialLinks;
   preview: boolean;
   searchSynonymGroups?: string[][];
 }) {
@@ -78,7 +81,7 @@ export function SiteChrome({
       <div id="main-content" tabIndex={-1}>
         {children}
       </div>
-      <Footer description={draft?.footerDescription ?? footerDescription} />
+      <Footer description={draft?.footerDescription ?? footerDescription} socialLinks={socialLinks} />
       </div>
     </CatalogProvider>
   );

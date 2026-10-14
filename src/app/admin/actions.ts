@@ -1,6 +1,7 @@
 "use server";
 
 import { normalizeHeroBackground } from "@/lib/hero-background";
+import { SOCIAL_PLATFORMS, normalizeSocialLinks, safeSocialUrl } from "@/lib/social-links";
 import { saveAdminStorefront } from "@/lib/admin-save";
 import { normalizeHeroProductIds, normalizeHeroDiscountMode, normalizeHeroPromotionCode } from "@/lib/hero-banner-offers";
 
@@ -609,6 +610,21 @@ function validateSiteNavigation(formData: FormData, destination = "/admin/settin
   }
 }
 
+function validateSocialSettings(formData: FormData) {
+  const destination = formData.get("builderWorkspace") === "settings"
+    ? "/admin/builder?workspace=settings&error="
+    : "/admin/settings?error=";
+  for (const platform of SOCIAL_PLATFORMS) {
+    const value = formData.get("social_" + platform.key);
+    if (value === null) continue;
+    if (safeSocialUrl(platform.key, value) === null) {
+      redirect(destination + encodeURIComponent(
+        platform.label + " needs a valid HTTPS URL from its official website, or leave it blank.",
+      ));
+    }
+  }
+}
+
 function applySiteSettings(config: StorefrontConfig, formData: FormData, homepage = false) {
     config.presentation = normalizePresentation({
       contentWidth: homepage ? config.presentation.contentWidth : text(formData,"contentWidth",20),
@@ -619,12 +635,17 @@ function applySiteSettings(config: StorefrontConfig, formData: FormData, homepag
       showHeroImageOnMobile: homepage ? config.presentation.showHeroImageOnMobile : formData.get("showHeroImageOnMobile") === "on",
       navigation: Array.from({length:5},(_,i)=>({label:text(formData,`navLabel${i}`,30),href:text(formData,`navHref${i}`,160)})),
     });
+    const socialDraft = Object.fromEntries(
+      SOCIAL_PLATFORMS.filter(platform => formData.has("social_" + platform.key))
+        .map(platform => [platform.key, formData.get("social_" + platform.key)]),
+    );
     config.site = {
       announcement: text(formData, "announcement", 180),
       footerDescription: text(formData, "footerDescription", 600),
       supportEmail: text(formData, "supportEmail", 200),
       supportPhone: text(formData, "supportPhone", 80),
       supportHours: text(formData, "supportHours", 200),
+      socialLinks: normalizeSocialLinks({ ...config.site.socialLinks, ...socialDraft }),
       appearance: ["rose", "sage", "sand"].includes(text(formData, "appearance", 10))
         ? text(formData, "appearance", 10) as "rose" | "sage" | "sand"
         : config.site.appearance,
@@ -634,6 +655,7 @@ function applySiteSettings(config: StorefrontConfig, formData: FormData, homepag
 export async function saveSiteSettings(formData: FormData) {
   const admin = await requireAdminPermission("settings.edit");
   validateSiteNavigation(formData);
+  validateSocialSettings(formData);
   await saveAdminStorefront(formData, (config) => {
     applySiteSettings(config, formData);
     return config;

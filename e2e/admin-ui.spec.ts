@@ -135,6 +135,20 @@ test.describe("minimal admin interface", () => {
     await page.screenshot({path:testInfo.outputPath("account-mobile.png"),fullPage:true});
   });
 
+  test("Admin Social media fields are labeled and editable on mobile", async ({ page }) => {
+    await page.goto(`${base}/admin/store-settings`);
+    const panel = page.locator("#website-social");
+    await panel.locator("summary").click();
+    for (const label of ["Facebook", "Instagram", "TikTok", "YouTube", "X", "LinkedIn", "WhatsApp"]) {
+      await expect(panel.getByRole("textbox", { name: label + " profile URL" })).toBeVisible();
+    }
+    const facebook = panel.getByRole("textbox", { name: "Facebook profile URL" });
+    await facebook.fill("https://www.facebook.com/aloyri");
+    await expect(facebook).toHaveValue("https://www.facebook.com/aloyri");
+    await page.setViewportSize({ width: 390, height: 844 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  });
+
   test("admin customization fields are labeled and fit a narrow screen",async({page},testInfo)=>{
     await page.goto(`${base}/admin/settings`);
     await page.getByLabel("Page width").selectOption("comfortable");

@@ -38,6 +38,7 @@ fs.writeFileSync(path.join(temp,'app/account/page.tsx'),'import {CustomerAccount
 // Render the actual customization fields with isolated configuration.
 fs.copyFileSync(path.join(root,'src/components/admin/storefront-layout-fields.tsx'),path.join(temp,'components/admin/storefront-layout-fields.tsx'));
 fs.copyFileSync(path.join(root,'src/lib/storefront-presentation.ts'),path.join(temp,'lib/storefront-presentation.ts'));
+fs.copyFileSync(path.join(root,'src/lib/social-links.ts'),path.join(temp,'lib/social-links.ts'));
 fs.mkdirSync(path.join(temp,'app/admin/settings'),{recursive:true});
 fs.writeFileSync(path.join(temp,'app/admin/settings/page.tsx'),`import {AdminShell} from "@/components/admin/admin-shell"; import {StorefrontLayoutFields} from "@/components/admin/storefront-layout-fields"; import {defaultPrivacyContent,defaultTermsContent} from "@/lib/default-policy-content"; import {defaultPresentation} from "@/lib/storefront-presentation"; export default function Page(){return <AdminShell username="preview" title="Store settings" subtitle="Customize the storefront"><form><StorefrontLayoutFields value={defaultPresentation}/></form></AdminShell>}`);
 // Isolated Visual Builder interaction preview: reuses the production editor,
