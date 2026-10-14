@@ -10,7 +10,7 @@ for (const width of [320, 390, 768, 1440]) {
     await expect(page.getByRole("navigation", { name: "Shop by skincare focus" })).toHaveCount(0);
     await expect(page.locator(".home-focus-card")).toHaveCount(0);
     await expect(page.locator("#routine-finder-feature")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Find your routine", exact: true })).toHaveAttribute("href", "/routine-finder");
+    await expect(page.locator('section[aria-labelledby="routine-finder-feature"]').getByRole("link", { name: "Find your routine", exact: true })).toHaveAttribute("href", "/routine-finder");
     await expect(page.getByText("Tell us what feels right")).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Shop and discover" })).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
