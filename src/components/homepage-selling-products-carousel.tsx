@@ -51,7 +51,7 @@ export function HomepageSellingProductsCarousel({
     });
     observer.observe(track);
     return () => observer.disconnect();
-  }, []);
+  }, [synced, available.length]);
 
   useEffect(() => {
     const track = trackRef.current;
