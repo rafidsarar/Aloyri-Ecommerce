@@ -11,6 +11,7 @@ import Link from "next/link";
 import { HomepagePromoBanners, activeHomepageBanners } from "@/components/homepage-promo-banners";
 import { HomepageHeroCarousel } from "@/components/homepage-hero-carousel";
 import { HomepageBrandShowcase } from "@/components/homepage-brand-showcase";
+import { readBrandImageAssignments } from "@/lib/brand-image-store";
 import { VisualBuilderBlock } from "@/components/visual-builder-block";
 import { HomepageCategoryShowcase } from "@/components/homepage-category-showcase";
 import { HomepageEditorialSections } from "@/components/homepage-editorial-sections";
@@ -75,9 +76,10 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ builderPreview?: string }> }) {
   const { builderPreview } = await searchParams;
-  const [config, crm] = await Promise.all([
+  const [config, crm, brandImages] = await Promise.all([
     readStorefrontConfig(),
     fetchCrmCatalog(),
+    readBrandImageAssignments(),
   ]);
 
   const catalogProducts = crm.ok
@@ -224,7 +226,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
       {home.showCategories ? <HomepageCategoryShowcase products={catalogProducts} categories={crm.ok ? crm.body.categories : []} eyebrow={home.categoriesEyebrow} title={home.categoriesTitle} intro={home.categoriesIntro} /> : null}
       </>
     ),
-    brands: <HomepageBrandShowcase products={crm.ok ? catalogProducts : []} />,
+    brands: <HomepageBrandShowcase products={crm.ok ? catalogProducts : []} brands={crm.ok ? crm.body.brands : []} images={brandImages.images} />,
     focus: null,
     routineFinder: (
       <>
