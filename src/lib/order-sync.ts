@@ -1,4 +1,5 @@
 import "server-only";
+import { isRejectedCheckout } from "@/lib/order-sync-status";
 import { createCrmWebsiteOrder, type WebsiteOrderPayload, type CrmOrderResult } from "@/lib/crm-order-integration";
 import { createStructuredJsonOnce, readStructuredJson, writeStructuredJson, listStructuredJson, acquireRecordLease, releaseRecordLease } from "@/lib/structured-record-store";
 import { recordOrderSettlement } from "@/lib/payment-settlement";
@@ -72,7 +73,8 @@ export async function runOrderSync(limit=50) {
   return {processed,errors};
 }
 export async function orderSyncHealth() {
-  let offset=0; const totals={pending:0,completed:0,attention:0}; const issues:Array<{id:string;state:string;error?:string;updatedAt:string}>=[];
-  for(;;){const rows=await listStructuredJson<Intent>(PREFIX,200,offset); for(const row of rows){totals[row.value.state]++;if(row.value.state!=="completed")issues.push({id:row.value.payload.externalOrderId,state:row.value.state,error:row.value.error,updatedAt:row.value.updatedAt});} offset+=rows.length;if(rows.length<200)break;}
+  let offset=0; const totals={pending:0,completed:0,attention:0,rejected:0}; const issues:Array<{id:string;state:string;error?:string;updatedAt:string}>=[];
+  for(;;){const rows=await listStructuredJson<Intent>(PREFIX,200,offset); for(const row of rows){const state=isRejectedCheckout(row.value)?"rejected":row.value.state;totals[state]++;if(state!=="completed")issues.push({id:row.value.payload.externalOrderId,state,error:row.value.error,updatedAt:row.value.updatedAt});} offset+=rows.length;if(rows.length<200)break;}
   return {totals,issues};
 }
+

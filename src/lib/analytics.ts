@@ -426,8 +426,11 @@ export function trackStorefrontEvent(
   const blob = new Blob([body], { type: "application/json" });
 
   if (navigator.sendBeacon) {
-    navigator.sendBeacon("/api/analytics", blob);
-    return;
+    try {
+      if (navigator.sendBeacon("/api/analytics", blob)) return;
+    } catch {
+      // A rejected beacon must fall back to the ordinary request path.
+    }
   }
 
   void fetch("/api/analytics", {
@@ -438,3 +441,4 @@ export function trackStorefrontEvent(
     credentials: "omit",
   }).catch(() => undefined);
 }
+
