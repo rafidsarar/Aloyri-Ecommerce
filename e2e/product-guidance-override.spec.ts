@@ -47,5 +47,6 @@ test("product pages consume saved Owner guidance without hardcoded courier charg
   expect(productPage).toContain("editorialGuidance={config.products[schemaProduct.id]}");
   expect(rendering).toContain("resolveProductGuidance({");
   expect(rendering).not.toContain("Inside Dhaka ৳80 · Outside Dhaka ৳150");
+  expect(rendering).not.toContain("৳80 inside Dhaka · ৳150 outside Dhaka");
   expect(rendering).toContain("The current charge is confirmed at checkout.");
 });
