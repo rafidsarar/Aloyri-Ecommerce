@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { StorefrontConfig } from "@/lib/storefront-admin-store";
 
 const tasks = [
+  ["Control coverage", "See what the website Admin controls and what stays in CRM.", "/admin/coverage"],
   ["Homepage", "Change banners, text and homepage sections.", "/admin/homepage"],
   ["Products", "Update product photos and descriptions. Prices and stock remain in CRM.", "/admin/products"],
   ["Shop by brands", "Set storefront pictures for brands created in CRM.", "/admin/brands"],
@@ -10,7 +11,7 @@ const tasks = [
   ["Images", "Upload and find website photos.", "/admin/media"],
   ["Customer care", "Respond to support and return requests.", "/admin/customer-service"],
   ["Analytics", "Check visits and shopping performance.", "/admin/analytics"],
-  ["SEO & search", "Control search engine titles and discoverability.", "/admin/seo"],
+  ["SEO metadata", "Control search engine titles and discoverability; storefront search ranking is separate.", "/admin/seo"],
   ["Reviews", "Moderate customer product reviews.", "/admin/reviews"],
   ["Delivery", "Monitor courier shipments and delivery status.", "/admin/delivery"],
   ["Payments", "Monitor payments, settlements and refund status.", "/admin/payments"],
