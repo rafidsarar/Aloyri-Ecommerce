@@ -442,7 +442,7 @@ export function LiveProductPage({
         >
           <p className="text-sm font-semibold">Shipping & delivery</p>
           <p className="mt-2 text-xs leading-6 text-[#321f1c]/48">
-            ৳80 inside Dhaka · ৳150 outside Dhaka.
+            Check the current delivery charge for your address at checkout.
           </p>
         </Link>
         <Link
