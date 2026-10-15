@@ -48,6 +48,29 @@ test.describe("minimal admin interface", () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await page.screenshot({ path: testInfo.outputPath("admin-mobile.png"), fullPage: true });
   });
+  test("Owner website control coverage is accessible and read-only on desktop and mobile", async ({ page }) => {
+    for (const width of [390, 1440]) {
+      await page.setViewportSize({ width, height: 860 });
+      await page.goto(`${base}/admin/dashboard`);
+      const guideLink = page.getByRole("link", { name: /Website control guide/ });
+      await expect(guideLink).toHaveAttribute("href", "/admin/controls");
+      await guideLink.click();
+      await expect(page.getByRole("heading", { name: "Website control guide" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Managed in Aloyri CRM" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Still requires development" })).toBeVisible();
+      await expect(page.locator("#admin-content form")).toHaveCount(0);
+      await expect(page.getByRole("link", { name: /Search and discovery/ })).toHaveAttribute(
+        "href",
+        "/admin/merchandising/discovery",
+      );
+      await expect(page.getByRole("link", { name: /Recommendations/ })).toHaveAttribute(
+        "href",
+        "/admin/merchandising/recommendations",
+      );
+      await expect(page.getByText(/staff-management interface/)).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+    }
+  });
   test("visual builder adds, edits, reorders and undoes components without saving", async ({ page }, testInfo) => {
     await page.goto(`${base}/admin/builder`);
     await expect(page.getByRole("heading", { name: "Visual Builder preview" })).toBeVisible();
