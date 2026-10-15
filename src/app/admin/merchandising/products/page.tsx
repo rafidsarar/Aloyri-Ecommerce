@@ -16,7 +16,7 @@ const badges = ["", "New", "Bestseller", "Limited", "Staff Pick", "Trending"];
 export default async function ProductMerchandisingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string }>;
+  searchParams: Promise<{ saved?: string; error?: string }>;
 }) {
   const admin = await requireAdminPermission("merchandising.view");
   const [query, config, catalog] = await Promise.all([
@@ -32,6 +32,7 @@ export default async function ProductMerchandisingPage({
       title="Product merchandising"
       subtitle="Control website badges, browse priority, search ranking and out-of-stock presentation. CRM price, promotions and stock remain read-only."
     >
+      {query.error ? <AdminNotice tone="warning">{query.error}</AdminNotice> : null}
       {query.saved ? <AdminNotice>Product merchandising saved to the live website.</AdminNotice> : null}
       {!catalog.ok ? (
         <AdminNotice tone="warning">
