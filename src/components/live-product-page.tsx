@@ -25,6 +25,7 @@ import {
   type Product,
 } from "@/lib/catalog";
 import { getVerifiedProductContent } from "@/lib/product-verification";
+import { resolveProductGuidance } from "@/lib/product-guidance-display";
 import { hasSalePrice, salePriceFor } from "@/lib/promotions";
 import { trackStorefrontEvent } from "@/lib/analytics";
 import type { PublicReviewData } from "@/lib/review-types";
@@ -39,11 +40,13 @@ export function LiveProductPage({
   fallback,
   recommendationConfig,
   reviewData,
+  editorialGuidance,
 }: {
   slug: string;
   fallback: Product | null;
   recommendationConfig: RecommendationConfig;
   reviewData: PublicReviewData;
+  editorialGuidance?: { howToUse?: string[]; careNotes?: string[] };
 }) {
   const { products, synced, error, refresh } = useCatalog();
   const product = products.find(
@@ -104,8 +107,14 @@ export function LiveProductPage({
   const verified = getVerifiedProductContent(product.id);
   const salePrice = salePriceFor(product);
   const onSale = hasSalePrice(product);
-  const directions = verified?.directions ?? product.howToUse;
-  const careNotes = verified?.warnings ?? product.careNotes;
+  const { directions, careNotes } = resolveProductGuidance({
+    ownerDirections: editorialGuidance?.howToUse,
+    ownerCareNotes: editorialGuidance?.careNotes,
+    verifiedDirections: verified?.directions,
+    verifiedWarnings: verified?.warnings,
+    productDirections: product.howToUse,
+    productCareNotes: product.careNotes,
+  });
 
   const recommendations = buildProductRecommendations(
     product,
@@ -257,7 +266,7 @@ export function LiveProductPage({
 
           <div className="mt-5 rounded-2xl border border-[#713a35]/10 bg-white/70 p-4 text-xs leading-6 text-[#321f1c]/70">
             <p className="font-semibold text-[#321f1c]">Delivery across Bangladesh</p>
-            <p>Inside Dhaka ৳80 · Outside Dhaka ৳150. Your final delivery charge is shown at checkout.</p>
+            <p>Delivery fees depend on your address. The current charge is confirmed at checkout.</p>
             <Link href="/shipping-delivery" className="inline-flex min-h-10 items-center font-semibold text-[#713a35] underline underline-offset-4">Delivery information</Link>
           </div>
 
