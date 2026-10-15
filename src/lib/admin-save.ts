@@ -1,6 +1,7 @@
 import "server-only";
 import { redirect } from "next/navigation";
 import { updateDraftStorefrontConfig } from "@/lib/storefront-admin-store";
+import { ownerSaveConflictDestination } from "@/lib/admin-save-destination";
 
 export async function saveAdminStorefront(
   formData: FormData,
@@ -16,9 +17,12 @@ export async function saveAdminStorefront(
     });
   } catch (error) {
     if (error instanceof Error && error.message.startsWith("This page has changed")) {
-      const requested = String(formData.get("builderWorkspace") || "design");
-      const workspace = ["design", "settings", "pages", "campaigns"].includes(requested) ? requested : "design";
-      redirect("/admin/builder?workspace=" + workspace + "&error=" + encodeURIComponent(error.message));
+      const destination = ownerSaveConflictDestination({
+        scope: audit?.scope,
+        action: audit?.action,
+        target: audit?.target,
+      });
+      redirect(destination + "?error=" + encodeURIComponent(error.message));
     }
     throw error;
   }
