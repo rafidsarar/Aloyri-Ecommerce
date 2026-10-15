@@ -17,13 +17,14 @@ const nav: Array<{
   group: string;
 }> = [
   { group: "Dashboard", label: "Overview", href: "/admin", permission: "dashboard.view" },
+  { group: "Dashboard", label: "Control coverage", href: "/admin/coverage", permission: "dashboard.view" },
   { group: "Storefront", label: "Homepage", href: "/admin/homepage", permission: "homepage.view" },
   { group: "Storefront", label: "Products", href: "/admin/products", permission: "products.view" },
   { group: "Storefront", label: "Shop by brands", href: "/admin/brands", permission: "merchandising.view" },
   { group: "Storefront", label: "Pages & FAQ", href: "/admin/pages", permission: "pages.view" },
   { group: "Storefront", label: "Images", href: "/admin/media", permission: "media.view" },
   { group: "Marketing", label: "Campaigns & collections", href: "/admin/merchandising", permission: "merchandising.view" },
-  { group: "Marketing", label: "SEO & search", href: "/admin/seo", permission: "seo.view" },
+  { group: "Marketing", label: "SEO metadata", href: "/admin/seo", permission: "seo.view" },
   { group: "Marketing", label: "Analytics", href: "/admin/analytics", permission: "analytics.view" },
   { group: "Customer operations", label: "Customer care & returns", href: "/admin/customer-service", permission: "support.view" },
   { group: "Customer operations", label: "Reviews", href: "/admin/reviews", permission: "products.view" },
