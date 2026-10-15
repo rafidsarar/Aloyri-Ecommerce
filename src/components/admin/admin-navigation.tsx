@@ -12,8 +12,8 @@ export function AdminNavigation({ items }: { items: AdminNavItem[] }) {
   const filtered = items.filter(item => `${item.label} ${item.group}`.toLowerCase().includes(query.trim().toLowerCase()));
   const groups = [...new Set(filtered.map(item => item.group))];
   const sectionPath = pathname === "/admin/builder" ? "/admin/homepage"
-    : ["/admin/reviews", "/admin/delivery", "/admin/payments"].includes(pathname) ? "/admin/customer-service"
-    : ["/admin/security", "/admin/history", "/admin/audit", "/admin/operations", "/admin/publishing"].includes(pathname) || pathname.startsWith("/admin/seo") ? "/admin/settings" : pathname;
+    : pathname === "/admin/publishing" ? "/admin/history" : pathname;
+
   const current = items.find(item => item.href === sectionPath) || items.find(item => item.href !== "/admin" && sectionPath.startsWith(item.href + "/"));
   return <>
     <button type="button" className="admin-menu-toggle" aria-expanded={open} aria-controls="admin-sections" onClick={() => setOpen(value => !value)}>
