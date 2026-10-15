@@ -23,7 +23,7 @@ const nav: Array<{
   { group: "Storefront", label: "Pages & FAQ", href: "/admin/pages", permission: "pages.view" },
   { group: "Storefront", label: "Images", href: "/admin/media", permission: "media.view" },
   { group: "Marketing", label: "Campaigns & collections", href: "/admin/merchandising", permission: "merchandising.view" },
-  { group: "Marketing", label: "SEO & search", href: "/admin/seo", permission: "seo.view" },
+  { group: "Marketing", label: "SEO & discoverability", href: "/admin/seo", permission: "seo.view" },
   { group: "Marketing", label: "Analytics", href: "/admin/analytics", permission: "analytics.view" },
   { group: "Customer operations", label: "Customer care & returns", href: "/admin/customer-service", permission: "support.view" },
   { group: "Customer operations", label: "Reviews", href: "/admin/reviews", permission: "products.view" },
