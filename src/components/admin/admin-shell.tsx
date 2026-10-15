@@ -16,16 +16,24 @@ const nav: Array<{
   permission: AdminPermission;
   group: string;
 }> = [
-  { group: "Daily tasks", label: "Dashboard", href: "/admin", permission: "dashboard.view" },
-  { group: "Website content", label: "Homepage", href: "/admin/homepage", permission: "homepage.view" },
-  { group: "Website content", label: "Products", href: "/admin/products", permission: "products.view" },
-  { group: "Website content", label: "Pages & FAQ", href: "/admin/pages", permission: "pages.view" },
-  { group: "Website content", label: "Campaigns & collections", href: "/admin/merchandising", permission: "merchandising.view" },
-  { group: "Website content", label: "Images", href: "/admin/media", permission: "media.view" },
-  { group: "Website content", label: "Shop by brands", href: "/admin/brands", permission: "merchandising.view" },
-  { group: "Business", label: "Customer care", href: "/admin/customer-service", permission: "support.view" },
-  { group: "Business", label: "Reports", href: "/admin/analytics", permission: "analytics.view" },
-  { group: "Account & store", label: "Settings", href: "/admin/settings", permission: "settings.view" },
+  { group: "Dashboard", label: "Overview", href: "/admin", permission: "dashboard.view" },
+  { group: "Storefront", label: "Homepage", href: "/admin/homepage", permission: "homepage.view" },
+  { group: "Storefront", label: "Products", href: "/admin/products", permission: "products.view" },
+  { group: "Storefront", label: "Shop by brands", href: "/admin/brands", permission: "merchandising.view" },
+  { group: "Storefront", label: "Pages & FAQ", href: "/admin/pages", permission: "pages.view" },
+  { group: "Storefront", label: "Images", href: "/admin/media", permission: "media.view" },
+  { group: "Marketing", label: "Campaigns & collections", href: "/admin/merchandising", permission: "merchandising.view" },
+  { group: "Marketing", label: "SEO & search", href: "/admin/seo", permission: "seo.view" },
+  { group: "Marketing", label: "Analytics", href: "/admin/analytics", permission: "analytics.view" },
+  { group: "Customer operations", label: "Customer care & returns", href: "/admin/customer-service", permission: "support.view" },
+  { group: "Customer operations", label: "Reviews", href: "/admin/reviews", permission: "products.view" },
+  { group: "Customer operations", label: "Delivery", href: "/admin/delivery", permission: "analytics.view" },
+  { group: "Customer operations", label: "Payments", href: "/admin/payments", permission: "analytics.view" },
+  { group: "Website settings", label: "Appearance, navigation & footer", href: "/admin/settings", permission: "settings.view" },
+  { group: "Administration", label: "Account security", href: "/admin/security", permission: "security.self" },
+  { group: "Administration", label: "History & restore", href: "/admin/history", permission: "publishing.view" },
+  { group: "Administration", label: "Audit activity", href: "/admin/audit", permission: "audit.view" },
+  { group: "Administration", label: "Health & backups", href: "/admin/operations", permission: "health.view" },
 ];
 
 export async function AdminShell({
