@@ -6,7 +6,7 @@ test("owner navigation exposes six clear groups without staff controls", () => {
   for (const group of ["Dashboard", "Storefront", "Marketing", "Customer operations", "Website settings", "Administration"]) {
     expect(shell).toContain(`group: "${group}"`);
   }
-  for (const path of ["/admin/brands", "/admin/seo", "/admin/reviews", "/admin/delivery", "/admin/payments", "/admin/security", "/admin/history", "/admin/audit", "/admin/operations"]) {
+  for (const path of ["/admin/coverage", "/admin/brands", "/admin/seo", "/admin/reviews", "/admin/delivery", "/admin/payments", "/admin/security", "/admin/history", "/admin/audit", "/admin/operations"]) {
     expect(shell).toContain(`href: "${path}"`);
   }
   expect(shell).not.toMatch(/staff\.view|staff\.manage|\/admin\/staff|Team management|Staff management/);
