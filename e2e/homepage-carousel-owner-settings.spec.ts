@@ -28,5 +28,5 @@ test("Admin explains the all-products placement is not capped by Maximum product
   expect(editor).toContain("All-products carousel: every active CRM product is included.");
   expect(editor).toContain('row.kind==="bestsellers" ?');
   expect(homepage).toContain("resolveAllProductsCarouselCopy(section)");
-  expect(homepage).toContain("isAllProductsCarousel ? catalogProducts.filter");
+  expect(homepage).toContain("catalogProducts.filter((product) => product.active !== false)");
 });
