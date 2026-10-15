@@ -14,7 +14,7 @@ import {
 export default async function DiscoveryMerchandisingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string }>;
+  searchParams: Promise<{ saved?: string; error?: string }>;
 }) {
   const admin = await requireAdminPermission("merchandising.view");
   const [query, config, publishing] = await Promise.all([
@@ -30,6 +30,7 @@ export default async function DiscoveryMerchandisingPage({
       title="Search & discovery controls"
       subtitle="Manage storefront search synonyms, category ordering and popular search shortcuts. Product-level search boosts stay under Product merchandising."
     >
+      {query.error ? <AdminNotice tone="warning">{query.error}</AdminNotice> : null}
       {query.saved ? (
         <AdminNotice>Search & discovery saved to the live website.</AdminNotice>
       ) : null}
