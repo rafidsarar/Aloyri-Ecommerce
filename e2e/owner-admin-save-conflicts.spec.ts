@@ -32,3 +32,21 @@ test("save action preserves atomic stale-version protection", () => {
   expect(storage).toContain("if (audit?.expectedUpdatedAt && audit.expectedUpdatedAt !== current.updatedAt)");
   expect(storage).toContain("withAtomicRecordMutation(async () => {");
 });
+
+test("Owner editors display rejected-save feedback at the destination", () => {
+  const routes = [
+    "src/app/admin/seo/page.tsx",
+    "src/app/admin/merchandising/page.tsx",
+    "src/app/admin/merchandising/discovery/page.tsx",
+    "src/app/admin/merchandising/recommendations/page.tsx",
+    "src/app/admin/merchandising/products/page.tsx",
+    "src/app/admin/merchandising/homepage/page.tsx",
+    "src/app/admin/homepage/page.tsx",
+    "src/app/admin/settings/page.tsx",
+    "src/app/admin/products/[id]/page.tsx",
+  ];
+  for (const route of routes) {
+    const source = readFileSync(route, "utf8");
+    expect(source, route).toMatch(/query\.error/);
+  }
+});
