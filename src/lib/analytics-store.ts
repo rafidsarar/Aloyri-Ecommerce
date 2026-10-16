@@ -1,4 +1,5 @@
 import "server-only";
+import { analyticsCollectionEnabled } from "@/lib/analytics-collection";
 
 import {
   listStructuredJson,
@@ -213,7 +214,9 @@ function blobConfigured() {
 }
 
 export function rawBlobAnalyticsEnabled() {
-  return process.env.ALOYRI_BLOB_ANALYTICS_ENABLED === "1";
+  // Analytics now writes to the structured datastore, not Blob. Keep explicit
+  // opt-outs, but do not require the obsolete Blob opt-in after migration.
+  return analyticsCollectionEnabled(structuredDatastoreConfigured(), process.env.ALOYRI_ANALYTICS_ENABLED, process.env.ALOYRI_BLOB_ANALYTICS_ENABLED);
 }
 
 function safeId() {
@@ -1106,3 +1109,4 @@ export async function buildAnalyticsReport(days = 30): Promise<AnalyticsReport> 
     recommendations: recommendations(base),
   };
 }
+

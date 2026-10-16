@@ -1,6 +1,7 @@
 import "server-only";
 
-import { buildAnalyticsReport } from "@/lib/analytics-store";
+import { buildAnalyticsReport, rawBlobAnalyticsEnabled } from "@/lib/analytics-store";
+import { orderSyncHealth } from "@/lib/order-sync";
 import {
   listAdminOwners,
   type PublicAdminAccount,
@@ -68,6 +69,16 @@ export async function runOperationalHealth(
   persist = false,
 ): Promise<OperationalHealthSnapshot> {
   const checks: OperationalHealthCheck[] = [];
+  try {
+    const sync = await orderSyncHealth();
+    checks.push({
+      id: "order-sync", label: "CRM order synchronization",
+      state: sync.totals.attention || sync.totals.pending || sync.totals.rejected ? "warning" : "healthy",
+      detail: `${sync.totals.completed} synchronized · ${sync.totals.pending} awaiting retry · ${sync.totals.attention} need review · ${sync.totals.rejected} rejected checkouts (not retried).`,
+    });
+  } catch {
+    checks.push({ id: "order-sync", label: "CRM order synchronization", state: "error", detail: "Order synchronization records could not be read." });
+  }
 
   const [
     catalog,
@@ -187,9 +198,9 @@ export async function runOperationalHealth(
     checks.push({
       id: "analytics-store",
       label: "Analytics datastore",
-      state: "healthy",
+      state: rawBlobAnalyticsEnabled() ? "healthy" : "warning",
       detail:
-        analyticsResult.value.summary.sessions +
+        (rawBlobAnalyticsEnabled() ? "Collection enabled · " : "Collection disabled · ") + analyticsResult.value.summary.sessions +
         " anonymous sessions visible in the last day.",
     });
   } else {
@@ -377,3 +388,4 @@ export async function restoreBackupToDraft(actor: string, id: string) {
   );
   return backup;
 }
+

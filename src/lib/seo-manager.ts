@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { defaultSocialImagePath, descriptiveSeoTitle } from "@/lib/seo-defaults";
 import type { LiveCatalogProduct } from "@/lib/catalog";
 import { absoluteUrl, siteConfig } from "@/lib/site";
 import {
@@ -74,15 +75,18 @@ export function effectiveSeoEntry(
   fallback: Required<Pick<SeoEntry, "title" | "description" | "canonical">> &
     Partial<SeoEntry>,
 ): SeoEntry {
+  const canonical = safeInternalPath(entry?.canonical, fallback.canonical);
+  const title = descriptiveSeoTitle(entry?.title?.trim() || fallback.title, canonical);
+  const socialTitle = descriptiveSeoTitle(entry?.ogTitle?.trim() || entry?.title?.trim() || fallback.ogTitle || fallback.title, canonical);
   return {
     ...fallback,
     ...(entry || {}),
-    title: entry?.title?.trim() || fallback.title,
+    title,
     description: entry?.description?.trim() || fallback.description,
     canonical: safeInternalPath(entry?.canonical, fallback.canonical),
     index: entry?.index ?? fallback.index ?? true,
     follow: entry?.follow ?? fallback.follow ?? true,
-    ogTitle: entry?.ogTitle?.trim() || entry?.title?.trim() || fallback.ogTitle || fallback.title,
+    ogTitle: socialTitle,
     ogDescription:
       entry?.ogDescription?.trim() ||
       entry?.description?.trim() ||
@@ -105,7 +109,7 @@ export function buildSeoMetadata(
   const canonical = safeInternalPath(effective.canonical, fallback.canonical);
   const forcedNoIndex =
     options?.forceNoIndex || protectedIndexPaths.has(canonical);
-  const image = seoImageUrl(effective.ogImagePath) || options?.imageFallback;
+  const image = seoImageUrl(effective.ogImagePath) || options?.imageFallback || absoluteUrl(defaultSocialImagePath);
   const index = forcedNoIndex ? false : effective.index !== false;
   const follow = forcedNoIndex ? false : effective.follow !== false;
 
@@ -316,13 +320,13 @@ function validateEntry(
     });
   }
 
-  if (!effective.ogImagePath && !key.startsWith("product:")) {
+  if (effective.ogImagePath && !seoImageUrl(effective.ogImagePath)) {
     issues.push({
       id: key + "-og-image-missing",
       severity: "warning",
       label,
       href,
-      message: "No dedicated social sharing image is configured.",
+      message: "The configured social image path is invalid; the default sharing image will be used.",
     });
   }
 }
@@ -539,3 +543,4 @@ export function seoConfigPathEntry(
   }
   return seo.pages[key as SeoPageKey];
 }
+

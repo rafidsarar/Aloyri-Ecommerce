@@ -470,9 +470,9 @@ test.describe('Owner administration editing safeguards', () => {
   });
   test('Clear main sections keep security and operational tools accessible under Settings', async ({page}) => {
     await page.goto(`${base}/admin/settings`);
-    await expect(page.getByRole('navigation',{name:'Admin navigation'}).getByRole('link')).toHaveCount(18);
+    await expect(page.getByRole('navigation',{name:'Admin navigation'}).getByRole('link')).toHaveCount(19);
     await expect(page.getByRole('navigation',{name:'Admin navigation'}).getByRole('link',{name:'Account security'})).toHaveAttribute('href','/admin/security');
-    await expect(page.getByRole('navigation',{name:'Admin navigation'}).getByRole('link',{name:'SEO & search'})).toHaveAttribute('href','/admin/seo');
+    await expect(page.getByRole('navigation',{name:'Admin navigation'}).getByRole('link',{name:'SEO metadata'})).toHaveAttribute('href','/admin/seo');
     const related = page.getByRole('navigation',{name:'Related store tools'});
     await expect(related.getByRole('link',{name:'Security',exact:true})).toHaveAttribute('href','/admin/security');
     await expect(related.getByRole('link',{name:'History & restore',exact:true})).toBeVisible();
@@ -572,7 +572,7 @@ test.describe('Owner administration editing safeguards', () => {
       await page.goto(`${base}/admin/dashboard`);
       await expect(page.getByRole('heading',{name:'Dashboard',exact:true})).toBeVisible();
       await expect(page.getByRole('heading',{name:'What would you like to update?'})).toBeVisible();
-      await expect(page.locator('.admin-task-card')).toHaveCount(15);
+      await expect(page.locator('.admin-task-card')).toHaveCount(16);
       await expect(page.locator('iframe')).toHaveCount(0);
       await expect(page.locator('a[href*="builder"],a[href*="preview"],a[href*="publishing"]')).toHaveCount(0);
       expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);

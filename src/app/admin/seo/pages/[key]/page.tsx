@@ -168,6 +168,7 @@ export default async function SeoPageEditor({
         <div className="grid gap-5">
           <AdminCard>
             <p className="text-sm font-semibold">Social sharing</p>
+            {!effective.ogImagePath ? <p className="mt-2 text-sm text-black/60">The Aloyri sharing image is used by default. Upload an image below to customize this page.</p> : null}
             <div className="mt-4 grid gap-4">
               <label className="grid gap-1.5 text-sm font-medium">
                 Social title
@@ -219,3 +220,4 @@ export default async function SeoPageEditor({
     </AdminShell>
   );
 }
+

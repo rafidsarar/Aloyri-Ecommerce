@@ -5,7 +5,7 @@ import {
   AdminShell,
 } from "@/components/admin/admin-shell";
 import { requireAdminPermission } from "@/lib/admin-auth";
-import { buildAnalyticsReport } from "@/lib/analytics-store";
+import { buildAnalyticsReport, rawBlobAnalyticsEnabled } from "@/lib/analytics-store";
 
 function period(value: string | undefined) {
   const days = Number(value);
@@ -68,7 +68,9 @@ export default async function AnalyticsDashboard({
 
       {report.summary.sessions === 0 ? (
         <AdminNotice tone="neutral">
-          The analytics datastore has no sessions in this period yet. New first-party events will begin populating this dashboard after this release is published.
+          {rawBlobAnalyticsEnabled()
+            ? "No sessions were recorded in this period. Collection is enabled; storefront visits that allow analytics will populate this dashboard. Admin pages and draft previews are excluded."
+            : "Storefront analytics collection is disabled or its datastore is not configured. Enable ALOYRI_ANALYTICS_ENABLED with a configured datastore to collect new visits; publishing alone will not enable collection."}
         </AdminNotice>
       ) : null}
 
@@ -171,3 +173,4 @@ export default async function AnalyticsDashboard({
     </AdminShell>
   );
 }
+
