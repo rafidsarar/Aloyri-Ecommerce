@@ -19,6 +19,7 @@ import { ArrowIcon } from "@/components/icons";
 import { ProductMedia } from "@/components/product-media";
 import { MerchandisingProductGrid } from "@/components/merchandising-product-grid";
 import { ProductCarouselControls } from "@/components/product-carousel-controls";
+import { resolveAllProductsCarouselCopy } from "@/lib/homepage-carousel-copy";
 import { AnalyticsViewTracker } from "@/components/storefront-analytics-tracker";
 import { TrackedLink } from "@/components/tracked-link";
 import { mergeLiveCatalog, products as localProducts } from "@/lib/catalog";
@@ -423,7 +424,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
               )
             : undefined;
         const sectionHref = collection ? collectionHref(collection) : "/shop";
-        const displayEyebrow = isAllProductsCarousel ? "Shop all products" :
+        const allProductsCopy = resolveAllProductsCarouselCopy(section);
+        const displayEyebrow = isAllProductsCarousel ? allProductsCopy.eyebrow :
           section.eyebrow ||
           collection?.eyebrow ||
           (section.kind === "new-arrivals"
@@ -431,7 +433,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
             : section.kind === "bestsellers"
               ? "Bestsellers"
               : "Aloyri selection");
-        const displayTitle = isAllProductsCarousel ? "Discover all our skincare." :
+        const displayTitle = isAllProductsCarousel ? allProductsCopy.title :
           section.title ||
           collection?.title ||
           (section.kind === "new-arrivals"

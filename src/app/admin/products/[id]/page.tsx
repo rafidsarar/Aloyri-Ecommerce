@@ -128,7 +128,7 @@ export default async function AdminProductPage({
                 rows={8}
                 className="rounded-xl border border-black/10 px-4 py-3"
               />
-              <span className="text-xs font-normal text-black/40">One step per line.</span>
+              <span className="text-xs font-normal text-black/55">One step per line. Saved website instructions take priority over reference directions for this product. Check against the current product packaging before publishing.</span>
             </label>
           </AdminCard>
           <AdminCard>
@@ -140,7 +140,7 @@ export default async function AdminProductPage({
                 rows={8}
                 className="rounded-xl border border-black/10 px-4 py-3"
               />
-              <span className="text-xs font-normal text-black/40">One note per line.</span>
+              <span className="text-xs font-normal text-black/55">One note per line. Saved website care notes take priority over reference warnings; keep important safety instructions accurate.</span>
             </label>
           </AdminCard>
         </div>
