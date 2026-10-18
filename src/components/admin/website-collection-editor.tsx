@@ -102,7 +102,9 @@ export function WebsiteCollectionEditor({ id, query = {}, config, catalog, inBui
                 className="rounded-xl border border-black/10 px-4 py-3"
               />
               <span className="text-xs font-normal text-black/40">
-                Published URL: /collections/your-slug
+                {collection?.slug
+                  ? `Published URL: /collections/${collection.slug}`
+                  : "Published URL: /collections/your-slug"}
               </span>
             </label>
             <label className="grid gap-1.5 text-sm font-medium">
@@ -237,14 +239,17 @@ export function WebsiteCollectionEditor({ id, query = {}, config, catalog, inBui
               <input
                 name="seoCanonical"
                 defaultValue={
-                  collection?.seo.canonical ||
-                  (collection?.slug
-                    ? "/collections/" + collection.slug
-                    : "/collections/")
+                  collection?.seo.canonical && collection.seo.canonical !== "/collections/"
+                    ? collection.seo.canonical
+                    : ""
                 }
+                placeholder="Automatic: use this collection's URL"
                 maxLength={400}
                 className="rounded-xl border border-black/10 px-4 py-3"
               />
+              <span className="text-xs font-normal text-black/40">
+                Leave blank to use this collection’s published URL.
+              </span>
             </label>
             <div className="flex flex-wrap gap-6">
               <label className="flex items-center gap-2 text-sm font-medium">
