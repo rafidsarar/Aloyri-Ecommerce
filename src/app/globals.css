@@ -794,7 +794,7 @@ body[data-storefront-theme="sand"] {
 }
 .store-campaign-track::-webkit-scrollbar { display: none; }
 .store-campaign-track:focus-visible { outline: 2px solid var(--store-accent); outline-offset: 3px; border-radius: 16px; }
-.store-campaign-slide { flex: 0 0 88%; min-width: 0; scroll-snap-align: start; scroll-snap-stop: always; }
+.store-campaign-slide { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; scroll-snap-stop: always; }
 .store-campaign-slide > * { height: 100%; min-width: 0; }
 .store-campaign-intro { height: 100%; }
 .store-campaign-slide .store-hero,
@@ -828,12 +828,6 @@ body[data-storefront-theme="sand"] {
 .store-campaign-editorial-mark { position: absolute; z-index: 0; right: 3%; bottom: -23%; color: color-mix(in srgb, var(--store-accent) 10%, transparent); font: 700 clamp(10rem, 22vw, 21rem)/1 Georgia, serif; pointer-events: none; }
 .store-campaign-controls { min-height: 58px; }
 .store-campaign-arrow { width: 36px; height: 36px; }
-@media (min-width: 768px) {
-  .store-campaign-slide { flex-basis: 70%; }
-}
-@media (min-width: 1200px) {
-  .store-campaign-slide { flex-basis: 66%; }
-}
 @media (max-width: 767px) {
   .store-campaign-slide .store-hero, .store-campaign-slide .store-promo, .store-campaign-editorial { min-height: 0; }
   .store-campaign-slide .store-hero-art { min-height: 180px; max-height: 225px; padding: 12px; }

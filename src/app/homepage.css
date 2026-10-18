@@ -6,7 +6,7 @@
 .skincare-home .store-home-muted { color: var(--store-muted); line-height: 1.7; }
 .skincare-home .store-campaign-carousel { padding-top: 22px; }
 .skincare-home .store-campaign-track { gap: 16px; border-radius: 24px; }
-.skincare-home .store-campaign-slide { flex-basis: 88%; }
+.skincare-home .store-campaign-slide { flex-basis: 100%; }
 .skincare-home .store-campaign-slide .store-hero { border-radius: 24px; min-height: 390px; box-shadow: none; }
 .skincare-home .store-campaign-slide .store-hero-copy { padding: clamp(24px, 3.4vw, 48px); justify-content: center; }
 .skincare-home .store-campaign-slide .store-hero-heading { font-size: clamp(2rem, 3.5vw, 3.6rem); line-height: 1.06; max-width: 14ch; }
@@ -74,10 +74,8 @@
 .home-story-product-0 { transform: translateY(-16px); }
 .home-story-product-1 { transform: translateY(16px); }
 .skincare-home :is(a,button):focus-visible { outline: 2px solid var(--store-accent); outline-offset: 4px; }
-@media (min-width: 1024px) { .skincare-home .store-campaign-slide { flex-basis: 86%; } }
 @media (max-width: 767px) {
   .skincare-home .store-campaign-carousel { padding-top: 12px; }
-  .skincare-home .store-campaign-slide { flex-basis: 94%; }
   .skincare-home .store-campaign-slide .store-hero { min-height: 0; border-radius: 20px; }
   .skincare-home .store-campaign-slide .store-hero-copy { padding: 24px 20px; }
   .skincare-home .store-campaign-slide .store-hero-heading { font-size: clamp(1.9rem,7.3vw,2.7rem); }

@@ -45,9 +45,17 @@ for (const width of [320, 390, 768, 1440]) {
     await expect(carousel).toBeVisible();
     const track = carousel.locator(".store-campaign-track");
     expect(await track.evaluate(node => node.scrollWidth > node.clientWidth)).toBe(true);
+    const slides = carousel.locator(".store-campaign-slide");
+    const trackWidth = await track.evaluate(node => node.clientWidth);
+    for (const slide of await slides.all()) {
+      expect(Math.abs((await slide.boundingBox())!.width - trackWidth)).toBeLessThanOrEqual(1);
+    }
+    const bounds = await track.boundingBox();
+    expect((await slides.nth(1).boundingBox())!.x).toBeGreaterThanOrEqual(bounds!.x + bounds!.width);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await carousel.getByRole("button", { name: "Next campaign" }).click();
     await expect(carousel.getByRole("button", { name: "Show campaign 2" })).toHaveAttribute("aria-current", "true");
+    await expect.poll(async () => Math.abs((await slides.nth(1).boundingBox())!.x - bounds!.x)).toBeLessThanOrEqual(1);
   });
 }
 
