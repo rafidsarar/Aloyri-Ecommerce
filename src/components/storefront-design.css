@@ -133,3 +133,76 @@ html:has(.storefront-design[data-storefront-page="compare"]) { overflow-x: clip;
 html:has(.storefront-design[data-storefront-page="compare"]),
 body:has(.storefront-design[data-storefront-page="compare"]) { overflow-x: hidden !important; max-width: 100%; }
 .storefront-design[data-storefront-page="compare"] main.shell { min-width: 0; max-width: calc(100vw - 2rem); }
+
+/* Botanical skincare palette. Legacy "rose" is the stored default theme key;
+   retain it for saved settings compatibility. Admin has no storefront wrapper. */
+body[data-storefront-theme="rose"]:has(.storefront-design) {
+  --background: #f8f7f2;
+  --foreground: #203c32;
+  --surface: #fffefa;
+  --surface-soft: #e9eee5;
+  --surface-warm: #eee7d8;
+  --muted: #58675e;
+  --line: #d1d9cd;
+  --rose-deep: #254e3e;
+  --rose: #52735c;
+  --rose-light: #b5c6ad;
+  --store-accent: #254e3e;
+  --store-ink: #203c32;
+  --store-muted: #58675e;
+  --store-surface: #f8f7f2;
+  --store-panel: #e9eee5;
+  --store-border: #d1d9cd;
+  --store-on-accent: #fffefa;
+  --store-footer: #e9eee5;
+}
+.storefront-design {
+  --background: var(--store-surface);
+  --foreground: var(--store-ink);
+  --surface: var(--store-surface);
+  --surface-soft: var(--store-panel);
+  --surface-warm: var(--store-panel);
+  --muted: var(--store-muted);
+  --line: var(--store-border);
+  --rose-deep: var(--store-accent);
+  --rose: var(--store-accent);
+  --botanical-champagne: #eee7d8;
+  --botanical-sage: #dfe8d9;
+  --botanical-pearl: #f1f2e9;
+}
+.storefront-design ::selection { background: var(--store-panel); color: var(--store-ink); }
+.storefront-design :focus-visible { outline-color: var(--store-accent); }
+.storefront-design :is(input[type="checkbox"],input[type="radio"]) { accent-color: var(--store-accent); }
+.storefront-design .rose-metal { background: linear-gradient(120deg,var(--store-accent),#52735c); color: var(--store-on-accent); }
+.storefront-design .rose-text { background: none; color: var(--store-accent); }
+.storefront-design .skip-link { background: var(--store-accent); color: var(--store-on-accent); }
+.storefront-design .soft-shadow { box-shadow: 0 24px 70px rgb(32 60 50 / 9%); }
+.storefront-design .store-header { background: color-mix(in srgb,var(--store-surface) 96%,transparent); }
+.storefront-design .store-icon-link { background: var(--store-surface); }
+.storefront-design .store-icon-link:hover { background: var(--store-panel); }
+.storefront-design .store-category-visual-cleanser { background: linear-gradient(145deg,#f0f4eb,var(--botanical-sage)); color: var(--store-ink); }
+.storefront-design .store-category-visual-moisturizer { background: linear-gradient(145deg,#fafaf3,var(--botanical-pearl)); color: var(--store-ink); }
+.storefront-design .store-category-visual-sunscreen { background: linear-gradient(145deg,#faf7ee,var(--botanical-champagne)); color: var(--store-ink); }
+.storefront-design .store-category-description p { opacity: 1; color: var(--store-muted); }
+.storefront-design .store-hero-product-caption { color: var(--store-ink); }
+.storefront-design .home-finder-scroll-section .home-finder-scroll-card:nth-child(1),
+.storefront-design .skincare-home .home-routine-stack-card:nth-child(1) { background: var(--store-surface); }
+.storefront-design .home-finder-scroll-section .home-finder-scroll-card:nth-child(2),
+.storefront-design .skincare-home .home-routine-stack-card:nth-child(2) { background: var(--botanical-sage); }
+.storefront-design .home-finder-scroll-section .home-finder-scroll-card:nth-child(3),
+.storefront-design .skincare-home .home-routine-stack-card:nth-child(3) { background: var(--botanical-champagne); }
+.storefront-design .home-finder-scroll-card { color: var(--store-ink); border-color: var(--store-border); }
+.storefront-design .store-footer { background: var(--store-footer); }
+.storefront-design .store-footer-bottom { border-color: var(--store-border); }
+
+/* Bridge legacy utility colors on commerce pages to semantic theme tokens.
+   Exact class matches preserve status/error colors and configured banner colors. */
+.storefront-design :is([class~="text-[#321f1c]"],[class~="text-[#2f211f]"],[class~="text-[#241512]"]) { color: var(--store-ink); }
+.storefront-design :is([class~="text-[#713a35]"],[class~="text-[#60312d]"]) { color: var(--store-accent); }
+.storefront-design :is([class~="text-[#796762]"],[class~="text-[#6f5c56]"]) { color: var(--store-muted); }
+.storefront-design :is([class~="bg-[#713a35]"],[class~="bg-[#321f1c]"]) { background-color: var(--store-accent); color: var(--store-on-accent); }
+.storefront-design [class~="hover:bg-[#60312d]"]:hover { background-color: #193a2e; }
+.storefront-design :is([class~="bg-[#fffaf7]"],[class~="bg-[#fffdfb]"]) { background-color: var(--store-surface); }
+.storefront-design :is([class~="bg-[#f5e8e2]"],[class~="bg-[#f7ebe6]"],[class~="bg-[#f8f0eb]"],[class~="bg-[#efe0d9]"]) { background-color: var(--store-panel); }
+.storefront-design :is([class~="border-[#713a35]"],[class~="border-[#ead8cf]"],[class~="border-[#e5d5cc]"]) { border-color: var(--store-border); }
+.storefront-design [class~="hover:text-[#713a35]"]:hover { color: var(--store-accent); }
