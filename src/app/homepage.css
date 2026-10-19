@@ -48,12 +48,6 @@
 .skincare-home .store-product-card > a > .relative > div:first-child { aspect-ratio: 1; border-radius: 12px; }
 .skincare-home .store-product-card h3 { font-size: .95rem; font-weight: 600; }
 .skincare-home .store-product-card-action button { min-height: 44px; border-radius: 10px; }
-.skincare-home .home-brand-section { padding-block: 36px; }
-.skincare-home .store-brand-tile { display: grid; grid-template-columns: 54px minmax(0,1fr); align-items: center; column-gap: 12px; padding: 14px; border-radius: 14px; background: transparent; }
-.skincare-home .home-brand-photo { width: 54px; grid-row: 1/3; }
-.skincare-home .store-brand-tile h3 { margin-top: 0; font-size: .8rem; }
-.skincare-home .store-brand-tile p { font-size: .68rem; }
-.skincare-home .home-brand-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
 .skincare-home .store-discovery-feature { border-radius: 24px; background: var(--store-panel); border-color: var(--home-line); }
 .skincare-home .store-discovery-title { font-size: clamp(1.9rem,3vw,2.9rem); }
 .skincare-home .store-discovery-feature-steps { background: transparent; }
@@ -91,9 +85,6 @@
   .home-focus-section, .skincare-home .home-product-section { padding-block: 28px; }
   .skincare-home .store-product-card { padding: 8px; border-radius: 14px; }
   .skincare-home .store-product-card h3 { font-size: .82rem; line-height: 1.5; }
-  .skincare-home .home-brand-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
-  .skincare-home .store-brand-tile { grid-template-columns: 40px minmax(0,1fr); gap: 8px; padding: 10px; }
-  .skincare-home .home-brand-photo { width: 40px; }
   .home-routine-cards { grid-template-columns: 1fr; }
   .home-routine-card { grid-template-columns: 36px 1fr; gap: 16px; padding: 20px; }
   .home-routine-card > span { grid-column: 1; font-size: 1.5rem; }
