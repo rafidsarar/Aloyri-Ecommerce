@@ -133,3 +133,202 @@ html:has(.storefront-design[data-storefront-page="compare"]) { overflow-x: clip;
 html:has(.storefront-design[data-storefront-page="compare"]),
 body:has(.storefront-design[data-storefront-page="compare"]) { overflow-x: hidden !important; max-width: 100%; }
 .storefront-design[data-storefront-page="compare"] main.shell { min-width: 0; max-width: calc(100vw - 2rem); }
+
+/* Soft Luxury skincare palette. Legacy "rose" is the stored default theme key;
+   retain it for saved settings compatibility. Admin has no storefront wrapper. */
+body[data-storefront-theme="rose"]:has(.storefront-design) {
+  --background: #faf8f4;
+  --foreground: #2e2b27;
+  --surface: #fffdfa;
+  --surface-soft: #f0e9df;
+  --surface-warm: #e9ddc8;
+  --muted: #6d655b;
+  --line: #ddd3c5;
+  --rose-deep: #36312c;
+  --rose: #72614c;
+  --rose-light: #c7b18e;
+  --store-accent: #36312c;
+  --store-ink: #2e2b27;
+  --store-muted: #6d655b;
+  --store-surface: #faf8f4;
+  --store-panel: #f0e9df;
+  --store-border: #ddd3c5;
+  --store-on-accent: #fffdfa;
+  --store-footer: #f0e9df;
+}
+.storefront-design {
+  --background: var(--store-surface);
+  --foreground: var(--store-ink);
+  --surface: var(--store-surface);
+  --surface-soft: var(--store-panel);
+  --surface-warm: var(--store-panel);
+  --muted: var(--store-muted);
+  --line: var(--store-border);
+  --rose-deep: var(--store-accent);
+  --rose: var(--store-accent);
+  --luxury-champagne: #e9ddc8;
+  --luxury-linen: #eee5d7;
+  --luxury-pearl: #f4f0e9;
+}
+.storefront-design ::selection { background: var(--store-panel); color: var(--store-ink); }
+.storefront-design :focus-visible { outline-color: var(--store-accent); }
+.storefront-design :is(input[type="checkbox"],input[type="radio"]) { accent-color: var(--store-accent); }
+.storefront-design .rose-metal { background: linear-gradient(120deg,var(--store-accent),#72614c); color: var(--store-on-accent); }
+.storefront-design .rose-text { background: none; color: var(--store-accent); }
+.storefront-design .skip-link { background: var(--store-accent); color: var(--store-on-accent); }
+.storefront-design .soft-shadow { box-shadow: 0 24px 70px rgb(54 49 44 / 7%); }
+.storefront-design .store-header { background: color-mix(in srgb,var(--store-surface) 96%,transparent); }
+.storefront-design .store-icon-link { background: var(--store-surface); }
+.storefront-design .store-icon-link:hover { background: var(--store-panel); }
+.storefront-design .store-category-visual-cleanser { background: linear-gradient(145deg,#f8f4ec,var(--luxury-linen)); color: var(--store-ink); }
+.storefront-design .store-category-visual-moisturizer { background: linear-gradient(145deg,#fdfbf7,var(--luxury-pearl)); color: var(--store-ink); }
+.storefront-design .store-category-visual-sunscreen { background: linear-gradient(145deg,#f9f4e9,var(--luxury-champagne)); color: var(--store-ink); }
+.storefront-design .store-category-description p { opacity: 1; color: var(--store-muted); }
+.storefront-design .store-hero-product-caption { color: var(--store-ink); }
+.storefront-design .home-finder-scroll-section .home-finder-scroll-card:nth-child(1),
+.storefront-design .skincare-home .home-routine-stack-card:nth-child(1) { background: var(--store-surface); }
+.storefront-design .home-finder-scroll-section .home-finder-scroll-card:nth-child(2),
+.storefront-design .skincare-home .home-routine-stack-card:nth-child(2) { background: var(--luxury-linen); }
+.storefront-design .home-finder-scroll-section .home-finder-scroll-card:nth-child(3),
+.storefront-design .skincare-home .home-routine-stack-card:nth-child(3) { background: var(--luxury-champagne); }
+.storefront-design .home-finder-scroll-card { color: var(--store-ink); border-color: var(--store-border); }
+.storefront-design .store-footer { background: var(--store-footer); }
+.storefront-design .store-footer-bottom { border-color: var(--store-border); }
+
+/* Bridge legacy utility colors on commerce pages to semantic theme tokens.
+   Exact class matches preserve status/error colors and configured banner colors. */
+.storefront-design :is([class~="text-[#321f1c]"],[class~="text-[#2f211f]"],[class~="text-[#241512]"]) { color: var(--store-ink); }
+.storefront-design :is([class~="text-[#713a35]"],[class~="text-[#60312d]"]) { color: var(--store-accent); }
+.storefront-design :is([class~="text-[#796762]"],[class~="text-[#6f5c56]"]) { color: var(--store-muted); }
+.storefront-design :is([class~="bg-[#713a35]"],[class~="bg-[#321f1c]"]) { background-color: var(--store-accent); color: var(--store-on-accent); }
+.storefront-design [class~="hover:bg-[#60312d]"]:hover { background-color: #24211e; }
+.storefront-design :is([class~="bg-[#fffaf7]"],[class~="bg-[#fffdfb]"]) { background-color: var(--store-surface); }
+.storefront-design :is([class~="bg-[#f5e8e2]"],[class~="bg-[#f7ebe6]"],[class~="bg-[#f8f0eb]"],[class~="bg-[#efe0d9]"]) { background-color: var(--store-panel); }
+.storefront-design :is([class~="border-[#713a35]"],[class~="border-[#ead8cf]"],[class~="border-[#e5d5cc]"]) { border-color: var(--store-border); }
+.storefront-design [class~="hover:text-[#713a35]"]:hover { color: var(--store-accent); }
+
+/* Explicit legacy commerce utilities, including muted text and disabled states. */
+.storefront-design [class~="bg-[#f5e8e2]"],
+.storefront-design [class~="bg-[#f5e8e2]/60"],
+.storefront-design [class~="bg-[#f7ebe6]"] { background-color: var(--store-panel); }
+.storefront-design [class~="text-[#321f1c]/50"],
+.storefront-design [class~="text-[#713a35]/48"],
+.storefront-design [class~="text-[#713a35]/45"],
+.storefront-design [class~="text-[#321f1c]/45"],
+.storefront-design [class~="text-[#321f1c]/38"],
+.storefront-design [class~="text-[#321f1c]/58"],
+.storefront-design [class~="text-[#321f1c]/65"],
+.storefront-design [class~="text-[#321f1c]/42"],
+.storefront-design [class~="text-[#321f1c]/60"],
+.storefront-design [class~="text-[#321f1c]/62"],
+.storefront-design [class~="text-[#321f1c]/52"],
+.storefront-design [class~="text-[#713a35]/50"],
+.storefront-design [class~="text-[#321f1c]/55"],
+.storefront-design [class~="placeholder:text-[#321f1c]/30"]::placeholder,
+.storefront-design [class~="text-[#321f1c]/35"],
+.storefront-design [class~="text-[#321f1c]/75"],
+.storefront-design [class~="text-[#321f1c]/48"],
+.storefront-design [class~="text-[#321f1c]/40"],
+.storefront-design [class~="text-[#713a35]/46"],
+.storefront-design [class~="text-[#321f1c]/66"],
+.storefront-design [class~="text-[#321f1c]/70"],
+.storefront-design [class~="text-[#713a35]/55"] { color: var(--store-muted); }
+.storefront-design [class~="bg-[#713a35]"],
+.storefront-design [class~="bg-[#b9725f]"],
+.storefront-design [class~="bg-[#321f1c]/82"] { background-color: var(--store-accent); color: var(--store-on-accent); }
+.storefront-design [class~="border-[#713a35]/10"],
+.storefront-design [class~="border-[#713a35]/14"],
+.storefront-design [class~="border-[#713a35]/20"],
+.storefront-design [class~="focus:border-[#b9725f]/60"]:focus,
+.storefront-design [class~="border-[#713a35]/15"],
+.storefront-design [class~="border-[#713a35]"],
+.storefront-design [class~="border-[#713a35]/12"],
+.storefront-design [class~="hover:border-[#713a35]/28"]:hover { border-color: var(--store-border); }
+.storefront-design [class~="text-[#713a35]"] { color: var(--store-accent); }
+.storefront-design [class~="decoration-[#713a35]/25"],
+.storefront-design [class~="decoration-[#713a35]/20"] { text-decoration-color: var(--store-border); }
+.storefront-design [class~="hover:bg-[#60312d]"]:hover { background-color: #24211e; }
+.storefront-design [class~="bg-[#713a35]/30"],
+.storefront-design [class~="disabled:bg-[#713a35]/30"]:disabled { background-color: var(--store-panel); color: var(--store-muted); }
+.storefront-design [class~="bg-[#fffaf7]/96"],
+.storefront-design [class~="bg-[#fffaf7]"],
+.storefront-design [class~="bg-[#fff4ef]"],
+.storefront-design [class~="bg-[#fffaf7]/95"] { background-color: var(--store-surface); }
+.storefront-design [class~="bg-[#241512]/50"],
+.storefront-design [class~="bg-[#211917]/35"] { background-color: rgb(46 43 39 / 48%); }
+.storefront-design [class~="text-[#321f1c]"] { color: var(--store-ink); }
+.storefront-design [class~="focus-visible:outline-[#713a35]"]:focus-visible { outline-color: var(--store-accent); }
+
+/* Refined editorial rhythm. Logo artwork, imagery and configured hero colors
+   remain owned by their components; these rules style the surrounding UI. */
+body[data-storefront-theme="rose"] .storefront-design {
+  --design-line: #e3dbcf;
+  --design-card: #fffdfa;
+  --design-soft: #f3eee6;
+}
+.storefront-design main :is(h1,h2.display,.store-hero-heading,.store-campaign-editorial-title) {
+  font-weight: 400;
+  letter-spacing: -.035em;
+  line-height: 1.12;
+}
+.storefront-design .store-home-overline { letter-spacing: .2em; font-size: .65rem; }
+.storefront-design .store-home-text-link { text-underline-offset: 5px; }
+.storefront-design .store-home-text-link:hover { text-decoration: underline; }
+.storefront-design .store-announcement { letter-spacing: .035em; }
+.storefront-design .store-desktop-nav-link { font-size: .78rem; letter-spacing: .025em; }
+.storefront-design .store-desktop-nav-link[aria-current="page"]::after { height: 1px; }
+.storefront-design .store-header { box-shadow: 0 2px 14px rgb(54 49 44 / 3%); }
+.storefront-design .skincare-home .store-campaign-track { border-radius: 12px; }
+.storefront-design .skincare-home .store-campaign-slide .store-hero {
+  border-radius: 12px;
+  border: 1px solid var(--store-border);
+}
+.storefront-design .skincare-home .store-campaign-slide .store-hero-copy {
+  padding: clamp(28px,4.5vw,64px);
+}
+.storefront-design .skincare-home .store-campaign-slide .store-hero-heading {
+  font-size: clamp(2.4rem,4.1vw,4.25rem);
+  max-width: 15ch;
+}
+.storefront-design :is(.store-hero-primary,.store-hero-secondary,.store-campaign-editorial-link) {
+  border-radius: 6px;
+  min-height: 48px;
+  letter-spacing: .025em;
+}
+.storefront-design .skincare-home :is(.home-category-section,.home-brand-section,.home-product-section) {
+  padding-block: clamp(32px,4vw,60px);
+}
+.storefront-design .skincare-home .store-category-visual {
+  border-radius: 10px;
+  border-color: var(--store-border);
+  box-shadow: none;
+}
+.storefront-design .skincare-home .store-category-visual::before { opacity: .025; }
+.storefront-design .skincare-home .store-category-visual h3 { font-weight: 400; }
+.storefront-design .store-product-card {
+  border-radius: 12px;
+  border-color: var(--design-line);
+  box-shadow: none;
+}
+.storefront-design .skincare-home .store-product-card { border-radius: 12px; }
+.storefront-design .store-product-card > a > .relative > div:first-child { border-radius: 7px; }
+.storefront-design .store-product-card h3 { font-weight: 500; }
+.storefront-design .store-product-card-action button { border-radius: 6px; }
+.storefront-design .store-product-card:hover {
+  border-color: #bcaa90;
+  box-shadow: 0 8px 22px rgb(54 49 44 / 5%);
+}
+.storefront-design :is(.home-focus-card,.home-routine-card) { border-radius: 12px; }
+.storefront-design .home-focus-symbol { color: #8b7454; border-color: currentColor; }
+.storefront-design .home-routine-card > span { color: #806b4e; opacity: 1; }
+.storefront-design .store-footer { border-top: 1px solid var(--store-border); }
+@media (min-width: 1024px) {
+  .storefront-design .skincare-home .store-campaign-slide .store-hero { min-height: 430px; }
+  .storefront-design .skincare-home .store-campaign-slide .store-hero-art { min-height: 390px; }
+}
+@media (max-width: 767px) {
+  .storefront-design .skincare-home .store-campaign-slide .store-hero-copy { padding: 28px 22px; }
+  .storefront-design .skincare-home .store-campaign-slide .store-hero-heading { font-size: clamp(2rem,8vw,2.85rem); }
+  .storefront-design .skincare-home :is(.home-category-section,.home-brand-section,.home-product-section) { padding-block: 30px; }
+  .storefront-design .store-product-card h3 { font-size: .82rem; line-height: 1.55; }
+}
