@@ -142,14 +142,14 @@ body[data-storefront-theme="rose"]:has(.storefront-design) {
   --surface: #fffdfa;
   --surface-soft: #f0e9df;
   --surface-warm: #e9ddc8;
-  --muted: #6d655b;
+  --muted: #625a50;
   --line: #ddd3c5;
   --rose-deep: #36312c;
   --rose: #72614c;
   --rose-light: #c7b18e;
   --store-accent: #36312c;
   --store-ink: #2e2b27;
-  --store-muted: #6d655b;
+  --store-muted: #625a50;
   --store-surface: #faf8f4;
   --store-panel: #f0e9df;
   --store-border: #ddd3c5;
