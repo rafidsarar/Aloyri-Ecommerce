@@ -138,18 +138,18 @@ body:has(.storefront-design[data-storefront-page="compare"]) { overflow-x: hidde
    retain it for saved settings compatibility. Admin has no storefront wrapper. */
 body[data-storefront-theme="rose"]:has(.storefront-design) {
   --background: #ffffff;
-  --foreground: #182c48;
+  --foreground: #49352e;
   --surface: #ffffff;
   --surface-soft: #edf0f4;
   --surface-warm: #e3e8ee;
-  --muted: #4c5e74;
+  --muted: #6e5146;
   --line: #c0c6ce;
-  --rose-deep: #182c48;
-  --rose: #344e70;
+  --rose-deep: #49352e;
+  --rose: #765044;
   --rose-light: #c0c6ce;
-  --store-accent: #182c48;
-  --store-ink: #182c48;
-  --store-muted: #4c5e74;
+  --store-accent: #49352e;
+  --store-ink: #49352e;
+  --store-muted: #6e5146;
   --store-surface: #ffffff;
   --store-panel: #edf0f4;
   --store-border: #c0c6ce;
@@ -173,7 +173,7 @@ body[data-storefront-theme="rose"]:has(.storefront-design) {
 .storefront-design ::selection { background: var(--store-panel); color: var(--store-ink); }
 .storefront-design :focus-visible { outline-color: var(--store-accent); }
 .storefront-design :is(input[type="checkbox"],input[type="radio"]) { accent-color: var(--store-accent); }
-.storefront-design .rose-metal { background: linear-gradient(120deg,var(--store-accent),#344e70); color: var(--store-on-accent); }
+.storefront-design .rose-metal { background: linear-gradient(120deg,var(--store-accent),#765044); color: var(--store-on-accent); }
 .storefront-design .rose-text { background: none; color: var(--store-accent); }
 .storefront-design .skip-link { background: var(--store-accent); color: var(--store-on-accent); }
 .storefront-design .soft-shadow { box-shadow: 0 24px 70px rgb(24 44 72 / 7%); }
@@ -201,7 +201,7 @@ body[data-storefront-theme="rose"]:has(.storefront-design) {
 .storefront-design :is([class~="text-[#713a35]"],[class~="text-[#60312d]"]) { color: var(--store-accent); }
 .storefront-design :is([class~="text-[#796762]"],[class~="text-[#6f5c56]"]) { color: var(--store-muted); }
 .storefront-design :is([class~="bg-[#713a35]"],[class~="bg-[#321f1c]"]) { background-color: var(--store-accent); color: var(--store-on-accent); }
-.storefront-design [class~="hover:bg-[#60312d]"]:hover { background-color: #102139; }
+.storefront-design [class~="hover:bg-[#60312d]"]:hover { background-color: #35231d; }
 .storefront-design :is([class~="bg-[#fffaf7]"],[class~="bg-[#fffdfb]"]) { background-color: var(--store-surface); }
 .storefront-design :is([class~="bg-[#f5e8e2]"],[class~="bg-[#f7ebe6]"],[class~="bg-[#f8f0eb]"],[class~="bg-[#efe0d9]"]) { background-color: var(--store-panel); }
 .storefront-design :is([class~="border-[#713a35]"],[class~="border-[#ead8cf]"],[class~="border-[#e5d5cc]"]) { border-color: var(--store-border); }
@@ -247,7 +247,7 @@ body[data-storefront-theme="rose"]:has(.storefront-design) {
 .storefront-design [class~="text-[#713a35]"] { color: var(--store-accent); }
 .storefront-design [class~="decoration-[#713a35]/25"],
 .storefront-design [class~="decoration-[#713a35]/20"] { text-decoration-color: var(--store-border); }
-.storefront-design [class~="hover:bg-[#60312d]"]:hover { background-color: #102139; }
+.storefront-design [class~="hover:bg-[#60312d]"]:hover { background-color: #35231d; }
 .storefront-design [class~="bg-[#713a35]/30"],
 .storefront-design [class~="disabled:bg-[#713a35]/30"]:disabled { background-color: var(--store-panel); color: var(--store-muted); }
 .storefront-design [class~="bg-[#fffaf7]/96"],
@@ -334,9 +334,9 @@ body[data-storefront-theme="rose"] .storefront-design {
 }
 
 /* Modern Clean reference: pale announcement, white chrome, navy pill actions. */
-.storefront-design .store-announcement { background: #edf0f4; color: #182c48; }
+.storefront-design .store-announcement { background: #edf0f4; color: #49352e; }
 .storefront-design .store-header { background: #ffffff; }
-.storefront-design .store-icon-link { background: transparent; border-color: transparent; color: #182c48; }
+.storefront-design .store-icon-link { background: transparent; border-color: transparent; color: #49352e; }
 .storefront-design .store-icon-link:hover { background: #edf0f4; }
 .storefront-design :is(.store-hero-primary,.store-hero-secondary,.store-campaign-editorial-link) { border-radius: 999px; }
 .storefront-design .store-hero:not([data-custom-background="true"]) { background: linear-gradient(115deg,#edf0f4,#e3e8ee); }
@@ -360,7 +360,7 @@ body[data-storefront-theme="rose"] .storefront-design {
   --clean-silver: #ebd3ce;
   --clean-pearl: #fff8f1;
 }
-.storefront-design .store-announcement { background: #ebd3ce; color: #182c48; }
+.storefront-design .store-announcement { background: #ebd3ce; color: #49352e; }
 .storefront-design .store-header { background: #fffdfb; }
 .storefront-design .store-hero:not([data-custom-background="true"]) {
   background: linear-gradient(112deg,#f8eee8 0%,#ebd3ce 65%,#edf0f4 100%);
@@ -375,3 +375,25 @@ body[data-storefront-theme="rose"] .storefront-design {
 .storefront-design .home-routine-card > span { color: #925440; }
 .storefront-design .store-footer { background: #f3e7e2; }
 .storefront-design .store-product-card:hover { border-color: #c97f6b; }
+
+/* Selected Warm Skincare reference supersedes the navy blend. */
+body[data-storefront-theme="rose"]:has(.storefront-design) { --store-accent: #49352e; --store-ink: #49352e; --store-muted: #6e5146; }
+.storefront-design .store-category-visual-moisturizer,
+.storefront-design .store-category-visual-cleanser,
+.storefront-design .store-category-visual-sunscreen { background: linear-gradient(145deg,#f4e2d9,#ebd3ce); }
+.storefront-design .home-category-section > div:first-child { justify-content: center; text-align: center; }
+.storefront-design .home-category-section .store-home-overline { color: #925440; }
+.storefront-design :is(.store-hero-primary,.store-hero-secondary) { border-radius: 7px; }
+.storefront-design .warm-reference-hero .store-hero:not([data-custom-background="true"]):not(:has(.hero-products)) {
+  background: #ebd3ce url('/images/warm-skincare-hero.webp') center / cover no-repeat;
+  grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+}
+.storefront-design .warm-reference-hero .store-hero:not([data-custom-background="true"]):not(:has(.hero-products)) .store-hero-art { visibility: hidden; pointer-events: none; }
+.storefront-design .warm-reference-hero .store-hero:not([data-custom-background="true"]):not(:has(.hero-products)) .store-hero-copy { background: transparent; }
+@media(max-width:767px) {
+  .storefront-design .warm-reference-hero .store-hero:not([data-custom-background="true"]):not(:has(.hero-products)) {
+    display: flex; flex-direction: column; background-position: 70% bottom; background-size: auto 270px; background-color: #eed4c9;
+  }
+  .storefront-design .warm-reference-hero .store-hero:not([data-custom-background="true"]):not(:has(.hero-products)) .store-hero-copy { background: linear-gradient(#f6e5dc,#eed4c9); }
+  .storefront-design .warm-reference-hero .store-hero:not([data-custom-background="true"]):not(:has(.hero-products)) .store-hero-art { display:block; min-height:250px; }
+}

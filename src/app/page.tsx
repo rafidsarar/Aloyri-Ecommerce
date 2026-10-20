@@ -140,7 +140,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
   const blocks: Record<HomepageBlockId, ReactNode> = {
     hero: (
       <>
-      {home.showHero && <HomepageHeroCarousel slides={[<section key="intro" className="store-campaign-intro">
+      {home.showHero && <HomepageHeroCarousel slides={[<section key="intro" className="store-campaign-intro warm-reference-hero">
         <HeroBannerFrame background={home.mainHeroBackground || home.heroBackground} style={home.heroStyle} alignment={home.heroAlignment} stacked={home.heroLayout === "stacked"} showImageOnMobile={config.presentation.showHeroImageOnMobile}
           copy={<>            <div className="store-home-overline flex items-center gap-3">
               <span className="h-px w-8 bg-[#b9725f]/55" />
