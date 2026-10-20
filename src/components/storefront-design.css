@@ -342,3 +342,36 @@ body[data-storefront-theme="rose"] .storefront-design {
 .storefront-design .store-hero:not([data-custom-background="true"]) { background: linear-gradient(115deg,#edf0f4,#e3e8ee); }
 .storefront-design :is(.store-category-visual-cleanser,.store-category-visual-moisturizer,.store-category-visual-sunscreen) { background: linear-gradient(145deg,#f3f5f8,#e7ecf2); }
 .storefront-design .store-footer { background: #edf0f4; }
+
+/* Warm Skincare × Modern Clean: navy anchors with cream, blush and clay.
+   Original logo and catalog media retain their own colors. */
+body[data-storefront-theme="rose"]:has(.storefront-design) {
+  --background: #fff8f1;
+  --store-surface: #fff8f1;
+  --store-panel: #f3e7e2;
+  --store-border: #ded6d3;
+  --store-footer: #f3e7e2;
+}
+body[data-storefront-theme="rose"] .storefront-design {
+  --design-card: #ffffff;
+  --design-soft: #f6eeea;
+  --design-line: #e2d8d3;
+  --clean-mist: #edf0f4;
+  --clean-silver: #ebd3ce;
+  --clean-pearl: #fff8f1;
+}
+.storefront-design .store-announcement { background: #ebd3ce; color: #182c48; }
+.storefront-design .store-header { background: #fffdfb; }
+.storefront-design .store-hero:not([data-custom-background="true"]) {
+  background: linear-gradient(112deg,#f8eee8 0%,#ebd3ce 65%,#edf0f4 100%);
+}
+.storefront-design .store-hero:not([data-custom-background="true"]) .store-hero-art { background: transparent; }
+.storefront-design .store-category-visual-cleanser { background: linear-gradient(145deg,#f8eee8,#ebd3ce); }
+.storefront-design .store-category-visual-moisturizer { background: linear-gradient(145deg,#f5f7fa,#edf0f4); }
+.storefront-design .store-category-visual-sunscreen { background: linear-gradient(145deg,#fff8f1,#f1dfd4); }
+.storefront-design .store-home-overline { color: #925440; }
+.storefront-design .store-hero[data-custom-background="true"] .store-home-overline { color: var(--hero-foreground); }
+.storefront-design .home-focus-symbol { color: #925440; }
+.storefront-design .home-routine-card > span { color: #925440; }
+.storefront-design .store-footer { background: #f3e7e2; }
+.storefront-design .store-product-card:hover { border-color: #c97f6b; }
