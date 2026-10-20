@@ -134,27 +134,27 @@ html:has(.storefront-design[data-storefront-page="compare"]),
 body:has(.storefront-design[data-storefront-page="compare"]) { overflow-x: hidden !important; max-width: 100%; }
 .storefront-design[data-storefront-page="compare"] main.shell { min-width: 0; max-width: calc(100vw - 2rem); }
 
-/* Soft Luxury skincare palette. Legacy "rose" is the stored default theme key;
+/* Modern Clean skincare palette. Legacy "rose" is the stored default theme key;
    retain it for saved settings compatibility. Admin has no storefront wrapper. */
 body[data-storefront-theme="rose"]:has(.storefront-design) {
-  --background: #faf8f4;
-  --foreground: #2e2b27;
-  --surface: #fffdfa;
-  --surface-soft: #f0e9df;
-  --surface-warm: #e9ddc8;
-  --muted: #625a50;
-  --line: #ddd3c5;
-  --rose-deep: #36312c;
-  --rose: #72614c;
-  --rose-light: #c7b18e;
-  --store-accent: #36312c;
-  --store-ink: #2e2b27;
-  --store-muted: #625a50;
-  --store-surface: #faf8f4;
-  --store-panel: #f0e9df;
-  --store-border: #ddd3c5;
-  --store-on-accent: #fffdfa;
-  --store-footer: #f0e9df;
+  --background: #ffffff;
+  --foreground: #182c48;
+  --surface: #ffffff;
+  --surface-soft: #edf0f4;
+  --surface-warm: #e3e8ee;
+  --muted: #4c5e74;
+  --line: #c0c6ce;
+  --rose-deep: #182c48;
+  --rose: #344e70;
+  --rose-light: #c0c6ce;
+  --store-accent: #182c48;
+  --store-ink: #182c48;
+  --store-muted: #4c5e74;
+  --store-surface: #ffffff;
+  --store-panel: #edf0f4;
+  --store-border: #c0c6ce;
+  --store-on-accent: #ffffff;
+  --store-footer: #edf0f4;
 }
 .storefront-design {
   --background: var(--store-surface);
@@ -166,31 +166,31 @@ body[data-storefront-theme="rose"]:has(.storefront-design) {
   --line: var(--store-border);
   --rose-deep: var(--store-accent);
   --rose: var(--store-accent);
-  --luxury-champagne: #e9ddc8;
-  --luxury-linen: #eee5d7;
-  --luxury-pearl: #f4f0e9;
+  --clean-silver: #e3e8ee;
+  --clean-mist: #e8edf3;
+  --clean-pearl: #f4f6f9;
 }
 .storefront-design ::selection { background: var(--store-panel); color: var(--store-ink); }
 .storefront-design :focus-visible { outline-color: var(--store-accent); }
 .storefront-design :is(input[type="checkbox"],input[type="radio"]) { accent-color: var(--store-accent); }
-.storefront-design .rose-metal { background: linear-gradient(120deg,var(--store-accent),#72614c); color: var(--store-on-accent); }
+.storefront-design .rose-metal { background: linear-gradient(120deg,var(--store-accent),#344e70); color: var(--store-on-accent); }
 .storefront-design .rose-text { background: none; color: var(--store-accent); }
 .storefront-design .skip-link { background: var(--store-accent); color: var(--store-on-accent); }
-.storefront-design .soft-shadow { box-shadow: 0 24px 70px rgb(54 49 44 / 7%); }
+.storefront-design .soft-shadow { box-shadow: 0 24px 70px rgb(24 44 72 / 7%); }
 .storefront-design .store-header { background: color-mix(in srgb,var(--store-surface) 96%,transparent); }
 .storefront-design .store-icon-link { background: var(--store-surface); }
 .storefront-design .store-icon-link:hover { background: var(--store-panel); }
-.storefront-design .store-category-visual-cleanser { background: linear-gradient(145deg,#f8f4ec,var(--luxury-linen)); color: var(--store-ink); }
-.storefront-design .store-category-visual-moisturizer { background: linear-gradient(145deg,#fdfbf7,var(--luxury-pearl)); color: var(--store-ink); }
-.storefront-design .store-category-visual-sunscreen { background: linear-gradient(145deg,#f9f4e9,var(--luxury-champagne)); color: var(--store-ink); }
+.storefront-design .store-category-visual-cleanser { background: linear-gradient(145deg,#f1f4f8,var(--clean-mist)); color: var(--store-ink); }
+.storefront-design .store-category-visual-moisturizer { background: linear-gradient(145deg,#ffffff,var(--clean-pearl)); color: var(--store-ink); }
+.storefront-design .store-category-visual-sunscreen { background: linear-gradient(145deg,#f4f6f9,var(--clean-silver)); color: var(--store-ink); }
 .storefront-design .store-category-description p { opacity: 1; color: var(--store-muted); }
 .storefront-design .store-hero-product-caption { color: var(--store-ink); }
 .storefront-design .home-finder-scroll-section .home-finder-scroll-card:nth-child(1),
 .storefront-design .skincare-home .home-routine-stack-card:nth-child(1) { background: var(--store-surface); }
 .storefront-design .home-finder-scroll-section .home-finder-scroll-card:nth-child(2),
-.storefront-design .skincare-home .home-routine-stack-card:nth-child(2) { background: var(--luxury-linen); }
+.storefront-design .skincare-home .home-routine-stack-card:nth-child(2) { background: var(--clean-mist); }
 .storefront-design .home-finder-scroll-section .home-finder-scroll-card:nth-child(3),
-.storefront-design .skincare-home .home-routine-stack-card:nth-child(3) { background: var(--luxury-champagne); }
+.storefront-design .skincare-home .home-routine-stack-card:nth-child(3) { background: var(--clean-silver); }
 .storefront-design .home-finder-scroll-card { color: var(--store-ink); border-color: var(--store-border); }
 .storefront-design .store-footer { background: var(--store-footer); }
 .storefront-design .store-footer-bottom { border-color: var(--store-border); }
@@ -201,7 +201,7 @@ body[data-storefront-theme="rose"]:has(.storefront-design) {
 .storefront-design :is([class~="text-[#713a35]"],[class~="text-[#60312d]"]) { color: var(--store-accent); }
 .storefront-design :is([class~="text-[#796762]"],[class~="text-[#6f5c56]"]) { color: var(--store-muted); }
 .storefront-design :is([class~="bg-[#713a35]"],[class~="bg-[#321f1c]"]) { background-color: var(--store-accent); color: var(--store-on-accent); }
-.storefront-design [class~="hover:bg-[#60312d]"]:hover { background-color: #24211e; }
+.storefront-design [class~="hover:bg-[#60312d]"]:hover { background-color: #102139; }
 .storefront-design :is([class~="bg-[#fffaf7]"],[class~="bg-[#fffdfb]"]) { background-color: var(--store-surface); }
 .storefront-design :is([class~="bg-[#f5e8e2]"],[class~="bg-[#f7ebe6]"],[class~="bg-[#f8f0eb]"],[class~="bg-[#efe0d9]"]) { background-color: var(--store-panel); }
 .storefront-design :is([class~="border-[#713a35]"],[class~="border-[#ead8cf]"],[class~="border-[#e5d5cc]"]) { border-color: var(--store-border); }
@@ -247,7 +247,7 @@ body[data-storefront-theme="rose"]:has(.storefront-design) {
 .storefront-design [class~="text-[#713a35]"] { color: var(--store-accent); }
 .storefront-design [class~="decoration-[#713a35]/25"],
 .storefront-design [class~="decoration-[#713a35]/20"] { text-decoration-color: var(--store-border); }
-.storefront-design [class~="hover:bg-[#60312d]"]:hover { background-color: #24211e; }
+.storefront-design [class~="hover:bg-[#60312d]"]:hover { background-color: #102139; }
 .storefront-design [class~="bg-[#713a35]/30"],
 .storefront-design [class~="disabled:bg-[#713a35]/30"]:disabled { background-color: var(--store-panel); color: var(--store-muted); }
 .storefront-design [class~="bg-[#fffaf7]/96"],
@@ -255,16 +255,16 @@ body[data-storefront-theme="rose"]:has(.storefront-design) {
 .storefront-design [class~="bg-[#fff4ef]"],
 .storefront-design [class~="bg-[#fffaf7]/95"] { background-color: var(--store-surface); }
 .storefront-design [class~="bg-[#241512]/50"],
-.storefront-design [class~="bg-[#211917]/35"] { background-color: rgb(46 43 39 / 48%); }
+.storefront-design [class~="bg-[#211917]/35"] { background-color: rgb(24 44 72 / 48%); }
 .storefront-design [class~="text-[#321f1c]"] { color: var(--store-ink); }
 .storefront-design [class~="focus-visible:outline-[#713a35]"]:focus-visible { outline-color: var(--store-accent); }
 
 /* Refined editorial rhythm. Logo artwork, imagery and configured hero colors
    remain owned by their components; these rules style the surrounding UI. */
 body[data-storefront-theme="rose"] .storefront-design {
-  --design-line: #e3dbcf;
-  --design-card: #fffdfa;
-  --design-soft: #f3eee6;
+  --design-line: #dce2e9;
+  --design-card: #ffffff;
+  --design-soft: #f3f5f8;
 }
 .storefront-design main :is(h1,h2.display,.store-hero-heading,.store-campaign-editorial-title) {
   font-weight: 400;
@@ -277,7 +277,7 @@ body[data-storefront-theme="rose"] .storefront-design {
 .storefront-design .store-announcement { letter-spacing: .035em; }
 .storefront-design .store-desktop-nav-link { font-size: .78rem; letter-spacing: .025em; }
 .storefront-design .store-desktop-nav-link[aria-current="page"]::after { height: 1px; }
-.storefront-design .store-header { box-shadow: 0 2px 14px rgb(54 49 44 / 3%); }
+.storefront-design .store-header { box-shadow: 0 2px 14px rgb(24 44 72 / 3%); }
 .storefront-design .skincare-home .store-campaign-track { border-radius: 12px; }
 .storefront-design .skincare-home .store-campaign-slide .store-hero {
   border-radius: 12px;
@@ -315,12 +315,12 @@ body[data-storefront-theme="rose"] .storefront-design {
 .storefront-design .store-product-card h3 { font-weight: 500; }
 .storefront-design .store-product-card-action button { border-radius: 6px; }
 .storefront-design .store-product-card:hover {
-  border-color: #bcaa90;
-  box-shadow: 0 8px 22px rgb(54 49 44 / 5%);
+  border-color: #8999ad;
+  box-shadow: 0 8px 22px rgb(24 44 72 / 5%);
 }
 .storefront-design :is(.home-focus-card,.home-routine-card) { border-radius: 12px; }
-.storefront-design .home-focus-symbol { color: #8b7454; border-color: currentColor; }
-.storefront-design .home-routine-card > span { color: #806b4e; opacity: 1; }
+.storefront-design .home-focus-symbol { color: #526985; border-color: currentColor; }
+.storefront-design .home-routine-card > span { color: #526985; opacity: 1; }
 .storefront-design .store-footer { border-top: 1px solid var(--store-border); }
 @media (min-width: 1024px) {
   .storefront-design .skincare-home .store-campaign-slide .store-hero { min-height: 430px; }
@@ -332,3 +332,13 @@ body[data-storefront-theme="rose"] .storefront-design {
   .storefront-design .skincare-home :is(.home-category-section,.home-brand-section,.home-product-section) { padding-block: 30px; }
   .storefront-design .store-product-card h3 { font-size: .82rem; line-height: 1.55; }
 }
+
+/* Modern Clean reference: pale announcement, white chrome, navy pill actions. */
+.storefront-design .store-announcement { background: #edf0f4; color: #182c48; }
+.storefront-design .store-header { background: #ffffff; }
+.storefront-design .store-icon-link { background: transparent; border-color: transparent; color: #182c48; }
+.storefront-design .store-icon-link:hover { background: #edf0f4; }
+.storefront-design :is(.store-hero-primary,.store-hero-secondary,.store-campaign-editorial-link) { border-radius: 999px; }
+.storefront-design .store-hero:not([data-custom-background="true"]) { background: linear-gradient(115deg,#edf0f4,#e3e8ee); }
+.storefront-design :is(.store-category-visual-cleanser,.store-category-visual-moisturizer,.store-category-visual-sunscreen) { background: linear-gradient(145deg,#f3f5f8,#e7ecf2); }
+.storefront-design .store-footer { background: #edf0f4; }
