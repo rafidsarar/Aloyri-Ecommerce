@@ -140,7 +140,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
   const blocks: Record<HomepageBlockId, ReactNode> = {
     hero: (
       <>
-      {home.showHero && <HomepageHeroCarousel slides={[<section key="intro" className="store-campaign-intro">
+      {home.showHero && <HomepageHeroCarousel slides={[<section key="intro" className={`store-campaign-intro reference-main-hero ${!home.heroImagePath && !heroGalleryProducts.length ? "reference-editorial-art" : ""}`}>
         <HeroBannerFrame background={home.mainHeroBackground || home.heroBackground} style={home.heroStyle} alignment={home.heroAlignment} stacked={home.heroLayout === "stacked"} showImageOnMobile={config.presentation.showHeroImageOnMobile}
           copy={<>            <div className="store-home-overline flex items-center gap-3">
               <span className="h-px w-8 bg-[#b9725f]/55" />
@@ -152,7 +152,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ b
                 home.heroDiscountMode === "checkout" && home.heroPromotionCode && heroGalleryProducts.length ?
                 <p className="hero-offer-badge mb-3">5% OFF <span>Eligible products at checkout</span></p> : null}
               <h1 className="store-hero-heading display max-w-[13ch] text-[clamp(2.25rem,4.8vw,5rem)] leading-[1.02]">
-                {home.headline}
+                {home.headline === "Skincare that earns a place in your routine." ? "Skincare that belongs in your routine." : home.headline}
               </h1>
               <p className="store-hero-muted mt-7 max-w-xl text-base leading-7 sm:text-lg">
                 {home.intro}

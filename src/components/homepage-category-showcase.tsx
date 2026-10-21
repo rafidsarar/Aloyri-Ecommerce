@@ -1,5 +1,6 @@
 import { CategoryCarousel } from "@/components/category-carousel";
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { ArrowIcon } from "@/components/icons";
 import { ProductMedia } from "@/components/product-media";
 import type { Product } from "@/lib/catalog";
@@ -10,14 +11,18 @@ const familiarCategories: Record<string, { style: string; note: string }> = {
   cleansers: { style: "cleanser", note: "A fresh start for every routine." },
   moisturizer: { style: "moisturizer", note: "Find the comfort and texture you love." },
   moisturizers: { style: "moisturizer", note: "Find the comfort and texture you love." },
+  serum: { style: "serum", note: "Find a serum for your routine." },
+  serums: { style: "serum", note: "Find a serum for your routine." },
   sunscreen: { style: "sunscreen", note: "Make everyday SPF effortless." },
 };
 
 export function HomepageCategoryShowcase({ products, categories, eyebrow, title, intro }: { products: Product[]; categories: string[]; eyebrow: string; title: string; intro: string }) {
-  const directory = buildCategoryDirectory(categories, products);
+  const categoryOrder = ["cleanser", "moisturizer", "serum", "sunscreen"];
+  const rank = (name: string) => { const index = categoryOrder.indexOf(familiarCategories[name.toLowerCase()]?.style || ""); return index < 0 ? 4 : index; };
+  const directory = buildCategoryDirectory(categories, products).sort((a, b) => rank(a.name) - rank(b.name));
   return (
     <section className="shell home-category-section py-7 md:py-10" aria-labelledby="shop-by-category">
-      <div className="mb-4 flex flex-wrap items-end justify-between gap-3 md:mb-5">
+      <div className="reference-category-heading mb-4 flex flex-wrap items-end justify-between gap-3 md:mb-5">
         <div>
           <p className="store-home-overline">{eyebrow}</p>
           <h2 id="shop-by-category" className="store-home-heading display mt-2">{title}</h2>
@@ -36,8 +41,9 @@ export function HomepageCategoryShowcase({ products, categories, eyebrow, title,
           );
           const familiar = familiarCategories[item.name.toLocaleLowerCase("en")];
           const style = familiar?.style || (index % 3 === 0 ? "cleanser" : index % 3 === 1 ? "moisturizer" : "sunscreen");
+          const artworkPosition: Record<string, string> = { cleanser: "0% 0%", moisturizer: "100% 0%", serum: "0% 100%", sunscreen: "100% 100%" };
           return (
-            <Link key={item.slug} href={item.href} className={"store-category-visual store-category-visual-" + style + " group relative flex shrink-0 snap-start flex-col overflow-hidden rounded-2xl border p-4 transition-transform duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#713a35] sm:p-5"}>
+            <Link key={item.slug} href={item.href} style={familiar ? { "--category-art-position": artworkPosition[style] } as CSSProperties : undefined} className={"store-category-visual " + (familiar ? "reference-category-art " : "") + "store-category-visual-" + style + " group relative flex shrink-0 snap-start flex-col overflow-hidden rounded-2xl border p-4 transition-transform duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#713a35] sm:p-5"}>
               <h3 className="display relative z-10 text-[1.25rem] leading-tight sm:text-[1.4rem] [overflow-wrap:anywhere]">{item.name}</h3>
               <div className="store-category-media relative my-3 flex h-[112px] sm:h-[128px] shrink-0 items-center justify-center overflow-hidden">
                 {photo ? <div className="w-[112px] sm:w-[128px] max-w-full">
