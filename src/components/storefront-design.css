@@ -133,3 +133,46 @@ html:has(.storefront-design[data-storefront-page="compare"]) { overflow-x: clip;
 html:has(.storefront-design[data-storefront-page="compare"]),
 body:has(.storefront-design[data-storefront-page="compare"]) { overflow-x: hidden !important; max-width: 100%; }
 .storefront-design[data-storefront-page="compare"] main.shell { min-width: 0; max-width: calc(100vw - 2rem); }
+
+/* Owner-selected white / espresso / silver palette. Public storefront only. */
+body[data-storefront-theme="rose"]:has(.storefront-design) {
+ --background:#ffffff; --foreground:#321f1c; --surface:#ffffff;
+ --surface-soft:#edf0f4; --surface-warm:#e3e8ee; --muted:#796762;
+ --line:#c0c6ce; --rose-deep:#713a35; --rose:#713a35;
+ --store-surface:#ffffff; --store-ink:#321f1c; --store-accent:#321f1c;
+ --store-secondary:#713a35; --store-muted:#796762; --store-panel:#edf0f4;
+ --store-silver:#e3e8ee; --store-border:#c0c6ce; --store-on-accent:#ffffff;
+ --store-footer:#edf0f4;
+}
+.storefront-design {
+ --design-card:var(--store-surface); --design-soft:var(--store-panel);
+ --design-line:var(--store-border);
+ --background:var(--store-surface); --surface:var(--store-surface);
+ --surface-soft:var(--store-panel); --surface-warm:var(--store-silver,var(--store-panel));
+ --line:var(--store-border);
+}
+.storefront-design .store-header { background:var(--store-surface); }
+.storefront-design .store-footer { background:var(--store-footer); }
+.storefront-design .skincare-home { --home-line:var(--store-border); }
+.storefront-design .store-home-overline,
+.storefront-design .store-home-text-link { color:var(--store-secondary,var(--store-accent)); }
+.storefront-design .store-hero-secondary { color:var(--store-secondary,var(--store-accent)); }
+.storefront-design .rose-metal { background:var(--store-accent); color:var(--store-on-accent); }
+.storefront-design .rose-text { background:none; color:var(--store-secondary,var(--store-accent)); }
+.storefront-design :is(.store-category-visual-cleanser,.store-category-visual-moisturizer,.store-category-visual-sunscreen) {
+ background:var(--store-silver,var(--store-panel)); color:var(--store-ink); border-color:var(--store-border);
+}
+.storefront-design .skincare-home .store-product-card { background:var(--store-surface); border-color:var(--store-border); }
+.storefront-design :is(.home-focus-card,.home-routine-card) { background:var(--store-surface); border-color:var(--store-border); }
+.storefront-design .home-finder-scroll-section .home-finder-scroll-card:nth-child(1),
+.storefront-design .skincare-home .home-routine-stack-card:nth-child(1) { background:var(--store-surface); }
+.storefront-design .home-finder-scroll-section .home-finder-scroll-card:nth-child(2),
+.storefront-design .skincare-home .home-routine-stack-card:nth-child(2) { background:var(--store-panel); }
+.storefront-design .home-finder-scroll-section .home-finder-scroll-card:nth-child(3),
+.storefront-design .skincare-home .home-routine-stack-card:nth-child(3) { background:var(--store-silver,var(--store-panel)); }
+.storefront-design :is([class~="bg-[#fffaf7]"],[class~="bg-[#fffdfb]"],[class~="bg-[#fff4ef]"],[class~="bg-[#fffaf7]/95"],[class~="bg-[#fffaf7]/96"]) { background-color:var(--store-surface); }
+.storefront-design :is([class~="bg-[#f5e8e2]"],[class~="bg-[#f7ebe6]"],[class~="bg-[#f8f0eb]"],[class~="bg-[#f5e8e2]/60"]) { background-color:var(--store-panel); }
+.storefront-design [class~="bg-[#efe0d9]"] { background-color:var(--store-silver,var(--store-panel)); }
+.storefront-design :is([class~="bg-[#713a35]"],[class~="bg-[#321f1c]"]) { background-color:var(--store-accent); color:var(--store-on-accent); }
+.storefront-design [class~="hover:bg-[#60312d]"]:hover { background-color:var(--store-secondary,var(--store-accent)); }
+.storefront-design :is([class~="border-[#ead8cf]"],[class~="border-[#e5d5cc]"],[class~="border-[#713a35]/10"],[class~="border-[#713a35]/12"],[class~="border-[#713a35]/14"],[class~="border-[#713a35]/15"],[class~="border-[#713a35]/20"]) { border-color:var(--store-border); }
