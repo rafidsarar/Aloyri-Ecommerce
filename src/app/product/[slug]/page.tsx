@@ -231,6 +231,7 @@ export default async function ProductPage({
         slug={slug}
         fallback={fallback ?? null}
         recommendationConfig={config.merchandising.recommendations}
+        editorialGuidance={config.products[schemaProduct.id]}
         reviewData={reviewData}
       />
       <VisualPageSections layout={config.visualPages.product} />

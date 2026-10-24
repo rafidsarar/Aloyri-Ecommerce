@@ -13,12 +13,13 @@ import {
   readDraftStorefrontConfig,
 } from "@/lib/storefront-admin-store";
 
-export default async function SeoManagerPage() {
+export default async function SeoManagerPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const admin = await requireAdminPermission("seo.view");
-  const [config, catalog, publishing] = await Promise.all([
+  const [config, catalog, publishing, query] = await Promise.all([
     readDraftStorefrontConfig(),
     fetchCrmCatalog(),
     getPublishingStatus(),
+    searchParams,
   ]);
   const products = catalog.ok
     ? applyStorefrontEditorial(catalog.body.products, config)
@@ -31,6 +32,7 @@ export default async function SeoManagerPage() {
       title="SEO & Discoverability"
       subtitle="Manage search metadata, social sharing information, indexing, canonicals, structured product discovery and redirects through the automatic live-save workflow."
     >
+      {query.error ? <AdminNotice tone="warning">{query.error}</AdminNotice> : null}
       {publishing.hasDraftChanges ? (
         <AdminNotice tone="warning">
           SEO changes update the live website when saved.

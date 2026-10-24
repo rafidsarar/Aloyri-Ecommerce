@@ -25,3 +25,16 @@ test("CRM remains authoritative for product and brand identity", () => {
   const brands = readFileSync("src/app/admin/brands/actions.ts", "utf8");
   expect(brands).toContain("Ecommerce may edit brand pictures, never brand names or directory membership");
 });
+
+test("every main Owner Admin navigation section exists and enforces its required permission", () => {
+  const shell = readFileSync("src/components/admin/admin-shell.tsx", "utf8");
+  const routes = [...shell.matchAll(/\{ group: "[^"]+", label: "[^"]+", href: "(\/admin[^"]*)", permission: "([^"]+)" \}/g)];
+  expect(routes).toHaveLength(18);
+  for (const [, href, permission] of routes) {
+    const route = href === "/admin" ? "/admin/page.tsx" : href + "/page.tsx";
+    const source = readFileSync("src/app" + route, "utf8");
+    expect(source, `Unprotected or missing Owner page: ${href}`).toContain(
+      `requireAdminPermission("${permission}")`,
+    );
+  }
+});

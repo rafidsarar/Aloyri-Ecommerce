@@ -81,6 +81,13 @@ fs.writeFileSync(path.join(temp,'app/page.tsx'),`import {HomepageLiveDraft} from
 
 fs.mkdirSync(path.join(temp,'app/admin/dashboard'),{recursive:true});
 fs.writeFileSync(path.join(temp,'app/admin/dashboard/page.tsx'),'import {AdminShell} from "@/components/admin/admin-shell";import {OwnerDashboard} from "@/components/admin/owner-dashboard";import {defaultStorefrontConfig} from "@/lib/storefront-admin-store";export default function Page(){return <AdminShell username="preview" title="Dashboard" subtitle="Manage your website, one task at a time."><OwnerDashboard config={defaultStorefrontConfig} productCount={9}/></AdminShell>}');
+// Read-only Owner control guide is rendered from production source with only
+// the disposable fixture's Owner authentication substituted.
+fs.mkdirSync(path.join(temp,'app/admin/controls'),{recursive:true});
+const controlGuide=fs.readFileSync(path.join(root,'src/app/admin/controls/page.tsx'),'utf8')
+  .replace('import { requireAdminPermission } from "@/lib/admin-auth";',
+    'const requireAdminPermission = async () => ({username: "preview", role: "owner"});');
+fs.writeFileSync(path.join(temp,'app/admin/controls/page.tsx'),controlGuide);
 // Isolated checkout renderer: uses the real client component but a disposable
 // Next.js app and mocked HTTP endpoints. Never bypasses production authentication.
 fs.mkdirSync(path.join(temp, 'app/test-cart'), {recursive:true});

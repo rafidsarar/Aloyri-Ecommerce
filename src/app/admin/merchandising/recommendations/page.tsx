@@ -13,7 +13,7 @@ import { readDraftStorefrontConfig } from "@/lib/storefront-admin-store";
 export default async function RecommendationMerchandisingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string }>;
+  searchParams: Promise<{ saved?: string; error?: string }>;
 }) {
   const admin = await requireAdminPermission("merchandising.view");
   const [query, config, catalog] = await Promise.all([
@@ -30,6 +30,7 @@ export default async function RecommendationMerchandisingPage({
       title="Product recommendations"
       subtitle="Control related products, complete-the-routine relationships and recommendation priority. All recommendation logic stays in Ecommerce; CRM price, stock and orders remain authoritative."
     >
+      {query.error ? <AdminNotice tone="warning">{query.error}</AdminNotice> : null}
       {query.saved ? (
         <AdminNotice>Recommendation merchandising saved to the live website.</AdminNotice>
       ) : null}
